@@ -1,0 +1,115 @@
+.monaco-editor,
+.monaco-editor-background,
+.monaco-editor .inputarea.ime-input {
+    background-color: rgba(0, 0, 0, 0) !important;
+}
+
+.monaco-editor-background {
+    /* background-color: var(--main-bg-color) !important; */
+    background-color: rgba(0, 0, 0, 0) !important;
+}
+
+.monaco-editor .margin {
+    /* background-color: var(--main-bg-color) !important; */
+    background-color: rgba(0, 0, 0, 0) !important;
+}
+
+.monaco-editor .view-overlays .current-line {
+    display: none;
+}
+
+.execution-decoration {
+    left: 45px !important;
+
+    width: 8px !important;
+    height: 8px !important;
+
+    border-radius: 50%;
+    border: 1px solid #bfbebe;
+    background-color: #00000008 !important;
+
+    margin-top: 10%;
+
+    display: none;
+}
+
+.monaco-editor .line-numbers {
+    color: var(--highlight-color) !important;
+    opacity: 0.2;
+    font-size: 12px !important;
+    margin-top: 2px !important;
+    transition: 0.2s;
+    transition-property: opacity;
+    /* margin-left: -10px; */
+}
+
+.monaco-editor .line-numbers:hover {
+    opacity: 1 !important;
+}
+
+.line-selected {
+    font-weight: 800 !important;
+    opacity: 1 !important;
+}
+
+.cigr {
+    box-shadow: 0.5px 0 0 0 rgba(0, 0, 0, 0) inset !important;
+}
+
+.cigra {
+    box-shadow: 0.5px 0 0 0 rgba(0, 0, 0, 0) inset !important;
+}
+
+.monaco-editor .margin-view-overlays .codicon-chevron-down {
+    font-size: 80%;
+}
+
+.monaco-editor .margin-view-overlays .codicon-folding-collapsed,
+.monaco-editor .margin-view-overlays .codicon-folding-expanded {
+    font-size: 80% !important;
+}
+
+.cdr.bracket-match {
+    opacity: 0.5;
+    border: none !important;
+    outline: none !important;
+    border-radius: 3px;
+    padding: 2px;
+    background: none !important;
+}
+
+.monaco-editor .cursors-layer .cursor {
+    background-color: var(--color-darkest) !important;
+    transition-property: top, left;
+    transition: 0.1s;
+    opacity: 0.5;
+    height: 20px !important;
+    margin-top: 11px !important;
+    margin-left: 2px !important;
+}
+
+.monaco-editor .scroll-decoration {
+    box-shadow: none !important;
+}
+
+.mtk18 {
+    color: #000000 !important;
+    font-weight: bold !important;
+}
+
+.lines-content {
+    contain: none !important;
+    overflow: visible !important;
+}
+
+.monaco-scrollable-element {
+    overflow: visible !important;
+}
+
+.view-line span span {
+    transition: 0.2s;
+}
+
+.view-line {
+    transition: 0.2s;
+}

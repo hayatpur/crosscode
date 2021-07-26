@@ -1,0 +1,32 @@
+@import 'editor';
+@import 'view';
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
+
+:root {
+    --color-lightest: white;
+    --color-lighter: #f3f5fa;
+    --color-light: #a4aec7;
+    --color: #7d89a5;
+    --color-darker: #48536d;
+    --color-darkest: black;
+}
+
+html,
+body {
+    margin: 0px;
+    height: 100%;
+    font-family: Source Sans Pro;
+    overflow: hidden;
+    background: white;
+}
+
+#svg-canvas {
+    z-index: 1;
+    pointer-events: none;
+}
+
+#editor {
+    width: 100%;
+    height: 100%;
+    padding: 7rem;
+}

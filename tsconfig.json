@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"experimentalDecorators": true,
+		"sourceMap": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "ES2021",
+		"outDir": "./dist", 
+		"lib": ["dom", "ES2021"],
+		"types": [],
+		"baseUrl": "./node_modules",
+		"jsx": "preserve",
+		"typeRoots": ["node_modules/@types"]
+	},
+	"include": ["./src/**/*"],
+	"exclude": ["node_modules"]
+}
