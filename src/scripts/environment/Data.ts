@@ -52,13 +52,22 @@ export class Data {
         this.value = props.value;
 
         if (this.type == DataType.Number) {
-            this.transform.width = 50;
-            this.transform.height = 50;
+            this.transform.width = 35;
+            this.transform.height = 35;
         }
 
         // Set ID
         this.id = `#${Data.id}`;
         Data.id += 1;
+    }
+
+    copy() {
+        let value = this.value;
+        if (this.type == DataType.Array) {
+            value = (value as Data[]).map((value) => value.copy());
+        }
+        const copy = new Data({ type: this.type, transform: { ...this.transform }, value: value });
+        return copy;
     }
 
     resolve(accessor: Accessor) {

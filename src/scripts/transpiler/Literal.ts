@@ -14,7 +14,12 @@ export class Literal extends Node {
 
     animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
-        graph.addVertex(new CreateLiteralAnimation(this.value, context.outputSpecifier));
+        graph.addVertex(
+            new CreateLiteralAnimation(this.value, context.outputSpecifier, {
+                speedMultiplier: context?.speedMultiplier,
+            }),
+            this
+        );
         return graph;
     }
 }

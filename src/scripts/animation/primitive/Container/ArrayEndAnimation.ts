@@ -1,3 +1,4 @@
+import { AccessorType, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { AnimationNode } from '../AnimationNode';
 
@@ -8,7 +9,17 @@ export class ArrayEndAnimation extends AnimationNode {
         this.base_duration = 5;
     }
 
-    begin(environment: Environment) {}
+    begin(environment: Environment) {
+        const LatestExpression = environment.resolvePath([{ type: AccessorType.Symbol, value: '_LatestExpression' }], {
+            noResolvingId: true,
+        }) as Data;
+
+        const ArrayExpression = environment.resolvePath([{ type: AccessorType.Symbol, value: '_ArrayExpression' }], {
+            noResolvingId: true,
+        }) as Data;
+
+        LatestExpression.value = ArrayExpression.id;
+    }
 
     seek(environment: Environment, time: number) {}
 

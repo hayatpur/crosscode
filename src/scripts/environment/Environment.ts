@@ -1,9 +1,12 @@
+import { AnimationGraph } from '../animation/graph/AnimationGraph';
+import { AnimationNode } from '../animation/primitive/AnimationNode';
 import { Accessor, AccessorType, Data, DataType } from './Data';
 
 export class Environment {
     bindings: { [name: string]: Accessor[] };
     memory: Data[];
-    temps: [];
+    _temps: any = {};
+    validLines: { max: number; min: number };
 
     constructor() {
         this.bindings = {
@@ -14,12 +17,54 @@ export class Environment {
         this.memory = [new Data({ type: DataType.ID }), new Data({ type: DataType.ID })];
     }
 
+    copy() {
+        const copy = new Environment();
+        copy.bindings = JSON.parse(JSON.stringify(this.bindings));
+        copy.memory = this.memory.map((data) => (data ? data.copy() : null));
+        copy._temps = JSON.parse(JSON.stringify(this._temps));
+        copy.validLines = JSON.parse(JSON.stringify(this.validLines));
+
+        return copy;
+    }
+
+    removeAt(location: Accessor[]) {
+        const parentPath = location.slice(0, -1);
+        const parent = this.resolvePath(parentPath);
+
+        const index = location[location.length - 1];
+
+        if (parent instanceof Data) {
+            parent.value[index.value] = null;
+        } else {
+            parent.memory[index.value] = null;
+        }
+    }
+
+    isValid(animation: AnimationGraph | AnimationNode): boolean {
+        // return false;
+        if (this.validLines == null) {
+            return true;
+        }
+
+        if (animation instanceof AnimationGraph && animation.node != null) {
+            const line = animation.node.meta.line;
+            return line >= this.validLines.min && line <= this.validLines.max;
+        } else if (animation instanceof AnimationNode && animation.statement != null) {
+            const line = animation.statement.meta.line;
+            return line >= this.validLines.min && line <= this.validLines.max;
+        }
+        // return true;
+
+        return true;
+    }
+
     flattenedMemory(): Data[] {
         const search = [...this.memory];
         const flattened: Data[] = [];
 
         while (search.length > 0) {
             const data = search.shift();
+            if (data == null) continue;
             flattened.push(data);
 
             if (data.type == DataType.Array) search.push(...(data.value as Data[]));
@@ -28,7 +73,11 @@ export class Environment {
         return flattened;
     }
 
-    updateLayout(position: { x: number; y: number } = { x: 0, y: 0 }, parent?: Data): { x: number; y: number } {
+    updateLayout(
+        position: { x: number; y: number } = { x: 0, y: 20 },
+        parent?: Data,
+        options?: { isArrayElement: boolean }
+    ): { x: number; y: number } {
         let search: Data[] = [];
 
         if (parent != null && parent.type == DataType.Array) {
@@ -40,13 +89,26 @@ export class Environment {
         }
 
         for (let i = 0; i < search.length; i++) {
+            if (search[i].transform.floating) continue;
+
             search[i].transform.x = position.x;
             search[i].transform.y = position.y;
 
+            // for (const [name, path] of Object.entries(this.bindings)) {
+            //     if (name.startsWith('_')) continue;
+            //     const data = this.resolvePath(path) as Data;
+            //     if (data.id == search[i].id && search[i].transform.y == 0) {
+            //         search[i].transform.y = 20;
+            //     }
+            // }
+
             if (search[i].type == DataType.Array) {
-                position = this.updateLayout({ ...position }, search[i]);
+                position.x = this.updateLayout({ x: search[i].transform.x, y: search[i].transform.y }, search[i], {
+                    isArrayElement: true,
+                }).x;
+                position.x += 30;
             } else if (search[i].type == DataType.Number) {
-                position.x += search[i].transform.width;
+                position.x += search[i].transform.width + (options?.isArrayElement ? 0 : 30);
             }
         }
 
@@ -54,7 +116,7 @@ export class Environment {
     }
 
     resolve(accessor: Accessor, _options: { noResolvingId?: boolean } = {}): Data | Environment {
-        console.log('resolve', accessor);
+        // console.log('resolve', accessor);
 
         // If parent is the environment
         if (accessor.type == AccessorType.ID) {
@@ -94,9 +156,13 @@ export class Environment {
             return this;
         }
 
-        console.log('resolvePath', path);
+        // console.log('resolvePath', path);
 
         let resolution = this.resolve(path[0], _options);
+
+        if (resolution == null) {
+            return null;
+        }
 
         return resolution.resolvePath(path.slice(1));
     }

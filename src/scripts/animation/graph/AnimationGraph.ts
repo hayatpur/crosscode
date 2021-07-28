@@ -127,7 +127,7 @@ export class AnimationGraph {
     /**
      * Seek into a specific time in the animation graph
      */
-    seek(environment: Environment, time: number, indent = 0) {
+    seek(environments: Environment[], time: number, indent = 0) {
         let start = 0;
 
         for (let i = 0; i < this.vertices.length; i++) {
@@ -144,8 +144,11 @@ export class AnimationGraph {
 
             // End animation
             if (animation.playing && !should_be_playing) {
-                animation.end(environment);
-                console.log(`${'\t'.repeat(indent)}`, JSON.parse(JSON.stringify(environment)));
+                environments.forEach((environment) => {
+                    if (!environment.isValid(animation)) return;
+                    animation.end(environment);
+                    console.log(`${'\t'.repeat(indent)}`, JSON.parse(JSON.stringify(environment)));
+                });
 
                 animation.hasPlayed = true;
                 animation.playing = false;
@@ -153,16 +156,35 @@ export class AnimationGraph {
 
             // Begin animation
             if (!animation.playing && should_be_playing) {
-                console.log(`${'\t'.repeat(indent)}[${time.toFixed(0)}ms] ${animation.constructor.name}`);
-                animation.begin(environment);
+                environments.forEach((environment) => {
+                    if (!environment.isValid(animation)) return;
+                    console.log(`${'\t'.repeat(indent)}[${time.toFixed(0)}ms] ${animation.constructor.name}`);
+                    animation.begin(environment);
+                });
+
                 animation.playing = true;
             }
 
             // Skip over this animation
             if (time >= start + animation.duration && !animation.playing && !animation.hasPlayed) {
-                animation.begin(environment);
-                animation.seek(environment, animation.duration);
-                animation.end(environment);
+                environments.forEach((environment) => {
+                    if (!environment.isValid(animation)) return;
+                    animation.begin(environment);
+                });
+
+                if (animation instanceof AnimationGraph) {
+                    animation.seek(environments, animation.duration);
+                } else {
+                    environments.forEach((environment) => {
+                        if (!environment.isValid(animation)) return;
+                        animation.seek(environment, animation.duration);
+                    });
+                }
+
+                environments.forEach((environment) => {
+                    if (!environment.isValid(animation)) return;
+                    animation.end(environment);
+                });
 
                 animation.hasPlayed = true;
             }
@@ -187,7 +209,14 @@ export class AnimationGraph {
             // Seek animation
             if (should_be_playing && animation.playing) {
                 // console.log(`Seeking ... ${animation.constructor.name}`, animation.statement);
-                animation.seek(environment, time - start, indent + 1);
+                if (animation instanceof AnimationGraph) {
+                    animation.seek(environments, time - start, indent + 1);
+                } else {
+                    environments.forEach((environment) => {
+                        if (!environment.isValid(animation)) return;
+                        animation.seek(environment, time - start);
+                    });
+                }
             }
 
             start += animation.duration;

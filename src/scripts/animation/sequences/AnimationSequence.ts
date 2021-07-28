@@ -1,8 +1,8 @@
 import { AnimationGraph } from '../graph/AnimationGraph';
 
 export default class AnimationSequence extends AnimationGraph {
-    constructor() {
-        super(null, { isSequence: true });
+    constructor(options = {}) {
+        super(null, { ...options, isSequence: true });
         this.edges = [];
     }
 

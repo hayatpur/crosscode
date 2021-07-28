@@ -9,6 +9,7 @@ export class Editor {
     onChangeContent: Set<() => void>;
     spacings: WeakMap<object, any>;
     parent: HTMLElement;
+    dragSelections: HTMLDivElement[] = [];
 
     constructor() {
         // Singleton
@@ -38,7 +39,7 @@ export class Editor {
             fontSize: 21,
             contextmenu: false,
             mouseWheelScrollSensitivity: 0,
-            lineHeight: 40,
+            lineHeight: 35,
             selectOnLineNumbers: false,
             letterSpacing: -0.5,
             codeLens: false,
@@ -121,6 +122,36 @@ export class Editor {
 
         // @ts-ignore
         return line.getBoundingClientRect().width / line.innerText.length;
+    }
+
+    updateDragSelection(selection: { x: number; y: number; x2: number; y2: number }) {
+        this.dragSelections.forEach((sel) => sel.remove());
+        this.dragSelections = [];
+
+        const lines = document.body.getElementsByClassName('view-lines')[0].children;
+
+        const min_y = Math.min(selection.y, selection.y2);
+        const max_y = Math.max(selection.y, selection.y2);
+
+        for (let i = 0; i < lines.length; i++) {
+            const bbox = lines[i].children[0].getBoundingClientRect();
+            if (bbox.width < 5 && bbox.height < 5) continue;
+
+            if (bbox.y > min_y && bbox.y + bbox.height < max_y) {
+                const sel = document.createElement('div');
+                sel.classList.add('editor-selection');
+                document.body.append(sel);
+
+                sel.style.left = `${bbox.x - 5}px`;
+                sel.style.top = `${bbox.y - 5}px`;
+                sel.style.width = `${bbox.width + 10}px`;
+                sel.style.height = `${bbox.height + 10}px`;
+
+                sel.setAttribute('_index', i.toString());
+
+                this.dragSelections.push(sel);
+            }
+        }
     }
 
     setSpacingAtLine(line: number, spacing: number, origin: object) {

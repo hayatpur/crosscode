@@ -11,6 +11,7 @@
         "acorn-walk": "^8.1.1",
         "astring": "^1.7.5",
         "eaz": "^1.0.2",
+        "keystroke-visualizer": "^1.0.1",
         "monaco-editor": "^0.25.2"
     },
     "devDependencies": {

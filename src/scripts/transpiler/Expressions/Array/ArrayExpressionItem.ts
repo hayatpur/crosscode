@@ -34,8 +34,9 @@ export class ArrayExpressionItem extends Node {
                 ...context.outputSpecifier,
                 { type: AccessorType.Index, value: this.index.value as number },
             ],
+            speedMultiplier: Math.sqrt((this.index.value as number) + 1),
         });
-        graph.addVertex(animation);
+        graph.addVertex(animation, this);
 
         return graph;
     }

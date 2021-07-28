@@ -29,7 +29,7 @@ export class ArrayExpression extends Node {
             context.outputSpecifier = [];
         }
 
-        graph.addVertex(new ArrayStartAnimation(context.outputSpecifier));
+        graph.addVertex(new ArrayStartAnimation(context.outputSpecifier), this);
 
         for (let i = 0; i < this.elements.length; i++) {
             const animation = this.elements[i].animation({
@@ -46,7 +46,7 @@ export class ArrayExpression extends Node {
         //     graph.addEdge(new FlowEdge(0, i + 1, this.getData.bind(this)));
         // }
 
-        graph.addVertex(new ArrayEndAnimation());
+        graph.addVertex(new ArrayEndAnimation(), this);
 
         return graph;
     }

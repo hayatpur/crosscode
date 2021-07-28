@@ -10,6 +10,14 @@ export enum AnimationPlayback {
 
 export interface AnimationContext {
     outputSpecifier: Accessor[];
+    speedMultiplier?: number;
+}
+
+export interface AnimationOptions {
+    playback?: AnimationPlayback;
+    delay?: number;
+    duration?: number;
+    speedMultiplier?: number;
 }
 
 export class AnimationNode {
@@ -24,8 +32,9 @@ export class AnimationNode {
     statement: Node;
 
     id: number;
+    speedMultiplier: number;
 
-    constructor(options: { playback?: AnimationPlayback; delay?: number; duration?: number } = {}) {
+    constructor(options: AnimationOptions = {}) {
         this.playback = options.playback;
 
         this.base_delay = options.delay == null ? 10 : options.delay;
@@ -35,6 +44,9 @@ export class AnimationNode {
 
         this.id = AnimationNode.id;
         AnimationNode.id += 1;
+
+        this.speedMultiplier = options.speedMultiplier ?? 1;
+        console.log(this.speedMultiplier);
     }
 
     get delay() {
@@ -42,7 +54,7 @@ export class AnimationNode {
     }
 
     get duration() {
-        return this.base_duration;
+        return this.base_duration * (1 / this.speedMultiplier);
     }
 
     ease(t: number) {

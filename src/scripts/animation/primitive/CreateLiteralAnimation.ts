@@ -1,14 +1,18 @@
-import { Accessor, AccessorType, Data, DataParams, DataType } from '../../environment/Data';
+import { Accessor, AccessorType, Data, DataType } from '../../environment/Data';
 import { Environment } from '../../environment/Environment';
-import { AnimationNode } from './AnimationNode';
+import { AnimationNode, AnimationOptions } from './AnimationNode';
 
 export class CreateLiteralAnimation extends AnimationNode {
     value: string | number | bigint | boolean | RegExp;
     outputSpecifier: Accessor[];
     dataSpecifier: Accessor[];
 
-    constructor(value: string | number | bigint | boolean | RegExp, outputSpecifier: Accessor[]) {
-        super();
+    constructor(
+        value: string | number | bigint | boolean | RegExp,
+        outputSpecifier: Accessor[],
+        options: AnimationOptions = {}
+    ) {
+        super(options);
 
         this.value = value;
         this.outputSpecifier = outputSpecifier;
@@ -24,13 +28,19 @@ export class CreateLiteralAnimation extends AnimationNode {
 
         data.transform.opacity = 0;
 
-        this.dataSpecifier = environment.addDataAt(this.outputSpecifier, data);
+        environment._temps['CreateLiteralAnimation'] = environment.addDataAt(this.outputSpecifier, data);
         // environment.bindVariable('_CreateLiteralAnimation', environment.getMemoryLocation(data).foundLocation);
+
+        const LatestExpression = environment.resolvePath([{ type: AccessorType.Symbol, value: '_LatestExpression' }], {
+            noResolvingId: true,
+        }) as Data;
+        LatestExpression.value = data.id;
     }
 
     seek(environment: Environment, time: number) {
         let t = this.ease(time / this.duration);
-        const data = environment.resolvePath(this.dataSpecifier) as Data;
+        // console.log(environment, environment._temps['CreateLiteralAnimation']);
+        const data = environment.resolvePath(environment._temps['CreateLiteralAnimation']) as Data;
         data.transform.opacity = t;
     }
 

@@ -3,11 +3,18 @@
 import * as ESTree from 'estree';
 import { ArrayExpression } from './Expressions/Array/ArrayExpression';
 import { ArrayExpressionItem } from './Expressions/Array/ArrayExpressionItem';
+import { AssignmentExpression } from './Expressions/BinaryOperations/AssigmentExpression';
+import BinaryExpression from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression';
+import { MemberExpression } from './Expressions/BinaryOperations/MemberExpression';
+import { UpdateExpression } from './Expressions/UpdateExpression';
 import { Identifier } from './Identifier';
 import { Literal } from './Literal';
 import { Node, NodeMeta } from './Node';
-import { MemberExpression } from './Statements/BinaryOperations/MemberExpression';
 import { BlockStatement } from './Statements/BlockStatement';
+import { ExpressionStatement } from './Statements/ExpressionStatement';
+import ForStatement from './Statements/Loops/ForStatement';
+import ForStatementIncrement from './Statements/Loops/ForStatementIncrement';
+import ForStatementIteration from './Statements/Loops/ForStatementIteration';
 import { Program } from './Statements/Program';
 import { VariableDeclaration } from './Statements/VariableDeclaration';
 import { VariableDeclarator } from './Statements/VariableDeclarator';
@@ -18,13 +25,15 @@ export class Transpiler {
             // Declarations
             VariableDeclarator,
             // Binary Operations
-            // AssignmentExpression,
+            BinaryExpression,
+            UpdateExpression,
             // Expressions
             ArrayExpression,
             ArrayExpressionItem,
             MemberExpression,
-            // ExpressionStatement,
+            ExpressionStatement,
             VariableDeclaration,
+            AssignmentExpression,
             // Identifier
             Identifier,
             // Literal
@@ -33,6 +42,9 @@ export class Transpiler {
             Program,
             // Statements
             BlockStatement,
+            ForStatementIteration,
+            ForStatement,
+            ForStatementIncrement,
         };
 
         if (mapping[`${ast.type}`] == null) {

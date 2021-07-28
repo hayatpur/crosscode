@@ -1,10 +1,9 @@
 import { AnimationGraph } from '../animation/graph/AnimationGraph';
 import { Editor } from '../editor/Editor';
-import { Environment } from '../environment/Environment';
 import { Program } from '../transpiler/Statements/Program';
 import { Transpiler } from '../transpiler/Transpiler';
 import { Ticker } from '../utilities/Ticker';
-import { ViewController } from '../view/ViewController';
+import { View } from '../view/View';
 import { Compiler } from './Compiler';
 import { ProgramWorker } from './worker/ProgramWorker';
 
@@ -26,10 +25,9 @@ export class Executor {
     timeControls = null;
 
     // Global speed of the animation (higher is faster)
-    speed = 1 / 8;
+    speed = 1 / 16;
     root: Program;
     animation: AnimationGraph;
-    view: ViewController;
 
     constructor(editor: Editor) {
         // Singleton
@@ -48,10 +46,15 @@ export class Executor {
 
         // Play
         document.addEventListener('keypress', (e) => {
-            if (e.code == 'Space') {
-                console.log(e.code);
+            if (e.key == '`') {
                 this.paused = false;
                 this.playing = true;
+
+                for (const view of View.views) {
+                    view.reset();
+                }
+
+                this.time = 0;
             }
         });
     }
@@ -99,9 +102,9 @@ export class Executor {
         this.animation = this.root.animation();
 
         // View
-        this.view = new ViewController();
+        // this.view = new View();
 
-        console.log(this.view);
+        // console.log(this.view);
 
         // console.log('Finished compiling...');
         // console.log('\tStorage', this.storage);
@@ -115,8 +118,14 @@ export class Executor {
 
         this.time += dt * this.speed;
 
-        this.animation?.seek(this.view.environment, this.time);
-        this.view.update();
+        // Apply animations
+        const environments = View.views.map((view) => view.environment);
+        this.animation?.seek(environments, this.time);
+
+        for (const view of View.views) {
+            view.update();
+        }
+
         // this.timeControls.seek(this.time);
     }
 }

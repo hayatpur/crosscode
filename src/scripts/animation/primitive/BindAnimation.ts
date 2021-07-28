@@ -16,6 +16,7 @@ export class BindAnimation extends AnimationNode {
     }
 
     begin(environment: Environment) {
+        console.log('Getting LatestExpression...');
         const data = environment.resolvePath(this.dataSpecifier) as Data;
         environment.bindVariable(this.identifier, environment.getMemoryLocation(data).foundLocation);
     }

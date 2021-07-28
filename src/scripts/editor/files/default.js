@@ -1,3 +1,3 @@
-let list = [7, 3, 4, 2];
-let n = list.length;
-let temp = 0;
+let x = 0;
+let y = 7;
+x = y;

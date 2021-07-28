@@ -1,6 +1,7 @@
 import { Editor } from './scripts/editor/Editor';
 import { Executor } from './scripts/executor/Executor';
 import { Ticker } from './scripts/utilities/Ticker';
+import { ViewController } from './scripts/view/ViewController';
 import './styles/main.scss';
 
 // @ts-ignore
@@ -26,6 +27,19 @@ function main() {
     const ticker = new Ticker();
     const editor = new Editor();
     const executor = new Executor(editor);
+
+    // View controller
+    const view = new ViewController();
+
+    // const keystrokeVisualizer = new KeystrokeVisualizer();
+    // keystrokeVisualizer.enable();
+
+    // Key visualizer
+
+    // Controls
+    // document.getElementById('play-button').addEventListener('click', () => {
+    //     executor.compile();
+    // });
 }
 
 main();

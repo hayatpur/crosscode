@@ -22,15 +22,6 @@ export class Node {
         return new AnimationGraph(null);
     }
 
-    // Data methods
-    getData(options?: any): Data {
-        console.error('[Node] Get data method not implemented for', this);
-        return new Data({
-            type: null,
-            value: null,
-        });
-    }
-
     reads(options = {}): Set<() => Data> {
         return new Set();
     }

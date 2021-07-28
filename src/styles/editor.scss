@@ -113,3 +113,11 @@
 .view-line {
     transition: 0.2s;
 }
+
+
+.editor-selection {
+    position: absolute;
+    background: #9edbffa4;
+    border-radius: 5px;
+    mix-blend-mode: multiply;
+}
