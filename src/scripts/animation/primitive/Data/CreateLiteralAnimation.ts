@@ -1,6 +1,6 @@
-import { Accessor, AccessorType, Data, DataType } from '../../environment/Data';
-import { Environment } from '../../environment/Environment';
-import { AnimationNode, AnimationOptions } from './AnimationNode';
+import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
+import { Environment } from '../../../environment/Environment';
+import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class CreateLiteralAnimation extends AnimationNode {
     value: string | number | bigint | boolean | RegExp;
@@ -42,9 +42,12 @@ export class CreateLiteralAnimation extends AnimationNode {
         // console.log(environment, environment._temps['CreateLiteralAnimation']);
         const data = environment.resolvePath(environment._temps['CreateLiteralAnimation']) as Data;
         data.transform.opacity = t;
+
+        // console.log(t);
     }
 
     end(environment: Environment) {
+        // console.log('Ending...');
         // const input = view.find(this.inputSpecifier);
         // const output = view.find(this.outputSpecifier);
         // input.type = 'Array';

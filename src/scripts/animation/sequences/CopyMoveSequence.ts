@@ -1,4 +1,5 @@
 import { Accessor, AccessorType } from '../../environment/Data';
+import { Node } from '../../transpiler/Node';
 import CopyDataAnimation from '../primitive/Data/CopyDataAnimation';
 import MoveAnimation from '../primitive/Data/MoveAnimation';
 import PlaceAnimation from '../primitive/Data/PlaceAnimation';
@@ -8,12 +9,13 @@ export class CopyMoveSequence extends AnimationSequence {
     inputSpecifier: Accessor[];
     outputSpecifier: Accessor[];
 
-    constructor(inputSpecifier: Accessor[], outputSpecifier: Accessor[], options = {}) {
-        super(options);
+    constructor(inputSpecifier: Accessor[], outputSpecifier: Accessor[], node: Node, options = {}) {
+        super(node, options);
 
         this.inputSpecifier = inputSpecifier;
         this.outputSpecifier = outputSpecifier;
         this.vertices = this.generateSequence();
+        this.postGenerateSequence();
     }
 
     generateSequence() {

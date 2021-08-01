@@ -19,7 +19,7 @@ export class Identifier extends Node {
     animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
 
-        const move = new CopyMoveSequence(this.getSpecifier(), context.outputSpecifier);
+        const move = new CopyMoveSequence(this.getSpecifier(), context.outputSpecifier, this);
         graph.addVertex(move, this);
 
         return graph;

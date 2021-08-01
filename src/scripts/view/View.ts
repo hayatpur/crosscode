@@ -108,7 +108,7 @@ export class View {
     }
 
     update() {
-        this.history.push(this.environment.copy());
+        // this.history.push(this.environment.copy());
         this.renderer.setState(this.environment);
     }
 

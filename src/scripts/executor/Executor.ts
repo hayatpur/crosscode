@@ -1,5 +1,6 @@
 import { AnimationGraph } from '../animation/graph/AnimationGraph';
 import { Editor } from '../editor/Editor';
+import { Environment } from '../environment/Environment';
 import { Program } from '../transpiler/Statements/Program';
 import { Transpiler } from '../transpiler/Transpiler';
 import { Ticker } from '../utilities/Ticker';
@@ -25,13 +26,18 @@ export class Executor {
     timeControls = null;
 
     // Global speed of the animation (higher is faster)
-    speed = 1 / 16;
+    speed = 1 / 2;
     root: Program;
     animation: AnimationGraph;
+
+    _time: number = 0;
 
     constructor(editor: Editor) {
         // Singleton
         Executor.instance = this;
+
+        this._time = performance.now();
+        console.log(`[${this._time.toFixed(4)}ms] Starting executor...`);
 
         // General
         this.editor = editor;
@@ -47,6 +53,7 @@ export class Executor {
         // Play
         document.addEventListener('keypress', (e) => {
             if (e.key == '`') {
+                console.clear();
                 this.paused = false;
                 this.playing = true;
 
@@ -64,9 +71,15 @@ export class Executor {
     }
 
     execute() {
+        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Calling execute()...`);
+        this._time = performance.now();
+
         // Compile user code
         const text = this.editor.getValue();
         const compiled = Compiler.compile(text);
+
+        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Compiled code...`);
+        this._time = performance.now();
 
         if (compiled.status == 'error') {
             console.error(compiled.data);
@@ -80,10 +93,16 @@ export class Executor {
     }
 
     onWorkerFinish() {
+        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Worker finished...`);
+        this._time = performance.now();
+
         const { storage, errors, logs } = this.worker.data;
 
         // Reset visualization
         this.reset();
+
+        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Reset visualization...`);
+        this._time = performance.now();
 
         // Handle errors
         if (errors.length > 0) {
@@ -91,15 +110,32 @@ export class Executor {
             return;
         }
 
-        console.log(storage);
+        // console.log(storage);
 
         // Transpile program
         this.root = Transpiler.transpileFromStorage(storage);
 
-        console.log(this.root);
+        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Root tree generated...`);
+        this._time = performance.now();
+
+        // console.log(this.root);
 
         // Animation
         this.animation = this.root.animation();
+
+        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Root animation generated...`);
+        this._time = performance.now();
+
+        // Baking
+        this.animation.seek([new Environment()], this.animation.duration, { baking: true, indent: 0 });
+
+        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Root animation baked...`);
+        this._time = performance.now();
+
+        // View.create({
+        //     position: { x: 600, y: 150 },
+        //     validLines: { min: 0, max: Math.max(...storage.map((item) => item.line)) },
+        // });
 
         // View
         // this.view = new View();
@@ -114,7 +150,7 @@ export class Executor {
 
     tick(dt: number = 0) {
         if (this.animation == null) return;
-        if ((dt > 0 && this.paused) || this.time + dt * this.speed > this.animation.duration) return;
+        if ((dt > 0 && this.paused) || this.time > this.animation.duration) return;
 
         this.time += dt * this.speed;
 

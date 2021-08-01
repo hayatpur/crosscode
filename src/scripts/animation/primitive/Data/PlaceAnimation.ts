@@ -1,30 +1,40 @@
-import { Accessor, Data } from '../../../environment/Data';
+import { Accessor, AccessorType, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationNode } from '../AnimationNode';
+import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class PlaceAnimation extends AnimationNode {
     inputSpecifier: Accessor[];
     outputSpecifier: Accessor[];
 
-    constructor(inputSpecifier: Accessor[], outputSpecifier: Accessor[]) {
-        super();
+    constructor(inputSpecifier: Accessor[], outputSpecifier: Accessor[], options: AnimationOptions = {}) {
+        super(options);
         this.inputSpecifier = inputSpecifier;
         this.outputSpecifier = outputSpecifier;
     }
 
     begin(environment: Environment) {
         const input = environment.resolvePath(this.inputSpecifier) as Data;
-        // environment.removeAt(environment.getMemoryLocation(input).foundLocation);
-
         const to = environment.resolvePath(this.outputSpecifier) as Data;
 
-        const loc = environment.getMemoryLocation(to).foundLocation;
+        let loc: Accessor[];
 
-        to.value = input.value;
+        const LatestExpression = environment.resolvePath([{ type: AccessorType.Symbol, value: '_LatestExpression' }], {
+            noResolvingId: true,
+        }) as Data;
 
-        console.log(environment);
+        if (to instanceof Environment) {
+            environment.removeAt(environment.getMemoryLocation(input).foundLocation);
+            loc = environment.addDataAt([], input);
+            LatestExpression.value = input.id;
+        } else {
+            // Remove the copy
+            environment.removeAt(environment.getMemoryLocation(input).foundLocation);
+            loc = environment.getMemoryLocation(to).foundLocation;
+            to.value = input.value;
+            LatestExpression.value = to.id;
+        }
 
-        // input.transform.floating = false;
+        input.transform.floating = false;
     }
 
     seek(environment: Environment, time: number) {}

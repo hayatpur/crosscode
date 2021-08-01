@@ -11,6 +11,7 @@ import { Identifier } from './Identifier';
 import { Literal } from './Literal';
 import { Node, NodeMeta } from './Node';
 import { BlockStatement } from './Statements/BlockStatement';
+import IfStatement from './Statements/Choice/IfStatement';
 import { ExpressionStatement } from './Statements/ExpressionStatement';
 import ForStatement from './Statements/Loops/ForStatement';
 import ForStatementIncrement from './Statements/Loops/ForStatementIncrement';
@@ -45,6 +46,8 @@ export class Transpiler {
             ForStatementIteration,
             ForStatement,
             ForStatementIncrement,
+
+            IfStatement,
         };
 
         if (mapping[`${ast.type}`] == null) {

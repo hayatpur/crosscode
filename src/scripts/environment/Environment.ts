@@ -3,25 +3,79 @@ import { AnimationNode } from '../animation/primitive/AnimationNode';
 import { Accessor, AccessorType, Data, DataType } from './Data';
 
 export class Environment {
-    bindings: { [name: string]: Accessor[] };
-    memory: Data[];
+    bindingFrames: { [name: string]: Accessor[] }[];
+    memory: (Data | null)[];
     _temps: any = {};
-    validLines: { max: number; min: number };
+    validLines: { max: number; min: number } = { max: Infinity, min: -Infinity };
 
     constructor() {
-        this.bindings = {
-            _ArrayExpression: [{ type: AccessorType.Index, value: 0 }],
-            _LatestExpression: [{ type: AccessorType.Index, value: 1 }],
-        };
+        this.bindingFrames = [
+            {
+                _ArrayExpression: [{ type: AccessorType.Index, value: 0 }],
+                _LatestExpression: [{ type: AccessorType.Index, value: 1 }],
+            },
+        ];
 
         this.memory = [new Data({ type: DataType.ID }), new Data({ type: DataType.ID })];
     }
 
+    createScope() {
+        this.bindingFrames.push({});
+    }
+
+    popScope() {
+        const frame = this.bindingFrames.length;
+        for (let i = this.memory.length - 1; i >= 0; i--) {
+            if (this.memory[i] == null) continue;
+            // TODO: Nested structures
+            if (this.memory[i].frame == frame) {
+                this.memory[i] = null;
+            }
+        }
+        return this.bindingFrames.pop();
+    }
+
+    /**
+     * Bind new variable
+     */
+    declare(name: string, location: Accessor[]) {
+        this.bindingFrames[this.bindingFrames.length - 1][name] = location;
+        this.updateLayout();
+    }
+
+    /**
+     * Re-assign existing variable
+     */
+    redeclare(name: string, location: Accessor[]) {
+        for (let i = this.bindingFrames.length - 1; i >= 0; i--) {
+            let scope = this.bindingFrames[i];
+
+            if (name in scope) {
+                scope[name] = location;
+                return;
+            }
+        }
+        this.updateLayout();
+    }
+
+    /**
+     * Lookup existing variable
+     */
+    lookup(name: string) {
+        for (let i = this.bindingFrames.length - 1; i >= 0; i--) {
+            let scope = this.bindingFrames[i];
+            if (name in scope) {
+                return scope[name];
+            }
+        }
+    }
+
     copy() {
         const copy = new Environment();
-        copy.bindings = JSON.parse(JSON.stringify(this.bindings));
+        copy.bindingFrames = JSON.parse(JSON.stringify(this.bindingFrames));
         copy.memory = this.memory.map((data) => (data ? data.copy() : null));
         copy._temps = JSON.parse(JSON.stringify(this._temps));
+
         copy.validLines = JSON.parse(JSON.stringify(this.validLines));
 
         return copy;
@@ -41,11 +95,6 @@ export class Environment {
     }
 
     isValid(animation: AnimationGraph | AnimationNode): boolean {
-        // return false;
-        if (this.validLines == null) {
-            return true;
-        }
-
         if (animation instanceof AnimationGraph && animation.node != null) {
             const line = animation.node.meta.line;
             return line >= this.validLines.min && line <= this.validLines.max;
@@ -53,8 +102,7 @@ export class Environment {
             const line = animation.statement.meta.line;
             return line >= this.validLines.min && line <= this.validLines.max;
         }
-        // return true;
-
+        console.error('No animation node or statement found!', animation);
         return true;
     }
 
@@ -89,6 +137,7 @@ export class Environment {
         }
 
         for (let i = 0; i < search.length; i++) {
+            if (search[i] == null) continue;
             if (search[i].transform.floating) continue;
 
             search[i].transform.x = position.x;
@@ -124,6 +173,7 @@ export class Environment {
 
             while (search.length > 0) {
                 const data = search.shift();
+                if (data == null) continue;
 
                 if (data.id == accessor.value) {
                     return data;
@@ -134,7 +184,7 @@ export class Environment {
 
             return null;
         } else if (accessor.type == AccessorType.Symbol) {
-            const accessors = this.bindings[accessor.value];
+            const accessors = this.lookup(accessor.value as string);
             return this.resolvePath(accessors, _options);
         } else if (accessor.type == AccessorType.Index) {
             let data: Data = this.memory[accessor.value];
@@ -159,16 +209,13 @@ export class Environment {
         // console.log('resolvePath', path);
 
         let resolution = this.resolve(path[0], _options);
-
-        if (resolution == null) {
-            return null;
-        }
-
         return resolution.resolvePath(path.slice(1));
     }
 
     addDataAt(path: Accessor[], data: Data): Accessor[] {
-        console.log('Adding data at', JSON.parse(JSON.stringify(path)), JSON.parse(JSON.stringify(data)));
+        // console.log('Adding data at', JSON.parse(JSON.stringify(path)), JSON.parse(JSON.stringify(data)));
+
+        data.frame = this.bindingFrames.length;
 
         // No path specified, push it into memory
         if (path.length == 0) {
@@ -196,11 +243,6 @@ export class Environment {
         return path;
     }
 
-    bindVariable(identifier: string, specifier: Accessor[]) {
-        this.bindings[identifier] = specifier;
-        this.updateLayout();
-    }
-
     getMemoryLocation(
         data: Data,
         location: Accessor[] = [],
@@ -217,6 +259,8 @@ export class Environment {
         }
 
         for (let i = 0; i < search.length; i++) {
+            if (search[i] == null) continue;
+
             // Check if this item is the data
             if (search[i].id == data.id) {
                 return { found: true, foundLocation: [...location, { type: AccessorType.Index, value: i }] };

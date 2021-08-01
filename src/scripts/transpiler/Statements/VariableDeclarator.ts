@@ -1,7 +1,7 @@
 import * as ESTree from 'estree';
 import { AnimationGraph } from '../../animation/graph/AnimationGraph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
-import { BindAnimation } from '../../animation/primitive/BindAnimation';
+import { BindAnimation } from '../../animation/primitive/Binding/BindAnimation';
 import { AccessorType } from '../../environment/Data';
 import { Identifier } from '../Identifier';
 import { Node, NodeMeta } from '../Node';

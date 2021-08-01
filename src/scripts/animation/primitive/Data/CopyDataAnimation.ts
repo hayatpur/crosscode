@@ -1,12 +1,12 @@
 import { Accessor, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationNode } from '../AnimationNode';
+import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class CopyDataAnimation extends AnimationNode {
     dataSpecifier: Accessor[];
 
-    constructor(dataSpecifier: Accessor[]) {
-        super();
+    constructor(dataSpecifier: Accessor[], options: AnimationOptions = {}) {
+        super(options);
         this.dataSpecifier = dataSpecifier;
     }
 
@@ -16,7 +16,7 @@ export default class CopyDataAnimation extends AnimationNode {
         copy.transform.floating = true;
 
         const location = environment.addDataAt([], copy);
-        environment.bindVariable('_CopyDataAnimation', location);
+        environment.declare('_CopyDataAnimation', location);
     }
 
     seek(environment: Environment, time: number) {}

@@ -92,7 +92,7 @@ export class ViewRenderer {
             this.element.append(element);
         }
 
-        // Make sure there are enough data elements
+        // Make sure there aren't too many data elements
         while (this.dataElements.length > memory.length) {
             // Remove element
             const el = this.dataElements.pop();
@@ -141,7 +141,12 @@ export class ViewRenderer {
         // this.identifierElements.forEach((el) => el.remove());
         // this.identifierElements = [];
 
-        let bindings = Object.entries(environment.bindings);
+        let bindings = [];
+        for (const scope of environment.bindingFrames) {
+            for (const binding of Object.entries(scope)) {
+                bindings.push(binding);
+            }
+        }
         bindings = bindings.filter((item) => !item[0].startsWith('_'));
 
         // Make sure there are enough identifier elements
@@ -154,9 +159,14 @@ export class ViewRenderer {
             this.element.append(element);
         }
 
+        // Make sure there aren't too many data elements
+        while (this.identifierElements.length > bindings.length) {
+            // Remove element
+            const el = this.identifierElements.pop();
+            el.remove();
+        }
+
         // Setup identifiers
-        // console.log(bindings);
-        // console.log(environment.bindings);
         for (let i = 0; i < bindings.length; i++) {
             const [identifier, path] = bindings[i];
 

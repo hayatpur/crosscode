@@ -1,6 +1,8 @@
 import * as ESTree from 'estree';
 import { AnimationGraph } from '../../animation/graph/AnimationGraph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
+import CreateScopeAnimation from '../../animation/primitive/Scope/CreateScopeAnimation';
+import PopScopeAnimation from '../../animation/primitive/Scope/PopScopeAnimation';
 import { Node, NodeMeta } from '../Node';
 
 /**
@@ -34,10 +36,13 @@ export class BlockStatement extends Node {
 
     animation(context: AnimationContext): AnimationGraph {
         const animation = new AnimationGraph(this);
+        animation.addVertex(new CreateScopeAnimation());
 
         for (const statement of this.statements) {
             animation.addVertex(statement.animation(context), statement);
         }
+
+        animation.addVertex(new PopScopeAnimation());
 
         return animation;
     }

@@ -4,8 +4,8 @@ import { Environment } from '../../environment/Environment';
 import { Node } from '../../transpiler/Node';
 
 export enum AnimationPlayback {
-    Normal,
-    WithPrevious,
+    Normal = 'Normal',
+    WithPrevious = 'WithPrevious',
 }
 
 export interface AnimationContext {
@@ -45,8 +45,7 @@ export class AnimationNode {
         this.id = AnimationNode.id;
         AnimationNode.id += 1;
 
-        this.speedMultiplier = options.speedMultiplier ?? 1;
-        console.log(this.speedMultiplier);
+        this.speedMultiplier = 1;
     }
 
     get delay() {

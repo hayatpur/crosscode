@@ -1,13 +1,13 @@
-import { Accessor, Data } from '../../environment/Data';
-import { Environment } from '../../environment/Environment';
-import { AnimationNode } from './AnimationNode';
+import { Accessor, Data } from '../../../environment/Data';
+import { Environment } from '../../../environment/Environment';
+import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class BindAnimation extends AnimationNode {
     identifier: string;
     dataSpecifier: Accessor[];
 
-    constructor(identifier: string, dataSpecifier: Accessor[]) {
-        super();
+    constructor(identifier: string, dataSpecifier: Accessor[], options: AnimationOptions = {}) {
+        super(options);
 
         this.identifier = identifier;
         this.dataSpecifier = dataSpecifier;
@@ -16,9 +16,8 @@ export class BindAnimation extends AnimationNode {
     }
 
     begin(environment: Environment) {
-        console.log('Getting LatestExpression...');
         const data = environment.resolvePath(this.dataSpecifier) as Data;
-        environment.bindVariable(this.identifier, environment.getMemoryLocation(data).foundLocation);
+        environment.declare(this.identifier, environment.getMemoryLocation(data).foundLocation);
     }
 
     seek(environment: Environment, time: number) {}

@@ -10,7 +10,9 @@
         "acorn": "^8.4.1",
         "acorn-walk": "^8.1.1",
         "astring": "^1.7.5",
+        "chalk": "^4.1.1",
         "eaz": "^1.0.2",
+        "hagen": "^1.5.2",
         "keystroke-visualizer": "^1.0.1",
         "monaco-editor": "^0.25.2"
     },

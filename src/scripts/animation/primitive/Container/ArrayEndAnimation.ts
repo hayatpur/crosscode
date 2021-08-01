@@ -1,10 +1,10 @@
 import { AccessorType, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationNode } from '../AnimationNode';
+import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class ArrayEndAnimation extends AnimationNode {
-    constructor() {
-        super();
+    constructor(options: AnimationOptions = {}) {
+        super(options);
 
         this.base_duration = 5;
     }

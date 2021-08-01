@@ -1,12 +1,12 @@
 import { Accessor, AccessorType, Data, DataParams, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationNode } from '../AnimationNode';
+import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class ArrayStartAnimation extends AnimationNode {
     outputSpecifier: Accessor[];
 
-    constructor(outputSpecifier: Accessor[]) {
-        super();
+    constructor(outputSpecifier: Accessor[], options: AnimationOptions = {}) {
+        super(options);
 
         this.outputSpecifier = outputSpecifier;
         this.base_duration = 5;

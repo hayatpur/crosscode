@@ -1,3 +1,5 @@
-let x = 0;
-let y = 7;
-x = y;
+let x = 5;
+
+let y = 1;
+
+let z = y;

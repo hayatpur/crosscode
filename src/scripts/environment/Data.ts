@@ -1,13 +1,13 @@
 export enum DataType {
-    Number,
-    Array,
-    ID,
+    Number = 'Number',
+    Array = 'Array',
+    ID = 'ID',
 }
 
 export enum AccessorType {
-    ID,
-    Symbol,
-    Index,
+    ID = 'ID',
+    Symbol = 'Symbol',
+    Index = 'Index',
 }
 
 export interface Accessor {
@@ -44,6 +44,9 @@ export class Data {
 
     // Value
     value: string | boolean | Number | Data[];
+
+    // Binding frame
+    frame: number = -1;
 
     // Automatically assigns props as attribute to data
     constructor(props: DataParams) {
@@ -90,7 +93,7 @@ export class Data {
     }
 
     addDataAt(path: Accessor[], data: Data) {
-        console.log('Adding data to data at', JSON.parse(JSON.stringify(path)), JSON.parse(JSON.stringify(data)));
+        // console.log('Adding data to data at', JSON.parse(JSON.stringify(path)), JSON.parse(JSON.stringify(data)));
 
         if (this.type != DataType.Array) console.error('[Data] Invalid addAt, trying to add to a non-addable type');
 

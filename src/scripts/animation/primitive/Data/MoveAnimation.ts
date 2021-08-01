@@ -1,33 +1,44 @@
-import { Accessor, Data } from '../../../environment/Data';
+import { Accessor, Data, DataType, Transform } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationNode } from '../AnimationNode';
-import { DataMovementPath } from '../DataMovementPath';
+import { DataMovementPath } from '../../../utilities/DataMovementPath';
+import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class MoveAnimation extends AnimationNode {
     inputSpecifier: Accessor[];
     outputSpecifier: Accessor[];
 
-    constructor(inputSpecifier: Accessor[], outputSpecifier: Accessor[]) {
-        super({ duration: 80 });
+    constructor(inputSpecifier: Accessor[], outputSpecifier: Accessor[], options: AnimationOptions = {}) {
+        super({ ...options, duration: 80 });
 
         this.inputSpecifier = inputSpecifier;
         this.outputSpecifier = outputSpecifier;
     }
 
     begin(environment: Environment) {
+        // console.log(this.inputSpecifier);
         const move = environment.resolvePath(this.inputSpecifier) as Data;
-        const to = environment.resolvePath(this.outputSpecifier) as Data;
+        const to = environment.resolvePath(this.outputSpecifier);
 
-        // TODO: If destination is the same as the current location
+        let end_transform: Transform;
 
-        // End position
-        const end_transform = { ...to.transform };
+        if (to instanceof Environment) {
+            // Then it doesn't have a place yet
+            const placeholder = new Data({ type: DataType.ID, value: '_MoveAnimationPlaceholder' });
+            const placeholderLocation = environment.addDataAt([], placeholder);
+
+            environment.updateLayout();
+            end_transform = { ...placeholder.transform };
+
+            environment.removeAt(placeholderLocation);
+        } else {
+            end_transform = { ...to.transform };
+        }
 
         // Start position
         const start_transform = { ...move.transform };
 
         // Create a movement path to translate the floating container along
-        environment.updateLayout();
+
         const path = new DataMovementPath(start_transform, end_transform);
         path.seek(0);
 

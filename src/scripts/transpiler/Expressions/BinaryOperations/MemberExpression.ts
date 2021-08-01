@@ -49,9 +49,7 @@ export class MemberExpression extends Node {
         const graph = new AnimationGraph(this, { shouldDissolve: true });
 
         if (this.computed) {
-            const anim = new CopyMoveSequence(this.getSpecifier(), context.outputSpecifier, {
-                node: this,
-            });
+            const anim = new CopyMoveSequence(this.getSpecifier(), context.outputSpecifier, this);
             graph.addVertex(anim, this);
         } else {
             const anim = this.property.animation(context);

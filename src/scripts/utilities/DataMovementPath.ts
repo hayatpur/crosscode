@@ -1,4 +1,4 @@
-import { Transform } from '../../environment/Data';
+import { Transform } from '../environment/Data';
 
 export class DataMovementPath {
     start: Transform;
@@ -32,7 +32,7 @@ export class DataMovementPath {
     seek(t: number) {
         let start = { x: this.start.x, y: this.start.y };
         let end = { x: this.end.x, y: this.end.y };
-        let mid = { x: (this.start.x + this.start.y) / 2, y: (this.start.y + this.end.y) / 2 };
+        let mid = { x: (this.start.x + this.end.x) / 2, y: (this.start.y + this.end.y) / 2 };
 
         // Convex
         let convex = start.x < end.x;
