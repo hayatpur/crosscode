@@ -14,7 +14,8 @@
         "eaz": "^1.0.2",
         "hagen": "^1.5.2",
         "keystroke-visualizer": "^1.0.1",
-        "monaco-editor": "^0.25.2"
+        "monaco-editor": "^0.25.2",
+        "nomnoml": "^1.4.0"
     },
     "devDependencies": {
         "css-loader": "^5.2.6",

@@ -86,6 +86,13 @@ class Environment {
 }
 
 
+let z = 5; // reads: [], writes: [z]
+let y = [z, 2, 3]; // reads: [z], writes: [y_0, y_2, y_3, y]
+let temp = y[0]; // reads: [y_0], writes: [temp]
+
+
+[z, 2, 3] // ['z', y_2, y_3]
+
 
 ```
 
@@ -96,3 +103,69 @@ Access into memory
 
 Access into data
 (1) index (i.e. 0)
+
+```javascript
+// Examples
+
+let left = [1, 4, 5];
+let right = [1, 2, 3];
+let arr = [];
+
+// Break out of loop if any one of the array gets empty
+while (left.length && right.length) {
+    // Pick the smaller among the smallest element of left and right sub arrays
+    if (left[0] < right[0]) {
+        arr.push(left.shift());
+    } else {
+        arr.push(right.shift());
+    }
+}
+
+// Concatenating the leftover elements
+// (in case we didn't go through the entire left or right array)
+let z = [...arr, ...left, ...right];
+
+
+```
+---
+```javascript
+
+function push(O, item) {
+    let len = O.length;
+    O[len] = item;
+}
+
+let left = [1, 4, 5];
+{
+  O = left;
+  item = 5;
+
+  let len = O.length;
+  O[len] = item;
+}
+
+
+```
+
+```javascript 
+function push(O, item) {
+    let len = O.length;
+    O[len] = item;
+}
+
+function pushn(O, n, item) {
+    for (let i = 0; i < n; i++) {
+        push(O, item);
+    }
+}
+
+let left = [1, 4, 5];
+let y = 5;
+pushn(left, 5, y);
+```
+
+
+> diff([1, 7, 2, 4]);
+6
+> diff([]);
+0

@@ -1,0 +1,45 @@
+.animation-controller-list {}
+
+.animation-controller-list.root {
+    position: absolute;
+    left: 800px;
+    top: 100px;
+    transform: scale(0.7);
+    top: -200px;
+}
+
+.animation-controller-label {
+    width: fit-content;
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #00000029;
+    opacity: 0.5;
+    background: #00000012;
+    border-radius: 5px;
+    transition: 0.2s;
+}
+
+.animation-controller-label:hover {
+    opacity: 1;
+}
+
+.animation-controller-label.hovered {
+    opacity: 1;
+}
+
+.animation-controller-item {
+    list-style: none;
+}
+
+.hover-boundary {
+    position: absolute;
+    // border: 1px solid rgba(0, 0, 0, 0.308);
+    transition: 0.2s;
+    border-radius: 5px;
+
+    position: absolute;
+
+    background: #c1e0ff;
+    mix-blend-mode: multiply;
+    z-index: 10;
+}

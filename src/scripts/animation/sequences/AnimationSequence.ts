@@ -1,23 +1,22 @@
-import { Node } from '../../transpiler/Node';
-import { AnimationGraph } from '../graph/AnimationGraph';
+import { Node } from '../../transpiler/Node'
+import { AnimationGraph } from '../graph/AnimationGraph'
 
 export default class AnimationSequence extends AnimationGraph {
     constructor(node: Node, options = {}) {
-        super(node, { ...options, isSequence: true });
-        this.edges = [];
+        super(node, { ...options, isSequence: true })
+        this.edges = []
     }
 
     computeEdges() {
-        this.edges = [];
+        this.edges = []
     }
 
     generateSequence() {
-        return [];
+        return []
     }
 
     postGenerateSequence() {
-        console.log(this.node);
-        this.vertices.forEach((vertex) => (vertex.statement = this.node));
+        this.vertices.forEach((vertex) => (vertex.statement = this.node))
     }
 
     dissolve(options = {}) {}
