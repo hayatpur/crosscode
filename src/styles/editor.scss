@@ -123,14 +123,14 @@
 }
 
 #errors {
-    font-family: Ubuntu Mono;
-    background: #f3b3b3;
+    font-family: Fira Mono;
     border-radius: 10px;
     padding: 10px;
     position: absolute;
     top: 50px;
-    left: 155px;
+    left: 177px;
     display: none;
+    color: #d86f64;
 }
 
 #errors.active {

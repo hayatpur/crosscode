@@ -8,7 +8,7 @@ export class Program extends BlockStatement {
         super(ast, { index: 0, states: { prev: [], current: [], next: [] }, line: 0, path: [] });
     }
 
-    animation(context: AnimationContext = { outputSpecifier: [] }): AnimationGraph {
+    animation(context: AnimationContext = { outputSpecifier: [], xOff: 0 }): AnimationGraph {
         const animation = new AnimationGraph(this);
 
         for (const statement of this.statements) {

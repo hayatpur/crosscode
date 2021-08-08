@@ -1,4 +1,4 @@
-import { Accessor, AccessorType, Data, DataParams, DataType } from '../../../environment/Data';
+import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
@@ -13,23 +13,17 @@ export class ArrayStartAnimation extends AnimationNode {
     }
 
     begin(environment: Environment) {
-        const params: DataParams = {
-            type: DataType.Array,
-            value: [],
-        };
+        const output = environment.resolvePath(this.outputSpecifier) as Data;
+        output.type = DataType.Array;
+        output.value = [];
 
-        const data = new Data(params);
-        environment.addDataAt(this.outputSpecifier, data);
-
-        const LatestExpression = environment.resolvePath([{ type: AccessorType.Symbol, value: '_LatestExpression' }], {
-            noResolvingId: true,
-        }) as Data;
-        LatestExpression.value = data.id;
+        // const data = new Data(params)
+        // environment.addDataAt(this.outputSpecifier, data)
 
         const ArrayExpression = environment.resolvePath([{ type: AccessorType.Symbol, value: '_ArrayExpression' }], {
             noResolvingId: true,
         }) as Data;
-        ArrayExpression.value = data.id;
+        ArrayExpression.value = output.id;
     }
 
     seek(environment: Environment, time: number) {}

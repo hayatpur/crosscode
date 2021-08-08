@@ -2,7 +2,6 @@ import * as ESTree from 'estree'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
 import { AnimationContext } from '../animation/primitive/AnimationNode'
 import CopyDataAnimation from '../animation/primitive/Data/CopyDataAnimation'
-import FloatAnimation from '../animation/primitive/Data/FloatAnimation'
 import { AccessorType } from '../environment/Data'
 import { Node, NodeMeta } from './Node'
 
@@ -25,8 +24,8 @@ export class Identifier extends Node {
         graph.addVertex(copy, this)
 
         // Float it up
-        const float = new FloatAnimation(this.getSpecifier())
-        graph.addVertex(float, this)
+        // const float = new FloatAnimation(this.getSpecifier())
+        // graph.addVertex(float, this)
 
         return graph
     }

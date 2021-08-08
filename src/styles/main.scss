@@ -2,6 +2,8 @@
 @import 'view';
 @import "animation-controller";
 @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap');
+
 
 :root {
     --color-lightest: white;
@@ -17,7 +19,7 @@ body {
     margin: 0px;
     height: 100%;
     font-family: Source Sans Pro;
-    // overflow: hidden;
+    overflow: hidden;
     background: white;
 }
 

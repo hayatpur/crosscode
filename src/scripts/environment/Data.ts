@@ -1,5 +1,5 @@
 export enum DataType {
-    Number = 'Number',
+    Literal = 'Literal',
     Array = 'Array',
     ID = 'ID',
 }
@@ -54,7 +54,7 @@ export class Data {
         this.transform = props.transform ?? { x: 0, y: 0, z: 0, width: 0, height: 0, floating: false, opacity: 1 }
         this.value = props.value
 
-        if (this.type == DataType.Number) {
+        if (this.type == DataType.Literal) {
             this.transform.width = 35
             this.transform.height = 35
         }
@@ -90,8 +90,12 @@ export class Data {
 
         if (accessor.type == AccessorType.Index) {
             if (accessor.value >= this.value.length) {
-                this.value[accessor.value] = new Data({ type: DataType.Number })
+                this.value[accessor.value] = new Data({ type: DataType.Literal })
                 this.value[accessor.value].frame = this.frame
+            }
+
+            if (accessor.value < 0) {
+                return this.value[this.value.length + (accessor.value as number)]
             }
 
             return this.value[accessor.value]
@@ -113,6 +117,12 @@ export class Data {
         // console.log('Adding data to data at', JSON.parse(JSON.stringify(path)), JSON.parse(JSON.stringify(data)));
 
         if (this.type != DataType.Array) console.error('[Data] Invalid addAt, trying to add to a non-addable type')
+
+        // No path specified, push it into memory
+        if (path.length == 0) {
+            ;(this.value as Data[]).push(data)
+            return
+        }
 
         const parentPath = path.slice(0, -1)
         const parent = this.resolvePath(parentPath)
