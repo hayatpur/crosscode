@@ -21,7 +21,8 @@ export class CreateLiteralAnimation extends AnimationNode {
         this.base_duration = 30;
     }
 
-    begin(environment: Environment) {
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
         const data = new Data({
             type: DataType.Literal,
             value: this.value as number | string | boolean,

@@ -21,7 +21,7 @@ export class AssignmentExpression extends Node {
     }
 
     animation(context: AnimationContext) {
-        const graph = new AnimationGraph(this, { shouldDissolve: true });
+        const graph = new AnimationGraph(this);
 
         const outputSpecifier =
             this.left instanceof MemberExpression ? this.left.getSpecifier() : (this.left as Identifier).getSpecifier();

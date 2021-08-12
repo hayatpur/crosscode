@@ -4,8 +4,9 @@
     position: absolute;
     left: 800px;
     top: 100px;
-    transform: scale(0.7);
-    top: -200px;
+    transform-origin: top center;
+    transform: scale(0.5);
+    display: none;
 }
 
 .animation-controller-label {
@@ -34,7 +35,7 @@
 .hover-boundary {
     position: absolute;
     // border: 1px solid rgba(0, 0, 0, 0.308);
-    transition: 0.2s;
+    transition: ease 0.2s;
     border-radius: 5px;
 
     position: absolute;
@@ -42,4 +43,8 @@
     background: #c1e0ff;
     mix-blend-mode: multiply;
     z-index: 10;
+}
+
+.hover-boundary.changing-content {
+    opacity: 0 !important;
 }

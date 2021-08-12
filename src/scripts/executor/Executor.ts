@@ -1,12 +1,12 @@
-import { AnimationController } from '../animation/AnimationController';
+import { Cursor } from '../animation/Cursor';
 import { AnimationGraph } from '../animation/graph/AnimationGraph';
+import { AnimationNode } from '../animation/primitive/AnimationNode';
 import { Editor } from '../editor/Editor';
 import { Environment } from '../environment/Environment';
 import { Program } from '../transpiler/Statements/Program';
 import { Transpiler } from '../transpiler/Transpiler';
 import { Ticker } from '../utilities/Ticker';
 import { View } from '../view/View';
-import { ViewLayoutController } from '../view/ViewLayoutController';
 import { Compiler } from './Compiler';
 import { ProgramWorker } from './worker/ProgramWorker';
 
@@ -23,35 +23,31 @@ export class Executor {
     // Web worker to enable parallel execution
     worker: ProgramWorker = null;
 
-    // Timeline visual
-    timeControls = null;
-
     // Global speed of the animation (higher is faster)
     speed = 1 / 16;
+
+    // Animation
     root: Program;
     animation: AnimationGraph;
 
-    _time: number = 0;
-    animationController: AnimationController;
-    layout: ViewLayoutController;
+    view: View;
+    cursor: Cursor;
 
     constructor(editor: Editor) {
         // Singleton
         Executor.instance = this;
 
-        this._time = performance.now();
-        console.log(`[${this._time.toFixed(4)}ms] Starting executor...`);
-
         // General
         this.editor = editor;
-        // this.editor.onChangeContent.add(() => this.execute())
 
-        // Update after 5s of no keyboard activity
+        // Update after 0.5s of no keyboard activity
         let typingTimer: number;
         this.editor.onChangeContent.add(() => {
             this.paused = true;
+            document.body.querySelector(`.view-element.root`)?.classList.add('changing-content');
+            document.body.querySelector(`.hover-boundary`)?.classList.add('changing-content');
             clearTimeout(typingTimer);
-            typingTimer = setTimeout(this.execute.bind(this), 100);
+            typingTimer = setTimeout(this.execute.bind(this), 500);
         });
 
         // Execution
@@ -62,44 +58,35 @@ export class Executor {
         Ticker.instance.registerTick(this.tick.bind(this));
 
         // Play
-        document.addEventListener('keypress', (e) => {
-            if (e.key == '`') {
-                console.clear();
-                this.paused = false;
+        // document.addEventListener('keypress', (e) => {
+        //     if (e.key == '`') {
+        //         this.paused = false;
 
-                for (const view of View.views) {
-                    view.reset();
-                }
+        //         View.reset();
+        //         View.views.forEach((view) => {
+        //             view.animation.hasPlayed = false;
+        //             view.animation.playing = false;
+        //         });
 
-                this.time = 0;
-            }
-        });
+        //         this.time = 0;
+        //     }
+        // });
     }
 
     reset() {
-        View.destroy();
-        this.animationController?.destroy();
-        this.animationController = undefined;
         this.time = 0;
+
+        this.view?.destroy();
+        this.view = undefined;
     }
 
     execute() {
-        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Calling execute()...`);
-        this._time = performance.now();
-
         // Compile user code
         const text = this.editor.getValue();
         const compiled = Compiler.compile(text);
 
-        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Compiled code...`);
-        this._time = performance.now();
-
         if (compiled.status == 'error') {
-            document.getElementById('errors').innerText = compiled.data.toString().split('\n')[0];
-            document.getElementById('errors').classList.add('active');
             return;
-        } else {
-            document.getElementById('errors').classList.remove('active');
         }
 
         const { code } = compiled.data;
@@ -109,89 +96,62 @@ export class Executor {
     }
 
     onWorkerFinish() {
-        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Worker finished...`);
-        this._time = performance.now();
-
         const { storage, errors, logs } = this.worker.data;
 
         // Reset visualization
         this.reset();
 
-        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Reset visualization...`);
-        this._time = performance.now();
-
         // Handle errors
         if (errors.length > 0) {
-            document.getElementById('errors').innerText = errors[0].data;
-            document.getElementById('errors').classList.add('active');
+            Editor.instance.error(errors.map((err) => err.data));
             return;
-        } else {
-            document.getElementById('errors').classList.remove('active');
         }
-
-        // console.log(storage);
 
         // Transpile program
         this.root = Transpiler.transpileFromStorage(storage);
 
-        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Root tree generated...`);
-        this._time = performance.now();
-
-        console.log(this.root);
-
         // Animation
         this.animation = this.root.animation();
 
-        console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Root animation generated...`);
-        this._time = performance.now();
-        console.log(this.animation);
-        this.animationController = new AnimationController(this.animation);
+        // Highlight cursor
+        this.cursor = new Cursor();
 
-        // Baking
+        // Post-animation baking
         this.animation.seek([new Environment()], this.animation.duration, { baking: true, indent: 0 });
         this.animation.reset({ baking: true });
 
-        // console.log(`[${(performance.now() - this._time).toFixed(4)}ms] Root animation baked...`)
-        // this._time = performance.now()
+        // View of animation
+        this.view = new View(this.animation);
 
-        // console.log(nomnoml.renderSvg('[nomnoml] is -> [awesome]'))
-
-        this.layout = new ViewLayoutController(this.animation);
-
-        // ViewController.create(this.animation);
-
-        // View.create({
-        //     position: { x: 600, y: 150 },
-        //     validLines: { min: 0, max: Math.max(...storage.map((item) => item.line)) },
-        // })
-
-        // View
-        // this.view = new View();
-
-        // console.log(this.view);
-
-        // console.log('Finished compiling...');
-        // console.log('\tStorage', this.storage);
-        // console.log('\tRoot', this.root);
-        // console.log('\tGraph', this.graph);
+        console.log('[Executor] Finished compiling...');
+        console.log('\tStorage', storage);
+        console.log('\tRoot', this.root);
+        console.log('\tAnimation', this.animation);
 
         this.paused = false;
     }
 
     tick(dt: number = 0) {
-        if (this.animation == null) return;
-        if ((dt > 0 && this.paused) || this.time > this.animation.duration) return;
+        if (this.animation == null || (dt > 0 && this.paused) || this.time > this.animation.duration) return;
 
         this.time += dt * this.speed;
 
+        this.view.update();
+
         // Apply animations
-        const environments = View.views.map((view) => view.environment);
+        const environments = [...View.shownViews].map((view) => view.environment);
         this.animation?.seek(environments, this.time);
+    }
+}
 
-        for (const view of View.views) {
-            view.update();
+function computeParentIds(animation: AnimationGraph | AnimationNode, parentIds: Set<string> = new Set()) {
+    animation.parentIds = parentIds;
+
+    console.log(animation.id, parentIds);
+
+    if (animation instanceof AnimationGraph) {
+        for (const node of animation.vertices) {
+            computeParentIds(node, new Set([animation.id, ...parentIds]));
         }
-
-        // this.timeControls.seek(this.time);
     }
 }

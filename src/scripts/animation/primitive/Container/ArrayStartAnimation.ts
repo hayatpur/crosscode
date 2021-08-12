@@ -12,7 +12,8 @@ export class ArrayStartAnimation extends AnimationNode {
         this.base_duration = 5;
     }
 
-    begin(environment: Environment) {
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
         const output = environment.resolvePath(this.outputSpecifier) as Data;
         output.type = DataType.Array;
         output.value = [];

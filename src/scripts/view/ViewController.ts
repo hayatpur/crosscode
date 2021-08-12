@@ -1,7 +1,6 @@
 import { Editor } from '../editor/Editor';
 import { lerp } from '../utilities/math';
 import { Ticker } from '../utilities/Ticker';
-import { View } from './View';
 
 export class ViewController {
     cursor: HTMLDivElement;
@@ -81,7 +80,7 @@ export class ViewController {
                 const validLines = { min: Math.min(...lines) + 1, max: Math.max(...lines) + 1 };
                 const mid_y = (this.cursorState.selection.y + this.cursorState.selection.y2) / 2;
                 const x = Math.max(this.cursorState.selection.x, this.cursorState.selection.x2) + 50;
-                View.create({ position: { x: x, y: mid_y }, validLines });
+                // View.create({ position: { x: x, y: mid_y }, validLines });
             }
 
             this.cursorState.pressed = false;

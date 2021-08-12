@@ -92,6 +92,25 @@ export class Editor {
             });
     }
 
+    error(errors: { message: string; line: number }[]) {
+        // console.warn(errors);
+        // const editor = Editor.instance;
+
+        for (const error of errors) {
+            monaco.editor.setModelMarkers(this.monaco.getModel(), 'javascript', [
+                {
+                    startLineNumber: error.line + 1,
+                    endLineNumber: error.line + 1,
+                    startColumn: 0,
+                    endColumn: 1,
+
+                    message: error.message,
+                    severity: monaco.MarkerSeverity.Error,
+                },
+            ]);
+        }
+    }
+
     getValue() {
         return this.monaco.getValue();
     }

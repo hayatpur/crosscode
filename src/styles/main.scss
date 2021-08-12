@@ -33,3 +33,57 @@ body {
     height: 100%;
     padding: 7rem;
 }
+
+header {
+    align-items: center;
+    flex-direction: row;
+    display: flex;
+    margin-top: 2rem;
+    justify-content: center;
+    transform: scale(0.9);
+    z-index: 10;
+    background: #fff;
+}
+
+header>div {
+    /* padding-right: 8px; */
+    /* flex: 1; */
+    font-size: 14px;
+    white-space: pre;
+    opacity: 0.5;
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: center;
+    align-items: center;
+    margin: 0px 50px;
+}
+
+header>div.active {
+    opacity: 1;
+}
+
+header>div.active .number-icon {
+    background: #0000001f;
+}
+
+header .number-icon {
+    background: #0000001f;
+    width: 25px;
+    border-radius: 50%;
+    height: 25px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+}
+
+header .seperator {
+    flex: 1 1 auto;
+}
+
+header .seperator>span {
+    display: block;
+    border-color: #bdbdbd;
+    border-top-style: solid;
+    border-top-width: 1px;
+}

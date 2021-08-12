@@ -10,7 +10,8 @@ export default class ReturnStatementAnimation extends AnimationNode {
         this.inputSpecifier = inputSpecifier;
     }
 
-    begin(environment: Environment) {
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
         let data = environment.resolvePath(this.inputSpecifier) as Data;
         if (data.type == DataType.ID) {
             data = environment.resolve({ type: AccessorType.ID, value: data.value as string }) as Data;

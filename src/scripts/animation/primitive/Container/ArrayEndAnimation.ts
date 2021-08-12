@@ -1,14 +1,16 @@
-import { Environment } from '../../../environment/Environment'
-import { AnimationNode, AnimationOptions } from '../AnimationNode'
+import { Environment } from '../../../environment/Environment';
+import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class ArrayEndAnimation extends AnimationNode {
     constructor(options: AnimationOptions = {}) {
-        super(options)
+        super(options);
 
-        this.base_duration = 5
+        this.base_duration = 5;
     }
 
-    begin(environment: Environment) {}
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
+    }
 
     seek(environment: Environment, time: number) {}
 

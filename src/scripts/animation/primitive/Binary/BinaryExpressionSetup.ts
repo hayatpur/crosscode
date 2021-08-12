@@ -23,7 +23,8 @@ export default class BinaryExpressionSetup extends AnimationNode {
         this.operator = operator;
     }
 
-    begin(environment: Environment) {
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
         // Find left data
         let left = environment.resolvePath(this.leftSpecifier) as Data;
         if (left.type == DataType.ID) {

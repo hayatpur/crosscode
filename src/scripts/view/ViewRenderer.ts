@@ -1,7 +1,6 @@
 import { Accessor, Data, DataType } from '../environment/Data';
 import { Environment } from '../environment/Environment';
 import { sigmoid } from '../utilities/math';
-import { ViewOptions } from './View';
 
 export class ViewRenderer {
     // View's HTML DOM Element
@@ -13,17 +12,17 @@ export class ViewRenderer {
     position: { x: number; y: number };
     draggable: boolean = false;
 
-    constructor(options: ViewOptions = {}) {
+    constructor(parent: HTMLDivElement) {
         // DOM elements
         this.element = document.createElement('div');
-        this.element.classList.add('view');
+        this.element.classList.add('view-renderer');
 
-        (options.parentElement ?? document.body).append(this.element);
+        (parent ?? document.body).append(this.element);
 
         // this.position = options.position ?? { x: 0, y: 0 };
 
-        this.element.style.top = `${this.position.y}px`;
-        this.element.style.left = `${this.position.x}px`;
+        // this.element.style.top = `${this.position.y}px`;
+        // this.element.style.left = `${this.position.x}px`;
     }
 
     setState(environment: Environment) {
@@ -39,7 +38,7 @@ export class ViewRenderer {
             if (this.dataElements[data.id] == null) {
                 // Create element
                 const el = document.createElement('div');
-                el.classList.add('view-element');
+                el.classList.add('view-renderer-element');
                 this.element.append(el);
 
                 this.dataElements[data.id] = el;
@@ -99,7 +98,7 @@ export class ViewRenderer {
             if (this.identifierElements[identifier] == null) {
                 // Create element
                 const el = document.createElement('div');
-                el.classList.add('view-identifier');
+                el.classList.add('view-renderer-identifier');
                 this.element.append(el);
 
                 this.identifierElements[identifier] = el;
@@ -135,8 +134,6 @@ export class ViewRenderer {
             positionMap[x]++;
         }
     }
-
-    updateState(environment: Environment) {}
 
     reset() {
         Object.values(this.identifierElements).forEach((el) => el.remove());

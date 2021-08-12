@@ -38,6 +38,11 @@ export default class ForStatement extends Node {
 
         for (let i = 0; i < this.iterations.length; i++) {
             graph.addVertex(this.iterations[i].animation(context), this.iterations[i]);
+
+            if (this.iterations[i].incr != null) {
+                const incr = this.iterations[i].incr.animation(context);
+                graph.addVertex(incr, this.iterations[i].incr);
+            }
         }
 
         graph.addVertex(new PopScopeAnimation(), this);

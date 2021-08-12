@@ -10,7 +10,8 @@ export default class CopyDataAnimation extends AnimationNode {
         this.dataSpecifier = dataSpecifier;
     }
 
-    begin(environment: Environment) {
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
         // console.log(this.dataSpecifier)
         const data = environment.resolvePath(this.dataSpecifier) as Data;
         const copy = data.copy();

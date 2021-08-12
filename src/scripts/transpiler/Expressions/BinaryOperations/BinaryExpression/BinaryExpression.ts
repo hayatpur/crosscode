@@ -24,7 +24,7 @@ export default class BinaryExpression extends Node {
     }
 
     animation(context: AnimationContext): AnimationGraph {
-        const graph = new AnimationGraph(this, { shouldDissolve: true });
+        const graph = new AnimationGraph(this);
 
         const left = this.left.animation(context);
         graph.addVertex(left, this.left);

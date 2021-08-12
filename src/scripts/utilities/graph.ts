@@ -1,5 +1,3 @@
-//@ts-check
-
 import { AnimationGraph } from '../animation/graph/AnimationGraph.js';
 import AntiEdge from '../animation/graph/edges/AntiEdge.js';
 import { Edge } from '../animation/graph/edges/Edge.js';

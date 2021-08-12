@@ -15,7 +15,8 @@ export class BindAnimation extends AnimationNode {
         this.base_duration = 5;
     }
 
-    begin(environment: Environment) {
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
         if (this.existingMemorySpecifier != null) {
             const existingMemory = environment.resolvePath(this.existingMemorySpecifier) as Data;
             environment.declare(this.identifier, environment.getMemoryLocation(existingMemory).foundLocation);

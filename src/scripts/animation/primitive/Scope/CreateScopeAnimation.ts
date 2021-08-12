@@ -6,7 +6,8 @@ export default class CreateScopeAnimation extends AnimationNode {
         super(options);
     }
 
-    begin(environment: Environment) {
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
         environment.createScope();
     }
 

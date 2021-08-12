@@ -6,10 +6,11 @@ export class Environment {
     bindingFrames: { [name: string]: Accessor[] }[];
     memory: (Data | null)[];
     _temps: any = {};
-    validLines: { max: number; min: number } = { max: Infinity, min: -Infinity };
 
     // Registers
     // registerA: (Data | null)[] = []
+
+    validIds: Set<string> = new Set();
 
     constructor() {
         this.bindingFrames = [
@@ -51,7 +52,6 @@ export class Environment {
      * Bind new variable
      */
     declare(name: string, location: Accessor[]) {
-        console.log('Declaring', name);
         this.bindingFrames[this.bindingFrames.length - 1][name] = location;
         this.updateLayout();
     }
@@ -88,8 +88,7 @@ export class Environment {
         copy.bindingFrames = JSON.parse(JSON.stringify(this.bindingFrames));
         copy.memory = this.memory.map((data) => (data ? data.copy() : null));
         copy._temps = JSON.parse(JSON.stringify(this._temps));
-
-        copy.validLines = JSON.parse(JSON.stringify(this.validLines));
+        copy.validIds = new Set(this.validIds);
 
         return copy;
     }
@@ -108,15 +107,13 @@ export class Environment {
     }
 
     isValid(animation: AnimationGraph | AnimationNode): boolean {
-        if (animation instanceof AnimationGraph && animation.node != null) {
-            const line = animation.node.meta.line;
-            return line >= this.validLines.min && line <= this.validLines.max;
-        } else if (animation instanceof AnimationNode && animation.statement != null) {
-            const line = animation.statement.meta.line;
-            return line >= this.validLines.min && line <= this.validLines.max;
-        }
-        console.error('No animation node or statement found!', animation);
-        return true;
+        // console.log(
+        //     `If this [${animation.id}] node:`,
+        //     this.validIds,
+        //     ` is valid for this [${animation.id}] animation:`,
+        //     animation.parentIds
+        // );
+        return [...this.validIds].filter((x) => animation.parentIds.has(x)).length > 0;
     }
 
     log() {
@@ -198,7 +195,7 @@ export class Environment {
                 }
             }
 
-            console.log('not found', accessor.value);
+            console.error('Did not find ID', accessor.value);
             this.log();
 
             return null;

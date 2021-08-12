@@ -14,7 +14,10 @@ export default class MoveAnimation extends AnimationNode {
         this.outputSpecifier = outputSpecifier;
     }
 
-    begin(environment: Environment) {
+    begin(environment: Environment, options = { baking: false }) {
+        super.begin(environment, options);
+        // console.log(this.inputSpecifier);
+        // environment.log();
         let move = environment.resolvePath(this.inputSpecifier) as Data;
         if (move.type == DataType.ID) {
             move = environment.resolve({ type: AccessorType.ID, value: move.value as string }) as Data;

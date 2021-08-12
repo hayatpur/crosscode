@@ -38,6 +38,11 @@ export class AnimationNode {
     speedMultiplier: number;
     xOff: number;
 
+    parentIds: Set<string> = new Set();
+    showing = false;
+
+    precondition?: Environment;
+
     constructor(options: AnimationOptions = {}) {
         this.playback = options.playback;
 
@@ -69,7 +74,11 @@ export class AnimationNode {
         // console.warn("[AnimationNode] Dispose method missing for ", this);
     }
 
-    begin(environment: Environment) {}
+    begin(environment: Environment, options = { baking: false }) {
+        if (options.baking) {
+            this.precondition = environment.copy();
+        }
+    }
 
     seek(environment: Environment, time: number) {}
 
