@@ -1,12 +1,12 @@
 import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { remap } from '../../../utilities/math';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class CreateLiteralAnimation extends AnimationNode {
     value: string | number | bigint | boolean | RegExp;
     outputSpecifier: Accessor[];
-    dataSpecifier: Accessor[];
 
     constructor(
         value: string | number | bigint | boolean | RegExp,
@@ -31,6 +31,10 @@ export class CreateLiteralAnimation extends AnimationNode {
         data.transform.floating = true;
 
         environment._temps['CreateLiteralAnimation'] = environment.addDataAt([], data);
+
+        if (options.baking) {
+            this.computeReadAndWrites({ location: environment._temps['CreateLiteralAnimation'], id: data.id });
+        }
 
         // Get the output data
         // console.log('Specifier', this.outputSpecifier);
@@ -67,7 +71,7 @@ export class CreateLiteralAnimation extends AnimationNode {
         data.transform.z = remap(t, 0, 1, 3, 1);
     }
 
-    end(environment: Environment) {
+    end(environment: Environment, options = { baking: false }) {
         // console.log('Ending...');
         // const input = view.find(this.inputSpecifier);
         // const output = view.find(this.outputSpecifier);
@@ -78,5 +82,10 @@ export class CreateLiteralAnimation extends AnimationNode {
         // const arrayContainer = new ArrayContainer();
         // output.container.addContainer(arrayContainer);
         // input.container = arrayContainer;
+    }
+
+    computeReadAndWrites(data: AnimationData) {
+        this._reads = [];
+        this._writes = [data];
     }
 }

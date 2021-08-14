@@ -49,7 +49,7 @@ export class MemberExpression extends Node {
     }
 
     animation(context: AnimationContext) {
-        const graph = new AnimationGraph(this, { shouldDissolve: true });
+        const graph = new AnimationGraph(this);
 
         if (this.computed) {
             const anim = new CopyDataAnimation(this.getSpecifier());

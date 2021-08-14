@@ -1,5 +1,6 @@
 import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class ArrayStartAnimation extends AnimationNode {
@@ -14,6 +15,7 @@ export class ArrayStartAnimation extends AnimationNode {
 
     begin(environment: Environment, options = { baking: false }) {
         super.begin(environment, options);
+
         const output = environment.resolvePath(this.outputSpecifier) as Data;
         output.type = DataType.Array;
         output.value = [];
@@ -25,11 +27,15 @@ export class ArrayStartAnimation extends AnimationNode {
             noResolvingId: true,
         }) as Data;
         ArrayExpression.value = output.id;
+
+        if (options.baking) {
+            this.computeReadAndWrites({ location: environment.getMemoryLocation(output).foundLocation, id: output.id });
+        }
     }
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment) {
+    end(environment: Environment, options = { baking: false }) {
         // const input = view.find(this.inputSpecifier);
         // const output = view.find(this.outputSpecifier);
         // input.type = 'Array';
@@ -39,5 +45,10 @@ export class ArrayStartAnimation extends AnimationNode {
         // const arrayContainer = new ArrayContainer();
         // output.container.addContainer(arrayContainer);
         // input.container = arrayContainer;
+    }
+
+    computeReadAndWrites(data: AnimationData) {
+        this._reads = [data];
+        this._writes = [];
     }
 }

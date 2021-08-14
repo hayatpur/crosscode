@@ -9,9 +9,13 @@ export default class PopScopeAnimation extends AnimationNode {
     begin(environment: Environment, options = { baking: false }) {
         super.begin(environment, options);
         environment.popScope();
+
+        if (options.baking) {
+            super.computeReadAndWrites();
+        }
     }
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment) {}
+    end(environment: Environment, options = { baking: false }) {}
 }

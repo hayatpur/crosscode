@@ -1,5 +1,6 @@
-import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
+import { Accessor, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class ReturnStatementAnimation extends AnimationNode {
@@ -13,14 +14,20 @@ export default class ReturnStatementAnimation extends AnimationNode {
     begin(environment: Environment, options = { baking: false }) {
         super.begin(environment, options);
         let data = environment.resolvePath(this.inputSpecifier) as Data;
-        if (data.type == DataType.ID) {
-            data = environment.resolve({ type: AccessorType.ID, value: data.value as string }) as Data;
-        }
 
         data.frame -= 2;
+
+        if (options.baking) {
+            this.computeReadAndWrites({ location: environment.getMemoryLocation(data).foundLocation, id: data.id });
+        }
     }
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment) {}
+    end(environment: Environment, options = { baking: false }) {}
+
+    computeReadAndWrites(data: AnimationData) {
+        this._reads = [data];
+        this._writes = [];
+    }
 }

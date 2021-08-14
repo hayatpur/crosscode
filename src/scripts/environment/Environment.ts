@@ -195,7 +195,8 @@ export class Environment {
                 }
             }
 
-            console.error('Did not find ID', accessor.value);
+            console.trace('Did not find ID', accessor.value);
+
             this.log();
 
             return null;
@@ -231,7 +232,13 @@ export class Environment {
         }
 
         let resolution = this.resolve(path[0], _options);
-        return resolution.resolvePath(path.slice(1));
+        let ret = resolution.resolvePath(path.slice(1));
+
+        if (ret.type == DataType.ID && !_options.noResolvingId) {
+            ret = this.resolve({ type: AccessorType.ID, value: ret.value as string }) as Data;
+        }
+
+        return ret;
     }
 
     addDataAt(path: Accessor[], data: Data): Accessor[] {

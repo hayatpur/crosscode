@@ -2,6 +2,7 @@ import * as ESTree from 'estree';
 import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { lerp, remap } from '../../../utilities/math';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class BinaryExpressionSetup extends AnimationNode {
@@ -28,22 +29,10 @@ export default class BinaryExpressionSetup extends AnimationNode {
         super.begin(environment, options);
         // Find left data
         let left = environment.resolvePath(this.leftSpecifier) as Data;
-        if (left.type == DataType.ID) {
-            left = environment.resolve({
-                type: AccessorType.ID,
-                value: left.value as string,
-            }) as Data;
-        }
         environment._temps[`LeftData${this.id}`] = [{ type: AccessorType.ID, value: left.id }];
 
         // Find right data
         let right = environment.resolvePath(this.rightSpecifier) as Data;
-        if (right.type == DataType.ID) {
-            right = environment.resolve({
-                type: AccessorType.ID,
-                value: right.value as string,
-            }) as Data;
-        }
         environment._temps[`RightData${this.id}`] = [{ type: AccessorType.ID, value: right.id }];
 
         const data = new Data({
@@ -74,6 +63,9 @@ export default class BinaryExpressionSetup extends AnimationNode {
             x: data.transform.x + data.transform.width / 4,
             y: data.transform.y,
         };
+
+        if (options.baking) {
+        }
     }
 
     seek(environment: Environment, time: number) {
@@ -95,18 +87,29 @@ export default class BinaryExpressionSetup extends AnimationNode {
         right.transform.y = lerp(rightTransform.init_y, rightTransform.y, t);
 
         if (t > 0.5) {
-            left.transform.opacity = remap(t, 0.5, 1, 1, 0);
-            right.transform.opacity = remap(t, 0.5, 1, 1, 0);
             evaluated.transform.opacity = remap(t, 0.5, 1, 0, 1);
+        }
+
+        if (t > 0.9) {
+            left.transform.opacity = remap(t, 0.9, 1, 1, 0);
+            right.transform.opacity = remap(t, 0.9, 1, 1, 0);
         }
     }
 
-    end(environment: Environment) {
+    end(environment: Environment, options = { baking: false }) {
         this.seek(environment, this.duration);
 
         const left = environment.resolvePath(environment._temps[`LeftData${this.id}`]) as Data;
         const right = environment.resolvePath(environment._temps[`RightData${this.id}`]) as Data;
         const evaluated = environment.resolvePath(environment._temps[`EvaluatedData${this.id}`]) as Data;
+
+        if (options.baking) {
+            this.computeReadAndWrites(
+                { location: environment.getMemoryLocation(left).foundLocation, id: left.id },
+                { location: environment.getMemoryLocation(right).foundLocation, id: right.id },
+                { location: environment.getMemoryLocation(evaluated).foundLocation, id: evaluated.id }
+            );
+        }
 
         const FloatingStack = environment.resolvePath([{ type: AccessorType.Symbol, value: '_FloatingStack' }], {
             noResolvingId: true,
@@ -121,5 +124,10 @@ export default class BinaryExpressionSetup extends AnimationNode {
 
         // Put it in the floating stack
         FloatingStack.addDataAt([], new Data({ type: DataType.ID, value: evaluated.id }));
+    }
+
+    computeReadAndWrites(leftData: AnimationData, rightData: AnimationData, evaluatedData: AnimationData) {
+        this._reads = [leftData, rightData];
+        this._writes = [evaluatedData];
     }
 }

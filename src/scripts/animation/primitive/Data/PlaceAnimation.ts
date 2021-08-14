@@ -1,5 +1,6 @@
 import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class PlaceAnimation extends AnimationNode {
@@ -27,13 +28,16 @@ export default class PlaceAnimation extends AnimationNode {
         input.transform.z = 1 - t;
     }
 
-    end(environment: Environment) {
-        let input = environment.resolvePath(this.inputSpecifier) as Data;
-        if (input.type == DataType.ID) {
-            input = environment.resolve({ type: AccessorType.ID, value: input.value as string }) as Data;
-        }
-
+    end(environment: Environment, options = { baking: false }) {
+        const input = environment.resolvePath(this.inputSpecifier) as Data;
         const to = environment.resolvePath(this.outputSpecifier) as Data;
+
+        if (options.baking) {
+            this.computeReadAndWrites(
+                { location: environment.getMemoryLocation(input).foundLocation, id: input.id },
+                { location: environment.getMemoryLocation(to).foundLocation, id: to.id }
+            );
+        }
 
         if (to instanceof Environment) {
             environment.removeAt(environment.getMemoryLocation(input).foundLocation);
@@ -52,5 +56,10 @@ export default class PlaceAnimation extends AnimationNode {
         }) as Data;
 
         (FloatingStack.value as Data[]).pop();
+    }
+
+    computeReadAndWrites(inputData: AnimationData, outputData: AnimationData) {
+        this._reads = [inputData];
+        this._writes = [outputData];
     }
 }

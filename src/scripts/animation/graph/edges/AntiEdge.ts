@@ -3,8 +3,8 @@ import { AnimationGraph } from '../AnimationGraph';
 import { Edge } from './Edge';
 
 export default class AntiEdge extends Edge {
-    constructor(from: number, to: number, getData: any) {
-        super(from, to, getData);
+    constructor(from: number, to: number, data: any) {
+        super(from, to, data);
     }
 
     getConstraint(vertices: (AnimationGraph | AnimationNode)[]) {

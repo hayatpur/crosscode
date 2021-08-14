@@ -33,12 +33,13 @@ export class View {
             // Set label
             const labelEl = document.createElement('div');
             labelEl.classList.add('view-label');
-            if (animation instanceof AnimationGraph) {
-                labelEl.innerHTML = `${animation.node.constructor.name}`;
-            } else {
-                labelEl.innerHTML = `${animation.constructor.name}`;
-            }
-            labelEl.innerHTML = camelCaseToSentence(labelEl.innerHTML);
+            labelEl.innerHTML = `[${animation.id}] ${camelCaseToSentence(animation.getName())}`;
+            // if (animation instanceof AnimationGraph) {
+            //     labelEl.innerHTML = `${animation.node.constructor.name}`;
+            // } else {
+            //     labelEl.innerHTML = `${animation.constructor.name}`;
+            // }
+            // labelEl.innerHTML = camelCaseToSentence(labelEl.innerHTML);
             this.element.append(labelEl);
 
             this.createControls();
@@ -101,7 +102,7 @@ export class View {
     }
 
     aggregate() {
-        alert('Not implemented');
+        // this.animation.aggregate();
     }
 
     collapse() {
@@ -114,8 +115,8 @@ export class View {
             child.animation.playing = false;
         });
 
-        console.log('Collapsing');
         this.children.forEach((child) => child.destroy());
+        this.children = [];
         this.animation.showing = true;
 
         if (this.animation.showing) {
@@ -129,7 +130,7 @@ export class View {
     }
 
     split() {
-        if (this.animation instanceof AnimationNode) return;
+        if (this.animation instanceof AnimationNode || !this.animation.showing) return;
 
         if (this.animation.showing) {
             this.renderer.destroy();
@@ -239,6 +240,10 @@ export class View {
             this.renderer.reset();
             this.environment = this.animation.precondition.copy();
             this.environment.validIds = new Set([this.animation.id]);
+        }
+
+        for (const child of this.children) {
+            child.reset();
         }
     }
 

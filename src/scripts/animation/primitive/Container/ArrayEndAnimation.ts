@@ -10,11 +10,15 @@ export class ArrayEndAnimation extends AnimationNode {
 
     begin(environment: Environment, options = { baking: false }) {
         super.begin(environment, options);
+
+        if (options.baking) {
+            super.computeReadAndWrites();
+        }
     }
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment) {
+    end(environment: Environment, options = { baking: false }) {
         // const input = view.find(this.inputSpecifier);
         // const output = view.find(this.outputSpecifier);
         // input.type = 'Array';

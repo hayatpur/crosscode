@@ -1,5 +1,6 @@
 import { Accessor, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class BindAnimation extends AnimationNode {
@@ -17,18 +18,31 @@ export class BindAnimation extends AnimationNode {
 
     begin(environment: Environment, options = { baking: false }) {
         super.begin(environment, options);
-        if (this.existingMemorySpecifier != null) {
-            const existingMemory = environment.resolvePath(this.existingMemorySpecifier) as Data;
-            environment.declare(this.identifier, environment.getMemoryLocation(existingMemory).foundLocation);
-        } else {
-            const temp = new Data({ type: DataType.Literal, value: undefined });
-            const loc = environment.addDataAt([], temp);
 
-            environment.declare(this.identifier, loc);
+        let location = null;
+        let data = null;
+
+        if (this.existingMemorySpecifier != null) {
+            data = environment.resolvePath(this.existingMemorySpecifier) as Data;
+            location = environment.getMemoryLocation(data).foundLocation;
+        } else {
+            data = new Data({ type: DataType.Literal, value: undefined });
+            location = environment.addDataAt([], data);
+        }
+
+        environment.declare(this.identifier, location);
+
+        if (options.baking) {
+            this.computeReadAndWrites({ location, id: data.id });
         }
     }
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment) {}
+    end(environment: Environment, options = { baking: false }) {}
+
+    computeReadAndWrites(data: AnimationData) {
+        this._reads = [data];
+        this._writes = [];
+    }
 }

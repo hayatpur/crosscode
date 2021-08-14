@@ -1,8 +1,7 @@
 import * as ESTree from 'estree';
 import { AnimationGraph } from '../../../animation/graph/AnimationGraph';
 import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-import MoveAnimation from '../../../animation/primitive/Data/MoveAnimation';
-import PlaceAnimation from '../../../animation/primitive/Data/PlaceAnimation';
+import MoveAndPlaceAnimation from '../../../animation/primitive/Data/MoveAndPlaceAnimation';
 import { AccessorType } from '../../../environment/Data';
 import { Identifier } from '../../Identifier';
 import { Node, NodeMeta } from '../../Node';
@@ -33,7 +32,7 @@ export class AssignmentExpression extends Node {
         });
         graph.addVertex(right, this.right);
 
-        const move = new MoveAnimation(
+        const move = new MoveAndPlaceAnimation(
             [
                 { type: AccessorType.Symbol, value: '_FloatingStack' },
                 { type: AccessorType.Index, value: -1 },
@@ -41,15 +40,6 @@ export class AssignmentExpression extends Node {
             outputSpecifier
         );
         graph.addVertex(move, this);
-
-        const place = new PlaceAnimation(
-            [
-                { type: AccessorType.Symbol, value: '_FloatingStack' },
-                { type: AccessorType.Index, value: -1 },
-            ],
-            outputSpecifier
-        );
-        graph.addVertex(place, this);
 
         return graph;
     }

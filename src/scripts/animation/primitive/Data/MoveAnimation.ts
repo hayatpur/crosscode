@@ -1,6 +1,7 @@
-import { Accessor, AccessorType, Data, DataType, Transform } from '../../../environment/Data';
+import { Accessor, Data, DataType, Transform } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { DataMovementPath } from '../../../utilities/DataMovementPath';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class MoveAnimation extends AnimationNode {
@@ -16,13 +17,8 @@ export default class MoveAnimation extends AnimationNode {
 
     begin(environment: Environment, options = { baking: false }) {
         super.begin(environment, options);
-        // console.log(this.inputSpecifier);
-        // environment.log();
-        let move = environment.resolvePath(this.inputSpecifier) as Data;
-        if (move.type == DataType.ID) {
-            move = environment.resolve({ type: AccessorType.ID, value: move.value as string }) as Data;
-        }
 
+        const move = environment.resolvePath(this.inputSpecifier) as Data;
         const to = environment.resolvePath(this.outputSpecifier);
 
         environment.updateLayout();
@@ -46,11 +42,14 @@ export default class MoveAnimation extends AnimationNode {
         const start_transform = { ...move.transform };
 
         // Create a movement path to translate the floating container along
-
         const path = new DataMovementPath(start_transform, end_transform);
         path.seek(0);
 
         environment._temps['path'] = path;
+
+        if (options.baking) {
+            this.computeReadAndWrites({ location: environment.getMemoryLocation(move).foundLocation, id: move.id });
+        }
     }
 
     seek(environment: Environment, time: number) {
@@ -62,16 +61,18 @@ export default class MoveAnimation extends AnimationNode {
         const position = path.getPosition(t);
 
         let move = environment.resolvePath(this.inputSpecifier) as Data;
-        if (move.type == DataType.ID) {
-            move = environment.resolve({ type: AccessorType.ID, value: move.value as string }) as Data;
-        }
 
         move.transform.x = position.x;
         move.transform.y = position.y;
     }
 
-    end(environment: Environment) {
+    end(environment: Environment, options = { baking: false }) {
         this.seek(environment, this.duration);
         environment._temps['path']?.destroy();
+    }
+
+    computeReadAndWrites(data: AnimationData) {
+        this._reads = [data];
+        this._writes = [data];
     }
 }

@@ -72,7 +72,7 @@ export class CallExpression extends Node {
     }
 
     animation(context: AnimationContext) {
-        const graph = new AnimationGraph(this, { shouldDissolve: true });
+        const graph = new AnimationGraph(this);
         graph.addVertex(new CreateScopeAnimation(), this);
 
         // Argument bindings

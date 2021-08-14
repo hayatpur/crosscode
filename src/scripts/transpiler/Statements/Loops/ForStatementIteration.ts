@@ -36,7 +36,7 @@ export default class ForStatementIteration extends Node {
     }
 
     animation(context: AnimationContext) {
-        const graph = new AnimationGraph(this, { shouldDissolve: true });
+        const graph = new AnimationGraph(this);
 
         if (this.block != null) {
             const animation = this.block.animation(context);

@@ -20,7 +20,7 @@ export class UpdateExpression extends Node {
     }
 
     animation(context = {}) {
-        const graph = new AnimationGraph(this, { shouldDissolve: true });
+        const graph = new AnimationGraph(this);
 
         // const animation = new UpdateExpressionSequence(
         //     this.argument.getData.bind(this.argument),

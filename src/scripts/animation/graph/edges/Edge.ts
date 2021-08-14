@@ -1,19 +1,19 @@
 import { AnimationNode } from '../../primitive/AnimationNode';
-import { AnimationGraph } from '../AnimationGraph';
+import { AnimationData, AnimationGraph } from '../AnimationGraph';
 
 export class Edge {
     static id = 0;
     from: number;
     to: number;
-    getData: any;
+    data: AnimationData;
     options: {};
     type: string;
     id: number;
 
-    constructor(from: number, to: number, getData = null, options = {}) {
+    constructor(from: number, to: number, data = null, options = {}) {
         this.from = from;
         this.to = to;
-        this.getData = getData;
+        this.data = data;
         this.options = options;
         this.type = this.constructor.name;
         this.id = Edge.id;

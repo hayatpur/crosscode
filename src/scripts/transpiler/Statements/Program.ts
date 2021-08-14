@@ -9,12 +9,6 @@ export class Program extends BlockStatement {
     }
 
     animation(context: AnimationContext = { outputSpecifier: [], xOff: 0 }): AnimationGraph {
-        const animation = new AnimationGraph(this);
-
-        for (const statement of this.statements) {
-            animation.addVertex(statement.animation(context), statement);
-        }
-
-        return animation;
+        return super.animation(context, true);
     }
 }

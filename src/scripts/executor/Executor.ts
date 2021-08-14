@@ -1,10 +1,10 @@
 import { Cursor } from '../animation/Cursor';
 import { AnimationGraph } from '../animation/graph/AnimationGraph';
-import { AnimationNode } from '../animation/primitive/AnimationNode';
 import { Editor } from '../editor/Editor';
 import { Environment } from '../environment/Environment';
 import { Program } from '../transpiler/Statements/Program';
 import { Transpiler } from '../transpiler/Transpiler';
+import { computeAllGraphEdges, computeParentIds, logAnimation } from '../utilities/graph';
 import { Ticker } from '../utilities/Ticker';
 import { View } from '../view/View';
 import { Compiler } from './Compiler';
@@ -40,12 +40,15 @@ export class Executor {
         // General
         this.editor = editor;
 
+        // Highlight cursor
+        this.cursor = new Cursor();
+
         // Update after 0.5s of no keyboard activity
         let typingTimer: number;
         this.editor.onChangeContent.add(() => {
             this.paused = true;
             document.body.querySelector(`.view-element.root`)?.classList.add('changing-content');
-            document.body.querySelector(`.hover-boundary`)?.classList.add('changing-content');
+            document.body.querySelector(`.highlight-cursor`)?.classList.add('changing-content');
             clearTimeout(typingTimer);
             typingTimer = setTimeout(this.execute.bind(this), 500);
         });
@@ -58,19 +61,15 @@ export class Executor {
         Ticker.instance.registerTick(this.tick.bind(this));
 
         // Play
-        // document.addEventListener('keypress', (e) => {
-        //     if (e.key == '`') {
-        //         this.paused = false;
+        document.addEventListener('keypress', (e) => {
+            if (e.key == '`') {
+                this.paused = false;
+                this.view.reset();
+                this.animation.reset();
 
-        //         View.reset();
-        //         View.views.forEach((view) => {
-        //             view.animation.hasPlayed = false;
-        //             view.animation.playing = false;
-        //         });
-
-        //         this.time = 0;
-        //     }
-        // });
+                this.time = 0;
+            }
+        });
     }
 
     reset() {
@@ -113,12 +112,11 @@ export class Executor {
         // Animation
         this.animation = this.root.animation();
 
-        // Highlight cursor
-        this.cursor = new Cursor();
-
         // Post-animation baking
         this.animation.seek([new Environment()], this.animation.duration, { baking: true, indent: 0 });
         this.animation.reset({ baking: true });
+        computeParentIds(this.animation);
+        computeAllGraphEdges(this.animation);
 
         // View of animation
         this.view = new View(this.animation);
@@ -127,6 +125,16 @@ export class Executor {
         console.log('\tStorage', storage);
         console.log('\tRoot', this.root);
         console.log('\tAnimation', this.animation);
+
+        console.log(this.animation.reads());
+
+        const testSubject = this.animation.vertices[1] as AnimationGraph;
+        // dissolveAnimation(testSubject);
+
+        console.log(logAnimation(testSubject));
+
+        document.body.querySelector(`.view-element.root`)?.classList.remove('changing-content');
+        document.body.querySelector(`.highlight-cursor`)?.classList.remove('changing-content');
 
         this.paused = false;
     }
@@ -141,17 +149,5 @@ export class Executor {
         // Apply animations
         const environments = [...View.shownViews].map((view) => view.environment);
         this.animation?.seek(environments, this.time);
-    }
-}
-
-function computeParentIds(animation: AnimationGraph | AnimationNode, parentIds: Set<string> = new Set()) {
-    animation.parentIds = parentIds;
-
-    console.log(animation.id, parentIds);
-
-    if (animation instanceof AnimationGraph) {
-        for (const node of animation.vertices) {
-            computeParentIds(node, new Set([animation.id, ...parentIds]));
-        }
     }
 }

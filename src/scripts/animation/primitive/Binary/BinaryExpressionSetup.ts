@@ -1,7 +1,8 @@
 import * as ESTree from 'estree';
-import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
+import { Accessor, AccessorType, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { lerp } from '../../../utilities/math';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class BinaryExpressionSetup extends AnimationNode {
@@ -27,22 +28,10 @@ export default class BinaryExpressionSetup extends AnimationNode {
         super.begin(environment, options);
         // Find left data
         let left = environment.resolvePath(this.leftSpecifier) as Data;
-        if (left.type == DataType.ID) {
-            left = environment.resolve({
-                type: AccessorType.ID,
-                value: left.value as string,
-            }) as Data;
-        }
         environment._temps[`LeftData${this.id}`] = [{ type: AccessorType.ID, value: left.id }];
 
         // Find right data
         let right = environment.resolvePath(this.rightSpecifier) as Data;
-        if (right.type == DataType.ID) {
-            right = environment.resolve({
-                type: AccessorType.ID,
-                value: right.value as string,
-            }) as Data;
-        }
         environment._temps[`RightData${this.id}`] = [{ type: AccessorType.ID, value: right.id }];
 
         // Target left transform
@@ -60,6 +49,13 @@ export default class BinaryExpressionSetup extends AnimationNode {
             x: (left.transform.x + right.transform.x) / 2 + 25,
             y: (left.transform.y + right.transform.y) / 2 - 5,
         };
+
+        if (options.baking) {
+            this.computeReadAndWrites(
+                { location: environment.getMemoryLocation(left).foundLocation, id: left.id },
+                { location: environment.getMemoryLocation(right).foundLocation, id: right.id }
+            );
+        }
     }
 
     seek(environment: Environment, time: number) {
@@ -80,7 +76,12 @@ export default class BinaryExpressionSetup extends AnimationNode {
         right.transform.y = lerp(rightTransform.init_y, rightTransform.y, t);
     }
 
-    end(environment: Environment) {
+    end(environment: Environment, options = { baking: false }) {
         this.seek(environment, this.duration);
+    }
+
+    computeReadAndWrites(leftData: AnimationData, rightData: AnimationData) {
+        this._reads = [leftData, rightData];
+        this._writes = [];
     }
 }

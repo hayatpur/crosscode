@@ -9,9 +9,13 @@ export default class CreateScopeAnimation extends AnimationNode {
     begin(environment: Environment, options = { baking: false }) {
         super.begin(environment, options);
         environment.createScope();
+
+        if (options.baking) {
+            super.computeReadAndWrites();
+        }
     }
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment) {}
+    end(environment: Environment, options = { baking: false }) {}
 }

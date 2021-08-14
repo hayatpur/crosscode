@@ -1,5 +1,6 @@
 import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
+import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class CopyDataAnimation extends AnimationNode {
@@ -26,6 +27,13 @@ export default class CopyDataAnimation extends AnimationNode {
         }) as Data;
 
         FloatingStack.addDataAt([], new Data({ type: DataType.ID, value: copy.id }));
+
+        if (options.baking) {
+            this.computeReadAndWrites(
+                { location: environment.getMemoryLocation(data).foundLocation, id: data.id },
+                { location, id: copy.id }
+            );
+        }
     }
 
     seek(environment: Environment, time: number) {
@@ -34,5 +42,10 @@ export default class CopyDataAnimation extends AnimationNode {
         copy.transform.z = t;
     }
 
-    end(environment: Environment) {}
+    end(environment: Environment, options = { baking: false }) {}
+
+    computeReadAndWrites(original: AnimationData, copy: AnimationData) {
+        this._reads = [original];
+        this._writes = [copy];
+    }
 }

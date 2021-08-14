@@ -2,6 +2,7 @@ import { Easing } from 'eaz';
 import { Accessor } from '../../environment/Data';
 import { Environment } from '../../environment/Environment';
 import { Node } from '../../transpiler/Node';
+import { AnimationData } from '../graph/AnimationGraph';
 
 export enum AnimationPlayback {
     Normal = 'Normal',
@@ -43,6 +44,10 @@ export class AnimationNode {
 
     precondition?: Environment;
 
+    // Read and writes are computed during baking
+    _reads: AnimationData[] = null;
+    _writes: AnimationData[] = null;
+
     constructor(options: AnimationOptions = {}) {
         this.playback = options.playback;
 
@@ -82,7 +87,15 @@ export class AnimationNode {
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment) {}
+    end(environment: Environment, options = { baking: false }) {}
+
+    computeReads(environment: Environment): void {}
+
+    computeWrites(environment: Environment): void {}
+
+    getName() {
+        return `${this.constructor.name}`;
+    }
 
     undoBegin() {
         console.warn('[AnimationNode] undoBegin method missing for ', this);
@@ -95,5 +108,26 @@ export class AnimationNode {
     reset(options = { baking: false }) {
         this.playing = false;
         this.hasPlayed = false;
+    }
+
+    reads() {
+        if (this._reads == null) {
+            console.error(`[${this.constructor.name}] Attempting to get reads from an AnimationNode before baking`);
+        }
+
+        return this._reads;
+    }
+
+    writes() {
+        if (this._writes == null) {
+            console.error(`[${this.constructor.name}] Attempting to get writes from an AnimationNode before baking`);
+        }
+
+        return this._writes;
+    }
+
+    computeReadAndWrites(...args: any) {
+        this._reads = [];
+        this._writes = [];
     }
 }

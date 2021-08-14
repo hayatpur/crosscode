@@ -10,7 +10,7 @@ export class Cursor {
         Cursor.instance = this;
 
         this.element = document.createElement('div');
-        this.element.classList.add('hover-boundary');
+        this.element.classList.add('highlight-cursor');
         document.body.append(this.element);
     }
 
@@ -33,7 +33,5 @@ export class Cursor {
         this.element.style.height = `${start.height}px`;
         this.element.style.left = `${start.left}px`;
         this.element.style.top = `${start.top}px`;
-
-        document.querySelectorAll('.animation-controller-label').forEach((el) => el.classList.remove('hovered'));
     }
 }

@@ -3,7 +3,7 @@ import { AnimationGraph } from '../../../animation/graph/AnimationGraph';
 import { AnimationContext } from '../../../animation/primitive/AnimationNode';
 import { ArrayEndAnimation } from '../../../animation/primitive/Container/ArrayEndAnimation';
 import { ArrayStartAnimation } from '../../../animation/primitive/Container/ArrayStartAnimation';
-import { Accessor, AccessorType, Data } from '../../../environment/Data';
+import { AccessorType, Data } from '../../../environment/Data';
 import { Node, NodeMeta } from '../../Node';
 import { ArrayExpressionItem, ArrayExpressionItemAST } from './ArrayExpressionItem';
 
@@ -49,17 +49,5 @@ export class ArrayExpression extends Node {
         graph.addVertex(new ArrayEndAnimation(), this);
 
         return graph;
-    }
-
-    reads(options = {}): Set<Accessor[]> {
-        let set: Set<Accessor[]> = new Set();
-        this.elements.forEach((el) => (set = new Set([...set, ...el.reads(options)])));
-        return set;
-    }
-
-    writes(options = {}): Set<Accessor[]> {
-        let set: Set<Accessor[]> = new Set();
-        this.elements.forEach((el) => (set = new Set([...set, ...el.writes(options)])));
-        return set;
     }
 }

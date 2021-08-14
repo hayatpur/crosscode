@@ -2,12 +2,10 @@ import * as ESTree from 'estree';
 import { AnimationGraph } from '../../animation/graph/AnimationGraph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
 import { BindAnimation } from '../../animation/primitive/Binding/BindAnimation';
-import MoveAnimation from '../../animation/primitive/Data/MoveAnimation';
-import PlaceAnimation from '../../animation/primitive/Data/PlaceAnimation';
+import MoveAndPlaceAnimation from '../../animation/primitive/Data/MoveAndPlaceAnimation';
 import { AccessorType } from '../../environment/Data';
 import { ArrayExpression } from '../Expressions/Array/ArrayExpression';
 import { Identifier } from '../Identifier';
-import { Literal } from '../Literal';
 import { Node, NodeMeta } from '../Node';
 import { Transpiler } from '../Transpiler';
 
@@ -63,18 +61,7 @@ export class VariableDeclarator extends Node {
                 });
                 graph.addVertex(initialize, this.init);
 
-                if (!(this.init instanceof Literal)) {
-                    const move = new MoveAnimation(
-                        [
-                            { type: AccessorType.Symbol, value: '_FloatingStack' },
-                            { type: AccessorType.Index, value: -1 },
-                        ],
-                        [{ type: AccessorType.Symbol, value: this.id.name }]
-                    );
-                    graph.addVertex(move, this);
-                }
-
-                const place = new PlaceAnimation(
+                const place = new MoveAndPlaceAnimation(
                     [
                         { type: AccessorType.Symbol, value: '_FloatingStack' },
                         { type: AccessorType.Index, value: -1 },

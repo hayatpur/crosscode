@@ -1,4 +1,5 @@
 import chalk = require('chalk');
+import { Accessor } from '../../environment/Data';
 import { Environment } from '../../environment/Environment';
 import { AssignmentExpression } from '../../transpiler/Expressions/BinaryOperations/AssigmentExpression';
 import { Node } from '../../transpiler/Node';
@@ -12,6 +13,16 @@ export interface AnimationGraphOptions {
     isSequence?: boolean;
     isSection?: boolean;
     isCollapsed?: boolean;
+}
+
+export interface AnimationGraphRuntimeOptions {
+    indent: number;
+    baking: boolean;
+}
+
+export interface AnimationData {
+    location: Accessor[];
+    id: string;
 }
 
 export class AnimationGraph {
@@ -125,14 +136,14 @@ export class AnimationGraph {
         this.edges.push(edge);
     }
 
-    begin(environment: Environment, options = { indent: 0, baking: false }) {
+    begin(environment: Environment, options: AnimationGraphRuntimeOptions) {
         // this.playing = true;
         if (options.baking) {
             this.precondition = environment.copy();
         }
     }
 
-    end(environment: Environment, options = { indent: 0, baking: false }) {
+    end(environment: Environment, options: AnimationGraphRuntimeOptions) {
         // this.hasPlayed = true;
         // this.playing = false;
     }
@@ -140,7 +151,11 @@ export class AnimationGraph {
     /**
      * Seek into a specific time in the animation graph
      */
-    seek(environments: Environment[], time: number, options = { indent: 0, baking: false }) {
+    seek(
+        environments: Environment[],
+        time: number,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false }
+    ) {
         let start = 0;
 
         for (let i = 0; i < this.vertices.length; i++) {
@@ -272,5 +287,29 @@ export class AnimationGraph {
         this.hasPlayed = false;
 
         this.vertices.forEach((vertex) => vertex.reset(options));
+    }
+
+    getName() {
+        return `${this.node.constructor.name}`;
+    }
+
+    reads(): AnimationData[] {
+        let result = [];
+
+        for (const vertex of this.vertices) {
+            result.push(...vertex.reads());
+        }
+
+        return result;
+    }
+
+    writes(): AnimationData[] {
+        let result = [];
+
+        for (const vertex of this.vertices) {
+            result.push(...vertex.writes());
+        }
+
+        return result;
     }
 }

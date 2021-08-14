@@ -123,8 +123,8 @@
 
 .view-element.has-played {
     opacity: 0.7 !important;
-    transform: scale(0.7);
-    margin-bottom: -30px;
+    // transform: scale(0.7);
+    // margin-bottom: -30px;
 }
 
 
@@ -137,6 +137,7 @@
     font-weight: 300;
     letter-spacing: 0.5px;
     font-size: 14px;
+    white-space: pre;
 }
 
 /** View controller **/
@@ -235,4 +236,23 @@ tiny {
 .view-element:hover>.view-controls>.view-controls-button {
     transform: scale(1);
     color: black;
+}
+
+.highlight-cursor {
+    position: absolute;
+    // border: 1px solid rgba(0, 0, 0, 0.308);
+    transition: ease-in 0.2s;
+    border-radius: 5px;
+
+    position: absolute;
+
+    background: #c1e0ff;
+    mix-blend-mode: multiply;
+    z-index: 10;
+    user-select: none;
+    pointer-events: none;
+}
+
+.highlight-cursor.changing-content {
+    opacity: 0 !important;
 }
