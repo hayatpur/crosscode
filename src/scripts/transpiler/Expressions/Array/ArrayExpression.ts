@@ -25,16 +25,13 @@ export class ArrayExpression extends Node {
     animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
 
-        if (context.outputSpecifier == null) {
-            context.outputSpecifier = [];
-        }
-
-        graph.addVertex(new ArrayStartAnimation(context.outputSpecifier), this);
+        graph.addVertex(new ArrayStartAnimation(context.outputRegister), this);
 
         for (let i = 0; i < this.elements.length; i++) {
             const animation = this.elements[i].animation({
                 ...context,
-                outputSpecifier: [{ type: AccessorType.Symbol, value: '_ArrayExpression' }],
+                outputRegister: [...context.outputRegister, { type: AccessorType.Index, value: i }],
+                locationHint: [...context.outputRegister, { type: AccessorType.Index, value: i }],
             });
             graph.addVertex(animation, this);
         }

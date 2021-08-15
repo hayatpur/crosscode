@@ -296,7 +296,11 @@ export class Environment {
             }
 
             // Check if this item contains data
-            const { found, foundLocation } = this.getMemoryLocation(data, location, search[i]);
+            const { found, foundLocation } = this.getMemoryLocation(
+                data,
+                [...location, { type: AccessorType.Index, value: i }],
+                search[i]
+            );
 
             if (found) {
                 return { found: true, foundLocation };

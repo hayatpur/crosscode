@@ -25,20 +25,17 @@ export class AssignmentExpression extends Node {
         const outputSpecifier =
             this.left instanceof MemberExpression ? this.left.getSpecifier() : (this.left as Identifier).getSpecifier();
 
+        const register = [{ type: AccessorType.Register, value: `${this.id}_Assignment` }];
+
         // Right should be in the floating stack
         const right = this.right.animation({
             ...context,
-            outputSpecifier,
+            locationHint: outputSpecifier,
+            outputRegister: register,
         });
         graph.addVertex(right, this.right);
 
-        const move = new MoveAndPlaceAnimation(
-            [
-                { type: AccessorType.Symbol, value: '_FloatingStack' },
-                { type: AccessorType.Index, value: -1 },
-            ],
-            outputSpecifier
-        );
+        const move = new MoveAndPlaceAnimation(register, outputSpecifier);
         graph.addVertex(move, this);
 
         return graph;

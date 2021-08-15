@@ -14,7 +14,9 @@ export class Literal extends Node {
 
     animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
-        const create = new CreateLiteralAnimation(this.value, context.outputSpecifier, { xOff: context.xOff });
+        const create = new CreateLiteralAnimation(this.value, context.outputRegister, context.locationHint, {
+            xOff: context.xOff,
+        });
         graph.addVertex(create, this);
         return graph;
     }

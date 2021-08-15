@@ -54,6 +54,8 @@ export class BlockStatement extends Node {
         const animation = new AnimationGraph(this);
         if (!isProgram) animation.addVertex(new CreateScopeAnimation(), this);
 
+        context.outputRegister = [];
+
         let group = new AnimationGroup(this);
         let line = this.statements[0]?.meta.line;
 

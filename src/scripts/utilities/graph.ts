@@ -22,71 +22,86 @@ import MoveAndPlaceAnimation from '../animation/primitive/Data/MoveAndPlaceAnima
 //     return [];
 // }
 
-// /**
-//  * @param {number} index
-//  * @param {Edge[]} edges
-//  * @returns {{ neighbour: number; road: Edge; }[]}
-//  */
-// export function getNeighbours(index: number, edges: Edge[]): { neighbour: number; road: Edge }[] {
-//     const neighbours = [];
-//     for (const edge of edges) {
-//         if (edge.from == index) {
-//             neighbours.push({ neighbour: edge.to, road: edge });
-//         }
-//     }
+export function getNeighbours(index: number, edges: Edge[]): { neighbour: number; road: Edge }[] {
+    const neighbours = [];
 
-//     return neighbours;
-// }
+    for (const edge of edges) {
+        if (edge.from == index) {
+            neighbours.push({ neighbour: edge.to, road: edge });
+        }
+    }
 
-// /**
-//  * @param {number} index
-//  * @param {Edge[]} edges
-//  * @returns {{ neighbour: number; road: Edge; }[]}
-//  */
-// export function getOutgoingNeighbours(index: number, edges: Edge[]): { neighbour: number; road: Edge }[] {
-//     const neighbours = [];
-//     for (const edge of edges) {
-//         if (edge.to == index) {
-//             neighbours.push({ neighbour: edge.from, road: edge });
-//         }
-//     }
+    return neighbours;
+}
 
-//     return neighbours;
-// }
+export function getOutgoingNeighbours(index: number, edges: Edge[]): { neighbour: number; road: Edge }[] {
+    const neighbours = [];
 
-// /**
-//  * @param {number} index
-//  * @param {Edge[]} edges
-//  * @returns {number[]}
-//  */
-// export function getOutgoingFlow(index: number, edges: Edge[], mask = new Set()): number[] {
-//     const outgoing = [];
+    for (const edge of edges) {
+        if (edge.to == index) {
+            neighbours.push({ neighbour: edge.from, road: edge });
+        }
+    }
 
-//     const visited = new Set([index]);
-//     const queue = [index];
+    return neighbours;
+}
 
-//     while (queue.length != 0) {
-//         // Vertex that'll be visited now
-//         const vertex = queue.shift();
+export function getOutgoingFlow(index: number, edges: Edge[], mask: Set<number> = new Set()): number[] {
+    const outgoing: number[] = [];
 
-//         const neighbours = getNeighbours(vertex, edges);
+    const visited = new Set([index]);
+    const queue = [index];
 
-//         for (const { neighbour, road } of neighbours) {
-//             if (mask.has(neighbour)) continue;
+    while (queue.length != 0) {
+        // Vertex that'll be visited now
+        const vertex = queue.shift();
 
-//             if (road instanceof FlowEdge) {
-//                 outgoing.push(neighbour);
-//             }
+        const neighbours = getNeighbours(vertex, edges);
 
-//             if (!visited.has(neighbour)) {
-//                 queue.push(neighbour);
-//                 visited.add(neighbour);
-//             }
-//         }
-//     }
+        for (const { neighbour, road } of neighbours) {
+            if (mask.has(neighbour)) continue;
 
-//     return outgoing;
-// }
+            if (road instanceof FlowEdge) {
+                outgoing.push(neighbour);
+            }
+
+            if (!visited.has(neighbour)) {
+                queue.push(neighbour);
+                visited.add(neighbour);
+            }
+        }
+    }
+
+    return outgoing;
+}
+
+export function getIncomingFlow(index: number, edges: Edge[], mask: Set<number> = new Set()): number[] {
+    const incoming: number[] = [];
+
+    const visited = new Set([index]);
+    const queue = [index];
+
+    while (queue.length != 0) {
+        // Vertex that'll be visited now
+        const vertex = queue.shift();
+
+        const neighbours = getOutgoingNeighbours(vertex, edges);
+
+        for (const { neighbour, road } of neighbours) {
+            if (mask.has(neighbour)) continue;
+
+            if (road instanceof FlowEdge) {
+                incoming.push(neighbour);
+            }
+
+            if (!visited.has(neighbour)) {
+                queue.push(neighbour);
+                visited.add(neighbour);
+            }
+        }
+    }
+    return incoming;
+}
 
 // /**
 //  * @param {number} index
@@ -285,7 +300,8 @@ function intersection(A: AnimationData[], B: AnimationData[]) {
 }
 
 export function animationDataToString(data: AnimationData) {
-    return `${data.location.map((acc) => `D(${acc.value.toString()})`).join('_')}`;
+    return `D(${data.id})`;
+    // return `D(${data.location.map((acc) => `${acc.value.toString()}`).join('#')})`;
 }
 
 export function logAnimation(animation: AnimationGraph | AnimationNode, indent = 0, options = { first: false }) {
@@ -325,6 +341,8 @@ export function logAnimation(animation: AnimationGraph | AnimationNode, indent =
 
     let visited_vertices = new Set();
     let visited_edges = new Set();
+
+    console.log(animation);
 
     // Flow edges
     for (const edge of animation.edges.filter((edge) => edge instanceof FlowEdge)) {
@@ -402,6 +420,96 @@ export function computeParentIds(animation: AnimationGraph | AnimationNode, pare
     }
 }
 
-export function dissolveAnimation(animation: AnimationGraph) {
+export function dissolve(animation: AnimationGraph) {
     // Dissolve all children
+    for (let i = animation.vertices.length - 1; i >= 0; i--) {
+        dissolveAt(animation, i);
+    }
+}
+
+export function dissolveAt(parent: AnimationGraph, i: number) {
+    let vertex = parent.vertices[i];
+    if (vertex instanceof AnimationNode) return;
+
+    dissolve(vertex);
+
+    if (vertex instanceof AnimationGraph && vertex.node.constructor.name == 'BlockStatement') {
+        // Remove create and pop scope animations
+        vertex.removeVertexAt(vertex.vertices.length - 1);
+        vertex.removeVertexAt(0);
+    }
+
+    // Gut out the animations and edges from vertex and place them in front of this vertex
+
+    // Mark the start and end vertices of the graph
+    // const startIds: Set<string> = new Set();
+    // const endIds: Set<string> = new Set();
+    // for (let j = 0; j < vertex.vertices.length; j++) {
+    //     const outgoing_flow = getOutgoingFlow(j, vertex.edges);
+    //     const incoming_flow = getIncomingFlow(j, vertex.edges);
+
+    //     if (incoming_flow.length == 0) {
+    //         startIds.add(vertex.vertices[j].id);
+    //     }
+
+    //     if (outgoing_flow.length == 0) {
+    //         endIds.add(vertex.vertices[j].id);
+    //     }
+    // }
+
+    // const incoming_edges: Edge[] = [];
+    // const outgoing_edges: Edge[] = [];
+
+    // for (const edge of parent.edges) {
+    //     if (edge.to == i) {
+    //         incoming_edges.push(edge);
+    //     }
+
+    //     if (edge.from == i) {
+    //         outgoing_edges.push(edge);
+    //     }
+    // }
+
+    // Remove all old edges
+    for (let k = parent.edges.length - 1; k >= 0; k--) {
+        if (parent.edges[k].from == i || parent.edges[k].to == i) {
+            parent.edges.splice(k, 1);
+        }
+    }
+
+    for (let j = vertex.vertices.length - 1; j >= 0; j--) {
+        parent.addVertexAt(vertex.vertices[j], i + 1);
+    }
+
+    for (let j = 0; j < vertex.edges.length; j++) {
+        vertex.edges[j].from += i + 1;
+        vertex.edges[j].to += i + 1;
+
+        parent.edges.push(vertex.edges[j]);
+    }
+
+    // Redirect edges that were coming into 'i' to all of its start nodes
+    // for (const edge of incoming_edges) {
+    //     for (let k = parent.vertices.length - 1; k >= 0; k--) {
+    //         if (startIds.has(parent.vertices[k].id)) {
+    //             const copy: Edge = new (<any>edge.constructor)(edge.from, k, edge.data);
+    //             parent.addEdge(copy);
+    //         }
+    //     }
+    // }
+
+    // // Redirect edges that were outgoing from 'i' to all of its end nodes
+    // for (const edge of outgoing_edges) {
+    //     for (let k = parent.vertices.length - 1; k >= 0; k--) {
+    //         if (endIds.has(parent.vertices[k].id)) {
+    //             const copy: Edge = new (<any>edge.constructor)(k, edge.to, edge.data);
+    //             parent.addEdge(copy);
+    //         }
+    //     }
+    // }
+
+    // Remove vertex
+    parent.removeVertexAt(i);
+
+    computeAllEdges(parent);
 }

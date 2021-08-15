@@ -20,7 +20,7 @@ export class Identifier extends Node {
         const graph = new AnimationGraph(this);
 
         // Create a copy of it
-        const copy = new CopyDataAnimation(this.getSpecifier());
+        const copy = new CopyDataAnimation(this.getSpecifier(), context.outputRegister);
         graph.addVertex(copy, this);
 
         // Float it up

@@ -10,7 +10,9 @@ export enum AnimationPlayback {
 }
 
 export interface AnimationContext {
-    outputSpecifier: Accessor[];
+    locationHint?: Accessor[]; // Hint of where to place data (for aesthetic reasons)
+    outputRegister?: Accessor[]; // Register to place data at
+
     speedMultiplier?: number;
     directExpression?: boolean;
     xOff: number;

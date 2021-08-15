@@ -18,15 +18,5 @@ export class ArrayEndAnimation extends AnimationNode {
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment, options = { baking: false }) {
-        // const input = view.find(this.inputSpecifier);
-        // const output = view.find(this.outputSpecifier);
-        // input.type = 'Array';
-        // input.value = [];
-        // output.value = input;
-        // // Create the array container - TODO: incorporate indexer
-        // const arrayContainer = new ArrayContainer();
-        // output.container.addContainer(arrayContainer);
-        // input.container = arrayContainer;
-    }
+    end(environment: Environment, options = { baking: false }) {}
 }

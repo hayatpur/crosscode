@@ -19,43 +19,24 @@ export default class BinaryExpression extends Node {
         this.right = Transpiler.transpile(ast.right, meta);
 
         this.operator = ast.operator;
-
-        // @ts-ignore
     }
 
     animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
 
-        const left = this.left.animation(context);
+        const leftRegister = [{ type: AccessorType.Register, value: `${this.id}_BinaryExpressionLeft` }];
+        const rightRegister = [{ type: AccessorType.Register, value: `${this.id}_BinaryExpressionRight` }];
+
+        const left = this.left.animation({ ...context, outputRegister: leftRegister });
         graph.addVertex(left, this.left);
 
-        const right = this.right.animation(context);
+        const right = this.right.animation({ ...context, outputRegister: rightRegister });
         graph.addVertex(right, this.right);
 
-        const initial = new BinaryExpressionSetup(
-            [
-                { type: AccessorType.Symbol, value: '_FloatingStack' },
-                { type: AccessorType.Index, value: -2 },
-            ],
-            [
-                { type: AccessorType.Symbol, value: '_FloatingStack' },
-                { type: AccessorType.Index, value: -1 },
-            ],
-            this.operator
-        );
+        const initial = new BinaryExpressionSetup(leftRegister, rightRegister, this.operator);
         graph.addVertex(initial, this);
 
-        const evaluate = new BinaryExpressionEvaluate(
-            [
-                { type: AccessorType.Symbol, value: '_FloatingStack' },
-                { type: AccessorType.Index, value: -2 },
-            ],
-            [
-                { type: AccessorType.Symbol, value: '_FloatingStack' },
-                { type: AccessorType.Index, value: -1 },
-            ],
-            this.operator
-        );
+        const evaluate = new BinaryExpressionEvaluate(leftRegister, rightRegister, this.operator);
         graph.addVertex(evaluate, this);
 
         return graph;

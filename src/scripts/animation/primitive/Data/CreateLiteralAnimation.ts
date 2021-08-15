@@ -6,17 +6,22 @@ import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class CreateLiteralAnimation extends AnimationNode {
     value: string | number | bigint | boolean | RegExp;
-    outputSpecifier: Accessor[];
+    locationHint: Accessor[];
+    outputRegister: Accessor[];
 
     constructor(
         value: string | number | bigint | boolean | RegExp,
-        outputSpecifier: Accessor[],
+        outputRegister: Accessor[],
+        locationHint: Accessor[],
+
         options: AnimationOptions = {}
     ) {
         super(options);
 
         this.value = value;
-        this.outputSpecifier = outputSpecifier;
+
+        this.outputRegister = outputRegister;
+        this.locationHint = locationHint;
 
         this.base_duration = 30;
     }
@@ -37,12 +42,12 @@ export class CreateLiteralAnimation extends AnimationNode {
         }
 
         // Get the output data
-        // console.log('Specifier', this.outputSpecifier);
-        const output = environment.resolvePath(this.outputSpecifier) as Data;
+        // console.log('Specifier', this.locationHint);
+        const location = environment.resolvePath(this.locationHint) as Data;
         environment.updateLayout();
 
-        data.transform.x = output.transform?.x ?? 0;
-        data.transform.y = output.transform?.y ?? 0;
+        data.transform.x = location.transform?.x ?? 0;
+        data.transform.y = location.transform?.y ?? 0;
 
         // Put it in the floating stack
         const FloatingStack = environment.resolvePath([{ type: AccessorType.Symbol, value: '_FloatingStack' }], {
@@ -71,18 +76,7 @@ export class CreateLiteralAnimation extends AnimationNode {
         data.transform.z = remap(t, 0, 1, 3, 1);
     }
 
-    end(environment: Environment, options = { baking: false }) {
-        // console.log('Ending...');
-        // const input = view.find(this.inputSpecifier);
-        // const output = view.find(this.outputSpecifier);
-        // input.type = 'Array';
-        // input.value = [];
-        // output.value = input;
-        // // Create the array container - TODO: incorporate indexer
-        // const arrayContainer = new ArrayContainer();
-        // output.container.addContainer(arrayContainer);
-        // input.container = arrayContainer;
-    }
+    end(environment: Environment, options = { baking: false }) {}
 
     computeReadAndWrites(data: AnimationData) {
         this._reads = [];

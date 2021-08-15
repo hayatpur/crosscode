@@ -89,7 +89,7 @@ export default class MoveAndPlaceAnimation extends AnimationNode {
         } else {
             // Remove the copy
             environment.removeAt(environment.getMemoryLocation(input).foundLocation);
-            to.replaceWith(input, { frame: true });
+            to.replaceWith(input, { frame: true, id: true });
         }
 
         input.transform.floating = false;
@@ -105,6 +105,6 @@ export default class MoveAndPlaceAnimation extends AnimationNode {
 
     computeReadAndWrites(inputData: AnimationData, outputData: AnimationData) {
         this._reads = [inputData];
-        this._writes = [inputData, outputData];
+        this._writes = [outputData];
     }
 }

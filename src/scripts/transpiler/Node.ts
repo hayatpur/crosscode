@@ -13,9 +13,15 @@ export class Node {
     meta: NodeMeta;
     loc: ESTree.SourceLocation;
 
+    static id = 0;
+    id: string;
+
     constructor(ast: ESTree.Node, meta: NodeMeta) {
         this.meta = meta;
         this.loc = ast.loc;
+
+        this.id = `Node(${Node.id})`;
+        Node.id += 1;
     }
 
     animation(context?: AnimationContext): AnimationGraph {

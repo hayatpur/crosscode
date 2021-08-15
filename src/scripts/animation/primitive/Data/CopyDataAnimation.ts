@@ -5,10 +5,12 @@ import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class CopyDataAnimation extends AnimationNode {
     dataSpecifier: Accessor[];
+    outputRegister: Accessor[];
 
-    constructor(dataSpecifier: Accessor[], options: AnimationOptions = {}) {
+    constructor(dataSpecifier: Accessor[], outputRegister: Accessor[], options: AnimationOptions = {}) {
         super(options);
         this.dataSpecifier = dataSpecifier;
+        this.outputRegister = outputRegister;
     }
 
     begin(environment: Environment, options = { baking: false }) {

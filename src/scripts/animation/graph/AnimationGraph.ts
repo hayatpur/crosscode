@@ -25,6 +25,11 @@ export interface AnimationData {
     id: string;
 }
 
+export interface AnimationGraphPath {
+    node: AnimationGraph | AnimationNode;
+    edge?: Edge;
+}
+
 export class AnimationGraph {
     static id = 0;
     node: Node = null;
@@ -101,14 +106,35 @@ export class AnimationGraph {
         }
     }
 
+    removeVertex(vertex: AnimationGraph | AnimationNode) {
+        const index = this.vertices.indexOf(vertex);
+        if (index == -1) return;
+
+        // console.log('Removing at index', index);
+        // console.log('Pre Vertices', JSON.parse(JSON.stringify(this.vertices)));
+        // console.log('Pre Edges', JSON.parse(JSON.stringify(this.edges)));
+        this.removeVertexAt(index);
+        // console.log('Post Vertices', JSON.parse(JSON.stringify(this.vertices)));
+        // console.log('Post Edges', JSON.parse(JSON.stringify(this.edges)));
+    }
+
+    removeEdge(edge: Edge) {
+        const index = this.edges.findIndex((e) => e.id == edge.id);
+        if (index == -1) return;
+
+        this.edges.splice(index, 1);
+    }
+
     removeVertexAt(i: number) {
+        // console.log('Removing at...', i);
         // Remove vertex if null
         this.vertices.splice(i, 1);
 
         // Shift over all edges
         for (let j = this.edges.length - 1; j >= 0; j--) {
             if (this.edges[j].from == i || this.edges[j].to == i) {
-                this.edges.slice(j, 1);
+                this.edges.splice(j, 1);
+                continue;
             }
 
             if (this.edges[j].from > i) this.edges[j].from -= 1;

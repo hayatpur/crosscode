@@ -8,6 +8,7 @@ export enum AccessorType {
     ID = 'ID',
     Symbol = 'Symbol',
     Index = 'Index',
+    Register = 'Register',
 }
 
 export interface Accessor {

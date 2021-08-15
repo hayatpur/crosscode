@@ -11,7 +11,7 @@ import { Transpiler } from '../Transpiler';
 
 export class VariableDeclarator extends Node {
     init?: Node = null;
-    id: Identifier;
+    identifier: Identifier;
 
     constructor(ast: ESTree.VariableDeclarator, meta: NodeMeta) {
         super(ast, meta);
@@ -22,52 +22,51 @@ export class VariableDeclarator extends Node {
         }
 
         // Compile LHS of expression (i.e. the symbol)
-        this.id = new Identifier(ast.id as ESTree.Identifier, meta);
+        this.identifier = new Identifier(ast.id as ESTree.Identifier, meta);
     }
 
     animation(context: AnimationContext) {
         const graph: AnimationGraph = new AnimationGraph(this);
 
-        // console.log(this.meta.states, this.id.name, this.init);
         // If memory already exists
         if (
-            (this.meta.states.current[this.id.name]?.reference > 0 ||
-                this.meta.states.prev[this.id.name]?.reference > 0) &&
+            (this.meta.states.current[this.identifier.name]?.reference > 0 ||
+                this.meta.states.prev[this.identifier.name]?.reference > 0) &&
             this.init != null &&
             this.init instanceof Identifier
         ) {
             // Allocate a place for variable
-            const bind = new BindAnimation(this.id.name, this.init.getSpecifier());
-            graph.addVertex(bind, this.id);
+            const bind = new BindAnimation(this.identifier.name, this.init.getSpecifier());
+            graph.addVertex(bind, this.identifier);
 
             return graph;
         } else {
             // Allocate a place for variable
-            const bind = new BindAnimation(this.id.name);
-            graph.addVertex(bind, this.id);
+            const bind = new BindAnimation(this.identifier.name);
+            graph.addVertex(bind, this.identifier);
 
             // Assign initial value to variable
             if (this.init instanceof ArrayExpression) {
                 const initialize = this.init.animation({
                     ...context,
-                    outputSpecifier: [{ type: AccessorType.Symbol, value: this.id.name }],
+                    locationHint: [{ type: AccessorType.Symbol, value: this.identifier.name }],
+                    outputRegister: [{ type: AccessorType.Symbol, value: this.identifier.name }],
                 });
                 graph.addVertex(initialize, this.init);
             } else if (this.init != null) {
+                const register = [{ type: AccessorType.Register, value: `${this.id}_VariableDeclaration` }];
+
                 // Copy / create and float it up at the location
                 const initialize = this.init.animation({
                     ...context,
-                    outputSpecifier: [{ type: AccessorType.Symbol, value: this.id.name }],
+                    locationHint: [{ type: AccessorType.Symbol, value: this.identifier.name }],
+                    outputRegister: register,
                 });
                 graph.addVertex(initialize, this.init);
 
-                const place = new MoveAndPlaceAnimation(
-                    [
-                        { type: AccessorType.Symbol, value: '_FloatingStack' },
-                        { type: AccessorType.Index, value: -1 },
-                    ],
-                    [{ type: AccessorType.Symbol, value: this.id.name }]
-                );
+                const place = new MoveAndPlaceAnimation(register, [
+                    { type: AccessorType.Symbol, value: this.identifier.name },
+                ]);
                 graph.addVertex(place, this);
             }
         }

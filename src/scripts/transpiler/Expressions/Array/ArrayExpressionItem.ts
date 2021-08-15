@@ -30,24 +30,17 @@ export class ArrayExpressionItem extends Node {
     animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
 
-        // Creates literal / expression onto float stack
+        const register = [{ type: AccessorType.Register, value: `${this.id}_ArrayExpressionItem` }];
+
+        // Creates literal / expression onto outputRegister
         const animation = this.item.animation({
             ...context,
-            outputSpecifier: [
-                ...context.outputSpecifier,
-                { type: AccessorType.Index, value: this.index.value as number },
-            ],
+            outputRegister: register,
         });
         graph.addVertex(animation, this);
 
         // Move and place it
-        const place = new MoveAndPlaceAnimation(
-            [
-                { type: AccessorType.Symbol, value: '_FloatingStack' },
-                { type: AccessorType.Index, value: -1 },
-            ],
-            [...context.outputSpecifier, { type: AccessorType.Index, value: this.index.value as number }]
-        );
+        const place = new MoveAndPlaceAnimation(register, context.outputRegister);
         graph.addVertex(place, this);
 
         return graph;

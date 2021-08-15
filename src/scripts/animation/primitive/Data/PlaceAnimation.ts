@@ -44,7 +44,7 @@ export default class PlaceAnimation extends AnimationNode {
         } else {
             // Remove the copy
             environment.removeAt(environment.getMemoryLocation(input).foundLocation);
-            to.replaceWith(input, { frame: true });
+            to.replaceWith(input, { frame: true, id: true });
         }
 
         input.transform.floating = false;
