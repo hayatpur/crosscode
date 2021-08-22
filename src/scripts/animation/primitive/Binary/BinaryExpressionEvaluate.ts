@@ -9,10 +9,12 @@ export default class BinaryExpressionSetup extends AnimationNode {
     leftSpecifier: Accessor[];
     rightSpecifier: Accessor[];
     operator: ESTree.BinaryOperator;
+    outputRegister: Accessor[];
 
     constructor(
         leftSpecifier: Accessor[],
         rightSpecifier: Accessor[],
+        outputRegister: Accessor[],
         operator: ESTree.BinaryOperator,
         options: AnimationOptions = {}
     ) {
@@ -20,6 +22,7 @@ export default class BinaryExpressionSetup extends AnimationNode {
 
         this.leftSpecifier = leftSpecifier;
         this.rightSpecifier = rightSpecifier;
+        this.outputRegister = outputRegister;
 
         this.base_duration = 50;
         this.operator = operator;
@@ -63,9 +66,6 @@ export default class BinaryExpressionSetup extends AnimationNode {
             x: data.transform.x + data.transform.width / 4,
             y: data.transform.y,
         };
-
-        if (options.baking) {
-        }
     }
 
     seek(environment: Environment, time: number) {
@@ -111,19 +111,14 @@ export default class BinaryExpressionSetup extends AnimationNode {
             );
         }
 
-        const FloatingStack = environment.resolvePath([{ type: AccessorType.Symbol, value: '_FloatingStack' }], {
-            noResolvingId: true,
-        }) as Data;
+        // Add evaluated to environment
 
-        // Pop them from stack
-        environment.removeAt(environment.getMemoryLocation(left).foundLocation);
-        environment.removeAt(environment.getMemoryLocation(right).foundLocation);
-
-        (FloatingStack.value as Data[]).pop();
-        (FloatingStack.value as Data[]).pop();
-
-        // Put it in the floating stack
-        FloatingStack.addDataAt([], new Data({ type: DataType.ID, value: evaluated.id }));
+        // Put it in the output register (if any)
+        if (this.outputRegister.length > 0) {
+            (environment.resolvePath(this.outputRegister) as Data).replaceWith(
+                new Data({ type: DataType.ID, value: evaluated.id })
+            );
+        }
     }
 
     computeReadAndWrites(leftData: AnimationData, rightData: AnimationData, evaluatedData: AnimationData) {

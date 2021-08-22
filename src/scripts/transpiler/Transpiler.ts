@@ -20,6 +20,8 @@ import { ExpressionStatement } from './Statements/ExpressionStatement';
 import ForStatement from './Statements/Loops/ForStatement';
 import ForStatementIncrement from './Statements/Loops/ForStatementIncrement';
 import ForStatementIteration from './Statements/Loops/ForStatementIteration';
+import WhileStatement from './Statements/Loops/WhileStatement';
+import WhileStatementIteration from './Statements/Loops/WhileStatementIteration';
 import { Program } from './Statements/Program';
 import { VariableDeclaration } from './Statements/VariableDeclaration';
 import { VariableDeclarator } from './Statements/VariableDeclarator';
@@ -58,6 +60,9 @@ export class Transpiler {
             FunctionStatement,
             CallExpression,
             ReturnStatement,
+
+            WhileStatementIteration,
+            WhileStatement,
         };
 
         if (mapping[`${ast.type}`] == null) {

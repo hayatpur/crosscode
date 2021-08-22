@@ -1,7 +1,6 @@
 import * as ESTree from 'estree';
 import { AnimationGraph } from '../../../animation/graph/AnimationGraph';
 import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-import { ArrayEndAnimation } from '../../../animation/primitive/Container/ArrayEndAnimation';
 import { ArrayStartAnimation } from '../../../animation/primitive/Container/ArrayStartAnimation';
 import { AccessorType, Data } from '../../../environment/Data';
 import { Node, NodeMeta } from '../../Node';
@@ -42,8 +41,6 @@ export class ArrayExpression extends Node {
         // for (let i = 0; i < this.elements.length; i++) {
         //     graph.addEdge(new FlowEdge(0, i + 1, this.getData.bind(this)));
         // }
-
-        graph.addVertex(new ArrayEndAnimation(), this);
 
         return graph;
     }

@@ -36,7 +36,12 @@ export default class BinaryExpression extends Node {
         const initial = new BinaryExpressionSetup(leftRegister, rightRegister, this.operator);
         graph.addVertex(initial, this);
 
-        const evaluate = new BinaryExpressionEvaluate(leftRegister, rightRegister, this.operator);
+        const evaluate = new BinaryExpressionEvaluate(
+            leftRegister,
+            rightRegister,
+            context.outputRegister,
+            this.operator
+        );
         graph.addVertex(evaluate, this);
 
         return graph;

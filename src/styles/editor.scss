@@ -136,3 +136,15 @@
 #errors.active {
     display: inherit;
 }
+
+.monaco-editor .codelens-decoration {
+    color: #999999;
+    margin-left: -10px;
+    margin-top: -2px;
+    opacity: 1;
+}
+
+.monaco-editor .codelens-decoration>span,
+.monaco-editor .codelens-decoration>a {
+    font-size: 14px;
+}

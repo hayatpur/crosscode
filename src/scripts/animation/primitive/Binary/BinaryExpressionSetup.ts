@@ -16,7 +16,7 @@ export default class BinaryExpressionSetup extends AnimationNode {
         operator: ESTree.BinaryOperator,
         options: AnimationOptions = {}
     ) {
-        super(options);
+        super({ ...options, duration: 60 });
 
         this.leftSpecifier = leftSpecifier;
         this.rightSpecifier = rightSpecifier;

@@ -1,7 +1,10 @@
 @import 'editor';
 @import 'view';
+@import 'checkbox';
 @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap');
+@import url("https://css.gg/check.css");
+@import url("https://css.gg/close.css");
 
 
 :root {
@@ -39,9 +42,12 @@ header {
     display: flex;
     margin-top: 2rem;
     justify-content: center;
-    transform: scale(0.9);
     z-index: 10;
     background: #fff;
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+    margin-bottom: 4rem;
 }
 
 header>div {
@@ -85,4 +91,10 @@ header .seperator>span {
     border-color: #bdbdbd;
     border-top-style: solid;
     border-top-width: 1px;
+}
+
+.question {
+    margin-bottom: 5em;
+    margin-top: -2rem;
+    margin-left: 2.5rem;
 }

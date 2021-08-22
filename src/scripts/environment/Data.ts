@@ -2,6 +2,7 @@ export enum DataType {
     Literal = 'Literal',
     Array = 'Array',
     ID = 'ID',
+    Register = 'Register',
 }
 
 export enum AccessorType {
@@ -24,6 +25,7 @@ export interface Transform {
     height: number;
     floating: boolean;
     opacity: number;
+    step: string;
 }
 
 export interface DataParams {
@@ -52,7 +54,16 @@ export class Data {
     // Automatically assigns props as attribute to data
     constructor(props: DataParams) {
         this.type = props.type;
-        this.transform = props.transform ?? { x: 0, y: 0, z: 0, width: 0, height: 0, floating: false, opacity: 1 };
+        this.transform = props.transform ?? {
+            x: 0,
+            y: 0,
+            z: 0,
+            width: 0,
+            height: 0,
+            floating: false,
+            opacity: 1,
+            step: null,
+        };
         this.value = props.value;
 
         if (this.type == DataType.Literal) {
@@ -65,7 +76,7 @@ export class Data {
         Data.id += 1;
     }
 
-    copy() {
+    copy(): Data {
         let value = this.value;
         if (this.type == DataType.Array) {
             value = (value as Data[]).map((value) => value.copy());

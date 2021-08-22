@@ -14,6 +14,11 @@ export class Cursor {
         document.body.append(this.element);
     }
 
+    reset() {
+        this.element.style.width = `${0}px`;
+        this.element.style.height = `${0}px`;
+    }
+
     destroy() {
         this.element.remove();
     }

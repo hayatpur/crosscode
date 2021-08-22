@@ -36,7 +36,6 @@ export class AnimationGraph {
     statement: Node = null;
 
     vertices: (AnimationNode | AnimationGraph)[] = [];
-
     edges: Edge[] = [];
 
     delay: number = 0;
@@ -46,11 +45,16 @@ export class AnimationGraph {
     playback = '';
     options: AnimationGraphOptions;
     id: string;
-    collapsedStarts: any;
+    collapsedStarts: number[] = null;
     precondition: Environment = null;
 
     showing = false;
     parentIds: Set<string> = new Set();
+
+    // Original bake information
+    originalVertices: (AnimationNode | AnimationGraph)[] = [];
+    originalEdges: Edge[] = [];
+    originalPrecondition: Environment = null;
 
     constructor(node: Node, options: AnimationGraphOptions = {}) {
         this.node = node;
@@ -61,6 +65,13 @@ export class AnimationGraph {
         AnimationGraph.id += 1;
 
         this.showing = node instanceof VariableDeclarator || node instanceof AssignmentExpression;
+    }
+
+    resetToOriginal() {
+        // TODO
+        this.vertices = [...this.originalVertices];
+        this.edges = [...this.originalEdges];
+        this.precondition = this.originalPrecondition.copy();
     }
 
     addVertex(vertex: AnimationGraph | AnimationNode, statement: Node = null) {
@@ -337,5 +348,62 @@ export class AnimationGraph {
         }
 
         return result;
+    }
+}
+
+export class AnimationGroup extends AnimationGraph {
+    constructor(node: Node) {
+        super(node);
+        this.showing = true;
+    }
+
+    getName() {
+        return 'Animation Group';
+    }
+
+    getLocation() {
+        const lines = document.body.getElementsByClassName('view-lines')[0];
+
+        let bbox = null;
+
+        let startRow = Math.min(
+            ...this.vertices.map((v) => {
+                const loc = v instanceof AnimationGraph ? v.node.loc : v.statement.loc;
+                return loc.start.line;
+            })
+        );
+
+        let endRow = Math.max(
+            ...this.vertices.map((v) => {
+                const loc = v instanceof AnimationGraph ? v.node.loc : v.statement.loc;
+                return loc.end.line;
+            })
+        );
+
+        for (let row = startRow; row <= endRow; row++) {
+            const line_bbox = lines.children[row - 1]?.children[0].getBoundingClientRect();
+            if (line_bbox == null) continue;
+
+            if (bbox == null) {
+                bbox = line_bbox;
+                continue;
+            }
+
+            // Expand it
+            bbox.width = Math.max(bbox.width, line_bbox.width);
+            bbox.height = Math.max(bbox.height, line_bbox.y + line_bbox.height - bbox.y);
+        }
+
+        if (bbox == null) {
+            return { x: 0, y: 0, width: 0, height: 0 };
+        }
+
+        // Column
+        // const char = Editor.instance.computeCharWidth();
+        // bbox.x += char * this.location.startCol;
+        // bbox.width -= char * this.location.startCol;
+        // bbox.width = Math.max((this.location.endCol - this.location.startCol) * char, bbox.width);
+
+        return { bbox, startRow, endRow };
     }
 }

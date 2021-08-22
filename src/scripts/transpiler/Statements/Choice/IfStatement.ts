@@ -9,7 +9,6 @@ export default class IfStatement extends Node {
     consequent?: Node;
     alternate?: Node;
 
-    // TODO: support non-variable declarations
     constructor(ast: ESTree.IfStatement, meta: NodeMeta) {
         super(ast, meta);
 
@@ -47,6 +46,10 @@ export default class IfStatement extends Node {
 
     animation(context: AnimationContext) {
         const graph = new AnimationGraph(this);
+
+        if (this.test != null) {
+            graph.addVertex(this.test.animation(context), this.test);
+        }
 
         // If successful
         if (this.consequent != null) {

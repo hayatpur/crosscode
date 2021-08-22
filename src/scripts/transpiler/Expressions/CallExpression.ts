@@ -31,6 +31,7 @@ export class CallExpression extends Node {
         // Try to grab the floating call expr that belongs to it
         for (const floating of FloatingExpressionStatement.statements) {
             if (floating.taken) continue;
+            console.log(floating);
             let sameCallee = false;
             if (floating.callee instanceof MemberExpression && this.callee instanceof MemberExpression) {
                 // TODO
@@ -42,6 +43,7 @@ export class CallExpression extends Node {
             if (sameCallee && floating.loc.start.line == this.loc.start.line) {
                 this.body = floating.body;
                 floating.taken = true;
+                console.log('Success');
                 break;
             }
         }

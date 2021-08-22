@@ -5,6 +5,7 @@ import { Accessor, AccessorType, Data, DataType } from './Data';
 export class Environment {
     bindingFrames: { [name: string]: Accessor[] }[];
     memory: (Data | null)[];
+    registers: { [name: string]: Data };
     _temps: any = {};
 
     // Registers
@@ -18,7 +19,6 @@ export class Environment {
                 _ArrayExpression: [{ type: AccessorType.Index, value: 0 }],
                 _LatestExpression: [{ type: AccessorType.Index, value: 1 }],
                 _LatestDeclaration: [{ type: AccessorType.Index, value: 2 }],
-                _FloatingStack: [{ type: AccessorType.Index, value: 3 }],
             },
         ];
 
@@ -26,8 +26,9 @@ export class Environment {
             new Data({ type: DataType.ID }),
             new Data({ type: DataType.ID }),
             new Data({ type: DataType.ID }),
-            new Data({ type: DataType.Array, value: [] }),
         ];
+
+        this.registers = {};
 
         // this.registerA = []
     }
@@ -86,7 +87,7 @@ export class Environment {
     copy() {
         const copy = new Environment();
         copy.bindingFrames = JSON.parse(JSON.stringify(this.bindingFrames));
-        copy.memory = this.memory.map((data) => (data ? data.copy() : null));
+        copy.memory = this.memory.map((data) => (data != null ? data.copy() : null));
         copy._temps = JSON.parse(JSON.stringify(this._temps));
         copy.validIds = new Set(this.validIds);
 
@@ -181,7 +182,21 @@ export class Environment {
 
     resolve(accessor: Accessor, _options: { noResolvingId?: boolean } = {}): Data | Environment {
         // If parent is the environment
-        if (accessor.type == AccessorType.ID) {
+        if (accessor.type == AccessorType.Register) {
+            if (this.registers[accessor.value] == null) {
+                this.registers[accessor.value] = new Data({ type: DataType.Register });
+            }
+
+            const registerData = this.registers[accessor.value];
+
+            if (registerData.type == DataType.ID) {
+                return this.resolvePath([{ type: AccessorType.ID, value: registerData.value as string }]);
+            } else if (registerData.type == DataType.Register) {
+                return registerData;
+            } else {
+                console.error('Invalid register type, has to be either ID or Register', registerData.type);
+            }
+        } else if (accessor.type == AccessorType.ID) {
             const search = [...this.memory];
 
             while (search.length > 0) {

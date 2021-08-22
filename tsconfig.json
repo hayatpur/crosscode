@@ -10,7 +10,8 @@
 		"types": [],
 		"baseUrl": "./node_modules",
 		"jsx": "preserve",
-		"typeRoots": ["node_modules/@types"]
+		"typeRoots": ["node_modules/@types"],
+		"allowJs": true
 	},
 	"include": ["./src/**/*"],
 	"exclude": ["node_modules"]

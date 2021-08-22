@@ -1,11 +1,11 @@
 import { Cursor } from '../animation/Cursor';
+import { applyAbstractions } from '../animation/graph/abstraction/AbstractionController';
 import { AnimationGraph } from '../animation/graph/AnimationGraph';
 import { Editor } from '../editor/Editor';
 import { Environment } from '../environment/Environment';
 import { Program } from '../transpiler/Statements/Program';
 import { Transpiler } from '../transpiler/Transpiler';
-import { computeAllGraphEdges, computeParentIds, dissolve, logAnimation } from '../utilities/graph';
-import { findMovementSubgraph, simplifyMovement } from '../utilities/graph-simplification';
+import { computeAllGraphEdges, computeParentIds } from '../utilities/graph';
 import { Ticker } from '../utilities/Ticker';
 import { View } from '../view/View';
 import { Compiler } from './Compiler';
@@ -49,7 +49,9 @@ export class Executor {
         this.editor.onChangeContent.add(() => {
             this.paused = true;
             document.body.querySelector(`.view-element.root`)?.classList.add('changing-content');
+            Cursor.instance.reset();
             document.body.querySelector(`.highlight-cursor`)?.classList.add('changing-content');
+
             clearTimeout(typingTimer);
             typingTimer = setTimeout(this.execute.bind(this), 500);
         });
@@ -120,21 +122,10 @@ export class Executor {
         computeParentIds(this.animation);
         computeAllGraphEdges(this.animation);
 
-        // Simplify animation
-        const testSubject = this.animation.vertices[1] as AnimationGraph;
-        dissolve(testSubject);
-        const movement = findMovementSubgraph(testSubject);
-        simplifyMovement(testSubject, movement);
-        testSubject.showing = true;
-        console.log(testSubject);
-        console.log(logAnimation(testSubject));
-
-        // Bake views
-        this.animation.seek([new Environment()], this.animation.duration, { baking: true, indent: 0 });
-        this.animation.reset({ baking: true });
-
         // View of animation
         this.view = new View(this.animation);
+
+        applyAbstractions(this.animation, { Transitions: [{}] });
 
         console.log('[Executor] Finished compiling...');
         console.log('\tStorage', storage);
@@ -154,10 +145,10 @@ export class Executor {
 
         this.time += dt * this.speed;
 
-        this.view.update();
-
         // Apply animations
         const environments = [...View.shownViews].map((view) => view.environment);
         this.animation?.seek(environments, this.time);
+
+        this.view.update();
     }
 }

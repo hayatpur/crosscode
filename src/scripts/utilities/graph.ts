@@ -9,9 +9,12 @@ import { AnimationData, AnimationGraph } from '../animation/graph/AnimationGraph
 import AntiEdge from '../animation/graph/edges/AntiEdge';
 import { Edge } from '../animation/graph/edges/Edge';
 import FlowEdge from '../animation/graph/edges/FlowEdge';
+import OutputEdge from '../animation/graph/edges/OutputEdge';
 import { AnimationNode } from '../animation/primitive/AnimationNode';
 import CopyDataAnimation from '../animation/primitive/Data/CopyDataAnimation';
 import MoveAndPlaceAnimation from '../animation/primitive/Data/MoveAndPlaceAnimation';
+import CreateScopeAnimation from '../animation/primitive/Scope/CreateScopeAnimation';
+import PopScopeAnimation from '../animation/primitive/Scope/PopScopeAnimation';
 
 // /**
 //  * @param {number} index
@@ -217,21 +220,28 @@ export function getIncomingFlow(index: number, edges: Edge[], mask: Set<number> 
 /**
  * Returns set of dependency edges from vertices[index] to all other vertices.
  */
-export function computeEdges(index: number, vertices: (AnimationGraph | AnimationNode)[]): Edge[] {
+export function computeEdges(index: number, graph: AnimationGraph, masks: Set<string>[] = []): Edge[] {
     let edges: Edge[] = [];
 
-    let reads = vertices[index].reads();
-    let writes = vertices[index].writes();
+    let reads = graph.vertices[index].reads();
+    let writes = graph.vertices[index].writes();
 
     // if (reads == null || writes == null || vertices[index].constructor.name == 'CursorLineAnimation') return new Set();
 
     const flow_added: AnimationData[] = [];
     const anti_added: AnimationData[] = [];
-    // const out_added = new Set();
+    const output_added: AnimationData[] = [];
     // const conditional_added = new Set();
 
+    // let candidates = [];
+
+    // candidates = graph.vertices.slice(0, index - 1);
+    // candidates.reverse();
+
+    // Look at all vertices 'before' this one, starting from the closest one
+
     for (let i = index - 1; i >= 0; i--) {
-        let other = vertices[i];
+        let other = graph.vertices[i];
 
         let other_reads = other.reads();
         let other_writes = other.writes();
@@ -243,7 +253,14 @@ export function computeEdges(index: number, vertices: (AnimationGraph | Animatio
         const anti = intersection(writes, other_reads);
 
         // If this statement writes something that the other statement writes to
-        // const out = intersection(writes, other_writes);
+        const output = intersection(writes, other_writes);
+
+        const fromId = graph.vertices[i].id;
+        const toId = graph.vertices[index].id;
+
+        if (masks.some((group) => group.has(fromId) && group.has(toId))) {
+            continue;
+        }
 
         // Add flow edges
         for (const data of flow) {
@@ -258,19 +275,28 @@ export function computeEdges(index: number, vertices: (AnimationGraph | Animatio
             edges.push(new AntiEdge(i, index, data));
             anti_added.push(data);
         }
+
+        // Add output edges
+        for (const data of output) {
+            if (output_added.some((existing) => existing.id == data.id) || i == index) continue;
+            edges.push(new OutputEdge(i, index, data));
+            output_added.push(data);
+        }
     }
 
     return edges;
 }
 
-export function computeAllEdges(graph: AnimationGraph) {
+export function computeAllEdges(graph: AnimationGraph, masks: Set<string>[] = []) {
     let edges: Set<Edge> = new Set();
 
     for (let i = 0; i < graph.vertices.length; i++) {
-        edges = new Set([...edges, ...computeEdges(i, graph.vertices)]);
+        edges = new Set([...edges, ...computeEdges(i, graph, masks)]);
     }
 
-    edges.forEach((edge) => graph.addEdge(edge));
+    edges.forEach((edge) => {
+        graph.addEdge(edge);
+    });
 }
 
 export function computeAllGraphEdges(animation: AnimationGraph) {
@@ -300,13 +326,15 @@ function intersection(A: AnimationData[], B: AnimationData[]) {
 }
 
 export function animationDataToString(data: AnimationData) {
-    return `D(${data.id})`;
-    // return `D(${data.location.map((acc) => `${acc.value.toString()}`).join('#')})`;
+    // return `D(${data.id})`;
+    return `D(${data.location.map((acc) => `${acc.value.toString()}`).join('#')})`;
 }
 
 export function logAnimation(animation: AnimationGraph | AnimationNode, indent = 0, options = { first: false }) {
     // computeAllEdges(graph);
     // console.log(animation);
+
+    if (animation == null) return;
 
     if (animation instanceof AnimationNode) {
         const space = `${'\t'.repeat(options.first ? 0 : indent)}`;
@@ -342,11 +370,9 @@ export function logAnimation(animation: AnimationGraph | AnimationNode, indent =
     let visited_vertices = new Set();
     let visited_edges = new Set();
 
-    console.log(animation);
-
     // Flow edges
     for (const edge of animation.edges.filter((edge) => edge instanceof FlowEdge)) {
-        if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
+        // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
 
         visited_vertices.add(edge.to);
         visited_vertices.add(edge.from);
@@ -361,7 +387,7 @@ export function logAnimation(animation: AnimationGraph | AnimationNode, indent =
 
     // Anti-edges
     for (const edge of animation.edges.filter((edge) => edge instanceof AntiEdge)) {
-        if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
+        // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
 
         visited_vertices.add(edge.to);
         visited_vertices.add(edge.from);
@@ -370,6 +396,19 @@ export function logAnimation(animation: AnimationGraph | AnimationNode, indent =
         let v1 = logAnimation(animation.vertices[edge.from], indent + 1, { first: false });
         let v2 = logAnimation(animation.vertices[edge.to], indent + 1, { first: true });
         output += `${v1}${animationDataToString(edge.data)} -:>${v2}\n`;
+    }
+
+    // Output-edges
+    for (const edge of animation.edges.filter((edge) => edge instanceof OutputEdge)) {
+        // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
+
+        visited_vertices.add(edge.to);
+        visited_vertices.add(edge.from);
+        visited_edges.add(`${edge.to}_${edge.from}`);
+
+        let v1 = logAnimation(animation.vertices[edge.from], indent + 1, { first: false });
+        let v2 = logAnimation(animation.vertices[edge.to], indent + 1, { first: true });
+        output += `${v1}${animationDataToString(edge.data)} -->${v2}\n`;
     }
 
     // Sequential edges
@@ -421,19 +460,36 @@ export function computeParentIds(animation: AnimationGraph | AnimationNode, pare
 }
 
 export function dissolve(animation: AnimationGraph) {
+    let masks: Set<string>[] = [];
+
     // Dissolve all children
     for (let i = animation.vertices.length - 1; i >= 0; i--) {
-        dissolveAt(animation, i);
+        const group = dissolveAt(animation, i);
+        masks.push(new Set(group));
     }
+
+    if (
+        animation.vertices[0] instanceof CreateScopeAnimation &&
+        animation.vertices[animation.vertices.length - 1] instanceof PopScopeAnimation
+    ) {
+        // Remove create and pop scope animations
+        animation.removeVertexAt(animation.vertices.length - 1);
+        animation.removeVertexAt(0);
+    }
+
+    computeAllEdges(animation, masks);
 }
 
 export function dissolveAt(parent: AnimationGraph, i: number) {
     let vertex = parent.vertices[i];
     if (vertex instanceof AnimationNode) return;
 
-    dissolve(vertex);
+    let ids = vertex.vertices.map((v) => v.id);
 
-    if (vertex instanceof AnimationGraph && vertex.node.constructor.name == 'BlockStatement') {
+    if (
+        vertex.vertices[0] instanceof CreateScopeAnimation &&
+        vertex.vertices[vertex.vertices.length - 1] instanceof PopScopeAnimation
+    ) {
         // Remove create and pop scope animations
         vertex.removeVertexAt(vertex.vertices.length - 1);
         vertex.removeVertexAt(0);
@@ -511,5 +567,5 @@ export function dissolveAt(parent: AnimationGraph, i: number) {
     // Remove vertex
     parent.removeVertexAt(i);
 
-    computeAllEdges(parent);
+    return ids;
 }

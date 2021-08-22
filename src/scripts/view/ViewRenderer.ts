@@ -66,10 +66,20 @@ export class ViewRenderer {
             element.style.marginLeft = `${transform.x + 5 * transform.z}px`;
             element.style.marginTop = `${transform.y - 5 * transform.z}px`;
             element.style.opacity = `${transform.opacity * sigmoid(-5 * (transform.z - 2))}`;
-            element.innerHTML = `${value == undefined ? '' : value}`;
+
+            if (typeof value == 'boolean') {
+                element.innerHTML = value ? `<i class="gg-check"></i>` : `<i class="gg-close"></i>`;
+            } else {
+                element.innerHTML = `${value == undefined ? '' : value}`;
+            }
+
             element.style.width = `${transform.width}px`;
             element.style.height = `${transform.height}px`;
             // element.style.transform = `translateZ(${transform.z}px)`
+
+            if (data.transform.step != null) {
+                element.innerHTML += `<step>${data.transform.step}</step>`;
+            }
 
             if (value == undefined) {
                 element.classList.add('undefined');

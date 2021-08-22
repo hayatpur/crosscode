@@ -1,14 +1,20 @@
 import * as astring from 'astring';
 import * as ESTree from 'estree';
 import { AnimationGraph } from '../../animation/graph/AnimationGraph';
+import { AnimationContext } from '../../animation/primitive/AnimationNode';
+import MoveAndPlaceAnimation from '../../animation/primitive/Data/MoveAndPlaceAnimation';
+import UpdateAnimation from '../../animation/primitive/Data/UpdateAnimation';
+import { AccessorType } from '../../environment/Data';
 import { Evaluator } from '../../executor/Evaluator';
+import { Identifier } from '../Identifier';
 import { Node, NodeMeta } from '../Node';
 import { Transpiler } from '../Transpiler';
+import { MemberExpression } from './BinaryOperations/MemberExpression';
 
 export class UpdateExpression extends Node {
     argument: Node;
     operator: string;
-    value: any;
+    newValue: any;
 
     constructor(ast: ESTree.UpdateExpression, meta: NodeMeta) {
         super(ast, meta);
@@ -16,23 +22,31 @@ export class UpdateExpression extends Node {
         this.argument = Transpiler.transpile(ast.argument, meta);
         this.operator = ast.operator;
 
-        this.value = Evaluator.evaluate(astring.generate(ast), meta.states.prev).data;
+        this.newValue = Evaluator.evaluate(
+            `(${astring.generate(ast)}, ${astring.generate(ast.argument)})`,
+            meta.states.prev
+        ).data;
     }
 
-    animation(context = {}) {
+    animation(context: AnimationContext) {
         const graph = new AnimationGraph(this);
 
-        // const animation = new UpdateExpressionSequence(
-        //     this.argument.getData.bind(this.argument),
-        //     context.getOutputData,
-        //     this.getData.bind(this),
-        //     context.getSectionData,
-        //     this.operator,
-        //     () => 'test',
-        //     context.input?.context
-        // );
+        const register = [{ type: AccessorType.Register, value: `${this.id}_UpdateExpression` }];
+        const specifier =
+            this.argument instanceof MemberExpression
+                ? this.argument.getSpecifier()
+                : (this.argument as Identifier).getSpecifier();
 
-        // graph.addVertex(animation, context.statement);
+        // Lift up LHS
+        const copy = this.argument.animation({ ...context, locationHint: specifier, outputRegister: register });
+        graph.addVertex(copy, this.argument);
+
+        // Apply the operation
+        const update = new UpdateAnimation(register, `${this.operator}`, this.newValue);
+        graph.addVertex(update, this.argument);
+
+        const move = new MoveAndPlaceAnimation(register, specifier, true);
+        graph.addVertex(move, this);
 
         return graph;
     }

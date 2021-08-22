@@ -40,7 +40,7 @@ export class ArrayExpressionItem extends Node {
         graph.addVertex(animation, this);
 
         // Move and place it
-        const place = new MoveAndPlaceAnimation(register, context.outputRegister);
+        const place = new MoveAndPlaceAnimation(register, context.outputRegister, this.item instanceof Literal);
         graph.addVertex(place, this);
 
         return graph;

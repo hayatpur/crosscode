@@ -11,7 +11,6 @@ export default class ForStatement extends Node {
     iterations: ForStatementIteration[];
     decl: any;
 
-    // TODO: support non-variable declarations
     constructor(ast: ESTree.ForStatement, meta: NodeMeta) {
         super(ast, meta);
 
@@ -28,7 +27,7 @@ export default class ForStatement extends Node {
         }
     }
 
-    animation(context: AnimationContext) {
+    animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
 
         graph.addVertex(new CreateScopeAnimation(), this);
@@ -37,7 +36,18 @@ export default class ForStatement extends Node {
         graph.addVertex(decl, this.decl);
 
         for (let i = 0; i < this.iterations.length; i++) {
-            graph.addVertex(this.iterations[i].animation(context), this.iterations[i]);
+            // if (this.iterations[i].test != null) {
+            //     const test = this.iterations[i].test.animation(context);
+            //     graph.addVertex(test, this.iterations[i].test);
+            // }
+
+            // const test = this.iterations[i].test.animation(context);
+            // graph.addVertex(test, this.iterations[i].test);
+
+            // if (this.iterations[i].block != null) {
+            const animation = this.iterations[i].animation(context);
+            graph.addVertex(animation, this.iterations[i]);
+            // }
 
             if (this.iterations[i].incr != null) {
                 const incr = this.iterations[i].incr.animation(context);

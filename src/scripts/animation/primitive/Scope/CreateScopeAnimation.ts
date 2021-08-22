@@ -3,7 +3,7 @@ import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class CreateScopeAnimation extends AnimationNode {
     constructor(options: AnimationOptions = {}) {
-        super(options);
+        super({ ...options, duration: 100 });
     }
 
     begin(environment: Environment, options = { baking: false }) {

@@ -1,6 +1,5 @@
 import * as ESTree from 'estree';
-import { AnimationGraph } from '../../animation/graph/AnimationGraph';
-import { AnimationGroup } from '../../animation/graph/group/AnimationGroup';
+import { AnimationGraph, AnimationGroup } from '../../animation/graph/AnimationGraph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
 import CreateScopeAnimation from '../../animation/primitive/Scope/CreateScopeAnimation';
 import PopScopeAnimation from '../../animation/primitive/Scope/PopScopeAnimation';

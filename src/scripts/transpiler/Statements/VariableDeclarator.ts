@@ -6,6 +6,7 @@ import MoveAndPlaceAnimation from '../../animation/primitive/Data/MoveAndPlaceAn
 import { AccessorType } from '../../environment/Data';
 import { ArrayExpression } from '../Expressions/Array/ArrayExpression';
 import { Identifier } from '../Identifier';
+import { Literal } from '../Literal';
 import { Node, NodeMeta } from '../Node';
 import { Transpiler } from '../Transpiler';
 
@@ -64,9 +65,11 @@ export class VariableDeclarator extends Node {
                 });
                 graph.addVertex(initialize, this.init);
 
-                const place = new MoveAndPlaceAnimation(register, [
-                    { type: AccessorType.Symbol, value: this.identifier.name },
-                ]);
+                const place = new MoveAndPlaceAnimation(
+                    register,
+                    [{ type: AccessorType.Symbol, value: this.identifier.name }],
+                    this.init instanceof Literal
+                );
                 graph.addVertex(place, this);
             }
         }

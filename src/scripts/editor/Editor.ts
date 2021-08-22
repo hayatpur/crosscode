@@ -85,6 +85,8 @@ export class Editor {
 
                 editor.monaco.getModel().onDidChangeContent((event) => {
                     editor.onChangeContent.forEach((callback) => callback());
+                    editor.monaco.updateOptions({ codeLens: false });
+                    editor.monaco.updateOptions({ codeLens: true });
                 });
 
                 editor.onChangeContent.forEach((callback) => callback());
@@ -124,6 +126,11 @@ export class Editor {
     }
 
     getSelectedTextBoundingBox() {
+        const selection = document.getElementsByClassName('cslr selected-text');
+        return selection.length > 0 ? selection[0].getBoundingClientRect() : null;
+    }
+
+    computeBoundingBoxForSection() {
         const selection = document.getElementsByClassName('cslr selected-text');
         return selection.length > 0 ? selection[0].getBoundingClientRect() : null;
     }
@@ -214,6 +221,35 @@ export class Editor {
     getLineDom(ln: number) {
         const lines = document.body.getElementsByClassName('view-lines')[0];
         return lines.children[ln - 1];
+    }
+
+    createLens(label, line) {
+        return;
+        monaco.languages.registerCodeLensProvider('javascript', {
+            provideCodeLenses: function (model, token) {
+                return {
+                    lenses: [
+                        {
+                            range: {
+                                startLineNumber: line,
+                                startColumn: 1,
+                                endLineNumber: line + 1,
+                                endColumn: 1,
+                            },
+                            id: 'First Line',
+                            command: {
+                                id: null,
+                                title: label,
+                            },
+                        },
+                    ],
+                    dispose: () => {},
+                };
+            },
+            resolveCodeLens: function (model, codeLens, token) {
+                return codeLens;
+            },
+        });
     }
 
     static dispose() {

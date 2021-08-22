@@ -13,6 +13,7 @@
         "chalk": "^4.1.1",
         "eaz": "^1.0.2",
         "hagen": "^1.5.2",
+        "javascript-lp-solver": "^0.4.24",
         "keystroke-visualizer": "^1.0.1",
         "monaco-editor": "^0.25.2",
         "nomnoml": "^1.4.0"

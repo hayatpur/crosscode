@@ -49,13 +49,6 @@ export default class PlaceAnimation extends AnimationNode {
 
         input.transform.floating = false;
         input.transform.z = 0;
-
-        // Put it in the floating stack
-        const FloatingStack = environment.resolvePath([{ type: AccessorType.Symbol, value: '_FloatingStack' }], {
-            noResolvingId: true,
-        }) as Data;
-
-        (FloatingStack.value as Data[]).pop();
     }
 
     computeReadAndWrites(inputData: AnimationData, outputData: AnimationData) {

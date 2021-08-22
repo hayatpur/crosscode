@@ -1,4 +1,4 @@
-import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
+import { Accessor, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { AnimationData } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
@@ -6,11 +6,14 @@ import { AnimationNode, AnimationOptions } from '../AnimationNode';
 export default class CopyDataAnimation extends AnimationNode {
     dataSpecifier: Accessor[];
     outputRegister: Accessor[];
+    hardCopy: boolean;
 
     constructor(dataSpecifier: Accessor[], outputRegister: Accessor[], options: AnimationOptions = {}) {
         super(options);
         this.dataSpecifier = dataSpecifier;
         this.outputRegister = outputRegister;
+
+        this.hardCopy = false;
     }
 
     begin(environment: Environment, options = { baking: false }) {
@@ -24,11 +27,12 @@ export default class CopyDataAnimation extends AnimationNode {
         environment._temps[`CopyDataAnimation${this.id}`] = location;
 
         // Put it in the floating stack
-        const FloatingStack = environment.resolvePath([{ type: AccessorType.Symbol, value: '_FloatingStack' }], {
-            noResolvingId: true,
-        }) as Data;
+        const register = environment.resolvePath(this.outputRegister) as Data;
+        register.replaceWith(new Data({ type: DataType.ID, value: copy.id }));
 
-        FloatingStack.addDataAt([], new Data({ type: DataType.ID, value: copy.id }));
+        if (this.hardCopy) {
+            data.value = undefined;
+        }
 
         if (options.baking) {
             this.computeReadAndWrites(
