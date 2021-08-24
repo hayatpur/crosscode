@@ -1,154 +1,188 @@
-import { Cursor } from '../animation/Cursor';
-import { applyAbstractions } from '../animation/graph/abstraction/AbstractionController';
-import { AnimationGraph } from '../animation/graph/AnimationGraph';
-import { Editor } from '../editor/Editor';
-import { Environment } from '../environment/Environment';
-import { Program } from '../transpiler/Statements/Program';
-import { Transpiler } from '../transpiler/Transpiler';
-import { computeAllGraphEdges, computeParentIds } from '../utilities/graph';
-import { Ticker } from '../utilities/Ticker';
-import { View } from '../view/View';
-import { Compiler } from './Compiler';
-import { ProgramWorker } from './worker/ProgramWorker';
+import { Cursor } from "../animation/Cursor";
+import {
+  AbstractionType,
+  applyAbstraction,
+} from "../animation/graph/abstraction/AbstractionController";
+import { AnimationGraph } from "../animation/graph/AnimationGraph";
+import { Editor } from "../editor/Editor";
+import { Environment } from "../environment/Environment";
+import { Program } from "../transpiler/Statements/Program";
+import { Transpiler } from "../transpiler/Transpiler";
+import {
+  computeAllGraphEdges,
+  computeParentIds,
+  logAnimation,
+} from "../utilities/graph";
+import { Ticker } from "../utilities/Ticker";
+import { View } from "../view/View";
+import { Compiler } from "./Compiler";
+import { ProgramWorker } from "./worker/ProgramWorker";
 
 export class Executor {
-    static instance: Executor = null;
+  static instance: Executor = null;
 
-    // Editor component this operates on
-    editor: Editor = null;
+  // Editor component this operates on
+  editor: Editor = null;
 
-    // Timeline controls
-    time = 0;
-    paused = true;
+  // Timeline controls
+  time = 0;
+  paused = true;
 
-    // Web worker to enable parallel execution
-    worker: ProgramWorker = null;
+  // Web worker to enable parallel execution
+  worker: ProgramWorker = null;
 
-    // Global speed of the animation (higher is faster)
-    speed = 1 / 16;
+  // Global speed of the animation (higher is faster)
+  speed = 1 / 16;
+
+  // Animation
+  root: Program;
+  animation: AnimationGraph;
+
+  view: View;
+  cursor: Cursor;
+
+  constructor(editor: Editor) {
+    // Singleton
+    Executor.instance = this;
+
+    // General
+    this.editor = editor;
+
+    // Highlight cursor
+    this.cursor = new Cursor();
+
+    // Update after 0.5s of no keyboard activity
+    let typingTimer: number;
+    this.editor.onChangeContent.add(() => {
+      this.paused = true;
+      document.body
+        .querySelector(`.view-element.root`)
+        ?.classList.add("changing-content");
+      Cursor.instance.reset();
+      document.body
+        .querySelector(`.highlight-cursor`)
+        ?.classList.add("changing-content");
+
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(this.execute.bind(this), 500);
+    });
+
+    // Execution
+    this.worker = new ProgramWorker();
+    this.worker.registerOnFinish(this.onWorkerFinish.bind(this));
+
+    // Bind update
+    Ticker.instance.registerTick(this.tick.bind(this));
+
+    // Play
+    document.addEventListener("keypress", (e) => {
+      if (e.key == "`") {
+        this.paused = false;
+        this.view.reset();
+        this.animation.reset();
+
+        this.time = 0;
+      }
+    });
+  }
+
+  reset() {
+    this.time = 0;
+
+    this.view?.destroy();
+    this.view = undefined;
+  }
+
+  execute() {
+    // Compile user code
+    const text = this.editor.getValue();
+    const compiled = Compiler.compile(text);
+
+    if (compiled.status == "error") {
+      return;
+    }
+
+    const { code } = compiled.data;
+
+    // Execute compiled code
+    this.worker.setup(code);
+  }
+
+  onWorkerFinish() {
+    const { storage, errors, logs } = this.worker.data;
+
+    // Reset visualization
+    this.reset();
+
+    // Handle errors
+    if (errors.length > 0) {
+      Editor.instance.error(errors.map((err) => err.data));
+      return;
+    }
+
+    // Transpile program
+    this.root = Transpiler.transpileFromStorage(storage);
 
     // Animation
-    root: Program;
-    animation: AnimationGraph;
+    this.animation = this.root.animation();
 
-    view: View;
-    cursor: Cursor;
+    // Bake views
+    this.animation.seek([new Environment()], this.animation.duration, {
+      baking: true,
+      indent: 0,
+    });
+    this.animation.reset({ baking: true });
 
-    constructor(editor: Editor) {
-        // Singleton
-        Executor.instance = this;
+    computeParentIds(this.animation);
+    computeAllGraphEdges(this.animation);
 
-        // General
-        this.editor = editor;
+    // View of animation
+    this.view = new View(this.animation);
 
-        // Highlight cursor
-        this.cursor = new Cursor();
+    // applyAbstraction(this.animation.vertices[0] as AnimationGraph, {
+    //   type: AbstractionType.Aggregation,
+    //   value: { Depth: 0 },
+    // });
 
-        // Update after 0.5s of no keyboard activity
-        let typingTimer: number;
-        this.editor.onChangeContent.add(() => {
-            this.paused = true;
-            document.body.querySelector(`.view-element.root`)?.classList.add('changing-content');
-            Cursor.instance.reset();
-            document.body.querySelector(`.highlight-cursor`)?.classList.add('changing-content');
+    applyAbstraction(this.animation.vertices[1] as AnimationGraph, {
+      type: AbstractionType.Transition,
+      value: {},
+    });
 
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(this.execute.bind(this), 500);
-        });
+    // applyAbstraction(this.animation.vertices[1] as AnimationGraph, {
+    //   type: AbstractionType.Aggregation,
+    //   value: { Depth: 0 },
+    // });
 
-        // Execution
-        this.worker = new ProgramWorker();
-        this.worker.registerOnFinish(this.onWorkerFinish.bind(this));
+    console.log("[Executor] Finished compiling...");
+    console.log("\tStorage", storage);
+    console.log("\tRoot", this.root);
+    console.log("\tAnimation", this.animation);
 
-        // Bind update
-        Ticker.instance.registerTick(this.tick.bind(this));
+    document.body
+      .querySelector(`.view-element.root`)
+      ?.classList.remove("changing-content");
+    document.body
+      .querySelector(`.highlight-cursor`)
+      ?.classList.remove("changing-content");
 
-        // Play
-        document.addEventListener('keypress', (e) => {
-            if (e.key == '`') {
-                this.paused = false;
-                this.view.reset();
-                this.animation.reset();
+    this.paused = false;
+  }
 
-                this.time = 0;
-            }
-        });
-    }
+  tick(dt: number = 0) {
+    if (
+      this.animation == null ||
+      (dt > 0 && this.paused) ||
+      this.time > this.animation.duration
+    )
+      return;
 
-    reset() {
-        this.time = 0;
+    this.time += dt * this.speed;
 
-        this.view?.destroy();
-        this.view = undefined;
-    }
+    // Apply animations
+    const environments = [...View.shownViews].map((view) => view.environment);
+    this.animation?.seek(environments, this.time);
 
-    execute() {
-        // Compile user code
-        const text = this.editor.getValue();
-        const compiled = Compiler.compile(text);
-
-        if (compiled.status == 'error') {
-            return;
-        }
-
-        const { code } = compiled.data;
-
-        // Execute compiled code
-        this.worker.setup(code);
-    }
-
-    onWorkerFinish() {
-        const { storage, errors, logs } = this.worker.data;
-
-        // Reset visualization
-        this.reset();
-
-        // Handle errors
-        if (errors.length > 0) {
-            Editor.instance.error(errors.map((err) => err.data));
-            return;
-        }
-
-        // Transpile program
-        this.root = Transpiler.transpileFromStorage(storage);
-
-        // Animation
-        this.animation = this.root.animation();
-
-        // Bake views
-        this.animation.seek([new Environment()], this.animation.duration, { baking: true, indent: 0 });
-        this.animation.reset({ baking: true });
-
-        computeParentIds(this.animation);
-        computeAllGraphEdges(this.animation);
-
-        // View of animation
-        this.view = new View(this.animation);
-
-        applyAbstractions(this.animation, { Transitions: [{}] });
-
-        console.log('[Executor] Finished compiling...');
-        console.log('\tStorage', storage);
-        console.log('\tRoot', this.root);
-        console.log('\tAnimation', this.animation);
-
-        console.log(this.animation.reads());
-
-        document.body.querySelector(`.view-element.root`)?.classList.remove('changing-content');
-        document.body.querySelector(`.highlight-cursor`)?.classList.remove('changing-content');
-
-        this.paused = false;
-    }
-
-    tick(dt: number = 0) {
-        if (this.animation == null || (dt > 0 && this.paused) || this.time > this.animation.duration) return;
-
-        this.time += dt * this.speed;
-
-        // Apply animations
-        const environments = [...View.shownViews].map((view) => view.environment);
-        this.animation?.seek(environments, this.time);
-
-        this.view.update();
-    }
+    this.view.update();
+  }
 }
