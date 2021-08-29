@@ -24,8 +24,8 @@ export default class BinaryExpression extends Node {
     animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
 
-        const leftRegister = [{ type: AccessorType.Register, value: `${this.id}_BinaryExpressionLeft` }];
-        const rightRegister = [{ type: AccessorType.Register, value: `${this.id}_BinaryExpressionRight` }];
+        const leftRegister = [{ type: AccessorType.Register, value: `${this.id}__BinaryExpressionLeft` }];
+        const rightRegister = [{ type: AccessorType.Register, value: `${this.id}__BinaryExpressionRight` }];
 
         const left = this.left.animation({ ...context, outputRegister: leftRegister });
         graph.addVertex(left, this.left);

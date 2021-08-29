@@ -50,7 +50,7 @@ header {
   margin-bottom: 4rem;
 }
 
-header > div {
+header>div {
   /* padding-right: 8px; */
   /* flex: 1; */
   font-size: 14px;
@@ -63,11 +63,11 @@ header > div {
   margin: 0px 50px;
 }
 
-header > div.active {
+header>div.active {
   opacity: 1;
 }
 
-header > div.active .number-icon {
+header>div.active .number-icon {
   background: #0000001f;
 }
 
@@ -82,11 +82,11 @@ header .number-icon {
   margin-right: 10px;
 }
 
-header .seperator {
+header .separator {
   flex: 1 1 auto;
 }
 
-header .seperator > span {
+header .separator>span {
   display: block;
   border-color: #bdbdbd;
   border-top-style: solid;
@@ -97,4 +97,13 @@ header .seperator > span {
   margin-bottom: 5em;
   margin-top: -2rem;
   margin-left: 2.5rem;
+}
+
+.separator-path {
+  fill: transparent;
+  stroke: rgba(0, 0, 0, 0.2);
+  stroke-width: 0.5px;
+  opacity: 1;
+  /* transition-property: opacity; */
+  transition-duration: 0.2s;
 }

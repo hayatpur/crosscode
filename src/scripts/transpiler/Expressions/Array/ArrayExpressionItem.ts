@@ -30,7 +30,7 @@ export class ArrayExpressionItem extends Node {
     animation(context: AnimationContext): AnimationGraph {
         const graph = new AnimationGraph(this);
 
-        const register = [{ type: AccessorType.Register, value: `${this.id}_ArrayExpressionItem` }];
+        const register = [{ type: AccessorType.Register, value: `${this.id}__ArrayExpressionItem` }];
 
         // Creates literal / expression onto outputRegister
         const animation = this.item.animation({

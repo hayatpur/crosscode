@@ -169,3 +169,49 @@ pushn(left, 5, y);
 6
 > diff([]);
 0
+
+
+
+
+
+
+
+    // Find all writes
+    for (const vertex of animation.vertices) {
+        for (const write of vertex.writes()) {
+            if (trace[write.id] == null) {
+                trace[write.id] = new Set();
+            }
+
+            const reads = vertex.reads();
+            for (const read of reads) {
+                trace[write.id].add(read.id);
+            }
+        }
+    }
+
+    // Propagate trace once
+    for (const id of Object.keys(trace)) {
+        const extra_writes = [];
+        for (const write of trace[id]) {
+            if (trace[write] != null) {
+                extra_writes.push(...trace[write]);
+            }
+        }
+
+        for (const write of extra_writes) {
+            trace[id].add(write);
+        }
+    }
+
+    // Filter out writes that are temporary (i.e. not in the endState)
+    for (const id of Object.keys(trace)) {
+        const value = endState.resolve({ type: AccessorType.ID, value: id }, null);
+        if (value == null) delete trace[id];
+    }
+    for (const ids of Object.values(trace)) {
+        for (const id of ids) {
+            const value = endState.resolve({ type: AccessorType.ID, value: id }, null);
+            if (value == null) ids.delete(id);
+        }
+    }

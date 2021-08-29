@@ -1,6 +1,6 @@
 import { Accessor, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationData } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export class BindAnimation extends AnimationNode {
@@ -16,18 +16,21 @@ export class BindAnimation extends AnimationNode {
         this.base_duration = 5;
     }
 
-    begin(environment: Environment, options = { baking: false }) {
+    begin(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {
         super.begin(environment, options);
 
         let location = null;
         let data = null;
 
         if (this.existingMemorySpecifier != null) {
-            data = environment.resolvePath(this.existingMemorySpecifier) as Data;
+            data = environment.resolvePath(this.existingMemorySpecifier, `${this.id}_Existing`) as Data;
             location = environment.getMemoryLocation(data).foundLocation;
         } else {
-            data = new Data({ type: DataType.Literal, value: undefined });
-            location = environment.addDataAt([], data);
+            data = new Data({ id: `${this.id}_BindNew`, type: DataType.Literal, value: undefined });
+            location = environment.addDataAt([], data, null);
         }
 
         environment.declare(this.identifier, location);
@@ -39,7 +42,10 @@ export class BindAnimation extends AnimationNode {
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment, options = { baking: false }) {}
+    end(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {}
 
     computeReadAndWrites(data: AnimationData) {
         this._reads = [data];

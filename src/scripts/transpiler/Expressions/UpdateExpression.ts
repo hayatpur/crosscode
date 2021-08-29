@@ -31,7 +31,7 @@ export class UpdateExpression extends Node {
     animation(context: AnimationContext) {
         const graph = new AnimationGraph(this);
 
-        const register = [{ type: AccessorType.Register, value: `${this.id}_UpdateExpression` }];
+        const register = [{ type: AccessorType.Register, value: `${this.id}__UpdateExpression` }];
         const specifier =
             this.argument instanceof MemberExpression
                 ? this.argument.getSpecifier()

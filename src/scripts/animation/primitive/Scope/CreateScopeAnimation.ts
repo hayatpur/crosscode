@@ -1,12 +1,16 @@
 import { Environment } from '../../../environment/Environment';
+import { AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class CreateScopeAnimation extends AnimationNode {
     constructor(options: AnimationOptions = {}) {
-        super({ ...options, duration: 100 });
+        super({ ...options });
     }
 
-    begin(environment: Environment, options = { baking: false }) {
+    begin(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {
         super.begin(environment, options);
         environment.createScope();
 
@@ -17,5 +21,8 @@ export default class CreateScopeAnimation extends AnimationNode {
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment, options = { baking: false }) {}
+    end(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {}
 }

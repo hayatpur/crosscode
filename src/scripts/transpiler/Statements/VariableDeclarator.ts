@@ -55,7 +55,7 @@ export class VariableDeclarator extends Node {
                 });
                 graph.addVertex(initialize, this.init);
             } else if (this.init != null) {
-                const register = [{ type: AccessorType.Register, value: `${this.id}_VariableDeclaration` }];
+                const register = [{ type: AccessorType.Register, value: `${this.id}__VariableDeclaration` }];
 
                 // Copy / create and float it up at the location
                 const initialize = this.init.animation({

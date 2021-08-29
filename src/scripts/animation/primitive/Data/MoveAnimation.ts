@@ -1,7 +1,7 @@
 import { Accessor, Data, DataType, Transform } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { DataMovementPath } from '../../../utilities/DataMovementPath';
-import { AnimationData } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class MoveAnimation extends AnimationNode {
@@ -15,11 +15,14 @@ export default class MoveAnimation extends AnimationNode {
         this.outputSpecifier = outputSpecifier;
     }
 
-    begin(environment: Environment, options = { baking: false }) {
+    begin(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {
         super.begin(environment, options);
 
-        const move = environment.resolvePath(this.inputSpecifier) as Data;
-        const to = environment.resolvePath(this.outputSpecifier);
+        const move = environment.resolvePath(this.inputSpecifier, null) as Data;
+        const to = environment.resolvePath(this.outputSpecifier, `${this.id}_to`);
 
         environment.updateLayout();
 
@@ -27,8 +30,12 @@ export default class MoveAnimation extends AnimationNode {
 
         if (to instanceof Environment) {
             // Then it doesn't have a place yet
-            const placeholder = new Data({ type: DataType.ID, value: '_MoveAnimationPlaceholder' });
-            const placeholderLocation = environment.addDataAt([], placeholder);
+            const placeholder = new Data({
+                id: `${this.id}_Placeholder`,
+                type: DataType.ID,
+                value: '_MoveAnimationPlaceholder',
+            });
+            const placeholderLocation = environment.addDataAt([], placeholder, `${this.id}_PlaceHolder`);
 
             environment.updateLayout();
             end_transform = { ...placeholder.transform };
@@ -60,13 +67,13 @@ export default class MoveAnimation extends AnimationNode {
         path.seek(t);
         const position = path.getPosition(t);
 
-        let move = environment.resolvePath(this.inputSpecifier) as Data;
+        let move = environment.resolvePath(this.inputSpecifier, null) as Data;
 
         move.transform.x = position.x;
         move.transform.y = position.y;
     }
 
-    end(environment: Environment, options = { baking: false }) {
+    end(environment: Environment, options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
         this.seek(environment, this.duration);
         environment._temps['path']?.destroy();
     }

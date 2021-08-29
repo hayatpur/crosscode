@@ -2,7 +2,7 @@ import * as ESTree from 'estree';
 import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
 import { lerp, remap } from '../../../utilities/math';
-import { AnimationData } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class BinaryExpressionSetup extends AnimationNode {
@@ -28,22 +28,26 @@ export default class BinaryExpressionSetup extends AnimationNode {
         this.operator = operator;
     }
 
-    begin(environment: Environment, options = { baking: false }) {
+    begin(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {
         super.begin(environment, options);
         // Find left data
-        let left = environment.resolvePath(this.leftSpecifier) as Data;
+        let left = environment.resolvePath(this.leftSpecifier, `${this.id}_Left`) as Data;
         environment._temps[`LeftData${this.id}`] = [{ type: AccessorType.ID, value: left.id }];
 
         // Find right data
-        let right = environment.resolvePath(this.rightSpecifier) as Data;
+        let right = environment.resolvePath(this.rightSpecifier, `${this.id}_Right`) as Data;
         environment._temps[`RightData${this.id}`] = [{ type: AccessorType.ID, value: right.id }];
 
         const data = new Data({
+            id: `${this.id}_EvaluatedData`,
             type: DataType.Literal,
             value: eval(`${left.value}${this.operator}${right.value}`),
         });
         data.transform.floating = true;
-        environment.addDataAt([], data);
+        environment.addDataAt([], data, null);
 
         data.transform.x = (left.transform.x + right.transform.x) / 2;
         data.transform.y = left.transform.y;
@@ -71,9 +75,9 @@ export default class BinaryExpressionSetup extends AnimationNode {
     seek(environment: Environment, time: number) {
         let t = super.ease(time / this.duration);
 
-        const left = environment.resolvePath(environment._temps[`LeftData${this.id}`]) as Data;
-        const right = environment.resolvePath(environment._temps[`RightData${this.id}`]) as Data;
-        const evaluated = environment.resolvePath(environment._temps[`EvaluatedData${this.id}`]) as Data;
+        const left = environment.resolvePath(environment._temps[`LeftData${this.id}`], null) as Data;
+        const right = environment.resolvePath(environment._temps[`RightData${this.id}`], null) as Data;
+        const evaluated = environment.resolvePath(environment._temps[`EvaluatedData${this.id}`], null) as Data;
 
         const leftTransform = environment._temps[`LeftTransform${this.id}`];
         const rightTransform = environment._temps[`RightTransform${this.id}`];
@@ -96,12 +100,12 @@ export default class BinaryExpressionSetup extends AnimationNode {
         }
     }
 
-    end(environment: Environment, options = { baking: false }) {
+    end(environment: Environment, options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
         this.seek(environment, this.duration);
 
-        const left = environment.resolvePath(environment._temps[`LeftData${this.id}`]) as Data;
-        const right = environment.resolvePath(environment._temps[`RightData${this.id}`]) as Data;
-        const evaluated = environment.resolvePath(environment._temps[`EvaluatedData${this.id}`]) as Data;
+        const left = environment.resolvePath(environment._temps[`LeftData${this.id}`], null) as Data;
+        const right = environment.resolvePath(environment._temps[`RightData${this.id}`], null) as Data;
+        const evaluated = environment.resolvePath(environment._temps[`EvaluatedData${this.id}`], null) as Data;
 
         if (options.baking) {
             this.computeReadAndWrites(
@@ -115,9 +119,11 @@ export default class BinaryExpressionSetup extends AnimationNode {
 
         // Put it in the output register (if any)
         if (this.outputRegister.length > 0) {
-            (environment.resolvePath(this.outputRegister) as Data).replaceWith(
-                new Data({ type: DataType.ID, value: evaluated.id })
+            (environment.resolvePath(this.outputRegister, `${this.id}_Floating`) as Data).replaceWith(
+                new Data({ id: `${this.id}_Placed`, type: DataType.ID, value: evaluated.id })
             );
+        } else {
+            environment.removeAt(environment.getMemoryLocation(evaluated).foundLocation);
         }
     }
 

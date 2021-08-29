@@ -1,6 +1,6 @@
-import { Accessor, AccessorType, Data, DataType } from '../../../environment/Data';
+import { Accessor, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationData } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class PlaceAnimation extends AnimationNode {
@@ -13,24 +13,24 @@ export default class PlaceAnimation extends AnimationNode {
         this.outputSpecifier = outputSpecifier;
     }
 
-    begin(environment: Environment, options = { baking: false }) {
+    begin(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {
         super.begin(environment, options);
     }
 
     seek(environment: Environment, time: number) {
         let t = super.ease(time / this.duration);
 
-        let input = environment.resolvePath(this.inputSpecifier) as Data;
-        if (input.type == DataType.ID) {
-            input = environment.resolve({ type: AccessorType.ID, value: input.value as string }) as Data;
-        }
+        let input = environment.resolvePath(this.inputSpecifier, null) as Data;
 
         input.transform.z = 1 - t;
     }
 
-    end(environment: Environment, options = { baking: false }) {
-        const input = environment.resolvePath(this.inputSpecifier) as Data;
-        const to = environment.resolvePath(this.outputSpecifier) as Data;
+    end(environment: Environment, options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
+        const input = environment.resolvePath(this.inputSpecifier, null) as Data;
+        const to = environment.resolvePath(this.outputSpecifier, `${this.id}_to`) as Data;
 
         if (options.baking) {
             this.computeReadAndWrites(

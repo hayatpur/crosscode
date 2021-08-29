@@ -73,8 +73,12 @@ export class BlockStatement extends Node {
             line = statement.meta.line;
             // animation.addVertex(statement.animation(context), statement);
         }
-
-        animation.addVertex(group, this);
+        if (group.vertices.length == 1) {
+            animation.addVertex(group.vertices[0], this);
+            group.removeVertexAt(0);
+        } else {
+            animation.addVertex(group, this);
+        }
         if (!isProgram) animation.addVertex(new PopScopeAnimation(), this);
 
         return animation;

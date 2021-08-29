@@ -1,6 +1,6 @@
 import { Accessor, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationData } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode } from '../AnimationNode';
 
 export default class PlaceAnimation extends AnimationNode {
@@ -16,14 +16,17 @@ export default class PlaceAnimation extends AnimationNode {
         this.newValue = newValue;
     }
 
-    begin(environment: Environment, options = { baking: false }) {
+    begin(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {
         super.begin(environment, options);
     }
 
     seek(environment: Environment, time: number) {
         let t = super.ease(time / this.duration);
 
-        const data = environment.resolvePath(this.dataSpecifier) as Data;
+        const data = environment.resolvePath(this.dataSpecifier, `${this.id}_Data`) as Data;
 
         if (t <= 0.8) {
             // Show the step
@@ -36,8 +39,8 @@ export default class PlaceAnimation extends AnimationNode {
         }
     }
 
-    end(environment: Environment, options = { baking: false }) {
-        const data = environment.resolvePath(this.dataSpecifier) as Data;
+    end(environment: Environment, options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
+        const data = environment.resolvePath(this.dataSpecifier, null) as Data;
         // const input = environment.resolvePath(this.inputSpecifier) as Data;
         // const to = environment.resolvePath(this.outputSpecifier) as Data;
         if (options.baking) {

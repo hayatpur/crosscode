@@ -36,7 +36,7 @@ export class AssignmentExpression extends Node {
     animation(context: AnimationContext) {
         const graph = new AnimationGraph(this);
 
-        const register = [{ type: AccessorType.Register, value: `${this.id}_Assignment` }];
+        const register = [{ type: AccessorType.Register, value: `${this.id}__Assignment` }];
 
         const leftSpecifier =
             this.left instanceof MemberExpression ? this.left.getSpecifier() : (this.left as Identifier).getSpecifier();

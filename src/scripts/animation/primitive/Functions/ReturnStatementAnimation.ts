@@ -1,6 +1,6 @@
 import { Accessor, Data } from '../../../environment/Data';
 import { Environment } from '../../../environment/Environment';
-import { AnimationData } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
 export default class ReturnStatementAnimation extends AnimationNode {
@@ -11,9 +11,12 @@ export default class ReturnStatementAnimation extends AnimationNode {
         this.inputSpecifier = inputSpecifier;
     }
 
-    begin(environment: Environment, options = { baking: false }) {
+    begin(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {
         super.begin(environment, options);
-        let data = environment.resolvePath(this.inputSpecifier) as Data;
+        let data = environment.resolvePath(this.inputSpecifier, `${this.id}_Data`) as Data;
 
         data.frame -= 2;
 
@@ -24,7 +27,10 @@ export default class ReturnStatementAnimation extends AnimationNode {
 
     seek(environment: Environment, time: number) {}
 
-    end(environment: Environment, options = { baking: false }) {}
+    end(
+        environment: Environment,
+        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    ) {}
 
     computeReadAndWrites(data: AnimationData) {
         this._reads = [data];
