@@ -1,5 +1,6 @@
 import * as ESTree from 'estree';
-import { AnimationGraph } from '../../animation/graph/AnimationGraph';
+import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph';
+import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
 import { Node, NodeMeta } from '../Node';
 import { VariableDeclarator } from './VariableDeclarator';
@@ -13,10 +14,10 @@ export class VariableDeclaration extends Node {
     }
 
     animation(context: AnimationContext) {
-        const graph: AnimationGraph = new AnimationGraph(this, { shouldDissolve: true });
+        const graph: AnimationGraph = createAnimationGraph(this);
 
         for (let i = 0; i < this.declarations.length; i++) {
-            graph.addVertex(this.declarations[i].animation(context), this.declarations[i]);
+            addVertex(graph, this.declarations[i].animation(context), this.declarations[i]);
         }
 
         return graph;

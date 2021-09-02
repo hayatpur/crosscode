@@ -1,66 +1,76 @@
-import { Accessor, Data, DataType } from '../../../environment/Data';
-import { Environment } from '../../../environment/Environment';
-import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions } from '../AnimationNode';
+import { cloneData, createData, replaceDataWith } from '../../../environment/data/data';
+import { DataState, DataType } from '../../../environment/data/DataState';
+import { addDataAt, resolvePath } from '../../../environment/environment';
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { duration } from '../../animation';
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
-export default class CopyDataAnimation extends AnimationNode {
+export interface CopyDataAnimation extends AnimationNode {
     dataSpecifier: Accessor[];
     outputRegister: Accessor[];
     hardCopy: boolean;
+}
 
-    constructor(dataSpecifier: Accessor[], outputRegister: Accessor[], options: AnimationOptions = {}) {
-        super(options);
-        this.dataSpecifier = dataSpecifier;
-        this.outputRegister = outputRegister;
+function onBegin(animation: CopyDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
+    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState;
+    const copy = cloneData(data, false, `${animation.id}_Copy`);
+    copy.transform.floating = true;
 
-        this.hardCopy = false;
+    const location = addDataAt(environment, copy, [], null);
+    environment._temps[`CopyDataAnimation${animation.id}`] = location;
+
+    // Put it in the floating stack
+    const register = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState;
+    replaceDataWith(register, createData(DataType.ID, copy.id, `${animation.id}_Floating`));
+
+    if (animation.hardCopy) {
+        data.value = undefined;
     }
 
-    begin(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {
-        super.begin(environment, options);
-        // console.log(this.dataSpecifier)
-        const data = environment.resolvePath(this.dataSpecifier, `${this.id}_Data`) as Data;
-        const copy = data.copy(false, `${this.id}_Copy`);
-        copy.transform.floating = true;
-
-        const location = environment.addDataAt([], copy, null);
-        environment._temps[`CopyDataAnimation${this.id}`] = location;
-
-        // Put it in the floating stack
-        const register = environment.resolvePath(this.outputRegister, `${this.id}_Floating`) as Data;
-        register.replaceWith(new Data({ id: `${this.id}_Floating`, type: DataType.ID, value: copy.id }));
-
-        if (this.hardCopy) {
-            data.value = undefined;
-        }
-
-        if (options.baking) {
-            this.computeReadAndWrites(
-                {
-                    location: environment.getMemoryLocation(data).foundLocation,
-                    id: data.id,
-                },
-                { location, id: copy.id }
-            );
-        }
+    if (options.baking) {
+        // animation.computeReadAndWrites(
+        //     {
+        //         location: getMemoryLocation(environment, data).foundLocation,
+        //         id: data.id,
+        //     },
+        //     { location, id: copy.id }
+        // );
     }
+}
 
-    seek(environment: Environment, time: number) {
-        let t = super.ease(time / this.duration);
-        const copy = environment.resolvePath(environment._temps[`CopyDataAnimation${this.id}`], null) as Data;
-        copy.transform.z = t;
-    }
+function onSeek(animation: CopyDataAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+    let t = animation.ease(time / duration(animation));
 
-    end(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {}
+    const environment = getCurrentEnvironment(view);
+    const copy = resolvePath(environment, environment._temps[`CopyDataAnimation${animation.id}`], null) as DataState;
+    copy.transform.z = t;
+}
 
-    computeReadAndWrites(original: AnimationData, copy: AnimationData) {
-        this._reads = [original];
-        this._writes = [copy];
-    }
+function onEnd(animation: CopyDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+
+export function copyDataAnimation(
+    dataSpecifier: Accessor[],
+    outputRegister: Accessor[],
+    hardCopy: boolean = false,
+    options: AnimationOptions = {}
+): CopyDataAnimation {
+    return {
+        ...createAnimationNode(null, options),
+
+        name: `Copy ${accessorsToString(dataSpecifier)} to ${accessorsToString(outputRegister)}`,
+
+        // Attributes
+        dataSpecifier,
+        outputRegister,
+        hardCopy,
+
+        // Callbacks
+        onBegin,
+        onSeek,
+        onEnd,
+    };
 }

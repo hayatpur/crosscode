@@ -1,54 +1,59 @@
-import { Accessor, Data, DataType } from '../../../environment/Data';
-import { Environment } from '../../../environment/Environment';
-import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions } from '../AnimationNode';
+import { createData } from '../../../environment/data/data';
+import { DataState, DataType } from '../../../environment/data/DataState';
+import { addDataAt, declareVariable, getMemoryLocation, resolvePath } from '../../../environment/environment';
+import { Accessor } from '../../../environment/EnvironmentState';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
-export class BindAnimation extends AnimationNode {
+export interface BindAnimation extends AnimationNode {
     identifier: string;
     existingMemorySpecifier: Accessor[];
+}
 
-    constructor(identifier: string, existingMemorySpecifier: Accessor[] = null, options: AnimationOptions = {}) {
-        super(options);
+function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
 
-        this.identifier = identifier;
-        this.existingMemorySpecifier = existingMemorySpecifier;
+    let data = null;
+    let location = null;
 
-        this.base_duration = 5;
+    if (animation.existingMemorySpecifier != null) {
+        data = resolvePath(environment, animation.existingMemorySpecifier, `${animation.id}_Existing`) as DataState;
+        location = getMemoryLocation(environment, data).foundLocation;
+    } else {
+        data = createData(DataType.Literal, undefined, `${animation.id}_BindNew`);
+        location = addDataAt(environment, data, [], null);
     }
 
-    begin(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {
-        super.begin(environment, options);
+    declareVariable(environment, animation.identifier, location);
 
-        let location = null;
-        let data = null;
+    // if (options.baking) {
+    //     animation.computeReadAndWrites({ location, id: data.id });
+    // }
+}
 
-        if (this.existingMemorySpecifier != null) {
-            data = environment.resolvePath(this.existingMemorySpecifier, `${this.id}_Existing`) as Data;
-            location = environment.getMemoryLocation(data).foundLocation;
-        } else {
-            data = new Data({ id: `${this.id}_BindNew`, type: DataType.Literal, value: undefined });
-            location = environment.addDataAt([], data, null);
-        }
+function onSeek(animation: BindAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
 
-        environment.declare(this.identifier, location);
+function onEnd(animation: BindAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
-        if (options.baking) {
-            this.computeReadAndWrites({ location, id: data.id });
-        }
-    }
+export function bindAnimation(
+    identifier: string,
+    existingMemorySpecifier: Accessor[] = null,
+    options: AnimationOptions = {}
+): BindAnimation {
+    return {
+        ...createAnimationNode(null, options),
+        baseDuration: 5,
+        name: `Bind Variable ${identifier}`,
 
-    seek(environment: Environment, time: number) {}
+        // Attributes
+        identifier,
+        existingMemorySpecifier,
 
-    end(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {}
-
-    computeReadAndWrites(data: AnimationData) {
-        this._reads = [data];
-        this._writes = [];
-    }
+        // Callbacks
+        onBegin,
+        onSeek,
+        onEnd,
+    };
 }

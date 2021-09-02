@@ -1,8 +1,9 @@
 import * as ESTree from 'estree';
-import { AnimationGraph } from '../animation/graph/AnimationGraph';
+import { AnimationGraph, createAnimationGraph } from '../animation/graph/AnimationGraph';
+import { addVertex } from '../animation/graph/graph';
 import { AnimationContext } from '../animation/primitive/AnimationNode';
-import CopyDataAnimation from '../animation/primitive/Data/CopyDataAnimation';
-import { AccessorType } from '../environment/Data';
+import { copyDataAnimation } from '../animation/primitive/Data/CopyDataAnimation';
+import { AccessorType } from '../environment/EnvironmentState';
 import { Node, NodeMeta } from './Node';
 
 export class Identifier extends Node {
@@ -17,15 +18,15 @@ export class Identifier extends Node {
     }
 
     animation(context: AnimationContext): AnimationGraph {
-        const graph = new AnimationGraph(this);
+        const graph = createAnimationGraph(this);
 
         // Create a copy of it
-        const copy = new CopyDataAnimation(this.getSpecifier(), context.outputRegister);
-        graph.addVertex(copy, this);
+        const copy = copyDataAnimation(this.getSpecifier(), context.outputRegister);
+        addVertex(graph, copy, this);
 
         // Float it up
         // const float = new FloatAnimation(this.getSpecifier())
-        // graph.addVertex(float, this)
+        // addVertex(graph, float, this)
 
         return graph;
     }

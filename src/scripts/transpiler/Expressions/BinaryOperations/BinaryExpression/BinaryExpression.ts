@@ -1,13 +1,14 @@
 import * as ESTree from 'estree';
-import { AnimationGraph } from '../../../../animation/graph/AnimationGraph';
+import { AnimationGraph, createAnimationGraph } from '../../../../animation/graph/AnimationGraph';
+import { addVertex } from '../../../../animation/graph/graph';
 import { AnimationContext } from '../../../../animation/primitive/AnimationNode';
-import BinaryExpressionEvaluate from '../../../../animation/primitive/Binary/BinaryExpressionEvaluate';
-import BinaryExpressionSetup from '../../../../animation/primitive/Binary/BinaryExpressionSetup';
-import { AccessorType } from '../../../../environment/Data';
+import { binaryExpressionEvaluate } from '../../../../animation/primitive/Binary/BinaryExpressionEvaluate';
+import { binaryExpressionSetup } from '../../../../animation/primitive/Binary/BinaryExpressionSetup';
+import { AccessorType } from '../../../../environment/EnvironmentState';
 import { Node, NodeMeta } from '../../../Node';
 import { Transpiler } from '../../../Transpiler';
 
-export default class BinaryExpression extends Node {
+export class BinaryExpression extends Node {
     left: Node;
     right: Node;
     operator: ESTree.BinaryOperator;
@@ -22,27 +23,22 @@ export default class BinaryExpression extends Node {
     }
 
     animation(context: AnimationContext): AnimationGraph {
-        const graph = new AnimationGraph(this);
+        const graph = createAnimationGraph(this);
 
-        const leftRegister = [{ type: AccessorType.Register, value: `${this.id}__BinaryExpressionLeft` }];
-        const rightRegister = [{ type: AccessorType.Register, value: `${this.id}__BinaryExpressionRight` }];
+        const leftRegister = [{ type: AccessorType.Register, value: `${this.id}_BinaryExpressionLeft` }];
+        const rightRegister = [{ type: AccessorType.Register, value: `${this.id}_BinaryExpressionRight` }];
 
         const left = this.left.animation({ ...context, outputRegister: leftRegister });
-        graph.addVertex(left, this.left);
+        addVertex(graph, left, this.left);
 
         const right = this.right.animation({ ...context, outputRegister: rightRegister });
-        graph.addVertex(right, this.right);
+        addVertex(graph, right, this.right);
 
-        const initial = new BinaryExpressionSetup(leftRegister, rightRegister, this.operator);
-        graph.addVertex(initial, this);
+        const initial = binaryExpressionSetup(leftRegister, rightRegister, this.operator);
+        addVertex(graph, initial, this);
 
-        const evaluate = new BinaryExpressionEvaluate(
-            leftRegister,
-            rightRegister,
-            context.outputRegister,
-            this.operator
-        );
-        graph.addVertex(evaluate, this);
+        const evaluate = binaryExpressionEvaluate(leftRegister, rightRegister, this.operator, context.outputRegister);
+        addVertex(graph, evaluate, this);
 
         return graph;
     }

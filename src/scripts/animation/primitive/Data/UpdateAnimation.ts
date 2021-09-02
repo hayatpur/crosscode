@@ -1,64 +1,66 @@
-import { Accessor, Data } from '../../../environment/Data';
-import { Environment } from '../../../environment/Environment';
-import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode } from '../AnimationNode';
+import { DataState } from '../../../environment/data/DataState';
+import { resolvePath } from '../../../environment/environment';
+import { Accessor } from '../../../environment/EnvironmentState';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { duration } from '../../animation';
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
-export default class PlaceAnimation extends AnimationNode {
+export interface UpdateAnimation extends AnimationNode {
     dataSpecifier: Accessor[];
     updateStep: string;
     newValue: any;
+}
 
-    constructor(dataSpecifier: Accessor[], updateStep: string, newValue: any, options = {}) {
-        super({ ...options, duration: 80 });
-        this.dataSpecifier = dataSpecifier;
+function onBegin(animation: UpdateAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
-        this.updateStep = updateStep;
-        this.newValue = newValue;
+function onSeek(animation: UpdateAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+    let t = animation.ease(time / duration(animation));
+
+    const environment = getCurrentEnvironment(view);
+
+    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState;
+
+    if (t <= 0.8) {
+        // Show the step
+        // data.transform.step = animation.updateStep;
+    } else {
+        // Apply the new value
+        // data.transform.step = null;
+
+        data.value = animation.newValue;
     }
+}
 
-    begin(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {
-        super.begin(environment, options);
-    }
+function onEnd(animation: UpdateAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
+    // const data = resolvePath(environment, this.dataSpecifier, null) as DataState;
+    // if (options.baking) {
+    //     this.computeReadAndWrites({ location: getMemoryLocation(environment, (data).foundLocation, id: data.id });
+    // }
+}
 
-    seek(environment: Environment, time: number) {
-        let t = super.ease(time / this.duration);
+export function updateAnimation(
+    dataSpecifier: Accessor[],
+    updateStep: string,
+    newValue: any,
+    options: AnimationOptions = {}
+): UpdateAnimation {
+    return {
+        ...createAnimationNode(null, options),
+        baseDuration: 30,
 
-        const data = environment.resolvePath(this.dataSpecifier, `${this.id}_Data`) as Data;
+        name: 'UpdateAnimation',
 
-        if (t <= 0.8) {
-            // Show the step
-            data.transform.step = this.updateStep;
-        } else {
-            // Apply the new value
-            data.transform.step = null;
+        // Attributes
+        dataSpecifier,
+        updateStep,
+        newValue,
 
-            data.value = this.newValue;
-        }
-    }
-
-    end(environment: Environment, options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
-        const data = environment.resolvePath(this.dataSpecifier, null) as Data;
-        // const input = environment.resolvePath(this.inputSpecifier) as Data;
-        // const to = environment.resolvePath(this.outputSpecifier) as Data;
-        if (options.baking) {
-            this.computeReadAndWrites({ location: environment.getMemoryLocation(data).foundLocation, id: data.id });
-        }
-        // if (to instanceof Environment) {
-        //     environment.removeAt(environment.getMemoryLocation(input).foundLocation);
-        // } else {
-        //     // Remove the copy
-        //     environment.removeAt(environment.getMemoryLocation(input).foundLocation);
-        //     to.replaceWith(input, { frame: true, id: true });
-        // }
-        // input.transform.floating = false;
-        // input.transform.z = 0;
-    }
-
-    computeReadAndWrites(data: AnimationData) {
-        this._reads = [data];
-        this._writes = [data];
-    }
+        // Callbacks
+        onBegin,
+        onSeek,
+        onEnd,
+    };
 }

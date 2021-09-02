@@ -1,196 +1,271 @@
-import { Separators } from '../../../editor/Separators';
-import { Transform } from '../../../environment/Data';
-import { Environment } from '../../../environment/Environment';
-import { lerp } from '../../../utilities/math';
-import { ViewPositionModifierType } from '../../../utilities/view';
-import { View } from '../../../view/View';
-import { Trace } from '../../graph/abstraction/Transition';
-import { AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions } from '../AnimationNode';
+// import { Separators } from '../../../editor/Separators';
+// import { AccessorType } from '../../../environment/data/data';
+// import { Environment } from '../../../environment/environment';
+// import { remap } from '../../../utilities/math';
+// import { ViewPositionModifierType } from '../../../utilities/view';
+// import { View } from '../../../view/ViewRenderer';
+// import { Trace } from '../../graph/abstraction/Transition';
+// import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+// import { AnimationNode, AnimationOptions } from '../AnimationNode';
 
-export class TransitionAnimation extends AnimationNode {
-    inputState: Environment;
-    outputState: Environment;
-    traces: { [dataId: string]: Trace[][] };
+// export class TransitionAnimation extends AnimationNode {
+//     inputState: Environment;
+//     outputState: Environment;
+//     traces: { [dataId: string]: Trace[][] };
 
-    constructor(
-        inputState: Environment,
-        outputState: Environment,
-        traces: { [dataId: string]: Trace[][] },
-        showBefore: boolean,
-        options: AnimationOptions = {}
-    ) {
-        super({ ...options, duration: 150 });
+//     constructor(
+//         inputState: Environment,
+//         outputState: Environment,
+//         traces: { [dataId: string]: Trace[][] },
+//         showBefore: boolean,
+//         options: AnimationOptions = {}
+//     ) {
+//         super({ ...options, duration: 150 });
 
-        this.inputState = inputState;
-        this.outputState = outputState;
-        this.traces = traces;
-    }
+//         this.inputState = inputState;
+//         this.outputState = outputState;
+//         this.traces = traces;
+//     }
 
-    begin(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {
-        super.begin(environment, options);
+//     begin(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
+//         super.begin(environment, options);
 
-        // Mapping of each data id to a corresponding view
-        // const trace_mapping: { [id: string]: { viewId: string } } = {};
-        // Object.keys(this.trace).forEach((id) => (trace_mapping[id] = { viewId: null }));
+//         // This environments view
+//         const thisView = Object.values(View.views).find((view) => view.environment == environment);
+//         thisView?.positionModifiers.push({ type: ViewPositionModifierType.BelowView, value: null });
 
-        // This environments view
-        const thisView = Object.values(View.views).find((view) => view.environment == environment);
+//         console.log(this.traces);
 
-        // // Find views that have the relevant variables
-        // for (const [viewId, view] of Object.entries(View.views)) {
-        //     if (view.animation.globalTime > this.globalTime || view.animation == this || !view.animation.showing)
-        //         continue;
+//         // Mapping of each data id to a corresponding view
+//         const dataToView = getDataToViewMapping(this);
 
-        //     for (const [dataId, mapping] of Object.entries(trace_mapping)) {
-        //         if (mapping.viewId != null) continue;
+//         // Bring those views right above this view
+//         const views = new Set(
+//             Object.values(dataToView)
+//                 .map((mapping) => mapping.viewId)
+//                 .filter((v) => v != null)
+//         );
 
-        //         const data = view.environment.resolve({ type: AccessorType.ID, value: dataId }, null) as Data;
-        //         if (data != null) mapping.viewId = viewId;
-        //     }
-        // }
+//         for (const id of views) {
+//             const view = View.views[id];
+//             view.positionModifiers.push({ type: ViewPositionModifierType.AboveView, value: thisView?.animation.id });
+//         }
 
-        // // Bring those views right above this view
-        // const relevantViews = new Set(
-        //     Object.values(trace_mapping)
-        //         .map((mapping) => mapping.viewId)
-        //         .filter((v) => v != null)
-        // );
+//         // Set to output state but render empty
+//         environment.replaceEnvironmentWith(this.outputState, { validIds: true });
+//         updateEnvironmentLayout(environment);
+//         environment.renderEmpty = true;
 
-        // for (const id of relevantViews) {
-        //     const other = View.views[id];
-        //     other.positionModifiers.push({ type: ViewPositionModifierType.AboveView, value: thisView?.animation.id });
-        // }
+//         // const mapping: { [id: string]: { start: Transform; end: Transform } } = {};
 
-        thisView?.positionModifiers.push({ type: ViewPositionModifierType.BelowView, value: null });
+//         // Start transforms
+//         // this.inputState.updateLayout();
+//         // let items = this.inputState.flattenedMemory();
+//         // items = items.filter((data) => data && data.type == DataType.Literal);
+//         // items.reverse();
 
-        environment.replaceEnvironmentWith(this.outputState, { validIds: true });
-        environment.renderEmpty = true;
-        environment.updateLayout();
+//         // this.inputState.log();
+//         // this.outputState.log();
 
-        // if (options.baking) {
-        //     this.computeReadAndWrites();
-        // }
+//         // for (const [id, mapping] of Object.entries(trace_mapping)) {
+//         //     if (mapping.viewId == null) continue;
 
-        environment.beforeOffset = -1;
+//         //     const data = View.views[mapping.viewId].environment.resolve(
+//         //         { type: AccessorType.ID, value: id },
+//         //         null
+//         //     ) as DataState;
+//         //     data.transform.floating = true;
+//         // }
 
-        // const mapping: { [id: string]: { start: Transform; end: Transform } } = {};
+//         // // for (let item of items) {
+//         // //     mapping[item.id] = { start: JSON.parse(JSON.stringify(item.transform)), end: null };
 
-        // // Start transforms
-        // this.inputState.updateLayout();
-        // let items = this.inputState.flattenedMemory();
-        // items = items.filter((data) => data && data.type == DataType.Literal);
-        // items.reverse();
+//         // //     const data = environment.resolve({ type: AccessorType.ID, value: item.id }, null) as DataState;
+//         // //     data.transform.floating = true;
+//         // // }
 
-        // this.inputState.log();
-        // this.outputState.log();
+//         // // End transforms
+//         // this.outputState.updateLayout();
+//         // console.log(this.outputState);
+//         // items = this.outputState.flattenedMemory();
+//         // items = items.filter((data) => data && data.type == DataType.Literal);
+//         // items.reverse();
 
-        // for (const [id, mapping] of Object.entries(trace_mapping)) {
-        //     if (mapping.viewId == null) continue;
+//         // // for (const [id, writes] of Object.entries(this.trace)) {
+//         // //     const data = environment.resolve({ type: AccessorType.ID, value: id }) as DataState;
 
-        //     const data = View.views[mapping.viewId].environment.resolve(
-        //         { type: AccessorType.ID, value: id },
-        //         null
-        //     ) as Data;
-        //     data.transform.floating = true;
-        // }
+//         // //     // if (data == null) continue;
 
-        // // for (let item of items) {
-        // //     mapping[item.id] = { start: JSON.parse(JSON.stringify(item.transform)), end: null };
+//         // //     console.log('\tWrites', id, [...writes]);
 
-        // //     const data = environment.resolve({ type: AccessorType.ID, value: item.id }, null) as Data;
-        // //     data.transform.floating = true;
-        // // }
+//         // //     if (writes.has(item.id)) {
+//         // //         mapping[id].end = JSON.parse(JSON.stringify(data.transform));
+//         // //     }
+//         // // }
 
-        // // End transforms
-        // this.outputState.updateLayout();
-        // console.log(this.outputState);
-        // items = this.outputState.flattenedMemory();
-        // items = items.filter((data) => data && data.type == DataType.Literal);
-        // items.reverse();
+//         // for (let item of items) {
+//         //     // TODO
+//         //     if (!(item.id in mapping)) {
+//         //         continue;
+//         //     }
 
-        // // for (const [id, writes] of Object.entries(this.trace)) {
-        // //     const data = environment.resolve({ type: AccessorType.ID, value: id }) as Data;
+//         //     const trace = this.trace[item.id];
 
-        // //     // if (data == null) continue;
+//         //     if (trace == null) {
+//         //         mapping[item.id].end = mapping[item.id].start;
+//         //         continue;
+//         //     }
 
-        // //     console.log('\tWrites', id, [...writes]);
+//         //     for (const write of trace) {
+//         //         const data = environment.resolve({ type: AccessorType.ID, value: write }, null) as DataState;
+//         //         if (data != null && write != item.id) {
+//         //             mapping[item.id].end = JSON.parse(JSON.stringify(data.transform));
+//         //         }
+//         //     }
+//         // }
 
-        // //     if (writes.has(item.id)) {
-        // //         mapping[id].end = JSON.parse(JSON.stringify(data.transform));
-        // //     }
-        // // }
+//         if (thisView) Separators.instance.addSeparator(thisView);
 
-        // for (let item of items) {
-        //     // TODO
-        //     if (!(item.id in mapping)) {
-        //         continue;
-        //     }
+//         environment._temps[`${this.id}_DataToView`] = dataToView;
+//         environment._temps[`${this.id}_ThisViewId`] = thisView?.animation.id;
+//         environment._temps[`${this.id}_ys`] = {};
+//     }
 
-        //     const trace = this.trace[item.id];
+//     seek(environment: Environment, time: number) {
+//         let tn = time / this.duration;
 
-        //     if (trace == null) {
-        //         mapping[item.id].end = mapping[item.id].start;
-        //         continue;
-        //     }
+//         let dataToView: {
+//             [id: string]: {
+//                 viewId: string;
+//             };
+//         } = environment._temps[`${this.id}_DataToView`];
 
-        //     for (const write of trace) {
-        //         const data = environment.resolve({ type: AccessorType.ID, value: write }, null) as Data;
-        //         if (data != null && write != item.id) {
-        //             mapping[item.id].end = JSON.parse(JSON.stringify(data.transform));
-        //         }
-        //     }
-        // }
+//         let ys = environment._temps[`${this.id}_ys`];
 
-        if (thisView) Separators.instance.addSeparator(thisView);
+//         const thisViewId = environment._temps[`${this.id}_ThisViewId`];
+//         if (thisViewId == null) return;
 
-        // environment._temps[`${this.id}_Transition`] = mapping;
-    }
+//         if (tn < 0.2) {
+//             let t = super.ease(remap(tn, 0, 0.2, 0, 1));
 
-    seek(environment: Environment, time: number) {
-        let t = super.ease(time / this.duration);
+//             // Float up / copy
+//             for (const dataId of Object.keys(this.traces)) {
+//                 const viewId = dataToView[dataId].viewId;
+//                 const data = View.views[viewId].environment.resolve(
+//                     { type: AccessorType.ID, value: dataId },
+//                     null
+//                 ) as DataState;
+//                 data.transform.floating = true;
+//                 data.transform.z = t;
+//                 ys[dataId] = data.transform.y;
+//             }
+//         } else if (tn < 0.8) {
+//             let t = super.ease(remap(tn, 0.2, 0.8, 0, 1));
 
-        let mapping: { [id: string]: { start: Transform; end: Transform } } =
-            environment._temps[`${this.id}_Transition`];
+//             // const dy = View.views[thisViewId.id];
 
-        environment.beforeOffset = lerp(-1, 0, Math.min(1, t));
+//             // Move
+//             for (const dataId of Object.keys(this.traces)) {
+//                 const viewId = dataToView[dataId].viewId;
+//                 const data = View.views[viewId].environment.resolve(
+//                     { type: AccessorType.ID, value: dataId },
+//                     null
+//                 ) as DataState;
+//                 data.transform.y = ys[dataId] + 125 * t;
+//             }
+//         } else {
+//             let t = super.ease(remap(tn, 0.8, 1, 0, 1));
+//             // Place
+//             for (const dataId of Object.keys(this.traces)) {
+//                 const viewId = dataToView[dataId].viewId;
+//                 const data = View.views[viewId].environment.resolve(
+//                     { type: AccessorType.ID, value: dataId },
+//                     null
+//                 ) as DataState;
+//                 data.transform.floating = true;
+//                 data.transform.z = 1 - t;
+//             }
+//         }
 
-        for (const [id, { start, end }] of Object.entries(mapping)) {
-            // Changes
+//         // let mapping: { [id: string]: { start: Transform; end: Transform } } =
+//         //     environment._temps[`${this.id}_Transition`];
 
-            // if (start && end) {
-            //     const data = environment.resolve({ type: AccessorType.ID, value: id }) as Data;
-            //     data.transform.x = lerp(start.x, end.x, t);
-            //     data.transform.y = lerp(start.y, end.y, t);
-            // }
+//         // for (const [id, { start, end }] of Object.entries(mapping)) {
+//         //     // Changes
 
-            // Deletions
-            // if (start && !end) {
-            //     const data = environment.resolve({ type: AccessorType.ID, value: id }) as Data;
-            //     data.transform.z = 2 * t + 1;
-            //     data.transform.opacity = (1 - t) ** 2;
-            // }
+//         //     // if (start && end) {
+//         //     //     const data = environment.resolve({ type: AccessorType.ID, value: id }) as DataState;
+//         //     //     data.transform.x = lerp(start.x, end.x, t);
+//         //     //     data.transform.y = lerp(start.y, end.y, t);
+//         //     // }
 
-            // Insertions
-            if (!start && end) {
-                // const data = environment.resolve({ type: AccessorType.ID, value: id }) as Data;
-                // data.transform.z = t;
-                // data.transform.opacity = 1 - t ** 2;
-            }
-        }
-    }
+//         //     // Deletions
+//         //     // if (start && !end) {
+//         //     //     const data = environment.resolve({ type: AccessorType.ID, value: id }) as DataState;
+//         //     //     data.transform.z = 2 * t + 1;
+//         //     //     data.transform.opacity = (1 - t) ** 2;
+//         //     // }
 
-    end(environment: Environment, options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
-        environment.replaceEnvironmentWith(this.outputState);
-        environment.updateLayout();
-        environment.renderEmpty = false;
-    }
+//         //     // Insertions
+//         //     if (!start && end) {
+//         //         // const data = environment.resolve({ type: AccessorType.ID, value: id }) as DataState;
+//         //         // data.transform.z = t;
+//         //         // data.transform.opacity = 1 - t ** 2;
+//         //     }
+//         // }
+//     }
 
-    computeReadAndWrites() {
-        this._reads = [];
-        this._writes = [];
-    }
-}
+//     end(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
+//         let dataToView: {
+//             [id: string]: {
+//                 viewId: string;
+//             };
+//         } = environment._temps[`${this.id}_DataToView`];
+
+//         for (const dataId of Object.keys(this.traces)) {
+//             const viewId = dataToView[dataId].viewId;
+//             if (View.views[viewId] == null) continue;
+//             const data = View.views[viewId].environment.resolve(
+//                 { type: AccessorType.ID, value: dataId },
+//                 null
+//             ) as DataState;
+//             data.transform.floating = false;
+//             data.transform.y = 0;
+//             View.views[viewId].updateEnvironmentLayout(environment);
+//             View.views[viewId].update();
+//         }
+
+//         environment.replaceEnvironmentWith(this.outputState);
+//         updateEnvironmentLayout(environment);
+//         environment.renderEmpty = false;
+//     }
+
+//     computeReadAndWrites() {
+//         this._reads = [];
+//         this._writes = [];
+//     }
+// }
+
+// function getDataToViewMapping(animation: TransitionAnimation) {
+//     const dataToView: { [id: string]: { viewId: string } } = {};
+//     Object.keys(animation.traces).forEach((dataId) => {
+//         dataToView[dataId] = { viewId: null };
+//     });
+
+//     // Find views that have the relevant variables, for each view
+//     for (const [viewId, view] of Object.entries(View.views)) {
+//         if (view.animation.globalTime > animation.globalTime || view.animation == animation || !view.animation.showing)
+//             continue;
+
+//         // Find if its environment contains any data
+//         for (const [dataId, mapping] of Object.entries(dataToView)) {
+//             if (mapping.viewId != null) continue;
+//             view.environment.log();
+
+//             const data = view.environment.resolve({ type: AccessorType.ID, value: dataId }, null) as DataState;
+//             if (data != null) mapping.viewId = viewId;
+//         }
+//     }
+
+//     return dataToView;
+// }

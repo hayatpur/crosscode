@@ -1,27 +1,28 @@
 //@ts-check
 
 import * as ESTree from 'estree';
-import { ArrayExpression } from './Expressions/Array/ArrayExpression';
-import { ArrayExpressionItem } from './Expressions/Array/ArrayExpressionItem';
+// import { ArrayExpression } from './Expressions/Array/ArrayExpression';
+// import { ArrayExpressionItem } from './Expressions/Array/ArrayExpressionItem';
 import { AssignmentExpression } from './Expressions/BinaryOperations/AssigmentExpression';
-import BinaryExpression from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression';
-import { MemberExpression } from './Expressions/BinaryOperations/MemberExpression';
-import { CallExpression } from './Expressions/CallExpression';
-import { FloatingExpressionStatement } from './Expressions/FloatingExpressionStatement';
-import { UpdateExpression } from './Expressions/UpdateExpression';
-import { FunctionStatement } from './Functions/FunctionStatement';
-import { ReturnStatement } from './Functions/ReturnStatement';
+import { BinaryExpression } from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression';
+// import BinaryExpression from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression';
+// import { MemberExpression } from './Expressions/BinaryOperations/MemberExpression';
+// import { CallExpression } from './Expressions/CallExpression';
+// import { FloatingExpressionStatement } from './Expressions/FloatingExpressionStatement';
+// import { UpdateExpression } from './Expressions/UpdateExpression';
+// import { FunctionStatement } from './Functions/FunctionStatement';
+// import { ReturnStatement } from './Functions/ReturnStatement';
 import { Identifier } from './Identifier';
 import { Literal } from './Literal';
 import { Node, NodeMeta } from './Node';
 import { BlockStatement } from './Statements/BlockStatement';
-import IfStatement from './Statements/Choice/IfStatement';
+// import IfStatement from './Statements/Choice/IfStatement';
 import { ExpressionStatement } from './Statements/ExpressionStatement';
-import ForStatement from './Statements/Loops/ForStatement';
-import ForStatementIncrement from './Statements/Loops/ForStatementIncrement';
-import ForStatementIteration from './Statements/Loops/ForStatementIteration';
-import WhileStatement from './Statements/Loops/WhileStatement';
-import WhileStatementIteration from './Statements/Loops/WhileStatementIteration';
+// import ForStatement from './Statements/Loops/ForStatement';
+// import ForStatementIncrement from './Statements/Loops/ForStatementIncrement';
+// import ForStatementIteration from './Statements/Loops/ForStatementIteration';
+// import WhileStatement from './Statements/Loops/WhileStatement';
+// import WhileStatementIteration from './Statements/Loops/WhileStatementIteration';
 import { Program } from './Statements/Program';
 import { VariableDeclaration } from './Statements/VariableDeclaration';
 import { VariableDeclarator } from './Statements/VariableDeclarator';
@@ -33,13 +34,13 @@ export class Transpiler {
         const mapping = {
             // Declarations
             VariableDeclarator,
-            // Binary Operations
+
             BinaryExpression,
-            UpdateExpression,
+            // UpdateExpression,
             // Expressions
-            ArrayExpression,
-            ArrayExpressionItem,
-            MemberExpression,
+            // ArrayExpression,
+            // ArrayExpressionItem,
+            // MemberExpression,
             ExpressionStatement,
             VariableDeclaration,
             AssignmentExpression,
@@ -51,18 +52,18 @@ export class Transpiler {
             Program,
             // Statements
             BlockStatement,
-            ForStatementIteration,
-            ForStatement,
-            ForStatementIncrement,
+            // ForStatementIteration,
+            // ForStatement,
+            // ForStatementIncrement,
 
-            IfStatement,
-            FloatingExpressionStatement,
-            FunctionStatement,
-            CallExpression,
-            ReturnStatement,
+            // IfStatement,
+            // FloatingExpressionStatement,
+            // FunctionStatement,
+            // CallExpression,
+            // ReturnStatement,
 
-            WhileStatementIteration,
-            WhileStatement,
+            // WhileStatementIteration,
+            // WhileStatement,
         };
 
         if (mapping[`${ast.type}`] == null) {
@@ -94,12 +95,12 @@ export class Transpiler {
             root.add(node, path);
         }
 
-        root.statements = root.statements.filter((stmt) => !(stmt instanceof FunctionStatement));
+        // root.statements = root.statements.filter((stmt) => !(stmt instanceof FunctionStatement));
 
         // For each block statement
-        for (const block of Transpiler.blocks) {
-            block.statements = block.statements.filter((stmt) => !(stmt instanceof FunctionStatement));
-        }
+        // for (const block of Transpiler.blocks) {
+        //     block.statements = block.statements.filter((stmt) => !(stmt instanceof FunctionStatement));
+        // }
 
         return root;
     }

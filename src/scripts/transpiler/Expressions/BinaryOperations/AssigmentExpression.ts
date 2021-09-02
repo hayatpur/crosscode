@@ -1,16 +1,16 @@
 import * as astring from 'astring';
 import * as ESTree from 'estree';
-import { AnimationGraph } from '../../../animation/graph/AnimationGraph';
+import { createAnimationGraph } from '../../../animation/graph/AnimationGraph';
+import { addVertex } from '../../../animation/graph/graph';
 import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-import MoveAndPlaceAnimation from '../../../animation/primitive/Data/MoveAndPlaceAnimation';
-import UpdateAnimation from '../../../animation/primitive/Data/UpdateAnimation';
-import { AccessorType } from '../../../environment/Data';
+import { moveAndPlaceAnimation } from '../../../animation/primitive/Data/MoveAndPlaceAnimation';
+import { updateAnimation } from '../../../animation/primitive/Data/UpdateAnimation';
+import { AccessorType } from '../../../environment/EnvironmentState';
 import { Evaluator } from '../../../executor/Evaluator';
 import { Identifier } from '../../Identifier';
 import { Literal } from '../../Literal';
 import { Node, NodeMeta } from '../../Node';
 import { Transpiler } from '../../Transpiler';
-import { MemberExpression } from './MemberExpression';
 
 export class AssignmentExpression extends Node {
     left: Node;
@@ -34,12 +34,14 @@ export class AssignmentExpression extends Node {
     }
 
     animation(context: AnimationContext) {
-        const graph = new AnimationGraph(this);
+        const graph = createAnimationGraph(this);
 
         const register = [{ type: AccessorType.Register, value: `${this.id}__Assignment` }];
 
-        const leftSpecifier =
-            this.left instanceof MemberExpression ? this.left.getSpecifier() : (this.left as Identifier).getSpecifier();
+        // const leftSpecifier =
+        //     this.left instanceof MemberExpression ? this.left.getSpecifier() : (this.left as Identifier).getSpecifier();
+
+        const leftSpecifier = (this.left as Identifier).getSpecifier();
 
         if (this.operator == '=') {
             // Right should be in the floating stack
@@ -48,21 +50,21 @@ export class AssignmentExpression extends Node {
                 locationHint: leftSpecifier,
                 outputRegister: register,
             });
-            graph.addVertex(right, this.right);
+            addVertex(graph, right, this.right);
 
-            const move = new MoveAndPlaceAnimation(register, leftSpecifier, right instanceof Literal);
-            graph.addVertex(move, this);
+            const move = moveAndPlaceAnimation(register, leftSpecifier, right instanceof Literal);
+            addVertex(graph, move, this);
         } else {
             // Lift up LHS
             const left = this.left.animation({ ...context, locationHint: leftSpecifier, outputRegister: register });
-            graph.addVertex(left, this.left);
+            addVertex(graph, left, this.left);
 
             // Apply the operation
-            const update = new UpdateAnimation(register, `${this.operator} ${this.right_str}`, this.newValue);
-            graph.addVertex(update, this.right);
+            const update = updateAnimation(register, `${this.operator} ${this.right_str}`, this.newValue);
+            addVertex(graph, update, this.right);
 
-            const move = new MoveAndPlaceAnimation(register, leftSpecifier, true);
-            graph.addVertex(move, this);
+            const move = moveAndPlaceAnimation(register, leftSpecifier, true);
+            addVertex(graph, move, this);
         }
 
         return graph;

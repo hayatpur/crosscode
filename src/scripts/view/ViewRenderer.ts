@@ -1,171 +1,225 @@
-import { Accessor, Data, DataType } from '../environment/Data';
-import { Environment } from '../environment/Environment';
-import { sigmoid } from '../utilities/math';
+import { EnvironmentRenderer } from '../environment/EnvironmentRenderer';
+import { ViewState } from './ViewState';
 
 export class ViewRenderer {
-    // View's HTML DOM Element
-    element: HTMLDivElement;
+    environmentRenderers: EnvironmentRenderer[];
 
-    dataElements: { [id: string]: HTMLDivElement } = {};
-    identifierElements: { [id: string]: HTMLDivElement } = {};
-
-    position: { x: number; y: number };
-    draggable: boolean = false;
-
-    constructor() {
-        // DOM elements
-        this.element = document.createElement('div');
-        this.element.classList.add('view-renderer');
-
-        // this.position = options.position ?? { x: 0, y: 0 };
-
-        // this.element.style.top = `${this.position.y}px`;
-        // this.element.style.left = `${this.position.x}px`;
-    }
-
-    setState(environment: Environment) {
-        // Clear memory
-        let memory = environment.flattenedMemory();
-        memory = memory.filter((data) => data && data.type == DataType.Literal);
-        memory.reverse();
-
-        let ids = new Set([...memory.map((data) => data.id)]);
-
-        // Add any missing elements
-        for (const data of memory) {
-            if (this.dataElements[data.id] == null) {
-                // Create element
-                const el = document.createElement('div');
-                el.classList.add('view-renderer-element');
-                this.element.append(el);
-
-                this.dataElements[data.id] = el;
-            }
+    setState(state: ViewState) {
+        for (const environment of state.environments) {
+            const environmentRenderer = this.environmentRenderers[environment.id];
+            environmentRenderer.setState(environment);
         }
-
-        // Remove any un-needed elements
-        for (const [id, el] of Object.entries(this.dataElements)) {
-            if (!ids.has(id)) {
-                el.remove();
-                delete this.dataElements[id];
-            }
-        }
-
-        this.element.style.marginTop = `${environment.rendererOffset.y}px`;
-
-        for (const data of memory) {
-            const element = this.dataElements[data.id];
-
-            if (data.type != DataType.Literal) {
-                continue;
-            }
-
-            const transform = data.transform;
-            const value = data.value;
-
-            if (!transform.floating) {
-                element.style.marginLeft = `${transform.x + 5 * transform.z}px`;
-                element.style.marginTop = `${transform.y - 5 * transform.z}px`;
-            } else {
-                element.style.marginLeft = `${0}px`;
-                element.style.marginTop = `${0}px`;
-                element.style.transform = `translate(${transform.x + 5 * transform.z}px, ${
-                    transform.y - 5 * transform.z
-                }px)`;
-            }
-
-            element.style.opacity = `${transform.opacity * sigmoid(-5 * (transform.z - 2))}`;
-
-            if (typeof value == 'boolean') {
-                element.innerHTML = value ? `<i class="gg-check"></i>` : `<i class="gg-close"></i>`;
-            } else if (value == undefined || environment.renderEmpty) {
-                element.innerHTML = ``;
-            } else {
-                element.innerHTML = `${value}`;
-            }
-
-            element.style.width = `${transform.width}px`;
-            element.style.height = `${transform.height}px`;
-            // element.style.transform = `translateZ(${transform.z}px)`
-
-            if (data.transform.step != null) {
-                element.innerHTML += `<step>${data.transform.step}</step>`;
-            }
-
-            if (value == undefined || environment.renderEmpty) {
-                element.classList.add('undefined');
-            } else {
-                element.classList.remove('undefined');
-            }
-
-            if (transform.floating) {
-                element.classList.add('floating');
-            } else {
-                element.classList.remove('floating');
-            }
-        }
-
-        let bindings: [string, Accessor[]][] = [];
-        for (const scope of environment.bindingFrames) {
-            for (const binding of Object.entries(scope)) {
-                bindings.push(binding);
-            }
-        }
-        bindings = bindings.filter((item) => !item[0].startsWith('_'));
-        let names = new Set(bindings.map((pair) => pair[0]));
-
-        // Add any missing elements
-        for (const [identifier, path] of bindings) {
-            if (this.identifierElements[identifier] == null) {
-                // Create element
-                const el = document.createElement('div');
-                el.classList.add('view-renderer-identifier');
-                this.element.append(el);
-
-                this.identifierElements[identifier] = el;
-            }
-        }
-
-        // Remove any un-needed elements
-        for (const [name, el] of Object.entries(this.identifierElements)) {
-            if (!names.has(name)) {
-                el.remove();
-                delete this.identifierElements[name];
-            }
-        }
-
-        const positionMap = {};
-
-        // Setup identifiers
-        for (const [identifier, path] of bindings) {
-            const element = this.identifierElements[identifier];
-
-            const data = environment.resolvePath(path, null) as Data;
-            const { x, y } = data.transform;
-
-            if (positionMap[x] == null) {
-                positionMap[x] = 0;
-            }
-
-            element.innerText = `${positionMap[x] != 0 ? ', ' : ''}${identifier}`;
-
-            element.style.left = `${x + positionMap[x] * 10}px`;
-            element.style.top = `${y - 25}px`;
-
-            positionMap[x]++;
-        }
-    }
-
-    reset() {
-        Object.values(this.identifierElements).forEach((el) => el.remove());
-        this.identifierElements = {};
-
-        Object.values(this.dataElements).forEach((el) => el.remove());
-        this.dataElements = {};
-    }
-
-    destroy() {
-        this.reset();
-        this.element.remove();
     }
 }
+
+/*
+    parent: ViewRenderer;
+
+    // Only if showing
+    renderer: ViewRenderer;
+    environment: Environment;
+
+    // Only if animation group and showing
+    codeSection: HTMLDivElement;
+
+    // Main element
+    element: HTMLDivElement;
+    childrenContainer: HTMLDivElement;
+
+    children: View[] = [];
+
+    static shownViews: Set<View> = new Set();
+    static views: { [id: string]: View } = {};
+
+    abstractionMenu: HTMLDivElement;
+
+    transform: ViewTransform;
+
+    positionModifiers: ViewPositionModifier[] = [{ type: ViewPositionModifierType.NextToCode, value: null }];
+
+    constructor(animation: AnimationGraph | AnimationNode, parent?: View) {
+        this.animation = animation;
+        this.parent = parent;
+
+        this.transform = { x: 0, y: 0, opacity: 1 };
+
+        // TODO: Support animation nodes
+        if (animation instanceof AnimationNode) {
+            return;
+        }
+
+        // Store it globally
+        View.views[animation.id] = this;
+
+        this.element = document.createElement('div');
+        this.element.classList.add('view-element');
+
+        this.childrenContainer = document.createElement('div');
+        this.childrenContainer.classList.add('view-children-container');
+
+        // Add to parent / body
+        if (parent != null) {
+            parent.childrenContainer.append(this.element);
+
+            // Set label
+            // const labelEl = document.createElement('div');
+            // labelEl.classList.add('view-label');
+            // labelEl.innerHTML = `[${animation.id}] ${camelCaseToSentence(animation.getName())}`;
+
+            // this.element.append(labelEl);
+
+            // createViewControls(this, labelEl);
+
+            this.element.style.opacity = '1';
+            // setTimeout(() => (this.element.style.opacity = '1'), 200);
+        } else {
+            this.element.classList.add('root');
+            document.body.append(this.element);
+        }
+
+        this.element.append(this.childrenContainer);
+
+        // If showing, create renderer AND stop propagating through tree
+        if (animation.showing) {
+            this.environment = animation.precondition.copy();
+            this.environment.validIds = new Set([this.animation.id]);
+            console.log('Valid Ids', this.environment.validIds);
+
+            this.renderer = new ViewRenderer();
+            this.element.append(this.renderer.element);
+            View.shownViews.add(this);
+
+            this.element.classList.add('showing-renderer');
+        }
+        // Otherwise, propagate through children
+        else if (animation instanceof AnimationGraph) {
+            for (const child of animation.vertices) {
+                this.children.push(new View(child, this));
+            }
+        }
+
+        // Create a visual in the code this represents
+        if (animation.showing && this.animation instanceof AnimationGraph) {
+            const { bbox, startRow, endRow } = getLocation(this.animation);
+            Editor.instance.createLens(
+                `[${this.animation.id}] ${camelCaseToSentence(this.animation.getName())}`,
+                startRow,
+                this.animation.id
+            );
+            this.codeSection = createCodeSection();
+        }
+
+        Ticker.instance.registerTickFrom(() => {
+            this.tick();
+        }, `ViewUpdate_${animation.id}`);
+    }
+
+    updateLayout() {}
+
+    // Runs every frame
+    tick() {
+        if (this.parent == null) {
+            // Then make sure each child is at least Editor.instance.getMaxWidth() + 50 on the x
+            this.element.style.left = `${Editor.instance.getMaxWidth() + 50}px`;
+        } else if (this.animation.showing && this.animation instanceof AnimationGraph) {
+            this.positionModifiers.forEach((modifier) => applyPositionModifier(this, modifier));
+
+            this.element.style.top = `${this.transform.y}px`;
+            this.element.style.left = `${this.transform.x}px`;
+        }
+
+        if (this.animation.playing || this.parent == null) {
+            this.element.classList.remove('hidden');
+            this.element.classList.remove('has-played');
+            this.element.classList.add('running');
+            this.codeSection?.classList.add('running');
+        } else if (this.animation.hasPlayed) {
+            let top_parent = this as View;
+            while (top_parent.parent.parent != null) {
+                top_parent = top_parent.parent;
+            }
+
+            if (top_parent.parent.children[top_parent.parent.children.length - 1] == top_parent) {
+            } else {
+                this.element.classList.add('has-played');
+            }
+            // this.element.classList.add('has-played');
+            this.element.classList.remove('running');
+            this.codeSection?.classList.remove('running');
+            // this.element.classList.remove('minimized');
+        } else {
+            this.element.classList.add('hidden');
+            this.element.classList.remove('running');
+            this.codeSection?.classList.remove('running');
+        }
+
+        if (this.codeSection != null) {
+            updateCodeSection(this);
+        }
+    }
+
+    // Runs when environment changes
+    update() {
+        if (this.animation instanceof AnimationNode) return;
+
+        if (this.animation.showing) {
+            this.renderer.setState(this.environment);
+        } else {
+            for (const child of this.children) {
+                child.update();
+            }
+        }
+    }
+
+    // Reset the animation
+    reset() {
+        if (this.animation instanceof AnimationNode) return;
+
+        this.positionModifiers = [{ type: ViewPositionModifierType.NextToCode, value: null }];
+
+        if (this.animation.showing) {
+            this.renderer.reset();
+            this.environment = this.animation.precondition.copy();
+            this.environment.validIds = new Set([this.animation.id]);
+        }
+
+        for (const child of this.children) {
+            child.reset();
+        }
+    }
+
+    // Destroy the animation
+    destroy() {
+        if (this.animation instanceof AnimationNode) return;
+
+        // this.renderer.destroy();
+        // this.environment = undefined;
+
+        if (this.animation == undefined) return;
+
+        Ticker.instance.removeTickFrom(`ViewUpdate_${this.animation.id}`);
+
+        if (this.animation.showing) {
+            this.renderer?.destroy();
+            this.environment = undefined;
+            this.renderer = undefined;
+            View.shownViews.delete(this);
+        }
+
+        delete View.views[this.animation.id];
+
+        Editor.instance.clearLens(this.animation.id);
+        this.codeSection?.remove();
+        destroyAbstractionMenu(this);
+
+        for (const child of this.children) {
+            child.destroy();
+        }
+
+        this.element.remove();
+        this.element = undefined;
+
+        this.animation = undefined;
+        this.parent = undefined;
+    }
+    */

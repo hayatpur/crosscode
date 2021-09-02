@@ -1,8 +1,11 @@
 import * as ESTree from 'estree';
-import { AnimationGraph } from '../animation/graph/AnimationGraph';
+import { AnimationGraph, createAnimationGraph } from '../animation/graph/AnimationGraph';
+import { addVertex } from '../animation/graph/graph';
 import { AnimationContext } from '../animation/primitive/AnimationNode';
-import { CreateLiteralAnimation } from '../animation/primitive/Data/CreateLiteralAnimation';
+import { createLiteralAnimation } from '../animation/primitive/Data/CreateLiteralAnimation';
 import { Node, NodeMeta } from './Node';
+
+export type literal = string | number | bigint | boolean | RegExp;
 
 export class Literal extends Node {
     value: string | number | bigint | boolean | RegExp;
@@ -13,11 +16,9 @@ export class Literal extends Node {
     }
 
     animation(context: AnimationContext): AnimationGraph {
-        const graph = new AnimationGraph(this);
-        const create = new CreateLiteralAnimation(this.value, context.outputRegister, context.locationHint, {
-            xOff: context.xOff,
-        });
-        graph.addVertex(create, this);
+        const graph = createAnimationGraph(this);
+        const create = createLiteralAnimation(this.value, context.outputRegister, context.locationHint);
+        addVertex(graph, create, this);
         return graph;
     }
 }

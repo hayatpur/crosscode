@@ -1,28 +1,47 @@
-import { Environment } from '../../../environment/Environment';
-import { AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions } from '../AnimationNode';
+import { popScope } from '../../../environment/environment';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
-export default class PopScopeAnimation extends AnimationNode {
-    constructor(options: AnimationOptions = {}) {
-        super(options);
-    }
+export interface PopScopeAnimation extends AnimationNode {}
 
-    begin(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {
-        super.begin(environment, options);
-        environment.popScope();
-
-        if (options.baking) {
-            super.computeReadAndWrites();
-        }
-    }
-
-    seek(environment: Environment, time: number) {}
-
-    end(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {}
+function onBegin(animation: PopScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
+    popScope(environment);
 }
+
+function onSeek(animation: PopScopeAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+
+function onEnd(animation: PopScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+
+export function popScopeAnimation(options: AnimationOptions = {}): PopScopeAnimation {
+    return {
+        ...createAnimationNode(null, options),
+        name: 'PopScopeAnimation',
+
+        // Callbacks
+        onBegin,
+        onSeek,
+        onEnd,
+    };
+}
+
+// export class PopScopeAnimation extends AnimationNode {
+//     constructor(options: AnimationOptions = {}) {
+//         super(options);
+//     }
+
+//     begin(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
+//         super.begin(environment, options);
+//         environment.popScope();
+
+//         if (options.baking) {
+//             super.computeReadAndWrites();
+//         }
+//     }
+
+//     seek(environment: Environment, time: number) {}
+
+//     end(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {}
+// }

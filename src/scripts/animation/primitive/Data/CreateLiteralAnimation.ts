@@ -1,79 +1,82 @@
-import { Accessor, Data, DataType } from '../../../environment/Data';
-import { Environment } from '../../../environment/Environment';
+import { createData, replaceDataWith } from '../../../environment/data/data';
+import { DataState, DataType } from '../../../environment/data/DataState';
+import { addDataAt, resolvePath, updateEnvironmentLayout } from '../../../environment/environment';
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
 import { remap } from '../../../utilities/math';
-import { AnimationData, AnimationGraphRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions } from '../AnimationNode';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { duration } from '../../animation';
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
-export class CreateLiteralAnimation extends AnimationNode {
+export interface CreateLiteralAnimation extends AnimationNode {
     value: string | number | bigint | boolean | RegExp;
     locationHint: Accessor[];
     outputRegister: Accessor[];
+}
 
-    constructor(
-        value: string | number | bigint | boolean | RegExp,
-        outputRegister: Accessor[],
-        locationHint: Accessor[],
+function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const data = createData(DataType.Literal, animation.value as number | string | boolean, `${animation.id}_Create`);
+    data.transform.floating = true;
 
-        options: AnimationOptions = {}
-    ) {
-        super(options);
+    const environment = getCurrentEnvironment(view);
+    environment._temps[`CreateLiteralAnimation${animation.id}`] = addDataAt(environment, data, [], null);
 
-        this.value = value;
+    // Get the output data
+    const location = resolvePath(environment, animation.locationHint, `${animation.id}_Location`) as DataState;
 
-        this.outputRegister = outputRegister;
-        this.locationHint = locationHint;
+    // if (options.baking) {
+    //     this.computeReadAndWrites({
+    //         location: environment._temps[`CreateLiteralAnimation${this.id}`],
+    //         id: data.id,
+    //     });
+    // }
 
-        this.base_duration = 30;
-    }
+    updateEnvironmentLayout(environment);
 
-    begin(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {
-        super.begin(environment, options);
-        const data = new Data({
-            id: `${this.id}_Create`,
-            type: DataType.Literal,
-            value: this.value as number | string | boolean,
-        });
+    data.transform.x = location.transform?.x ?? 0;
+    data.transform.y = location.transform?.y ?? 0;
 
-        data.transform.floating = true;
+    // Put it in the floating stack
+    const outputRegister = resolvePath(environment, this.outputRegister, `${this.id}_Floating`) as DataState;
+    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${this.id}_Floating`));
+}
 
-        environment._temps[`CreateLiteralAnimation${this.id}`] = environment.addDataAt([], data, null);
+function onSeek(animation: CreateLiteralAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+    let t = animation.ease(time / duration(animation));
 
-        // Get the output data
-        const location = environment.resolvePath(this.locationHint, `${this.id}_Location`) as Data;
+    const environment = getCurrentEnvironment(view);
+    const data = resolvePath(
+        environment,
+        environment._temps[`CreateLiteralAnimation${animation.id}`],
+        null
+    ) as DataState;
 
-        if (options.baking) {
-            this.computeReadAndWrites({
-                location: environment._temps[`CreateLiteralAnimation${this.id}`],
-                id: data.id,
-            });
-        }
+    data.transform.z = remap(t, 0, 1, 3, 1);
+}
 
-        environment.updateLayout();
+function onEnd(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
-        data.transform.x = location.transform?.x ?? 0;
-        data.transform.y = location.transform?.y ?? 0;
+export function createLiteralAnimation(
+    value: string | number | bigint | boolean | RegExp,
+    outputRegister: Accessor[],
+    locationHint: Accessor[],
+    options: AnimationOptions = {}
+): CreateLiteralAnimation {
+    return {
+        ...createAnimationNode(null, options),
+        baseDuration: 30,
 
-        // Put it in the floating stack
-        const outputRegister = environment.resolvePath(this.outputRegister, `${this.id}_Floating`) as Data;
-        outputRegister.replaceWith(new Data({ id: `${this.id}_Floating`, type: DataType.ID, value: data.id }));
-    }
+        name: `Create Literal ${value} at ${accessorsToString(outputRegister)}`,
 
-    seek(environment: Environment, time: number) {
-        let t = super.ease(time / this.duration);
-        const data = environment.resolvePath(environment._temps[`CreateLiteralAnimation${this.id}`], null) as Data;
-        data.transform.z = remap(t, 0, 1, 3, 1);
-    }
+        // Attributes
+        value,
+        outputRegister,
+        locationHint,
 
-    end(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {}
-
-    computeReadAndWrites(data: AnimationData) {
-        this._reads = [];
-        this._writes = [data];
-    }
+        // Callbacks
+        onBegin,
+        onSeek,
+        onEnd,
+    };
 }

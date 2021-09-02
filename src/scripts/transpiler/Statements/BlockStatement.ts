@@ -1,10 +1,9 @@
 import * as ESTree from 'estree';
-import { AnimationGraph, AnimationGroup } from '../../animation/graph/AnimationGraph';
+import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph';
+import { addVertex, removeVertexAt } from '../../animation/graph/graph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
-import CreateScopeAnimation from '../../animation/primitive/Scope/CreateScopeAnimation';
-import PopScopeAnimation from '../../animation/primitive/Scope/PopScopeAnimation';
-import { FloatingExpressionStatement } from '../Expressions/FloatingExpressionStatement';
-import { FunctionStatement } from '../Functions/FunctionStatement';
+import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation';
+import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation';
 import { Node, NodeMeta } from '../Node';
 
 /**
@@ -19,19 +18,6 @@ export class BlockStatement extends Node {
     }
 
     add(node: Node, path: number[]) {
-        if (node instanceof FunctionStatement) {
-            const floating = FloatingExpressionStatement.statements;
-            const latest = floating[floating.length - 1];
-
-            if (latest != null && latest.body == null) {
-                latest.body = node;
-            }
-
-            // return
-        }
-
-        if (node instanceof FloatingExpressionStatement) return;
-
         // Base-case, there are no more paths to find
         if (path.length == 0) {
             this.statements.push(node);
@@ -50,37 +36,39 @@ export class BlockStatement extends Node {
     }
 
     animation(context: AnimationContext, isProgram = false): AnimationGraph {
-        const animation = new AnimationGraph(this);
-        if (!isProgram) animation.addVertex(new CreateScopeAnimation(), this);
+        const graph = createAnimationGraph(this);
+        if (!isProgram) addVertex(graph, createScopeAnimation(), this);
 
         context.outputRegister = [];
 
-        let group = new AnimationGroup(this);
+        let group = createAnimationGraph(this);
         let line = this.statements[0]?.meta.line;
 
         for (const statement of this.statements) {
             if (statement.meta.line > line + 1) {
                 if (group.vertices.length == 1) {
-                    animation.addVertex(group.vertices[0], this);
-                    group.removeVertexAt(0);
+                    addVertex(graph, group.vertices[0], this);
+                    removeVertexAt(group, 0);
                 } else if (group.vertices.length > 1) {
-                    animation.addVertex(group, this);
-                    group = new AnimationGroup(this);
+                    addVertex(graph, group, this);
+                    group = createAnimationGraph(this);
                 }
             }
 
-            group.addVertex(statement.animation(context), statement);
+            addVertex(group, statement.animation(context), statement);
             line = statement.meta.line;
-            // animation.addVertex(statement.animation(context), statement);
+            // addVertex(animation, statement.animation(context), statement);
         }
-        if (group.vertices.length == 1) {
-            animation.addVertex(group.vertices[0], this);
-            group.removeVertexAt(0);
-        } else {
-            animation.addVertex(group, this);
-        }
-        if (!isProgram) animation.addVertex(new PopScopeAnimation(), this);
 
-        return animation;
+        if (group.vertices.length == 1) {
+            addVertex(graph, group.vertices[0], this);
+            removeVertexAt(group, 0);
+        } else {
+            addVertex(graph, group, this);
+        }
+
+        if (!isProgram) addVertex(group, popScopeAnimation(), this);
+
+        return group;
     }
 }

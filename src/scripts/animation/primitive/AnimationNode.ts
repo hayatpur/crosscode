@@ -1,8 +1,14 @@
 import { Easing } from 'eaz';
-import { Accessor } from '../../environment/Data';
-import { Environment } from '../../environment/Environment';
+import * as ESTree from 'estree';
+import { Accessor, EnvironmentState } from '../../environment/EnvironmentState';
 import { Node } from '../../transpiler/Node';
-import { AnimationData, AnimationGraphRuntimeOptions } from '../graph/AnimationGraph';
+import { ViewState } from '../../view/ViewState';
+import { AnimationRuntimeOptions } from '../graph/AnimationGraph';
+
+export interface NodeData {
+    location: ESTree.SourceLocation;
+    type: string;
+}
 
 export enum AnimationPlayback {
     Normal = 'Normal',
@@ -15,7 +21,6 @@ export interface AnimationContext {
 
     speedMultiplier?: number;
     directExpression?: boolean;
-    xOff: number;
 }
 
 export interface AnimationOptions {
@@ -23,123 +28,67 @@ export interface AnimationOptions {
     delay?: number;
     duration?: number;
     speedMultiplier?: number;
-    xOff?: number;
 }
 
-export class AnimationNode {
-    playing: boolean = false;
-    hasPlayed: boolean = false;
+export interface PlayableAnimation {
+    // Playback state
+    isPlaying: boolean;
+    hasPlayed: boolean;
 
-    static id = 0;
-    playback: AnimationPlayback;
+    // Playback options
+    speed: number;
+    delay: number;
 
-    base_delay: number;
-    base_duration: number;
-    statement: Node;
+    nodeData: NodeData;
+    ease: (t: number) => number;
+}
+
+export interface AnimationNode extends PlayableAnimation {
+    _type: 'AnimationNode';
+
+    name: string;
 
     id: string;
-    speedMultiplier: number;
-    xOff: number;
+    precondition: EnvironmentState;
+    postcondition: EnvironmentState;
 
-    parentIds: Set<string> = new Set();
-    showing = false;
+    baseDuration: number;
 
-    precondition?: Environment;
-    postcondition?: Environment = null;
+    onBegin: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void;
+    onSeek: (animation: AnimationNode, view: ViewState, time: number, options: AnimationRuntimeOptions) => void;
+    onEnd: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void;
+}
 
-    // Read and writes are computed during baking
-    _reads: AnimationData[] = null;
-    _writes: AnimationData[] = null;
-    globalTime: number;
+export function instanceOfAnimationNode(animation: any): animation is AnimationNode {
+    return animation._type == 'AnimationNode';
+}
 
-    constructor(options: AnimationOptions = {}) {
-        this.playback = options.playback;
+export function createAnimationNode(node: Node = null, options: AnimationOptions = {}): AnimationNode {
+    Easing.cubic;
+    if (this.id == undefined) this.id = 0;
+    return {
+        _type: 'AnimationNode',
+        name: 'Animation Node',
 
-        this.base_delay = options.delay == null ? 10 : options.delay;
-        this.base_duration = options.duration == null ? 20 : options.duration;
+        id: `AN(${++this.id})`,
+        precondition: null,
+        postcondition: null,
 
-        this.statement = null;
+        nodeData: {
+            location: node?.loc,
+            type: node?.type,
+        },
 
-        this.id = `AN${AnimationNode.id}`;
-        AnimationNode.id += 1;
+        baseDuration: 20,
+        delay: 10,
 
-        this.speedMultiplier = 1;
-        this.xOff = options.xOff ?? 0;
-    }
+        isPlaying: false,
+        hasPlayed: false,
+        speed: 1,
+        ease: (t) => t,
 
-    get delay() {
-        return this.base_delay;
-    }
-
-    get duration() {
-        return this.base_duration * (1 / this.speedMultiplier);
-    }
-
-    ease(t: number) {
-        return Easing.sinusoidal.inOut(t);
-    }
-
-    dispose() {
-        // console.warn("[AnimationNode] Dispose method missing for ", this);
-    }
-
-    begin(
-        environment: Environment,
-        options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
-    ) {
-        if (options.baking) {
-            this.precondition = environment.copy();
-            this.globalTime = options.globalTime;
-        }
-    }
-
-    seek(environment: Environment, time: number) {}
-
-    end(environment: Environment, options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
-        if (options.baking) {
-            this.precondition = environment.copy();
-        }
-    }
-
-    computeReads(environment: Environment): void {}
-
-    computeWrites(environment: Environment): void {}
-
-    getName() {
-        return `${this.constructor.name}`;
-    }
-
-    undoBegin() {
-        console.warn('[AnimationNode] undoBegin method missing for ', this);
-    }
-
-    undoEnd() {
-        console.warn('[AnimationNode] undoStart method missing for ', this);
-    }
-
-    reset(options: AnimationGraphRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
-        this.playing = false;
-        this.hasPlayed = false;
-    }
-
-    reads() {
-        if (this._reads == null) {
-            console.error(`[${this.constructor.name}] Attempting to get reads from an AnimationNode before baking`);
-        }
-
-        return this._reads;
-    }
-
-    writes() {
-        if (this._writes == null) {
-            console.error(`[${this.constructor.name}] Attempting to get writes from an AnimationNode before baking`);
-        }
-
-        return this._writes;
-    }
-
-    computeReadAndWrites(...args: any) {
-        this._reads = [];
-        this._writes = [];
-    }
+        onBegin: () => console.warn('[AnimationNode] Non-implemented on begin callback'),
+        onSeek: () => console.warn('[AnimationNode] Non-implemented on seek callback'),
+        onEnd: () => console.warn('[AnimationNode] Non-implemented on end callback'),
+    };
 }

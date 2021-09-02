@@ -1,12 +1,12 @@
-import { Transform } from '../environment/Data';
+import { DataTransform } from '../environment/data/DataState';
 
 export class DataMovementPath {
-    start: Transform;
-    end: Transform;
+    start: DataTransform;
+    end: DataTransform;
     movement: SVGPathElement;
     visual: SVGPathElement;
 
-    constructor(start: Transform, end: Transform) {
+    constructor(start: DataTransform, end: DataTransform) {
         this.start = start;
         this.end = end;
 

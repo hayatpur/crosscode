@@ -15,6 +15,7 @@
     "eaz": "^1.0.2",
     "hagen": "^1.5.2",
     "javascript-lp-solver": "^0.4.24",
+    "just-clone": "^3.2.1",
     "keystroke-visualizer": "^1.0.1",
     "monaco-editor": "^0.25.2",
     "nomnoml": "^1.4.0",
