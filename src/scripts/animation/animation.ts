@@ -71,7 +71,11 @@ export function addEdge(graph: AnimationGraph, edge: Edge) {
  * @param view - View to apply the animation on
  * @param options - Mostly used for setting flags to bake animation
  */
-export function begin(animation: AnimationGraph | AnimationNode, view: ViewState, options: AnimationRuntimeOptions) {
+export function begin(
+    animation: AnimationGraph | AnimationNode,
+    view: ViewState,
+    options: AnimationRuntimeOptions = {}
+) {
     if (options.baking) {
         // animation.precondition = cloneEnvironment(view.environments[view.environments.length - 1]);
     }
@@ -87,7 +91,7 @@ export function begin(animation: AnimationGraph | AnimationNode, view: ViewState
  * @param view - View to apply the animation on
  * @param options - Mostly used for setting flags to bake animation
  */
-export function end(animation: AnimationGraph | AnimationNode, view: ViewState, options: AnimationRuntimeOptions) {
+export function end(animation: AnimationGraph | AnimationNode, view: ViewState, options: AnimationRuntimeOptions = {}) {
     if (options.baking) {
         // animation.postcondition = cloneEnvironment(view.environments[view.environments.length - 1]);
     }
@@ -108,7 +112,7 @@ export function seek(
     animation: AnimationGraph | AnimationNode,
     view: ViewState,
     time: number,
-    options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }
+    options: AnimationRuntimeOptions = {}
 ) {
     if (instanceOfAnimationNode(animation)) {
         animation.onSeek(animation, view, time, options);
@@ -208,4 +212,10 @@ export function bake(animation: AnimationGraph | AnimationNode) {
     });
     reset(animation);
     // computeAllGraphEdges(this.animation);
+}
+
+export function apply(animation: AnimationGraph | AnimationNode, view: ViewState) {
+    begin(animation, view);
+    seek(animation, view, duration(animation));
+    end(animation, view);
 }

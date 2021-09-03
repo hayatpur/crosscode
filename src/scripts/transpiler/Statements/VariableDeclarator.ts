@@ -1,79 +1,41 @@
 import * as ESTree from 'estree';
+import { apply } from '../../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph';
 import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
 import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation';
 import { moveAndPlaceAnimation } from '../../animation/primitive/Data/MoveAndPlaceAnimation';
 import { AccessorType } from '../../environment/EnvironmentState';
-import { Identifier } from '../Identifier';
-import { Literal } from '../Literal';
-import { Node, NodeMeta } from '../Node';
-import { Transpiler } from '../Transpiler';
+import { ViewState } from '../../view/ViewState';
+import { Compiler, getNodeData } from '../Compiler';
 
-export class VariableDeclarator extends Node {
-    init?: Node = null;
-    identifier: Identifier;
+export function VariableDeclarator(ast: ESTree.VariableDeclarator, view: ViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
-    constructor(ast: ESTree.VariableDeclarator, meta: NodeMeta) {
-        super(ast, meta);
+    // Allocate a place for variable @TODO: support other initializations that identifier
+    const bind = bindAnimation((ast.id as ESTree.Identifier).name);
+    addVertex(graph, bind, getNodeData(ast.id));
+    apply(bind, view);
 
-        // Compile RHS of expression (i.e. initial value assigned to this variable)
-        if (ast.init != null) {
-            this.init = Transpiler.transpile(ast.init, meta);
-        }
+    // Create a register to allocate RHS in
+    const register = [{ type: AccessorType.Register, value: `${graph.id}__VariableDeclaration` }];
 
-        // Compile LHS of expression (i.e. the symbol)
-        this.identifier = new Identifier(ast.id as ESTree.Identifier, meta);
-    }
+    // Copy / create and float it up RHS
+    const init = Compiler.compile(ast.init, view, {
+        ...context,
+        locationHint: [{ type: AccessorType.Symbol, value: (ast.id as ESTree.Identifier).name }],
+        outputRegister: register,
+    });
+    addVertex(graph, init, getNodeData(ast.init));
 
-    animation(context: AnimationContext) {
-        const graph: AnimationGraph = createAnimationGraph(this);
+    // Place down the RHS
+    const place = moveAndPlaceAnimation(
+        register,
+        [{ type: AccessorType.Symbol, value: (ast.id as ESTree.Identifier).name }],
+        ast.init.type == 'Literal'
+    );
+    addVertex(graph, place, getNodeData(ast));
+    apply(place, view);
 
-        // If memory already exists
-        if (
-            (this.meta.states.current[this.identifier.name]?.reference > 0 ||
-                this.meta.states.prev[this.identifier.name]?.reference > 0) &&
-            this.init != null &&
-            this.init instanceof Identifier
-        ) {
-            // Allocate a place for variable
-            const bind = bindAnimation(this.identifier.name, this.init.getSpecifier());
-            addVertex(graph, bind, this.identifier);
-
-            return graph;
-        } else {
-            // Allocate a place for variable
-            const bind = bindAnimation(this.identifier.name);
-            addVertex(graph, bind, this.identifier);
-
-            // Assign initial value to variable
-            // if (this.init instanceof ArrayExpression) {
-            //     const initialize = this.init.animation({
-            //         ...context,
-            //         locationHint: [{ type: AccessorType.Symbol, value: this.identifier.name }],
-            //         outputRegister: [{ type: AccessorType.Symbol, value: this.identifier.name }],
-            //     });
-            //     addVertex(graph, initialize, this.init);
-            // } else if (this.init != null) {
-            const register = [{ type: AccessorType.Register, value: `${this.id}__VariableDeclaration` }];
-
-            // Copy / create and float it up at the location
-            const initialize = this.init.animation({
-                ...context,
-                locationHint: [{ type: AccessorType.Symbol, value: this.identifier.name }],
-                outputRegister: register,
-            });
-            addVertex(graph, initialize, this.init);
-
-            const place = moveAndPlaceAnimation(
-                register,
-                [{ type: AccessorType.Symbol, value: this.identifier.name }],
-                this.init instanceof Literal
-            );
-            addVertex(graph, place, this);
-        }
-        // }
-
-        return graph;
-    }
+    return graph;
 }

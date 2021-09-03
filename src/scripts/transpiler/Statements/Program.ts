@@ -1,14 +1,18 @@
-import { AnimationGraph } from '../../animation/graph/AnimationGraph';
+import * as ESTree from 'estree';
+import { createAnimationGraph } from '../../animation/graph/AnimationGraph';
+import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
-import { BlockStatement } from './BlockStatement';
+import { ViewState } from '../../view/ViewState';
+import { Compiler, getNodeData } from '../Compiler';
 
-export class Program extends BlockStatement {
-    constructor(ast: any) {
-        // A program is a block statement that starts at the beginning
-        super(ast, { index: 0, states: { prev: [], current: [], next: [] }, line: 0, path: [] });
+export function Program(ast: ESTree.Program, view: ViewState, context: AnimationContext) {
+    const graph = createAnimationGraph(getNodeData(ast));
+
+    // Add blocks
+    for (const statement of ast.body) {
+        const animation = Compiler.compile(statement, view, context);
+        addVertex(graph, animation, getNodeData(statement));
     }
 
-    animation(context: AnimationContext = { outputRegister: [], locationHint: [] }): AnimationGraph {
-        return super.animation(context, true);
-    }
+    return graph;
 }

@@ -1,5 +1,4 @@
-import { Node } from '../../transpiler/Node';
-import { AnimationNode, instanceOfAnimationNode } from '../primitive/AnimationNode';
+import { AnimationNode, instanceOfAnimationNode, NodeData } from '../primitive/AnimationNode';
 import { AnimationGraph, instanceOfAnimationGraph } from './AnimationGraph';
 import { Edge, EdgeType } from './edges/Edge';
 
@@ -15,11 +14,11 @@ import { Edge, EdgeType } from './edges/Edge';
 export function addVertex(
     graph: AnimationGraph,
     vertex: AnimationGraph | AnimationNode,
-    node: Node = null,
+    nodeData: NodeData = null,
     shouldDissolve = false
 ) {
     if (instanceOfAnimationNode(vertex) || (instanceOfAnimationGraph(vertex) && !shouldDissolve)) {
-        vertex.nodeData = { location: node.loc, type: node.type };
+        vertex.nodeData = nodeData;
         graph.vertices.push(vertex);
     } else {
         // Offset all the edges
@@ -27,7 +26,7 @@ export function addVertex(
 
         // Add all the vertices
         const vertices = [...vertex.vertices];
-        vertices.forEach((vertex) => addVertex(graph, vertex, node));
+        vertices.forEach((vertex) => addVertex(graph, vertex, nodeData));
 
         // Add all the edges
         for (let j = 0; j < vertex.edges.length; j++) {
@@ -403,138 +402,138 @@ export function getIncomingFlow(index: number, edges: Edge[], mask: Set<number> 
 //     return `D(${data.location.map((acc) => `${acc.value.toString()}`).join('#')})`;
 // }
 
-// export function logAnimation(animation: AnimationGraph | AnimationNode, indent = 0, options = { first: false }) {
-//     // computeAllEdges(graph);
-//     // console.log(animation);
+export function animationToString(animation: AnimationGraph | AnimationNode, indent = 0, options = { first: false }) {
+    // computeAllEdges(graph);
+    // console.log(animation);
 
-//     if (animation == null) return;
+    if (animation == null) return;
 
-//     if (animation instanceof AnimationNode) {
-//         const space = `${'\t'.repeat(options.first ? 0 : indent)}`;
+    if (instanceOfAnimationNode(animation)) {
+        const space = `${'\t'.repeat(options.first ? 0 : indent)}`;
 
-//         if (animation instanceof CopyDataAnimation) {
-//             const from = animation
-//                 .reads()
-//                 .map((read) => animationDataToString(read))
-//                 .join(', ');
-//             const to = animation
-//                 .writes()
-//                 .map((read) => animationDataToString(read))
-//                 .join(', ');
+        // if (animation instanceof CopyDataAnimation) {
+        //     const from = animation
+        //         .reads()
+        //         .map((read) => animationDataToString(read))
+        //         .join(', ');
+        //     const to = animation
+        //         .writes()
+        //         .map((read) => animationDataToString(read))
+        //         .join(', ');
 
-//             return space + `[${from} 🠕 ${to}]`;
-//         } else if (animation instanceof MoveAndPlaceAnimation) {
-//             const from = animation
-//                 .reads()
-//                 .map((read) => animationDataToString(read))
-//                 .join(', ');
-//             const to = animation
-//                 .writes()
-//                 .map((read) => animationDataToString(read))
-//                 .join(', ');
+        //     return space + `[${from} 🠕 ${to}]`;
+        // } else if (animation instanceof MoveAndPlaceAnimation) {
+        //     const from = animation
+        //         .reads()
+        //         .map((read) => animationDataToString(read))
+        //         .join(', ');
+        //     const to = animation
+        //         .writes()
+        //         .map((read) => animationDataToString(read))
+        //         .join(', ');
 
-//             return space + `[${from} ➝ ${to}]`;
-//         }
-//         return space + `[${animation.id}_${animation.constructor.name}]`;
-//     }
+        //     return space + `[${from} ➝ ${to}]`;
+        // }
+        return space + `[${animation.id}_${animation.name}]`;
+    }
 
-//     let output = '';
+    let output = '';
 
-//     let visited_vertices = new Set();
-//     let visited_edges = new Set();
+    let visited_vertices = new Set();
+    let visited_edges = new Set();
 
-//     // Flow edges
-//     for (const edge of animation.edges.filter((edge) => edge instanceof FlowEdge)) {
-//         // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
+    // Flow edges
+    // for (const edge of animation.edges.filter((edge) => edge instanceof FlowEdge)) {
+    //     // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
 
-//         visited_vertices.add(edge.to);
-//         visited_vertices.add(edge.from);
-//         visited_edges.add(`${edge.to}_${edge.from}`);
+    //     visited_vertices.add(edge.to);
+    //     visited_vertices.add(edge.from);
+    //     visited_edges.add(`${edge.to}_${edge.from}`);
 
-//         let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
-//             first: false,
-//         });
-//         let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
-//             first: true,
-//         });
-//         if (v2 == null) v2 = '[NULL]';
+    //     let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
+    //         first: false,
+    //     });
+    //     let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
+    //         first: true,
+    //     });
+    //     if (v2 == null) v2 = '[NULL]';
 
-//         output += `${v1}${animationDataToString(edge.data)} ->${v2}\n`;
-//     }
+    //     output += `${v1}${animationDataToString(edge.data)} ->${v2}\n`;
+    // }
 
-//     // Anti-edges
-//     for (const edge of animation.edges.filter((edge) => edge instanceof AntiEdge)) {
-//         // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
+    // // Anti-edges
+    // for (const edge of animation.edges.filter((edge) => edge instanceof AntiEdge)) {
+    //     // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
 
-//         visited_vertices.add(edge.to);
-//         visited_vertices.add(edge.from);
-//         visited_edges.add(`${edge.to}_${edge.from}`);
+    //     visited_vertices.add(edge.to);
+    //     visited_vertices.add(edge.from);
+    //     visited_edges.add(`${edge.to}_${edge.from}`);
 
-//         let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
-//             first: false,
-//         });
-//         let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
-//             first: true,
-//         });
-//         output += `${v1}${animationDataToString(edge.data)} -:>${v2}\n`;
-//     }
+    //     let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
+    //         first: false,
+    //     });
+    //     let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
+    //         first: true,
+    //     });
+    //     output += `${v1}${animationDataToString(edge.data)} -:>${v2}\n`;
+    // }
 
-//     // Output-edges
-//     for (const edge of animation.edges.filter((edge) => edge instanceof OutputEdge)) {
-//         // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
+    // // Output-edges
+    // for (const edge of animation.edges.filter((edge) => edge instanceof OutputEdge)) {
+    //     // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
 
-//         visited_vertices.add(edge.to);
-//         visited_vertices.add(edge.from);
-//         visited_edges.add(`${edge.to}_${edge.from}`);
+    //     visited_vertices.add(edge.to);
+    //     visited_vertices.add(edge.from);
+    //     visited_edges.add(`${edge.to}_${edge.from}`);
 
-//         let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
-//             first: false,
-//         });
-//         let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
-//             first: true,
-//         });
-//         output += `${v1}${animationDataToString(edge.data)} -->${v2}\n`;
-//     }
+    //     let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
+    //         first: false,
+    //     });
+    //     let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
+    //         first: true,
+    //     });
+    //     output += `${v1}${animationDataToString(edge.data)} -->${v2}\n`;
+    // }
 
-//     // Sequential edges
-//     for (let i = animation.vertices.length - 1; i >= 1; i--) {
-//         const from = i - 1;
-//         const to = i;
+    // Sequential edges
+    for (let i = animation.vertices.length - 1; i >= 1; i--) {
+        const from = i - 1;
+        const to = i;
 
-//         if (visited_edges.has(`${to}_${from}`)) continue;
+        if (visited_edges.has(`${to}_${from}`)) continue;
 
-//         visited_vertices.add(to);
-//         visited_vertices.add(from);
-//         visited_edges.add(`${to}_${from}`);
+        visited_vertices.add(to);
+        visited_vertices.add(from);
+        visited_edges.add(`${to}_${from}`);
 
-//         let v1 = animation.vertices[from]
-//             ? logAnimation(animation.vertices[from], indent + 1, { first: false })
-//             : `[${from}_Null]`;
-//         let v2 = animation.vertices[to]
-//             ? logAnimation(animation.vertices[to], indent + 1, { first: true })
-//             : `[${to}_Null]`;
+        let v1 = animation.vertices[from]
+            ? animationToString(animation.vertices[from], indent + 1, { first: false })
+            : `[${from}_Null]`;
+        let v2 = animation.vertices[to]
+            ? animationToString(animation.vertices[to], indent + 1, { first: true })
+            : `[${to}_Null]`;
 
-//         output = `${v1}--${v2}\n${output}`;
-//     }
+        output = `${v1}--${v2}\n${output}`;
+    }
 
-//     // Left out vertices
-//     for (let i = 0; i < animation.vertices.length; i++) {
-//         if (animation.vertices[i] == null) continue;
+    // Left out vertices
+    for (let i = 0; i < animation.vertices.length; i++) {
+        if (animation.vertices[i] == null) continue;
 
-//         if (!visited_vertices.has(i)) {
-//             output += `${logAnimation(animation.vertices[i], indent + 1, {
-//                 first: false,
-//             })}\n`;
-//         }
-//     }
+        if (!visited_vertices.has(i)) {
+            output += `${animationToString(animation.vertices[i], indent + 1, {
+                first: false,
+            })}\n`;
+        }
+    }
 
-//     output = `${'\t'.repeat(options.first ? 0 : indent)}[<reference>${animation.id}_${
-//         animation.node?.constructor.name
-//     }\n${output}`;
+    output = `${'\t'.repeat(options.first ? 0 : indent)}[<reference>${animation.id}_${
+        animation.nodeData?.type
+    }\n${output}`;
 
-//     output += `${'\t'.repeat(indent)}]`;
-//     return output;
-// }
+    output += `${'\t'.repeat(indent)}]`;
+    return output;
+}
 
 // export function computeParentIds(animation: AnimationGraph | AnimationNode, parentIds: Set<string> = new Set()) {
 //     animation.parentIds = parentIds;

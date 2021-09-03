@@ -1,6 +1,11 @@
 //@ts-check
 
 import * as ESTree from 'estree';
+import { AnimationGraph } from '../animation/graph/AnimationGraph';
+import { AnimationContext, NodeData } from '../animation/primitive/AnimationNode';
+import { AccessorType } from '../environment/EnvironmentState';
+import { ViewState } from '../view/ViewState';
+import { ArrayExpression } from './Expressions/Array/ArrayExpression';
 // import { ArrayExpression } from './Expressions/Array/ArrayExpression';
 // import { ArrayExpressionItem } from './Expressions/Array/ArrayExpressionItem';
 import { AssignmentExpression } from './Expressions/BinaryOperations/AssigmentExpression';
@@ -14,7 +19,7 @@ import { BinaryExpression } from './Expressions/BinaryOperations/BinaryExpressio
 // import { ReturnStatement } from './Functions/ReturnStatement';
 import { Identifier } from './Identifier';
 import { Literal } from './Literal';
-import { Node, NodeMeta } from './Node';
+// import { NodeMeta } from './Node';
 import { BlockStatement } from './Statements/BlockStatement';
 // import IfStatement from './Statements/Choice/IfStatement';
 import { ExpressionStatement } from './Statements/ExpressionStatement';
@@ -27,10 +32,21 @@ import { Program } from './Statements/Program';
 import { VariableDeclaration } from './Statements/VariableDeclaration';
 import { VariableDeclarator } from './Statements/VariableDeclarator';
 
-export class Transpiler {
-    static blocks: BlockStatement[] = [];
+export function getNodeData(node: ESTree.Node): NodeData {
+    return { location: node.loc, type: node.type };
+}
 
-    static transpile(ast: ESTree.Node, meta: NodeMeta): Node {
+// @TODO: Member expression
+export function getSpecifier(node: ESTree.Node) {
+    if (node.type == 'Identifier') {
+        return [{ type: AccessorType.Symbol, value: node.name }];
+    } else {
+        console.error('Unknown type', node.type);
+    }
+}
+
+export class Compiler {
+    static compile(ast: ESTree.Node, view: ViewState, context: AnimationContext): AnimationGraph {
         const mapping = {
             // Declarations
             VariableDeclarator,
@@ -38,7 +54,7 @@ export class Transpiler {
             BinaryExpression,
             // UpdateExpression,
             // Expressions
-            // ArrayExpression,
+            ArrayExpression,
             // ArrayExpressionItem,
             // MemberExpression,
             ExpressionStatement,
@@ -71,37 +87,7 @@ export class Transpiler {
             return;
         }
 
-        const node = new mapping[`${ast.type}`](ast, meta, parent);
-
-        if (node instanceof BlockStatement) {
-            Transpiler.blocks.push(node);
-        }
-
+        const node = new mapping[`${ast.type}`](ast, view, context);
         return node;
-    }
-
-    static transpileFromStorage(storage: any[]): Program {
-        const root = new Program(storage[0].ast);
-
-        for (let i = 1; i < storage.length; i++) {
-            const message = storage[i];
-            const { ast, state, line, path } = message;
-            const states = {
-                current: state,
-                prev: storage[i - 1]?.state ?? {},
-                next: storage[i + 1]?.state ?? state,
-            };
-            const node = Transpiler.transpile(ast, { index: i, states, line, path });
-            root.add(node, path);
-        }
-
-        // root.statements = root.statements.filter((stmt) => !(stmt instanceof FunctionStatement));
-
-        // For each block statement
-        // for (const block of Transpiler.blocks) {
-        //     block.statements = block.statements.filter((stmt) => !(stmt instanceof FunctionStatement));
-        // }
-
-        return root;
     }
 }

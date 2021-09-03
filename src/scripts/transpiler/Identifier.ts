@@ -1,33 +1,19 @@
 import * as ESTree from 'estree';
-import { AnimationGraph, createAnimationGraph } from '../animation/graph/AnimationGraph';
+import { apply } from '../animation/animation';
+import { createAnimationGraph } from '../animation/graph/AnimationGraph';
 import { addVertex } from '../animation/graph/graph';
 import { AnimationContext } from '../animation/primitive/AnimationNode';
 import { copyDataAnimation } from '../animation/primitive/Data/CopyDataAnimation';
-import { AccessorType } from '../environment/EnvironmentState';
-import { Node, NodeMeta } from './Node';
+import { ViewState } from '../view/ViewState';
+import { getNodeData, getSpecifier } from './Compiler';
 
-export class Identifier extends Node {
-    name: string;
-    constructor(ast: ESTree.Identifier, meta: NodeMeta) {
-        super(ast, meta);
-        this.name = ast.name;
-    }
+export function Identifier(ast: ESTree.Identifier, view: ViewState, context: AnimationContext) {
+    const graph = createAnimationGraph(getNodeData(ast));
 
-    getSpecifier() {
-        return [{ type: AccessorType.Symbol, value: this.name }];
-    }
+    // Create a copy of it
+    const copy = copyDataAnimation(getSpecifier(ast), context.outputRegister);
+    addVertex(graph, copy, getNodeData(ast));
+    apply(copy, view);
 
-    animation(context: AnimationContext): AnimationGraph {
-        const graph = createAnimationGraph(this);
-
-        // Create a copy of it
-        const copy = copyDataAnimation(this.getSpecifier(), context.outputRegister);
-        addVertex(graph, copy, this);
-
-        // Float it up
-        // const float = new FloatAnimation(this.getSpecifier())
-        // addVertex(graph, float, this)
-
-        return graph;
-    }
+    return graph;
 }

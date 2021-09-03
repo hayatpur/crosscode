@@ -80,9 +80,7 @@ export function binaryExpressionSetup(
         ...createAnimationNode(null, options),
         baseDuration: 60,
 
-        name: `Binary Expression Setup (${operator}(${accessorsToString(leftSpecifier)} ${accessorsToString(
-            rightSpecifier
-        )}))`,
+        name: `Binary Setup ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(rightSpecifier)}`,
 
         // Attributes
         leftSpecifier,

@@ -1,3 +1,55 @@
+import { DataState, DataType } from '../../../environment/data/DataState';
+import { resolvePath } from '../../../environment/environment';
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { duration } from '../../animation';
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
+
+export interface ArrayStartAnimation extends AnimationNode {
+    dataSpecifier: Accessor[];
+}
+
+function onBegin(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
+
+    const output = resolvePath(environment, animation.dataSpecifier, null) as DataState;
+    output.type = DataType.Array;
+    output.value = [];
+
+    //         if (options.baking) {
+    //             animation.computeReadAndWrites({
+    //                 location: getMemoryLocation(environment, (output).foundLocation,
+    //                 id: output.id,
+    //             });
+    //         }
+}
+
+function onSeek(animation: ArrayStartAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+    let t = animation.ease(time / duration(animation));
+    const environment = getCurrentEnvironment(view);
+}
+
+function onEnd(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+
+export function arrayStartAnimation(dataSpecifier: Accessor[], options: AnimationOptions = {}): ArrayStartAnimation {
+    return {
+        ...createAnimationNode(null, options),
+        baseDuration: 30,
+
+        name: `Initialize array at ${accessorsToString(dataSpecifier)}`,
+
+        // Attributes
+        dataSpecifier,
+
+        // Callbacks
+        onBegin,
+        onSeek,
+        onEnd,
+    };
+}
+
 // import { Accessor, AccessorType, DataType } from '../../../environment/data/data';
 // import { Environment } from '../../../environment/environment';
 // import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';

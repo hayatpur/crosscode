@@ -1,24 +1,18 @@
 import * as ESTree from 'estree';
+import { apply } from '../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../animation/graph/AnimationGraph';
 import { addVertex } from '../animation/graph/graph';
 import { AnimationContext } from '../animation/primitive/AnimationNode';
 import { createLiteralAnimation } from '../animation/primitive/Data/CreateLiteralAnimation';
-import { Node, NodeMeta } from './Node';
+import { ViewState } from '../view/ViewState';
+import { getNodeData } from './Compiler';
 
-export type literal = string | number | bigint | boolean | RegExp;
+export function Literal(ast: ESTree.Literal, view: ViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
-export class Literal extends Node {
-    value: string | number | bigint | boolean | RegExp;
+    const create = createLiteralAnimation(ast.value, context.outputRegister, context.locationHint);
+    addVertex(graph, create, getNodeData(ast));
+    apply(create, view);
 
-    constructor(ast: ESTree.Literal, meta: NodeMeta) {
-        super(ast, meta);
-        this.value = ast.value;
-    }
-
-    animation(context: AnimationContext): AnimationGraph {
-        const graph = createAnimationGraph(this);
-        const create = createLiteralAnimation(this.value, context.outputRegister, context.locationHint);
-        addVertex(graph, create, this);
-        return graph;
-    }
+    return graph;
 }

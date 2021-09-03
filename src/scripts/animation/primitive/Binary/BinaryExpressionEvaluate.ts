@@ -128,9 +128,9 @@ export function binaryExpressionEvaluate(
         ...createAnimationNode(null, options),
         baseDuration: 30,
 
-        name: `Binary Expression Evaluate (${operator}(${accessorsToString(leftSpecifier)} ${accessorsToString(
+        name: `Binary Evaluate ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(
             rightSpecifier
-        )}))`,
+        )} onto ${accessorsToString(outputRegister)}`,
 
         // Attributes
         leftSpecifier,

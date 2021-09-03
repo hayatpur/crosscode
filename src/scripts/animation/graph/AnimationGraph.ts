@@ -1,5 +1,4 @@
 import { Accessor, EnvironmentState } from '../../environment/EnvironmentState';
-import { Node } from '../../transpiler/Node';
 import { AnimationNode, NodeData, PlayableAnimation } from '../primitive/AnimationNode';
 import { Edge } from './edges/Edge';
 
@@ -11,9 +10,9 @@ export interface AnimationGraphOptions {
 }
 
 export interface AnimationRuntimeOptions {
-    indent: number;
-    baking: boolean;
-    globalTime: number;
+    indent?: number;
+    baking?: boolean;
+    globalTime?: number;
 }
 
 export interface AnimationData {
@@ -46,16 +45,13 @@ export function instanceOfAnimationGraph(animation: any): animation is Animation
     return animation._type == 'AnimationGraph';
 }
 
-export function createAnimationGraph(node: Node): AnimationGraph {
+export function createAnimationGraph(nodeData: NodeData): AnimationGraph {
     if (this.id == undefined) this.id = 0;
 
     return {
         _type: 'AnimationGraph',
         id: `AG(${++this.id})`,
-        nodeData: {
-            location: node?.loc,
-            type: node?.type,
-        },
+        nodeData,
         vertices: [],
         edges: [],
         delay: 0,

@@ -1,7 +1,6 @@
 import { Easing } from 'eaz';
 import * as ESTree from 'estree';
 import { Accessor, EnvironmentState } from '../../environment/EnvironmentState';
-import { Node } from '../../transpiler/Node';
 import { ViewState } from '../../view/ViewState';
 import { AnimationRuntimeOptions } from '../graph/AnimationGraph';
 
@@ -63,7 +62,13 @@ export function instanceOfAnimationNode(animation: any): animation is AnimationN
     return animation._type == 'AnimationNode';
 }
 
-export function createAnimationNode(node: Node = null, options: AnimationOptions = {}): AnimationNode {
+export function createAnimationNode(
+    nodeData: NodeData = {
+        location: null,
+        type: null,
+    },
+    options: AnimationOptions = {}
+): AnimationNode {
     Easing.cubic;
     if (this.id == undefined) this.id = 0;
     return {
@@ -74,10 +79,7 @@ export function createAnimationNode(node: Node = null, options: AnimationOptions
         precondition: null,
         postcondition: null,
 
-        nodeData: {
-            location: node?.loc,
-            type: node?.type,
-        },
+        nodeData,
 
         baseDuration: 20,
         delay: 10,

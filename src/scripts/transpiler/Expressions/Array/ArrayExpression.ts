@@ -1,3 +1,37 @@
+import * as ESTree from 'estree';
+import { apply } from '../../../animation/animation';
+import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
+import { addVertex } from '../../../animation/graph/graph';
+import { AnimationContext } from '../../../animation/primitive/AnimationNode';
+import { arrayStartAnimation } from '../../../animation/primitive/Container/ArrayStartAnimation';
+import { logEnvironment } from '../../../environment/environment';
+import { AccessorType } from '../../../environment/EnvironmentState';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { Compiler, getNodeData } from '../../Compiler';
+
+export function ArrayExpression(ast: ESTree.ArrayExpression, view: ViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
+
+    const start = arrayStartAnimation(context.outputRegister);
+    addVertex(graph, start, getNodeData(ast));
+    apply(start, view);
+
+    console.log(context.outputRegister);
+    logEnvironment(getCurrentEnvironment(view));
+
+    for (let i = 0; i < ast.elements.length; i++) {
+        const animation = Compiler.compile(ast.elements[i], view, {
+            ...context,
+            outputRegister: [...context.outputRegister, { type: AccessorType.Index, value: i }],
+            locationHint: [...context.outputRegister, { type: AccessorType.Index, value: i }],
+        });
+        addVertex(graph, animation, getNodeData(ast.elements[i]));
+    }
+
+    return graph;
+}
+
 // import * as ESTree from 'estree';
 // import { AnimationGraph } from '../../../animation/graph/AnimationGraph';
 // import { AnimationContext } from '../../../animation/primitive/AnimationNode';

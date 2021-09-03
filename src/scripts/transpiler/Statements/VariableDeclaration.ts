@@ -2,24 +2,16 @@ import * as ESTree from 'estree';
 import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph';
 import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
-import { Node, NodeMeta } from '../Node';
+import { ViewState } from '../../view/ViewState';
 import { VariableDeclarator } from './VariableDeclarator';
 
-export class VariableDeclaration extends Node {
-    declarations: VariableDeclarator[];
+export function VariableDeclaration(ast: ESTree.VariableDeclaration, view: ViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(this);
 
-    constructor(ast: ESTree.VariableDeclaration, meta: NodeMeta) {
-        super(ast, meta);
-        this.declarations = ast.declarations.map((el) => new VariableDeclarator(el, meta));
+    for (const declaration of ast.declarations) {
+        const animation = VariableDeclarator(declaration, view, context);
+        addVertex(graph, animation);
     }
 
-    animation(context: AnimationContext) {
-        const graph: AnimationGraph = createAnimationGraph(this);
-
-        for (let i = 0; i < this.declarations.length; i++) {
-            addVertex(graph, this.declarations[i].animation(context), this.declarations[i]);
-        }
-
-        return graph;
-    }
+    return graph;
 }
