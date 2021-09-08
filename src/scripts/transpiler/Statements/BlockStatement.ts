@@ -4,6 +4,7 @@ import { createAnimationGraph } from '../../animation/graph/AnimationGraph';
 import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
 import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation';
+import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation';
 import { ViewState } from '../../view/ViewState';
 import { Compiler, getNodeData } from '../Compiler';
 
@@ -27,7 +28,7 @@ export function BlockStatement(ast: ESTree.BlockStatement, view: ViewState, cont
     }
 
     // Pop scope
-    const popScope = createScopeAnimation();
+    const popScope = popScopeAnimation();
     addVertex(graph, popScope, getNodeData(ast));
     apply(popScope, view);
 

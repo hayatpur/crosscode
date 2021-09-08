@@ -1,7 +1,7 @@
 import { createData } from '../../../environment/data/data';
 import { DataState, DataType } from '../../../environment/data/DataState';
 import { addDataAt, declareVariable, getMemoryLocation, resolvePath } from '../../../environment/environment';
-import { Accessor } from '../../../environment/EnvironmentState';
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
@@ -18,6 +18,10 @@ function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRu
     let data = null;
     let location = null;
 
+    // Create a reference for variable
+    const reference = createData(DataType.Reference, [], `${animation.id}_Reference`);
+    const loc = addDataAt(environment, reference, [], `${animation.id}_Add`);
+
     if (animation.existingMemorySpecifier != null) {
         data = resolvePath(environment, animation.existingMemorySpecifier, `${animation.id}_Existing`) as DataState;
         location = getMemoryLocation(environment, data).foundLocation;
@@ -26,7 +30,9 @@ function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRu
         location = addDataAt(environment, data, [], null);
     }
 
-    declareVariable(environment, animation.identifier, location);
+    reference.value = location;
+
+    declareVariable(environment, animation.identifier, loc);
 
     // if (options.baking) {
     //     animation.computeReadAndWrites({ location, id: data.id });
@@ -45,7 +51,7 @@ export function bindAnimation(
     return {
         ...createAnimationNode(null, options),
         baseDuration: 5,
-        name: `Bind Variable ${identifier}`,
+        name: `Bind Variable (${identifier}), with data at ${accessorsToString(existingMemorySpecifier ?? [])}`,
 
         // Attributes
         identifier,

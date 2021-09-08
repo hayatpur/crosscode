@@ -1,11 +1,64 @@
-// import * as astring from 'astring';
-// import * as ESTree from 'estree';
-// import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-// import CopyDataAnimation from '../../../animation/primitive/Data/CopyDataAnimation';
-// import { AccessorType } from '../../../environment/data/data';
-// import { Evaluator } from '../../../executor/Evaluator';
-// import { Node, NodeMeta } from '../../Node';
-// import { Transpiler } from '../../Transpiler';
+import * as ESTree from 'estree';
+import { apply } from '../../../animation/animation';
+import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
+import { addVertex } from '../../../animation/graph/graph';
+import { AnimationContext } from '../../../animation/primitive/AnimationNode';
+import { findMember } from '../../../animation/primitive/Data/FindMember';
+import { getMember } from '../../../animation/primitive/Data/GetMember';
+import { AccessorType } from '../../../environment/EnvironmentState';
+import { ViewState } from '../../../view/ViewState';
+import { Compiler, getNodeData } from '../../Compiler';
+
+export function MemberExpression(ast: ESTree.MemberExpression, view: ViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
+
+    // Create a register which'll *point* to the location of object
+    const objectRegister = [{ type: AccessorType.Register, value: `${graph.id}_Object` }];
+    const object = Compiler.compile(ast.object, view, {
+        ...context,
+        feed: false,
+        outputRegister: objectRegister,
+    });
+    addVertex(graph, object, getNodeData(ast.object));
+
+    // Create a register that'll point to the location of computed property
+    const propertyRegister = [{ type: AccessorType.Register, value: `${graph.id}_Property` }];
+
+    if (ast.computed) {
+        // Something like obj[i], or obj['x']
+        const property = Compiler.compile(ast.property, view, {
+            ...context,
+            outputRegister: propertyRegister,
+            feed: false,
+        });
+        addVertex(property, object, getNodeData(ast.property));
+    }
+
+    // Compute the result
+    if (context.feed) {
+        const find = findMember(
+            objectRegister,
+            ast.computed ? propertyRegister : null,
+            context.outputRegister,
+            !ast.computed ? (ast.property as ESTree.Identifier).name : null,
+            ast.computed
+        );
+        addVertex(graph, find, getNodeData(ast));
+        apply(find, view);
+    } else {
+        const member = getMember(
+            objectRegister,
+            ast.computed ? propertyRegister : null,
+            context.outputRegister,
+            !ast.computed ? (ast.property as ESTree.Identifier).name : null,
+            ast.computed
+        );
+        addVertex(graph, member, getNodeData(ast));
+        apply(member, view);
+    }
+
+    return graph;
+}
 
 // export class MemberExpression extends Node {
 //     object: Node;

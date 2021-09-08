@@ -6,25 +6,25 @@ import { AnimationContext } from '../../../animation/primitive/AnimationNode';
 import { moveAndPlaceAnimation } from '../../../animation/primitive/Data/MoveAndPlaceAnimation';
 import { AccessorType } from '../../../environment/EnvironmentState';
 import { ViewState } from '../../../view/ViewState';
-import { Compiler, getNodeData, getSpecifier } from '../../Compiler';
+import { Compiler, getNodeData } from '../../Compiler';
 
 export function AssignmentExpression(ast: ESTree.AssignmentExpression, view: ViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
-    const register = [{ type: AccessorType.Register, value: `${graph.id}_Assignment` }];
+    const leftRegister = [{ type: AccessorType.Register, value: `${graph.id}_Assignment_Left` }];
+    const rightRegister = [{ type: AccessorType.Register, value: `${graph.id}_Assignment_Right` }];
 
-    // @TODO: Member expression assignment
-    const leftSpecifier = getSpecifier(ast.left);
+    // Put the *location* of the LHS in the left register
+    Compiler.compile(ast.left, view, { ...context, outputRegister: leftRegister, feed: true });
 
     // Right should be in the floating stack
     const right = Compiler.compile(ast.right, view, {
         ...context,
-        locationHint: leftSpecifier,
-        outputRegister: register,
+        outputRegister: rightRegister,
     });
     addVertex(graph, right, getNodeData(ast.right));
 
-    const place = moveAndPlaceAnimation(register, leftSpecifier, ast.right.type == 'Literal');
+    const place = moveAndPlaceAnimation(rightRegister, leftRegister, ast.right.type == 'Literal');
     addVertex(graph, place, getNodeData(ast));
     apply(place, view);
 

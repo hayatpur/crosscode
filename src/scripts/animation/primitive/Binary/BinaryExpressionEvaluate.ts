@@ -70,6 +70,8 @@ function onSeek(animation: BinaryExpressionEvaluate, view: ViewState, time: numb
     const leftTransform = environment._temps[`LeftTransform${animation.id}`];
     const rightTransform = environment._temps[`RightTransform${animation.id}`];
 
+    // console.log(environment._temps[`LeftTransform${animation.id}`]);
+
     // Move left
     left.transform.x = lerp(leftTransform.init_x, leftTransform.x, t);
     left.transform.y = lerp(leftTransform.init_y, leftTransform.y, t);

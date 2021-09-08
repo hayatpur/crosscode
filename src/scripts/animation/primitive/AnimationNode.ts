@@ -17,9 +17,8 @@ export enum AnimationPlayback {
 export interface AnimationContext {
     locationHint?: Accessor[]; // Hint of where to place data (for aesthetic reasons)
     outputRegister?: Accessor[]; // Register to place data at
-
-    speedMultiplier?: number;
-    directExpression?: boolean;
+    feed?: boolean; // Puts the location of data instead of data itself - used for feeding (assignment / declaration)'
+    args?: Accessor[][]; // Arguments to pass to the function
 }
 
 export interface AnimationOptions {

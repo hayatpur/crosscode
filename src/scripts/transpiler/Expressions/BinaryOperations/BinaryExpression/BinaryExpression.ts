@@ -4,7 +4,6 @@ import { createAnimationGraph } from '../../../../animation/graph/AnimationGraph
 import { addVertex } from '../../../../animation/graph/graph';
 import { AnimationContext } from '../../../../animation/primitive/AnimationNode';
 import { binaryExpressionEvaluate } from '../../../../animation/primitive/Binary/BinaryExpressionEvaluate';
-import { binaryExpressionSetup } from '../../../../animation/primitive/Binary/BinaryExpressionSetup';
 import { AccessorType } from '../../../../environment/EnvironmentState';
 import { ViewState } from '../../../../view/ViewState';
 import { Compiler, getNodeData } from '../../../Compiler';
@@ -20,10 +19,6 @@ export function BinaryExpression(ast: ESTree.BinaryExpression, view: ViewState, 
 
     const right = Compiler.compile(ast.right, view, { ...context, outputRegister: rightRegister });
     addVertex(graph, right, getNodeData(ast.right));
-
-    const initial = binaryExpressionSetup(leftRegister, rightRegister, ast.operator);
-    addVertex(graph, initial, this);
-    apply(initial, view);
 
     const evaluate = binaryExpressionEvaluate(leftRegister, rightRegister, ast.operator, context.outputRegister);
     addVertex(graph, evaluate, this);

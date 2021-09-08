@@ -1,5 +1,6 @@
+import { createData, replaceDataWith } from '../../../environment/data/data';
 import { DataState, DataType } from '../../../environment/data/DataState';
-import { resolvePath } from '../../../environment/environment';
+import { addDataAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
@@ -14,9 +15,15 @@ export interface ArrayStartAnimation extends AnimationNode {
 function onBegin(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
 
-    const output = resolvePath(environment, animation.dataSpecifier, null) as DataState;
-    output.type = DataType.Array;
-    output.value = [];
+    // Create a new array somewhere in memory
+    const data = createData(DataType.Array, [], `${animation.id}_CreateArray`);
+    data.transform.floating = true;
+
+    const loc = addDataAt(environment, data, [], null);
+
+    // const output = resolvePath(environment, animation.dataSpecifier, null) as DataState;
+    // output.type = DataType.Array;
+    // output.value = [];
 
     //         if (options.baking) {
     //             animation.computeReadAndWrites({
@@ -24,11 +31,14 @@ function onBegin(animation: ArrayStartAnimation, view: ViewState, options: Anima
     //                 id: output.id,
     //             });
     //         }
+
+    // Point the output register to the newly created data
+    const outputRegister = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Floating`) as DataState;
+    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`));
 }
 
 function onSeek(animation: ArrayStartAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation));
-    const environment = getCurrentEnvironment(view);
 }
 
 function onEnd(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {}

@@ -125,9 +125,13 @@ export function replaceEnvironmentWith(current: EnvironmentState, newEnv: Enviro
  * @param environment
  * @param location
  */
-export function removeAt(environment: EnvironmentState, location: Accessor[]) {
+export function removeAt(
+    environment: EnvironmentState,
+    location: Accessor[],
+    options: { noResolvingId?: boolean; noResolvingReference?: boolean } = null
+) {
     const parentPath = location.slice(0, -1);
-    const parent = resolvePath(environment, parentPath, null);
+    const parent = resolvePath(environment, parentPath, null, null, options);
 
     const index = location[location.length - 1];
 
@@ -223,7 +227,7 @@ export function resolve(
     accessor: Accessor,
     srcId: string,
     parent: DataState | EnvironmentState | null = null,
-    options: { noResolvingId?: boolean } = {}
+    options: { noResolvingId?: boolean; noResolvingReference?: boolean } = {}
 ): DataState | EnvironmentState {
     // By default, make focus the overall environment if none is specified
     if (parent == null) {
@@ -240,7 +244,13 @@ export function resolve(
         const registerData = root.registers[accessor.value];
 
         if (registerData.type == DataType.ID) {
-            return resolvePath(root, [{ type: AccessorType.ID, value: registerData.value as string }], srcId);
+            return resolvePath(
+                root,
+                [{ type: AccessorType.ID, value: registerData.value as string }],
+                srcId,
+                null,
+                options
+            );
         } else if (registerData.type == DataType.Register) {
             return registerData;
         } else {
@@ -254,7 +264,7 @@ export function resolve(
             if (data == null) continue;
 
             if (data.id == accessor.value) {
-                return resolvePath(root, getMemoryLocation(root, data).foundLocation, srcId);
+                return resolvePath(root, getMemoryLocation(root, data).foundLocation, srcId, null, options);
             } else if (data.type == DataType.Array) {
                 search.push(...(data.value as DataState[]));
             }
@@ -266,7 +276,15 @@ export function resolve(
         const accessors = lookupVariable(root, accessor.value as string);
         return resolvePath(root, accessors, srcId, null, options);
     } else if (accessor.type == AccessorType.Index) {
-        let data: DataState = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[accessor.value];
+        if (instanceOfData(parent) && parent.type == DataType.Array) {
+            const value = parent.value as DataState[];
+            if (accessor.value >= value.length) {
+                value[accessor.value] = createData(DataType.Literal, null, srcId);
+                value[accessor.value].frame = parent.frame;
+            }
+        }
+
+        let data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[accessor.value];
 
         if (data.type == DataType.ID) {
             if (options.noResolvingId) {
@@ -278,8 +296,16 @@ export function resolve(
                         type: AccessorType.ID,
                         value: data.value as string,
                     },
-                    srcId
+                    srcId,
+                    null,
+                    options
                 );
+            }
+        } else if (data.type == DataType.Reference) {
+            if (options.noResolvingReference) {
+                return data;
+            } else {
+                return resolvePath(root, data.value as Accessor[], srcId, null, options);
             }
         }
 
@@ -292,25 +318,25 @@ export function resolvePath(
     path: Accessor[],
     srcId: string,
     parent: DataState | EnvironmentState | null = null,
-    options: { noResolvingId?: boolean } = {}
+    options: { noResolvingId?: boolean; noResolvingReference?: boolean } = {}
 ): DataState | EnvironmentState {
     if (path.length == 0) {
         return parent ?? root;
     }
 
     let resolution = resolve(root, path[0], srcId, parent, options);
-    let ret = resolvePath(root, path.slice(1), srcId, resolution);
+    let ret = resolvePath(root, path.slice(1), srcId, resolution, options);
 
-    if (instanceOfData(ret) && ret.type == DataType.ID && !options.noResolvingId) {
-        ret = resolve(
-            root,
-            {
-                type: AccessorType.ID,
-                value: ret.value as string,
-            },
-            srcId
-        ) as DataState;
-    }
+    // if (instanceOfData(ret) && ret.type == DataType.ID && !options.noResolvingId) {
+    //     ret = resolve(
+    //         root,
+    //         {
+    //             type: AccessorType.ID,
+    //             value: ret.value as string,
+    //         },
+    //         srcId
+    //     ) as DataState;
+    // }
 
     return ret;
 }

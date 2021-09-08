@@ -3,13 +3,16 @@
 import * as ESTree from 'estree';
 import { AnimationGraph } from '../animation/graph/AnimationGraph';
 import { AnimationContext, NodeData } from '../animation/primitive/AnimationNode';
-import { AccessorType } from '../environment/EnvironmentState';
 import { ViewState } from '../view/ViewState';
 import { ArrayExpression } from './Expressions/Array/ArrayExpression';
 // import { ArrayExpression } from './Expressions/Array/ArrayExpression';
 // import { ArrayExpressionItem } from './Expressions/Array/ArrayExpressionItem';
 import { AssignmentExpression } from './Expressions/BinaryOperations/AssigmentExpression';
 import { BinaryExpression } from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression';
+import { MemberExpression } from './Expressions/BinaryOperations/MemberExpression';
+import { CallExpression } from './Expressions/CallExpression';
+import { FunctionCall } from './Functions/FunctionCall';
+import { FunctionDeclaration } from './Functions/FunctionDeclaration';
 // import BinaryExpression from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression';
 // import { MemberExpression } from './Expressions/BinaryOperations/MemberExpression';
 // import { CallExpression } from './Expressions/CallExpression';
@@ -21,8 +24,10 @@ import { Identifier } from './Identifier';
 import { Literal } from './Literal';
 // import { NodeMeta } from './Node';
 import { BlockStatement } from './Statements/BlockStatement';
+import { IfStatement } from './Statements/Choice/IfStatement';
 // import IfStatement from './Statements/Choice/IfStatement';
 import { ExpressionStatement } from './Statements/ExpressionStatement';
+import { ForStatement } from './Statements/Loops/ForStatement';
 // import ForStatement from './Statements/Loops/ForStatement';
 // import ForStatementIncrement from './Statements/Loops/ForStatementIncrement';
 // import ForStatementIteration from './Statements/Loops/ForStatementIteration';
@@ -37,13 +42,23 @@ export function getNodeData(node: ESTree.Node): NodeData {
 }
 
 // @TODO: Member expression
-export function getSpecifier(node: ESTree.Node) {
-    if (node.type == 'Identifier') {
-        return [{ type: AccessorType.Symbol, value: node.name }];
-    } else {
-        console.error('Unknown type', node.type);
-    }
-}
+// export function getSpecifier(node: ESTree.Node) {
+//     if (node.type == 'Identifier') {
+//         return [{ type: AccessorType.Symbol, value: node.name }];
+//     } else {
+//         console.error('Unknown type', node.type);
+//     }
+
+//     //     getSpecifier() {
+//     //     return [
+//     //         { type: AccessorType.Symbol, value: this.object_string },
+//     //         {
+//     //             type: AccessorType.Index,
+//     //             value: Evaluator.evaluate(this.property_string, this.meta.states.current).data,
+//     //         },
+//     //     ];
+//     // }
+// }
 
 export class Compiler {
     static compile(ast: ESTree.Node, view: ViewState, context: AnimationContext): AnimationGraph {
@@ -55,8 +70,7 @@ export class Compiler {
             // UpdateExpression,
             // Expressions
             ArrayExpression,
-            // ArrayExpressionItem,
-            // MemberExpression,
+            MemberExpression,
             ExpressionStatement,
             VariableDeclaration,
             AssignmentExpression,
@@ -69,17 +83,18 @@ export class Compiler {
             // Statements
             BlockStatement,
             // ForStatementIteration,
-            // ForStatement,
+            ForStatement,
             // ForStatementIncrement,
 
-            // IfStatement,
+            IfStatement,
             // FloatingExpressionStatement,
-            // FunctionStatement,
-            // CallExpression,
+            FunctionCall,
+            CallExpression,
             // ReturnStatement,
 
             // WhileStatementIteration,
             // WhileStatement,
+            FunctionDeclaration,
         };
 
         if (mapping[`${ast.type}`] == null) {

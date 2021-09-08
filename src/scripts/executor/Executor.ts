@@ -4,7 +4,7 @@ import { AnimationGraph } from '../animation/graph/AnimationGraph';
 import { animationToString } from '../animation/graph/graph';
 import { Editor } from '../editor/Editor';
 import { Compiler } from '../transpiler/Compiler';
-import { createView } from '../view/view';
+import { createView, getCurrentEnvironment } from '../view/view';
 import { ViewRenderer } from '../view/ViewRenderer';
 import { ViewState } from '../view/ViewState';
 
@@ -74,7 +74,13 @@ export class Executor {
         }
 
         // Transpile program
-        this.animation = Compiler.compile(ast, createView(), { outputRegister: [], locationHint: [] });
+        const tempView = createView();
+
+        const _t = performance.now();
+        this.animation = Compiler.compile(ast, tempView, { outputRegister: [], locationHint: [] });
+        console.log('Compilation time: ' + (performance.now() - _t) + 'ms');
+        // logEnvironment(getCurrentEnvironment(tempView));
+        console.log(getCurrentEnvironment(tempView));
 
         // Initialize a view of animation
         this.view = createView();

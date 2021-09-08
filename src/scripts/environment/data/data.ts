@@ -1,8 +1,9 @@
+import { Accessor } from '../EnvironmentState';
 import { DataState, DataTransform, DataType } from './DataState';
 
 export function createData(
     type: DataType,
-    value: string | boolean | Number | DataState[],
+    value: string | boolean | Number | DataState[] | Accessor[],
     id: string,
     transform: DataTransform = null,
     frame: number = -1
@@ -52,4 +53,8 @@ export function replaceDataWith(
     original.value = data.value;
     original.type = data.type;
     original.transform = data.transform;
+
+    if (mask.frame && data.type == DataType.Array) {
+        (data.value as DataState[]).forEach((data) => (data.frame = original.frame));
+    }
 }

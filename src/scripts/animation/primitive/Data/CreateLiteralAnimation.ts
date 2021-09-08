@@ -15,15 +15,24 @@ export interface CreateLiteralAnimation extends AnimationNode {
     outputRegister: Accessor[];
 }
 
+/**
+ * Puts data into context.output register.
+ * @param animation
+ * @param view
+ * @param options
+ */
 function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
+
     const data = createData(DataType.Literal, animation.value as number | string | boolean, `${animation.id}_Create`);
     data.transform.floating = true;
 
-    const environment = getCurrentEnvironment(view);
-    environment._temps[`CreateLiteralAnimation${animation.id}`] = addDataAt(environment, data, [], null);
+    // Add the newly created data to environment
+    const loc = addDataAt(environment, data, [], null);
+    environment._temps[`CreateLiteralAnimation${animation.id}`] = loc;
 
     // Get the output data
-    const location = resolvePath(environment, animation.locationHint, `${animation.id}_Location`) as DataState;
+    // const location = resolvePath(environment, animation.locationHint, `${animation.id}_Location`) as DataState;
 
     // if (options.baking) {
     //     this.computeReadAndWrites({
@@ -34,12 +43,12 @@ function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: An
 
     updateEnvironmentLayout(environment);
 
-    data.transform.x = location.transform?.x ?? 0;
-    data.transform.y = location.transform?.y ?? 0;
+    // data.transform.x = location.transform?.x ?? 0;
+    // data.transform.y = location.transform?.y ?? 0;
 
-    // Put it in the floating stack
-    const outputRegister = resolvePath(environment, this.outputRegister, `${this.id}_Floating`) as DataState;
-    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${this.id}_Floating`));
+    // Point the output register to the newly created data
+    const outputRegister = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState;
+    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`));
 }
 
 function onSeek(animation: CreateLiteralAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
@@ -55,7 +64,10 @@ function onSeek(animation: CreateLiteralAnimation, view: ViewState, time: number
     data.transform.z = remap(t, 0, 1, 3, 1);
 }
 
-function onEnd(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
+    delete environment._temps[`CreateLiteralAnimation${animation.id}`];
+}
 
 export function createLiteralAnimation(
     value: string | number | bigint | boolean | RegExp,

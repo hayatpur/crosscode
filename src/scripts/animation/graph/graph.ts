@@ -402,39 +402,22 @@ export function getIncomingFlow(index: number, edges: Edge[], mask: Set<number> 
 //     return `D(${data.location.map((acc) => `${acc.value.toString()}`).join('#')})`;
 // }
 
-export function animationToString(animation: AnimationGraph | AnimationNode, indent = 0, options = { first: false }) {
-    // computeAllEdges(graph);
-    // console.log(animation);
+/*
+#fontSize: 8
+#spacing: 16
+#padding: 0
+#ranker: longest-path
+#lineWidth: 1
 
+#.box: fill=#454442 stroke=#FDF6E3
+*/
+
+export function animationToString(animation: AnimationGraph | AnimationNode, indent = 0, options = { first: false }) {
     if (animation == null) return;
 
     if (instanceOfAnimationNode(animation)) {
         const space = `${'\t'.repeat(options.first ? 0 : indent)}`;
-
-        // if (animation instanceof CopyDataAnimation) {
-        //     const from = animation
-        //         .reads()
-        //         .map((read) => animationDataToString(read))
-        //         .join(', ');
-        //     const to = animation
-        //         .writes()
-        //         .map((read) => animationDataToString(read))
-        //         .join(', ');
-
-        //     return space + `[${from} 🠕 ${to}]`;
-        // } else if (animation instanceof MoveAndPlaceAnimation) {
-        //     const from = animation
-        //         .reads()
-        //         .map((read) => animationDataToString(read))
-        //         .join(', ');
-        //     const to = animation
-        //         .writes()
-        //         .map((read) => animationDataToString(read))
-        //         .join(', ');
-
-        //     return space + `[${from} ➝ ${to}]`;
-        // }
-        return space + `[${animation.id}_${animation.name}]`;
+        return space + `[<box> ${animation.name} --- ${animation.id} ]`;
     }
 
     let output = '';
@@ -442,60 +425,23 @@ export function animationToString(animation: AnimationGraph | AnimationNode, ind
     let visited_vertices = new Set();
     let visited_edges = new Set();
 
-    // Flow edges
-    // for (const edge of animation.edges.filter((edge) => edge instanceof FlowEdge)) {
-    //     // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
+    // Edges
+    for (const edge of animation.edges) {
+        visited_vertices.add(edge.to);
+        visited_vertices.add(edge.from);
+        visited_edges.add(`${edge.to}_${edge.from}`);
 
-    //     visited_vertices.add(edge.to);
-    //     visited_vertices.add(edge.from);
-    //     visited_edges.add(`${edge.to}_${edge.from}`);
+        let v1 = animationToString(animation.vertices[edge.from], indent + 1, {
+            first: false,
+        });
+        let v2 = animationToString(animation.vertices[edge.to], indent + 1, {
+            first: true,
+        });
 
-    //     let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
-    //         first: false,
-    //     });
-    //     let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
-    //         first: true,
-    //     });
-    //     if (v2 == null) v2 = '[NULL]';
+        output += `${v1}${edge.data} ->${v2}\n`;
+    }
 
-    //     output += `${v1}${animationDataToString(edge.data)} ->${v2}\n`;
-    // }
-
-    // // Anti-edges
-    // for (const edge of animation.edges.filter((edge) => edge instanceof AntiEdge)) {
-    //     // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
-
-    //     visited_vertices.add(edge.to);
-    //     visited_vertices.add(edge.from);
-    //     visited_edges.add(`${edge.to}_${edge.from}`);
-
-    //     let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
-    //         first: false,
-    //     });
-    //     let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
-    //         first: true,
-    //     });
-    //     output += `${v1}${animationDataToString(edge.data)} -:>${v2}\n`;
-    // }
-
-    // // Output-edges
-    // for (const edge of animation.edges.filter((edge) => edge instanceof OutputEdge)) {
-    //     // if (visited_edges.has(`${edge.to}_${edge.from}`)) continue;
-
-    //     visited_vertices.add(edge.to);
-    //     visited_vertices.add(edge.from);
-    //     visited_edges.add(`${edge.to}_${edge.from}`);
-
-    //     let v1 = logAnimation(animation.vertices[edge.from], indent + 1, {
-    //         first: false,
-    //     });
-    //     let v2 = logAnimation(animation.vertices[edge.to], indent + 1, {
-    //         first: true,
-    //     });
-    //     output += `${v1}${animationDataToString(edge.data)} -->${v2}\n`;
-    // }
-
-    // Sequential edges
+    // Sequential edges (because my animation graphs are implicitly ordered)
     for (let i = animation.vertices.length - 1; i >= 1; i--) {
         const from = i - 1;
         const to = i;
@@ -527,9 +473,9 @@ export function animationToString(animation: AnimationGraph | AnimationNode, ind
         }
     }
 
-    output = `${'\t'.repeat(options.first ? 0 : indent)}[<reference>${animation.id}_${
-        animation.nodeData?.type
-    }\n${output}`;
+    output = `${'\t'.repeat(options.first ? 0 : indent)}[<package> ${animation.nodeData?.type} ${
+        animation.id
+    } |\n${output}`;
 
     output += `${'\t'.repeat(indent)}]`;
     return output;

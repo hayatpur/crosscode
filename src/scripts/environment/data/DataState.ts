@@ -1,8 +1,12 @@
+import { Accessor } from '../EnvironmentState';
+
 export enum DataType {
     Literal = 'Literal',
     Array = 'Array',
     ID = 'ID',
+    Reference = 'Reference',
     Register = 'Register',
+    Function = 'Function',
 }
 
 export interface DataTransform {
@@ -19,7 +23,7 @@ export interface DataState {
     type: DataType;
     transform: DataTransform;
 
-    value: string | boolean | Number | DataState[];
+    value: string | boolean | Number | DataState[] | Accessor[];
 
     // Binding frame
     frame: number;
