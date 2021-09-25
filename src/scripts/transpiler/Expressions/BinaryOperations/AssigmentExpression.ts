@@ -8,14 +8,23 @@ import { AccessorType } from '../../../environment/EnvironmentState';
 import { ViewState } from '../../../view/ViewState';
 import { Compiler, getNodeData } from '../../Compiler';
 
-export function AssignmentExpression(ast: ESTree.AssignmentExpression, view: ViewState, context: AnimationContext) {
+export function AssignmentExpression(
+    ast: ESTree.AssignmentExpression,
+    view: ViewState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     const leftRegister = [{ type: AccessorType.Register, value: `${graph.id}_Assignment_Left` }];
     const rightRegister = [{ type: AccessorType.Register, value: `${graph.id}_Assignment_Right` }];
 
     // Put the *location* of the LHS in the left register
-    Compiler.compile(ast.left, view, { ...context, outputRegister: leftRegister, feed: true });
+    const left = Compiler.compile(ast.left, view, {
+        ...context,
+        outputRegister: leftRegister,
+        feed: true,
+    });
+    addVertex(graph, left, getNodeData(ast.left));
 
     // Right should be in the floating stack
     const right = Compiler.compile(ast.right, view, {
@@ -24,7 +33,7 @@ export function AssignmentExpression(ast: ESTree.AssignmentExpression, view: Vie
     });
     addVertex(graph, right, getNodeData(ast.right));
 
-    const place = moveAndPlaceAnimation(rightRegister, leftRegister, ast.right.type == 'Literal');
+    const place = moveAndPlaceAnimation(rightRegister, leftRegister);
     addVertex(graph, place, getNodeData(ast));
     apply(place, view);
 

@@ -23,7 +23,6 @@ self.MonacoEnvironment = {
 };
 
 function main() {
-    const ticker = new Ticker();
     const editor = new Editor();
     const executor = new Executor(editor);
 

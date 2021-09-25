@@ -1,5 +1,5 @@
 import { Accessor } from '../EnvironmentState';
-import { DataState, DataTransform, DataType } from './DataState';
+import { DataState, DataTransform, DataType, PositionType } from './DataState';
 
 export function createData(
     type: DataType,
@@ -16,8 +16,8 @@ export function createData(
             z: 0,
             width: type == DataType.Literal ? 35 : 0,
             height: type == DataType.Literal ? 35 : 0,
-            floating: false,
             opacity: 1,
+            positionType: PositionType.Relative,
         },
         value: value,
         id: id,
@@ -25,7 +25,11 @@ export function createData(
     };
 }
 
-export function cloneData(data: DataState, copyId: boolean = true, srcId: string = null): DataState {
+export function cloneData(
+    data: DataState,
+    copyId: boolean = true,
+    srcId: string = null
+): DataState {
     let value = data.value;
     if (data.type == DataType.Array) {
         value = (value as DataState[]).map((value) => cloneData(value, copyId));

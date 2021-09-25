@@ -20,7 +20,11 @@ export interface FindMember extends AnimationNode {
 function onBegin(animation: FindMember, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
 
-    const object = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`) as DataState;
+    const object = resolvePath(
+        environment,
+        animation.objectRegister,
+        `${animation.id}_Object`
+    ) as DataState;
 
     if (object.type != DataType.Array) {
         console.error('Invalid object type in index');
@@ -29,7 +33,11 @@ function onBegin(animation: FindMember, view: ViewState, options: AnimationRunti
 
     if (animation.computed) {
         // Get property
-        const property = resolvePath(environment, animation.propertyRegister, `${animation.id}_Property`) as DataState;
+        const property = resolvePath(
+            environment,
+            animation.propertyRegister,
+            `${animation.id}_Property`
+        ) as DataState;
         animation.property = property.value;
         removeAt(environment, getMemoryLocation(environment, property).foundLocation);
     }
@@ -37,19 +45,37 @@ function onBegin(animation: FindMember, view: ViewState, options: AnimationRunti
     const value = (object.value as DataState[])[animation.property] as DataState;
 
     // Remove object (reference)
-    const objectReference = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`, null, {
-        noResolvingReference: true,
-    }) as DataState;
+    const objectReference = resolvePath(
+        environment,
+        animation.objectRegister,
+        `${animation.id}_Object`,
+        null,
+        {
+            noResolvingReference: true,
+        }
+    ) as DataState;
     removeAt(environment, getMemoryLocation(environment, objectReference).foundLocation, {
         noResolvingReference: true,
     });
 
     // Point the output register to the newly created data
-    const outputRegister = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState;
-    replaceDataWith(outputRegister, createData(DataType.ID, value.id, `${animation.id}_OutputRegister`));
+    const outputRegister = resolvePath(
+        environment,
+        animation.outputRegister,
+        `${animation.id}_Floating`
+    ) as DataState;
+    replaceDataWith(
+        outputRegister,
+        createData(DataType.ID, value.id, `${animation.id}_OutputRegister`)
+    );
 }
 
-function onSeek(animation: FindMember, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: FindMember,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation));
 }
 

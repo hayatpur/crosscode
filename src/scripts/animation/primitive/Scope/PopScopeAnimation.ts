@@ -11,7 +11,12 @@ function onBegin(animation: PopScopeAnimation, view: ViewState, options: Animati
     popScope(environment);
 }
 
-function onSeek(animation: PopScopeAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: PopScopeAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
 function onEnd(animation: PopScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 

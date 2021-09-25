@@ -1,0 +1,76 @@
+#time-scrubber-container {
+    width: 600px;
+    /* background: grey; */
+    height: 36px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 0px 1px #e7e7e9 inset;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+#time-scrubber-container:hover {
+    box-shadow: 0px 0px 0px 1px #d6d6d8 inset;
+}
+
+#time-scrubber {
+    width: 2px;
+    background: #b1b1b1;
+    height: 100%;
+    margin-left: 0px;
+    position: absolute;
+}
+
+#time-scrubber.active {
+    height: 70%;
+}
+
+.controls {
+    display: flex;
+    /* justify-content: center; */
+    /* align-items: center; */
+    margin-top: 27px;
+    position: absolute;
+    transform: scale(0.9);
+    margin-left: 120px;
+}
+
+.button {
+    color: #0d0c22;
+    cursor: pointer;
+    border-radius: 7px;
+    /* padding: 15px; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: 0.1s ease;
+    height: fit-content;
+    height: -moz-fit-content;
+    margin-right: 10px;
+    /* border: 1px solid #00000029; */
+    box-shadow: 0px 0px 0px 1px #e7e7e9 inset;
+    font-weight: 300;
+    font-size: 14px;
+    padding: 10px 14px;
+}
+.button > ion-icon {
+    color: #747474;
+    margin-right: 5px;
+}
+
+.button:hover {
+    box-shadow: 0px 0px 0px 1px #dbdbde inset;
+}
+
+.button:active {
+    box-shadow: none;
+    background-color: #f3f5fa;
+}
+
+.button.active {
+    box-shadow: 0px 0px 0px 1px #cecece inset;
+    background-color: #f5f5f5;
+}

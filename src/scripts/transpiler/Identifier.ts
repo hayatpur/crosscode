@@ -38,7 +38,10 @@ export function Identifier(ast: ESTree.Identifier, view: ViewState, context: Ani
             apply(copyReference, view);
         } else if (data.type == DataType.Literal) {
             // Create a copy of it
-            const copy = copyDataAnimation([{ type: AccessorType.Symbol, value: ast.name }], context.outputRegister);
+            const copy = copyDataAnimation(
+                [{ type: AccessorType.Symbol, value: ast.name }],
+                context.outputRegister
+            );
             addVertex(graph, copy, getNodeData(ast));
             apply(copy, view);
         }

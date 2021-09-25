@@ -2,7 +2,11 @@ import * as ESTree from 'estree';
 import { apply } from '../../../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
 import { addVertex } from '../../../animation/graph/graph';
-import { AnimationContext } from '../../../animation/primitive/AnimationNode';
+import {
+    AnimationContext,
+    ControlOutput,
+    ControlOutputData,
+} from '../../../animation/primitive/AnimationNode';
 import { createScopeAnimation } from '../../../animation/primitive/Scope/CreateScopeAnimation';
 import { popScopeAnimation } from '../../../animation/primitive/Scope/PopScopeAnimation';
 import { DataState } from '../../../environment/data/DataState';
@@ -38,14 +42,29 @@ export function ForStatement(ast: ESTree.ForStatement, view: ViewState, context:
         if (!testValue) break;
 
         // Body
-        const body = Compiler.compile(ast.body, view, context);
+        const controlOutput: ControlOutputData = { output: ControlOutput.None };
+        const body = Compiler.compile(ast.body, view, { ...context, controlOutput: controlOutput });
         addVertex(graph, body, getNodeData(ast.body));
+
+        if (controlOutput.output == ControlOutput.Break) {
+            context.controlOutput.output = ControlOutput.None;
+            break;
+        } else if (controlOutput.output == ControlOutput.Continue) {
+            context.controlOutput.output = ControlOutput.None;
+        } else if (controlOutput.output == ControlOutput.Return) {
+            context.controlOutput.output = ControlOutput.Return;
+            break;
+        }
 
         // Update
         const update = Compiler.compile(ast.update, view, context);
         addVertex(graph, update, getNodeData(ast.update));
 
         _i++;
+    }
+
+    if (context.controlOutput.output != ControlOutput.Return) {
+        context.controlOutput.output = ControlOutput.None;
     }
 
     // Pop scope

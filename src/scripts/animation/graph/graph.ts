@@ -12,30 +12,30 @@ import { Edge, EdgeType } from './edges/Edge';
  * @param shouldDissolve - If vertex should dissolve or not
  */
 export function addVertex(
-    graph: AnimationGraph,
-    vertex: AnimationGraph | AnimationNode,
-    nodeData: NodeData = null,
-    shouldDissolve = false
+  graph: AnimationGraph,
+  vertex: AnimationGraph | AnimationNode,
+  nodeData: NodeData = null,
+  shouldDissolve = false
 ) {
-    if (instanceOfAnimationNode(vertex) || (instanceOfAnimationGraph(vertex) && !shouldDissolve)) {
-        vertex.nodeData = nodeData;
-        graph.vertices.push(vertex);
-    } else {
-        // Offset all the edges
-        const offset = graph.vertices.length + 1;
+  if (instanceOfAnimationNode(vertex) || (instanceOfAnimationGraph(vertex) && !shouldDissolve)) {
+    vertex.nodeData = nodeData;
+    graph.vertices.push(vertex);
+  } else {
+    // Offset all the edges
+    const offset = graph.vertices.length + 1;
 
-        // Add all the vertices
-        const vertices = [...vertex.vertices];
-        vertices.forEach((vertex) => addVertex(graph, vertex, nodeData));
+    // Add all the vertices
+    const vertices = [...vertex.vertices];
+    vertices.forEach((vertex) => addVertex(graph, vertex, nodeData));
 
-        // Add all the edges
-        for (let j = 0; j < vertex.edges.length; j++) {
-            vertex.edges[j].from += offset;
-            vertex.edges[j].to += offset;
+    // Add all the edges
+    for (let j = 0; j < vertex.edges.length; j++) {
+      vertex.edges[j].from += offset;
+      vertex.edges[j].to += offset;
 
-            graph.edges.push(vertex.edges[j]);
-        }
+      graph.edges.push(vertex.edges[j]);
     }
+  }
 }
 
 /**
@@ -44,19 +44,19 @@ export function addVertex(
  * @param i - Vertex to remove at
  */
 export function removeVertexAt(graph: AnimationGraph, i: number) {
-    // Remove vertex
-    graph.vertices.splice(i, 1);
+  // Remove vertex
+  graph.vertices.splice(i, 1);
 
-    // Shift over all edges
-    for (let j = graph.edges.length - 1; j >= 0; j--) {
-        if (graph.edges[j].from == i || graph.edges[j].to == i) {
-            graph.edges.splice(j, 1);
-            continue;
-        }
-
-        if (graph.edges[j].from > i) graph.edges[j].from -= 1;
-        if (graph.edges[j].to > i) graph.edges[j].to -= 1;
+  // Shift over all edges
+  for (let j = graph.edges.length - 1; j >= 0; j--) {
+    if (graph.edges[j].from == i || graph.edges[j].to == i) {
+      graph.edges.splice(j, 1);
+      continue;
     }
+
+    if (graph.edges[j].from > i) graph.edges[j].from -= 1;
+    if (graph.edges[j].to > i) graph.edges[j].to -= 1;
+  }
 }
 
 /**
@@ -65,13 +65,13 @@ export function removeVertexAt(graph: AnimationGraph, i: number) {
  * @param vertex - Vertex to remove
  */
 export function removeVertex(graph: AnimationGraph, vertex: AnimationGraph | AnimationNode) {
-    const index = graph.vertices.indexOf(vertex);
-    if (index == -1) {
-        console.warn('Attempting to remove non-existent vertex', vertex);
-        return;
-    }
+  const index = graph.vertices.indexOf(vertex);
+  if (index == -1) {
+    console.warn('Attempting to remove non-existent vertex', vertex);
+    return;
+  }
 
-    removeVertexAt(graph, index);
+  removeVertexAt(graph, index);
 }
 
 /**
@@ -81,84 +81,95 @@ export function removeVertex(graph: AnimationGraph, vertex: AnimationGraph | Ani
  * @returns
  */
 export function getNeighbours(index: number, edges: Edge[]): { neighbour: number; road: Edge }[] {
-    const neighbours = [];
+  const neighbours = [];
 
-    for (const edge of edges) {
-        if (edge.from == index) {
-            neighbours.push({ neighbour: edge.to, road: edge });
-        }
+  for (const edge of edges) {
+    if (edge.from == index) {
+      neighbours.push({ neighbour: edge.to, road: edge });
     }
+  }
 
-    return neighbours;
+  return neighbours;
 }
 
-export function getOutgoingNeighbours(index: number, edges: Edge[]): { neighbour: number; road: Edge }[] {
-    const neighbours = [];
+export function getOutgoingNeighbours(
+  index: number,
+  edges: Edge[]
+): { neighbour: number; road: Edge }[] {
+  const neighbours = [];
 
-    for (const edge of edges) {
-        if (edge.to == index) {
-            neighbours.push({ neighbour: edge.from, road: edge });
-        }
+  for (const edge of edges) {
+    if (edge.to == index) {
+      neighbours.push({ neighbour: edge.from, road: edge });
     }
+  }
 
-    return neighbours;
+  return neighbours;
 }
 
-export function getOutgoingFlow(index: number, edges: Edge[], mask: Set<number> = new Set()): number[] {
-    const outgoing: number[] = [];
+export function getOutgoingFlow(
+  index: number,
+  edges: Edge[],
+  mask: Set<number> = new Set()
+): number[] {
+  const outgoing: number[] = [];
 
-    const visited = new Set([index]);
-    const queue = [index];
+  const visited = new Set([index]);
+  const queue = [index];
 
-    while (queue.length != 0) {
-        // Vertex that'll be visited now
-        const vertex = queue.shift();
+  while (queue.length != 0) {
+    // Vertex that'll be visited now
+    const vertex = queue.shift();
 
-        const neighbours = getNeighbours(vertex, edges);
+    const neighbours = getNeighbours(vertex, edges);
 
-        for (const { neighbour, road } of neighbours) {
-            if (mask.has(neighbour)) continue;
+    for (const { neighbour, road } of neighbours) {
+      if (mask.has(neighbour)) continue;
 
-            if (road.type == EdgeType.FlowEdge) {
-                outgoing.push(neighbour);
-            }
+      if (road.type == EdgeType.FlowEdge) {
+        outgoing.push(neighbour);
+      }
 
-            if (!visited.has(neighbour)) {
-                queue.push(neighbour);
-                visited.add(neighbour);
-            }
-        }
+      if (!visited.has(neighbour)) {
+        queue.push(neighbour);
+        visited.add(neighbour);
+      }
     }
+  }
 
-    return outgoing;
+  return outgoing;
 }
 
-export function getIncomingFlow(index: number, edges: Edge[], mask: Set<number> = new Set()): number[] {
-    const incoming: number[] = [];
+export function getIncomingFlow(
+  index: number,
+  edges: Edge[],
+  mask: Set<number> = new Set()
+): number[] {
+  const incoming: number[] = [];
 
-    const visited = new Set([index]);
-    const queue = [index];
+  const visited = new Set([index]);
+  const queue = [index];
 
-    while (queue.length != 0) {
-        // Vertex that'll be visited now
-        const vertex = queue.shift();
+  while (queue.length != 0) {
+    // Vertex that'll be visited now
+    const vertex = queue.shift();
 
-        const neighbours = getOutgoingNeighbours(vertex, edges);
+    const neighbours = getOutgoingNeighbours(vertex, edges);
 
-        for (const { neighbour, road } of neighbours) {
-            if (mask.has(neighbour)) continue;
+    for (const { neighbour, road } of neighbours) {
+      if (mask.has(neighbour)) continue;
 
-            if (road.type == EdgeType.FlowEdge) {
-                incoming.push(neighbour);
-            }
+      if (road.type == EdgeType.FlowEdge) {
+        incoming.push(neighbour);
+      }
 
-            if (!visited.has(neighbour)) {
-                queue.push(neighbour);
-                visited.add(neighbour);
-            }
-        }
+      if (!visited.has(neighbour)) {
+        queue.push(neighbour);
+        visited.add(neighbour);
+      }
     }
-    return incoming;
+  }
+  return incoming;
 }
 
 // /**
@@ -412,73 +423,106 @@ export function getIncomingFlow(index: number, edges: Edge[], mask: Set<number> 
 #.box: fill=#454442 stroke=#FDF6E3
 */
 
-export function animationToString(animation: AnimationGraph | AnimationNode, indent = 0, options = { first: false }) {
-    if (animation == null) return;
+export function animationToString(
+  animation: AnimationGraph | AnimationNode,
+  indent = 0,
+  options = { first: false },
+  logUrl = false
+) {
+  if (animation == null) return;
 
-    if (instanceOfAnimationNode(animation)) {
-        const space = `${'\t'.repeat(options.first ? 0 : indent)}`;
-        return space + `[<box> ${animation.name} --- ${animation.id} ]`;
+  if (instanceOfAnimationNode(animation)) {
+    const space = `${'\t'.repeat(options.first ? 0 : indent)}`;
+    return space + `[<box> ${animation.name} --- ${animation.id} ]`;
+  }
+
+  let output = '';
+
+  let visited_vertices = new Set();
+  let visited_edges = new Set();
+
+  // Edges
+  // for (const edge of animation.edges) {
+  //     visited_vertices.add(edge.to);
+  //     visited_vertices.add(edge.from);
+  //     visited_edges.add(`${edge.to}_${edge.from}`);
+
+  //     let v1 = animationToString(animation.vertices[edge.from], indent + 1, {
+  //         first: false,
+  //     });
+  //     let v2 = animationToString(animation.vertices[edge.to], indent + 1, {
+  //         first: true,
+  //     });
+
+  //     output += `${v1}${edge.data} ->${v2}\n`;
+  // }
+
+  const lookup = {};
+
+  // Sequential edges
+  for (let i = animation.vertices.length - 1; i >= 1; i--) {
+    const from = i - 1;
+    const to = i;
+
+    if (visited_edges.has(`${to}_${from}`)) continue;
+
+    visited_vertices.add(to);
+    visited_vertices.add(from);
+    visited_edges.add(`${to}_${from}`);
+
+    // console.log(animation.id, from, to);
+
+    // if (animation.vertices[from] == animation) console.log('CIRCULAR');
+
+    if (!(from in lookup)) {
+      let v1 = animation.vertices[from]
+        ? animationToString(animation.vertices[from], indent + 1, { first: true })
+        : `[${from}_Null]`;
+      lookup[from] = v1;
     }
 
-    let output = '';
-
-    let visited_vertices = new Set();
-    let visited_edges = new Set();
-
-    // Edges
-    for (const edge of animation.edges) {
-        visited_vertices.add(edge.to);
-        visited_vertices.add(edge.from);
-        visited_edges.add(`${edge.to}_${edge.from}`);
-
-        let v1 = animationToString(animation.vertices[edge.from], indent + 1, {
-            first: false,
-        });
-        let v2 = animationToString(animation.vertices[edge.to], indent + 1, {
-            first: true,
-        });
-
-        output += `${v1}${edge.data} ->${v2}\n`;
+    if (!(to in lookup)) {
+      let v2 = animation.vertices[to]
+        ? animationToString(animation.vertices[to], indent + 1, { first: true })
+        : `[${to}_Null]`;
+      lookup[to] = v2;
     }
 
-    // Sequential edges (because my animation graphs are implicitly ordered)
-    for (let i = animation.vertices.length - 1; i >= 1; i--) {
-        const from = i - 1;
-        const to = i;
+    output = `${'\t'.repeat(indent + 1)}${lookup[from]}--${lookup[to]}\n${output}`;
+  }
 
-        if (visited_edges.has(`${to}_${from}`)) continue;
+  // Left out vertices
+  for (let i = 0; i < animation.vertices.length; i++) {
+    if (animation.vertices[i] == null) continue;
+    if (i in lookup) continue;
 
-        visited_vertices.add(to);
-        visited_vertices.add(from);
-        visited_edges.add(`${to}_${from}`);
-
-        let v1 = animation.vertices[from]
-            ? animationToString(animation.vertices[from], indent + 1, { first: false })
-            : `[${from}_Null]`;
-        let v2 = animation.vertices[to]
-            ? animationToString(animation.vertices[to], indent + 1, { first: true })
-            : `[${to}_Null]`;
-
-        output = `${v1}--${v2}\n${output}`;
+    if (!visited_vertices.has(i)) {
+      output += `${animationToString(animation.vertices[i], indent + 1, {
+        first: false,
+      })}\n`;
     }
+  }
 
-    // Left out vertices
-    for (let i = 0; i < animation.vertices.length; i++) {
-        if (animation.vertices[i] == null) continue;
+  output = `${'\t'.repeat(options.first ? 0 : indent)}[<package> ${animation.nodeData?.type} ${
+    animation.id
+  } |\n${output}`;
 
-        if (!visited_vertices.has(i)) {
-            output += `${animationToString(animation.vertices[i], indent + 1, {
-                first: false,
-            })}\n`;
-        }
-    }
+  output += `${'\t'.repeat(indent)}]`;
 
-    output = `${'\t'.repeat(options.first ? 0 : indent)}[<package> ${animation.nodeData?.type} ${
-        animation.id
-    } |\n${output}`;
+  if (logUrl) {
+    const config = `#fontSize: 8
+#spacing: 16
+#.box: fill=#454442 stroke=#FDF6E3
+#padding: 0
+#ranker: longest-path
+#lineWidth: 1`;
 
-    output += `${'\t'.repeat(indent)}]`;
-    return output;
+    console.log(
+      `https://nomnoml.com/image.svg?source=${encodeURIComponent(`${config}\n${output}`)}`
+    );
+  }
+
+  return output;
 }
 
 // export function computeParentIds(animation: AnimationGraph | AnimationNode, parentIds: Set<string> = new Set()) {

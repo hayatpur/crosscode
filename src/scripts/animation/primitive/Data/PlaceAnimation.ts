@@ -1,55 +1,77 @@
-// import { Accessor } from '../../../environment/data/data';
-// import { Environment } from '../../../environment/environment';
-// import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
-// import { AnimationNode, AnimationOptions } from '../AnimationNode';
+import { replaceDataWith } from '../../../environment/data/data';
+import { DataState, PositionType } from '../../../environment/data/DataState';
+import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
+import { Accessor, instanceOfEnvironment } from '../../../environment/EnvironmentState';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { duration } from '../../animation';
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
-// export class PlaceAnimation extends AnimationNode {
-//     inputSpecifier: Accessor[];
-//     outputSpecifier: Accessor[];
+export interface PlaceAnimation extends AnimationNode {
+    inputSpecifier: Accessor[];
+    outputSpecifier: Accessor[];
+}
 
-//     constructor(inputSpecifier: Accessor[], outputSpecifier: Accessor[], options: AnimationOptions = {}) {
-//         super(options);
-//         this.inputSpecifier = inputSpecifier;
-//         this.outputSpecifier = outputSpecifier;
-//     }
+function onBegin(animation: PlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
+    // if (options.baking) {
+    //     const data = resolvePath(environment, this.dataSpecifier, null) as DataState;
+    //     this.computeReadAndWrites({ location: getMemoryLocation(environment, (data).foundLocation, id: data.id }));
+    // }
+}
 
-//     begin(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
-//         super.begin(environment, options);
-//     }
+function onSeek(
+    animation: PlaceAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
+    let t = animation.ease(time / duration(animation));
 
-//     seek(environment: Environment, time: number) {
-//         let t = super.ease(time / this.duration);
+    const environment = getCurrentEnvironment(view);
+    const data = resolvePath(environment, animation.inputSpecifier, null) as DataState;
 
-//         let input = resolvePath(environment, this.inputSpecifier, null) as DataState;
+    data.transform.z = 1 - t;
+}
 
-//         input.transform.z = 1 - t;
-//     }
+function onEnd(animation: PlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view);
+    const from = resolvePath(environment, animation.inputSpecifier, null) as DataState;
 
-//     end(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
-//         const input = resolvePath(environment, this.inputSpecifier, null) as DataState;
-//         const to = resolvePath(environment, this.outputSpecifier, `${this.id}_to`) as DataState;
+    if (animation.outputSpecifier != null) {
+        const to = resolvePath(environment, animation.outputSpecifier, null) as DataState;
 
-//         if (options.baking) {
-//             this.computeReadAndWrites(
-//                 { location: getMemoryLocation(environment, (input).foundLocation, id: input.id },
-//                 { location: getMemoryLocation(environment, (to).foundLocation, id: to.id }
-//             );
-//         }
+        if (instanceOfEnvironment(to)) {
+            removeAt(environment, getMemoryLocation(environment, from).foundLocation);
+        } else {
+            // Remove the copy
+            removeAt(environment, getMemoryLocation(environment, from).foundLocation);
+            replaceDataWith(to, from, { frame: true });
+        }
+    }
 
-//         if (to instanceof Environment) {
-//             removeAt(environment, getMemoryLocation(environment, (input).foundLocation);
-//         } else {
-//             // Remove the copy
-//             removeAt(environment, getMemoryLocation(environment, (input).foundLocation);
-//             to.replaceWith(input, { frame: true, id: true });
-//         }
+    from.transform.z = 0;
+    from.transform.positionType = PositionType.Relative;
+}
 
-//         input.transform.floating = false;
-//         input.transform.z = 0;
-//     }
+export function placeAnimation(
+    inputSpecifier: Accessor[],
+    outputSpecifier: Accessor[] = null,
+    options: AnimationOptions = {}
+): PlaceAnimation {
+    return {
+        ...createAnimationNode(null, options),
 
-//     computeReadAndWrites(inputData: AnimationData, outputData: AnimationData) {
-//         this._reads = [inputData];
-//         this._writes = [outputData];
-//     }
-// }
+        name: 'Place Animation',
+
+        // Attributes
+        inputSpecifier,
+        outputSpecifier,
+
+        // Callbacks
+        onBegin,
+        onSeek,
+        onEnd,
+    };
+}

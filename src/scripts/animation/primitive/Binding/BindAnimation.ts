@@ -1,6 +1,11 @@
 import { createData } from '../../../environment/data/data';
 import { DataState, DataType } from '../../../environment/data/DataState';
-import { addDataAt, declareVariable, getMemoryLocation, resolvePath } from '../../../environment/environment';
+import {
+    addDataAt,
+    declareVariable,
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment';
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
@@ -23,7 +28,11 @@ function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRu
     const loc = addDataAt(environment, reference, [], `${animation.id}_Add`);
 
     if (animation.existingMemorySpecifier != null) {
-        data = resolvePath(environment, animation.existingMemorySpecifier, `${animation.id}_Existing`) as DataState;
+        data = resolvePath(
+            environment,
+            animation.existingMemorySpecifier,
+            `${animation.id}_Existing`
+        ) as DataState;
         location = getMemoryLocation(environment, data).foundLocation;
     } else {
         data = createData(DataType.Literal, undefined, `${animation.id}_BindNew`);
@@ -39,7 +48,12 @@ function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRu
     // }
 }
 
-function onSeek(animation: BindAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: BindAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
 function onEnd(animation: BindAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
@@ -51,7 +65,9 @@ export function bindAnimation(
     return {
         ...createAnimationNode(null, options),
         baseDuration: 5,
-        name: `Bind Variable (${identifier}), with data at ${accessorsToString(existingMemorySpecifier ?? [])}`,
+        name: `Bind Variable (${identifier}), with data at ${accessorsToString(
+            existingMemorySpecifier ?? []
+        )}`,
 
         // Attributes
         identifier,

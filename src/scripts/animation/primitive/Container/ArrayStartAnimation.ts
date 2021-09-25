@@ -1,5 +1,5 @@
 import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataType } from '../../../environment/data/DataState';
+import { DataState, DataType, PositionType } from '../../../environment/data/DataState';
 import { addDataAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
@@ -10,14 +10,22 @@ import { AnimationNode, AnimationOptions, createAnimationNode } from '../Animati
 
 export interface ArrayStartAnimation extends AnimationNode {
     dataSpecifier: Accessor[];
+    doNotFloat: boolean;
 }
 
-function onBegin(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+function onBegin(
+    animation: ArrayStartAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {
     const environment = getCurrentEnvironment(view);
 
     // Create a new array somewhere in memory
     const data = createData(DataType.Array, [], `${animation.id}_CreateArray`);
-    data.transform.floating = true;
+    if (!animation.doNotFloat) {
+        data.transform.z = 1;
+    }
+    data.transform.positionType = PositionType.Relative;
 
     const loc = addDataAt(environment, data, [], null);
 
@@ -33,25 +41,41 @@ function onBegin(animation: ArrayStartAnimation, view: ViewState, options: Anima
     //         }
 
     // Point the output register to the newly created data
-    const outputRegister = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Floating`) as DataState;
-    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`));
+    const outputRegister = resolvePath(
+        environment,
+        animation.dataSpecifier,
+        `${animation.id}_Floating`
+    ) as DataState;
+    replaceDataWith(
+        outputRegister,
+        createData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
+    );
 }
 
-function onSeek(animation: ArrayStartAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: ArrayStartAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation));
 }
 
 function onEnd(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
-export function arrayStartAnimation(dataSpecifier: Accessor[], options: AnimationOptions = {}): ArrayStartAnimation {
+export function arrayStartAnimation(
+    dataSpecifier: Accessor[],
+    doNotFloat: boolean = false,
+    options: AnimationOptions = {}
+): ArrayStartAnimation {
     return {
-        ...createAnimationNode(null, options),
-        baseDuration: 30,
+        ...createAnimationNode(null, { ...options, duration: 10 }),
 
         name: `Initialize array at ${accessorsToString(dataSpecifier)}`,
 
         // Attributes
         dataSpecifier,
+        doNotFloat,
 
         // Callbacks
         onBegin,

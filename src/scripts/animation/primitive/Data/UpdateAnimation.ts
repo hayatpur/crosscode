@@ -15,12 +15,21 @@ export interface UpdateAnimation extends AnimationNode {
 
 function onBegin(animation: UpdateAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
-function onSeek(animation: UpdateAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: UpdateAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation));
 
     const environment = getCurrentEnvironment(view);
 
-    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState;
+    const data = resolvePath(
+        environment,
+        animation.dataSpecifier,
+        `${animation.id}_Data`
+    ) as DataState;
 
     if (t <= 0.8) {
         // Show the step

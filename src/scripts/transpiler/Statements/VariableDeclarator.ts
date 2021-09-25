@@ -4,31 +4,43 @@ import { AnimationGraph, createAnimationGraph } from '../../animation/graph/Anim
 import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
 import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation';
+import { moveAndPlaceAnimation } from '../../animation/primitive/Data/MoveAndPlaceAnimation';
+import { placeAnimation } from '../../animation/primitive/Data/PlaceAnimation';
+import { logEnvironment } from '../../environment/environment';
 import { AccessorType } from '../../environment/EnvironmentState';
+import { clone } from '../../utilities/objects';
+import { getCurrentEnvironment } from '../../view/view';
 import { ViewState } from '../../view/ViewState';
 import { Compiler, getNodeData } from '../Compiler';
 
-export function VariableDeclarator(ast: ESTree.VariableDeclarator, view: ViewState, context: AnimationContext) {
+export function VariableDeclarator(
+    ast: ESTree.VariableDeclarator,
+    view: ViewState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     // Create a register to allocate RHS in
     const register = [{ type: AccessorType.Register, value: `${graph.id}__VariableDeclaration` }];
 
+    const doNotFloat = ast.init.type == 'ArrayExpression';
+
     // Copy / create and float it up RHS
     const init = Compiler.compile(ast.init, view, {
         ...context,
         outputRegister: register,
+        doNotFloat,
     });
     addVertex(graph, init, getNodeData(ast.init));
 
-    // Place down the RHS
-    // const place = moveAndPlaceAnimation(
-    //     register,
-    //     [{ type: AccessorType.Symbol, value: (ast.id as ESTree.Identifier).name }],
-    //     ast.init.type == 'Literal'
-    // );
-    // addVertex(graph, place, getNodeData(ast));
-    // apply(place, view);
+    console.log(clone(getCurrentEnvironment(view)));
+
+    // Place down the RHS at a free spot
+    if (!doNotFloat) {
+        const place = moveAndPlaceAnimation(register, [], ast.init.type == 'Literal');
+        addVertex(graph, place, getNodeData(ast));
+        apply(place, view);
+    }
 
     // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier
     const bind = bindAnimation((ast.id as ESTree.Identifier).name, register);

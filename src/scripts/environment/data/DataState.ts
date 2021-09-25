@@ -9,14 +9,30 @@ export enum DataType {
     Function = 'Function',
 }
 
-export interface DataTransform {
+export enum PositionType {
+    Absolute = 'Absolute',
+    Relative = 'Relative',
+}
+
+export interface Transform {
     x: number;
     y: number;
-    z: number;
     width: number;
     height: number;
-    floating: boolean;
+    positionType: PositionType;
+}
+
+export interface DataTransform extends Transform {
+    z: number;
     opacity: number;
+}
+
+export function getZPane(z: number): number {
+    if (z < 1) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
 export interface DataState {
@@ -32,5 +48,7 @@ export interface DataState {
 }
 
 export function instanceOfData(data: any): data is DataState {
-    return 'type' in data && 'transform' in data && 'value' in data && 'frame' in data && 'id' in data;
+    return (
+        'type' in data && 'transform' in data && 'value' in data && 'frame' in data && 'id' in data
+    );
 }

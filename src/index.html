@@ -16,6 +16,22 @@
 </head>
 
 <body>
+    <div class="controls">
+        <div id="play-button" class="button">
+            <ion-icon name="play"></ion-icon>
+            <span>Play</span>
+        </div>
+        <div id="pause-button" class="button">
+            <ion-icon name="pause"></ion-icon>
+            <span>Pause</span>
+        </div>
+        <div id="time-scrubber-container">
+            <div id="time-scrubber">
+
+            </div>
+        </div>
+    </div>
+
     <div id="editor">
         <!-- <div class="question">
             <p><b>Q1. </b> Write a valid javascript program to reverse list inputArr using iteration. Do not use the
@@ -43,51 +59,12 @@
             <marker id="dot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="10" markerHeight="5">
                 <circle cx="5" cy="5" r="5" fill="rgb(100,100,100)" />
             </marker>
-
-            <filter id="threshold">
-                <!-- Basically just a threshold effect - pixels with a high enough opacity are set to full opacity, and all other pixels are set to completely transparent. -->
-                <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0
-                                0 1 0 0 0
-                                0 0 1 0 0
-                                0 0 0 255 -140" />
-            </filter>
         </defs>
     </svg>
 
     <div id="errors"></div>
 
-    <!-- <header>
-        <div>
-            <div class="number-icon">1</div>
-            <p>Consent</p>
-        </div>
-        <div>
-            <div class="number-icon">2</div>
-            <p>Pre-Questionnaire</p>
-        </div>
-        <div>
-            <div class="number-icon">3</div>
-            <p>Tutorial</p>
-        </div>
-        <div class="active">
-            <div class="number-icon">4</div>
-            <p>Module</p>
-        </div>
-        <div>
-            <div class="number-icon">5</div>
-            <p>Post-Questionnaire</p>
-        </div>
-        <div>
-            <div class="number-icon">5</div>
-            <p>Reimbursement</p>
-        </div>
-    </header> -->
-    <!--SVG Sprites-->
-    <svg class="inline-svg">
-        <symbol id="check" viewbox="0 0 12 10">
-            <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
-        </symbol>
-    </svg>
+    <div id="root-view"></div>
 </body>
 
 </html>

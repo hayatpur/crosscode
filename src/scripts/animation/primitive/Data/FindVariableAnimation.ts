@@ -13,7 +13,11 @@ export interface FindVariableAnimation extends AnimationNode {
     outputRegister: Accessor[];
 }
 
-function onBegin(animation: FindVariableAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+function onBegin(
+    animation: FindVariableAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {
     const environment = getCurrentEnvironment(view);
 
     const reference = resolvePath(
@@ -34,11 +38,20 @@ function onBegin(animation: FindVariableAnimation, view: ViewState, options: Ani
     replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`));
 }
 
-function onSeek(animation: FindVariableAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: FindVariableAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation));
 }
 
-function onEnd(animation: FindVariableAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: FindVariableAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {}
 
 export function findVariableAnimation(
     identifier: string,

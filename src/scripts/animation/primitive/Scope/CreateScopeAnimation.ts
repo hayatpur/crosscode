@@ -6,14 +6,27 @@ import { AnimationNode, AnimationOptions, createAnimationNode } from '../Animati
 
 export interface CreateScopeAnimation extends AnimationNode {}
 
-function onBegin(animation: CreateScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+function onBegin(
+    animation: CreateScopeAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {
     const environment = getCurrentEnvironment(view);
     createScope(environment);
 }
 
-function onSeek(animation: CreateScopeAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: CreateScopeAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: CreateScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: CreateScopeAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {}
 
 export function createScopeAnimation(options: AnimationOptions = {}): CreateScopeAnimation {
     return {

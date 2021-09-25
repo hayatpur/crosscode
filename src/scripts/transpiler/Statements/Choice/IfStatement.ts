@@ -1,7 +1,11 @@
 import * as ESTree from 'estree';
 import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
 import { addVertex } from '../../../animation/graph/graph';
-import { AnimationContext } from '../../../animation/primitive/AnimationNode';
+import {
+    AnimationContext,
+    ControlOutput,
+    ControlOutputData,
+} from '../../../animation/primitive/AnimationNode';
 import { DataState } from '../../../environment/data/DataState';
 import { resolvePath } from '../../../environment/environment';
 import { AccessorType } from '../../../environment/EnvironmentState';
@@ -22,20 +26,19 @@ export function IfStatement(ast: ESTree.IfStatement, view: ViewState, context: A
     const testData = resolvePath(getCurrentEnvironment(view), testRegister, null) as DataState;
     const testValue = testData.value as boolean;
 
+    const controlOutput: ControlOutputData = { output: ControlOutput.None };
+
     if (testValue) {
         // Execute the body
-        const body = Compiler.compile(ast.consequent, view, context);
+        const body = Compiler.compile(ast.consequent, view, { ...context, controlOutput });
         addVertex(graph, body, getNodeData(ast.consequent));
     } else if (ast.alternate != null) {
         // Execute the alternate (if any)
-        const alternate = Compiler.compile(ast.alternate, view, context);
+        const alternate = Compiler.compile(ast.alternate, view, { ...context, controlOutput });
         addVertex(graph, alternate, getNodeData(ast.alternate));
     }
 
-    // for (const declaration of ast.declarations) {
-    //     const animation = VariableDeclarator(declaration, view, context);
-    //     addVertex(graph, animation, getNodeData(declaration));
-    // }
+    context.controlOutput.output = controlOutput.output;
 
     return graph;
 }

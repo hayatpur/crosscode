@@ -1,7 +1,14 @@
 import { clone } from '../utilities/objects';
 import { createData } from './data/data';
-import { DataState, DataType, instanceOfData } from './data/DataState';
-import { Accessor, AccessorType, EnvironmentState, instanceOfEnvironment, Scope } from './EnvironmentState';
+import { DataState, DataTransform, DataType, instanceOfData, PositionType } from './data/DataState';
+import {
+    Accessor,
+    AccessorType,
+    EnvironmentState,
+    instanceOfEnvironment,
+    Scope,
+} from './EnvironmentState';
+import { updateEnvironmentLayout } from './layout';
 
 export function createEnvironment(): EnvironmentState {
     this.id = 0;
@@ -14,7 +21,8 @@ export function createEnvironment(): EnvironmentState {
         memory: [],
         registers: {},
         _temps: {},
-        id: `#${++this.id}`,
+        id: `Env(${++this.id})`,
+        transform: { x: 0, y: 0, width: 0, height: 0, positionType: PositionType.Absolute },
     };
 }
 
@@ -66,7 +74,11 @@ export function declareVariable(
  * @param name name of the variable to reassign
  * @param location location of new storage
  */
-export function redeclareVariable(environment: EnvironmentState, name: string, location: Accessor[]) {
+export function redeclareVariable(
+    environment: EnvironmentState,
+    name: string,
+    location: Accessor[]
+) {
     for (let i = environment.scope.length - 1; i >= 0; i--) {
         let scope = environment.scope[i];
 
@@ -104,6 +116,7 @@ export function cloneEnvironment(environment: EnvironmentState): EnvironmentStat
         registers: clone(environment.registers),
         _temps: clone(environment._temps),
         id: environment.id,
+        transform: clone(environment.transform),
     };
 }
 
@@ -173,55 +186,6 @@ export function flattenedEnvironmentMemory(environment: EnvironmentState): DataS
     return flattened;
 }
 
-/**
- * Updates the layout of the environment.
- * @param environment
- * @param position
- * @param parent
- * @param options
- * @returns
- */
-export function updateEnvironmentLayout(
-    environment: EnvironmentState,
-    position: { x: number; y: number } = { x: 0, y: 20 },
-    parent?: DataState,
-    options?: { isArrayElement: boolean }
-): { x: number; y: number } {
-    let search: DataState[] = [];
-
-    if (parent != null && parent.type == DataType.Array && parent.frame >= 0) {
-        search = parent.value as DataState[];
-    }
-
-    if (parent == null) {
-        search = environment.memory;
-    }
-
-    for (let i = 0; i < search.length; i++) {
-        if (search[i] == null) continue;
-        if (search[i].transform.floating) continue;
-
-        search[i].transform.x = position.x;
-        search[i].transform.y = position.y;
-
-        if (search[i].type == DataType.Array && search[i].frame >= 0) {
-            position.x = updateEnvironmentLayout(
-                environment,
-                { x: search[i].transform.x, y: search[i].transform.y },
-                search[i],
-                {
-                    isArrayElement: true,
-                }
-            ).x;
-            position.x += 30;
-        } else if (search[i].type == DataType.Literal) {
-            position.x += search[i].transform.width + (options?.isArrayElement ? 0 : 30);
-        }
-    }
-
-    return position;
-}
-
 export function resolve(
     root: EnvironmentState,
     accessor: Accessor,
@@ -254,17 +218,28 @@ export function resolve(
         } else if (registerData.type == DataType.Register) {
             return registerData;
         } else {
-            console.error('Invalid register type, has to be either ID or Register', registerData.type);
+            console.error(
+                'Invalid register type, has to be either ID or Register',
+                registerData.type
+            );
         }
     } else if (accessor.type == AccessorType.ID) {
-        const search = [...(instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)];
+        const search = [
+            ...(instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory),
+        ];
 
         while (search.length > 0) {
             const data = search.shift();
             if (data == null) continue;
 
             if (data.id == accessor.value) {
-                return resolvePath(root, getMemoryLocation(root, data).foundLocation, srcId, null, options);
+                return resolvePath(
+                    root,
+                    getMemoryLocation(root, data).foundLocation,
+                    srcId,
+                    null,
+                    options
+                );
             } else if (data.type == DataType.Array) {
                 search.push(...(data.value as DataState[]));
             }
@@ -284,7 +259,9 @@ export function resolve(
             }
         }
 
-        let data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[accessor.value];
+        let data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[
+            accessor.value
+        ];
 
         if (data.type == DataType.ID) {
             if (options.noResolvingId) {
@@ -354,7 +331,8 @@ export function addDataAt(
     }
 
     if (instanceOfData(origin)) {
-        if (origin.type != DataType.Array) console.error('[Data] Invalid addAt, trying to add to a non-addable type');
+        if (origin.type != DataType.Array)
+            console.error('[Data] Invalid addAt, trying to add to a non-addable type');
 
         // No path specified, push it into memory
         if (path.length == 0) {
@@ -394,38 +372,9 @@ export function addDataAt(
             addDataAt(root, data, path.slice(-1), srcId, parent);
         }
 
-        this.updateLayout();
-
         return path;
     }
 }
-// addDataAt(path: Accessor[], data: Data, srcId: string) {
-//     // console.log('Adding data to data at', JSON.parse(JSON.stringify(path)), JSON.parse(JSON.stringify(data)));
-
-//     if (this.type != DataType.Array) console.error('[Data] Invalid addAt, trying to add to a non-addable type');
-
-//     // No path specified, push it into memory
-//     if (path.length == 0) {
-//         (this.value as DataState[]).push(data);
-//         return;
-//     }
-
-//     const parentPath = path.slice(0, -1);
-//     const parent = this.resolvePath(parentPath, srcId);
-
-//     if (parent == this) {
-//         const index = path[path.length - 1];
-//         parent.value[index.value] = data;
-//         data.frame = this.frame;
-//         // data.spatialLocation = [this.memory.length - 1];
-//         // data.memorySpecifier = [
-//         //     ...this.memorySpecifier,
-//         //     { type: AccessorType.Index, value: index.value },
-//         // ];
-//     } else {
-//         parent.addDataAt(path.slice(-2, -1), data, srcId);
-//     }
-// }
 
 export function getMemoryLocation(
     root: EnvironmentState,
@@ -435,7 +384,12 @@ export function getMemoryLocation(
 ): { found: boolean; foundLocation: Accessor[] } {
     let search: DataState[] = [];
 
-    if (parent != null && instanceOfData(parent) && parent.type == DataType.Array && parent.frame >= 0) {
+    if (
+        parent != null &&
+        instanceOfData(parent) &&
+        parent.type == DataType.Array &&
+        parent.frame >= 0
+    ) {
         search = parent.value as DataState[];
     } else if (parent == null) {
         search = root.memory;

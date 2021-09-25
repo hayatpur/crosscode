@@ -40,7 +40,10 @@ export class DataMovementPath {
 
         this.movement.style['stroke-dasharray'] = this.movement.getTotalLength();
         this.movement.style['stroke-dashoffset'] = this.movement.getTotalLength() * (1 - t);
-        this.movement.setAttribute('d', `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`);
+        this.movement.setAttribute(
+            'd',
+            `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`
+        );
     }
 
     getPosition(t: number) {

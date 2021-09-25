@@ -12,14 +12,22 @@ export interface BindFunctionAnimation extends AnimationNode {
     ast: ESTree.FunctionDeclaration;
 }
 
-function onBegin(animation: BindFunctionAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+function onBegin(
+    animation: BindFunctionAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {
     const environment = getCurrentEnvironment(view);
 
     // Create a reference for variable
     const reference = createData(DataType.Reference, [], `${animation.id}_ReferenceFunction`);
     const referenceLocation = addDataAt(environment, reference, [], `${animation.id}_AddFunction`);
 
-    const data = createData(DataType.Function, JSON.stringify(animation.ast), `${animation.id}_BindFunctionNew`);
+    const data = createData(
+        DataType.Function,
+        JSON.stringify(animation.ast),
+        `${animation.id}_BindFunctionNew`
+    );
     const location = addDataAt(environment, data, [], null);
 
     reference.value = location;
@@ -27,9 +35,18 @@ function onBegin(animation: BindFunctionAnimation, view: ViewState, options: Ani
     declareVariable(environment, animation.identifier, referenceLocation);
 }
 
-function onSeek(animation: BindFunctionAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: BindFunctionAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: BindFunctionAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: BindFunctionAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {}
 
 export function bindFunctionAnimation(
     identifier: string,

@@ -9,7 +9,11 @@ import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnima
 import { ViewState } from '../../view/ViewState';
 import { Compiler, getNodeData } from '../Compiler';
 
-export function FunctionCall(ast: ESTree.FunctionDeclaration, view: ViewState, context: AnimationContext) {
+export function FunctionCall(
+    ast: ESTree.FunctionDeclaration,
+    view: ViewState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     // Create a scope @TODO: HARD SCOPE

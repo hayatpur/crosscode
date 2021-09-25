@@ -7,9 +7,12 @@ export class Ticker {
     private namedCallbacks: { [id: string]: (dt?: number) => void } = {};
     private time = 0;
 
-    constructor() {
-        Ticker.instance = this;
+    static _initialize() {
+        if (Ticker.instance) return;
+        Ticker.instance = new Ticker();
+    }
 
+    constructor() {
         const timer = this;
         function tick(time: number) {
             const dt = time - timer.time;
@@ -34,3 +37,5 @@ export class Ticker {
         delete this.namedCallbacks[from];
     }
 }
+
+Ticker._initialize();

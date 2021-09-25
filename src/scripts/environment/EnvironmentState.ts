@@ -1,5 +1,5 @@
 import { stringHashCode } from '../utilities/string';
-import { DataState } from './data/DataState';
+import { DataState, Transform } from './data/DataState';
 
 export enum AccessorType {
     ID = 'ID',
@@ -30,7 +30,11 @@ export interface Scope {
     [name: string]: Accessor[];
 }
 
+export interface EnvironmentTransform extends Transform {}
+
 export interface EnvironmentState {
+    transform: EnvironmentTransform;
+
     // Variable name bindings
     scope: Scope[];
 
@@ -47,5 +51,10 @@ export interface EnvironmentState {
 }
 
 export function instanceOfEnvironment(environment: any): environment is EnvironmentState {
-    return 'scope' in environment && 'memory' in environment && 'registers' in environment && '_temps' in environment;
+    return (
+        'scope' in environment &&
+        'memory' in environment &&
+        'registers' in environment &&
+        '_temps' in environment
+    );
 }

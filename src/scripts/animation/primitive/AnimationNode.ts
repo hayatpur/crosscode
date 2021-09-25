@@ -14,16 +14,37 @@ export enum AnimationPlayback {
     WithPrevious = 'WithPrevious',
 }
 
+export enum ControlOutput {
+    None = 'None',
+    Break = 'Break',
+    Continue = 'Continue',
+    Return = 'Return',
+}
+
+export interface ControlOutputData {
+    output: ControlOutput;
+}
+
+export interface ReturnData {
+    frame: number;
+    register: Accessor[];
+}
+
 export interface AnimationContext {
     locationHint?: Accessor[]; // Hint of where to place data (for aesthetic reasons)
     outputRegister?: Accessor[]; // Register to place data at
     feed?: boolean; // Puts the location of data instead of data itself - used for feeding (assignment / declaration)'
     args?: Accessor[][]; // Arguments to pass to the function
+    controlOutput?: ControlOutputData;
+    returnData?: ReturnData; // Register to place the return value at
+    doNotFloat?: boolean;
 }
 
 export interface AnimationOptions {
     playback?: AnimationPlayback;
     delay?: number;
+
+    // Length of animation
     duration?: number;
     speedMultiplier?: number;
 }
@@ -53,7 +74,12 @@ export interface AnimationNode extends PlayableAnimation {
     baseDuration: number;
 
     onBegin: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void;
-    onSeek: (animation: AnimationNode, view: ViewState, time: number, options: AnimationRuntimeOptions) => void;
+    onSeek: (
+        animation: AnimationNode,
+        view: ViewState,
+        time: number,
+        options: AnimationRuntimeOptions
+    ) => void;
     onEnd: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void;
 }
 
@@ -80,7 +106,7 @@ export function createAnimationNode(
 
         nodeData,
 
-        baseDuration: 20,
+        baseDuration: options.duration ?? 20,
         delay: 10,
 
         isPlaying: false,
