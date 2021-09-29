@@ -1,4 +1,3 @@
-import clone = require('just-clone');
 import { createData, replaceDataWith } from '../../../environment/data/data';
 import {
     DataState,

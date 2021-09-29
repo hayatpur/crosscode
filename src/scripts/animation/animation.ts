@@ -87,7 +87,7 @@ export function begin(
     view: ViewState,
     options: AnimationRuntimeOptions = {}
 ) {
-    console.log(animation);
+    // console.log(animation);
     Cursor.instance?.setCodeLocation(animation.nodeData.location);
 
     if (options.baking) {

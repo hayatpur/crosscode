@@ -24,10 +24,10 @@ export class EnvironmentRenderer {
         // Hit test
         const hits = new Set();
 
-        const flattened = flattenedEnvironmentMemory(state);
+        // const flattened = flattenedEnvironmentMemory(state);
 
         // Memory
-        const memory = flattened
+        const memory = state.memory
             .filter((m) => m != null)
             .filter((data) => data.type == DataType.Literal || data.type == DataType.Array);
 

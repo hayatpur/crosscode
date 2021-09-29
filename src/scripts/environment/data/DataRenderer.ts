@@ -1,7 +1,7 @@
 import { DataState } from './DataState';
 
 export class DataRenderer {
-    static Padding = 10;
+    static Padding = 20;
 
     element: HTMLDivElement;
     array: DataRenderer[];
