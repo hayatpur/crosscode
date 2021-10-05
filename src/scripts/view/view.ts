@@ -3,10 +3,13 @@ import { createEnvironment } from '../environment/environment';
 import { EnvironmentState, instanceOfEnvironment } from '../environment/EnvironmentState';
 import { ViewState } from './ViewState';
 
-export function createView(): ViewState {
-    this.id = 0;
+let CUR_VIEW_ID = 0;
+
+export function createView(
+    options: { noChildren?: boolean; isRoot?: boolean } = { noChildren: false, isRoot: false }
+): ViewState {
     return {
-        id: `View(${++this.id})`,
+        id: `View(${++CUR_VIEW_ID})`,
         transform: {
             x: 0,
             y: 0,
@@ -16,7 +19,9 @@ export function createView(): ViewState {
             positionModifiers: [],
             positionType: PositionType.Relative,
         },
-        children: [createEnvironment()],
+        children: options.noChildren ? [] : [createEnvironment()],
+        label: '[NONE]',
+        isRoot: options.isRoot ? true : false,
     };
 }
 
@@ -29,5 +34,3 @@ export function getCurrentEnvironment(view: ViewState): EnvironmentState {
         return getCurrentEnvironment(lastChild);
     }
 }
-
-export function updateViewLayout(view: ViewState) {}

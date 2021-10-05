@@ -1,3 +1,1 @@
-let list = [1, 2];
-
-let x = list[list[0] - 1];
+let list = [10, 2, 3, 7, 5, 6];

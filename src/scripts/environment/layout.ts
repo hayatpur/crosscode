@@ -2,8 +2,23 @@ import { clone } from '../utilities/objects';
 import { ArrayRenderer } from './data/array/ArrayRenderer';
 import { DataRenderer } from './data/DataRenderer';
 import { DataState, DataType, getZPane, PositionType, Transform } from './data/DataState';
-import { LiteralRenderer } from './data/literal/LiteralRenderer';
-import { EnvironmentState, instanceOfEnvironment } from './EnvironmentState';
+import { EnvironmentState } from './EnvironmentState';
+
+export interface Layout {
+    transform: Transform;
+    children: any[];
+}
+
+export function environmentStateToMemoryLayout(environment: EnvironmentState): Layout {
+    return {
+        transform: environment.transform,
+        children: environment.memory,
+    };
+}
+
+export function updateLayout(layout: Layout): Transform {
+    if (layout == null) return;
+}
 
 // Pivot transform for a single z pane
 export interface PivotTransform extends Transform {
@@ -132,11 +147,7 @@ export function updateLiteralLayout(
  * @param pivots
  * @returns
  */
-export function updateArrayLayout(
-    array: DataState,
-    pivots: PivotTransform[],
-    offset: Offset
-): PivotTransform[] {
+export function updateArrayLayout(array: DataState, pivots: PivotTransform[], offset: Offset): PivotTransform[] {
     // if (array.transform.floating) return { ...position, width: 0, height: 0 };
     const initial = clone(pivots);
 
@@ -159,8 +170,12 @@ export function updateArrayLayout(
     array.transform.height = ArrayRenderer.MinHeight;
 
     // Update layout of each item
-    for (const item of array.value as DataState[]) {
+    const items = array.value as DataState[];
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
         pivots = updateDataLayout(item, pivots, { z: array.transform.z });
+
+        if (i < items.length - 1) correctPivot(pivots, array.transform.z + offset.z).x += ArrayRenderer.ElementGap;
     }
 
     pivot = correctPivot(pivots, array.transform.z + offset.z);

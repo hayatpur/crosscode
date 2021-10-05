@@ -30,7 +30,10 @@ export interface Scope {
     [name: string]: Accessor[];
 }
 
-export interface EnvironmentTransform extends Transform {}
+export interface EnvironmentTransform extends Transform {
+    // Anchors to align it to lines of code, or to other views
+    positionModifiers: EnvironmentPositionModifier[];
+}
 
 export interface EnvironmentState {
     transform: EnvironmentTransform;
@@ -50,11 +53,17 @@ export interface EnvironmentState {
     id: string;
 }
 
+export interface EnvironmentPositionModifier {
+    type: EnvironmentPositionModifierType;
+    value: any;
+}
+
+export enum EnvironmentPositionModifierType {
+    NextToCode = 'NextToCode',
+    AboveView = 'AboveView',
+    BelowView = 'BelowView',
+}
+
 export function instanceOfEnvironment(environment: any): environment is EnvironmentState {
-    return (
-        'scope' in environment &&
-        'memory' in environment &&
-        'registers' in environment &&
-        '_temps' in environment
-    );
+    return 'scope' in environment && 'memory' in environment && 'registers' in environment && '_temps' in environment;
 }

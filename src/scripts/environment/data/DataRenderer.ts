@@ -1,7 +1,13 @@
+import { EnvironmentRenderer } from '../EnvironmentRenderer';
 import { DataState } from './DataState';
 
+export interface DataRendererOptions {
+    zOffset?: number;
+    environmentRenderer: EnvironmentRenderer;
+}
+
 export class DataRenderer {
-    static Padding = 20;
+    static Padding = 40;
 
     element: HTMLDivElement;
     array: DataRenderer[];
@@ -11,7 +17,7 @@ export class DataRenderer {
         this.element.classList.add('data');
     }
 
-    setState(data: DataState) {
+    setState(data: DataState, options: DataRendererOptions) {
         console.warn('No fallback for', data.type);
     }
 

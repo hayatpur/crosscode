@@ -1,24 +1,27 @@
-// (code) Editor
-@import 'editor';
+/* (code) Editor */
+@import './editor.scss';
 
-// Generic
+/* Generic */
 @import './generic/checkbox.scss';
 
-// View
+/* View */
 @import './state/data.scss';
 @import './state/environment.scss';
 @import './state/view.scss';
 
-// Timeline
+/* Timeline */
 @import './time/timeline.scss';
 @import './time/timeSection.scss';
 
-// Fonts
+/* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=PT+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@100;200;300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@200;300;400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;300;400;600;700&display=swap');
 
-// Icons
+/* Icons */
 @import url('https://css.gg/check.css');
 @import url('https://css.gg/close.css');
 
@@ -33,13 +36,17 @@
     --floating-shadow-color: 200deg 60% 70%;
 }
 
+html {
+    background: white;
+}
+
 html,
 body {
     margin: 0px;
     height: 100%;
-    font-family: Source Sans Pro;
+    font-family: Calibri;
     overflow: hidden;
-    background: white;
+    font-size: 24px;
 }
 
 #svg-canvas {
@@ -67,7 +74,7 @@ header {
     margin-bottom: 4rem;
 }
 
-header > div {
+header>div {
     /* padding-right: 8px; */
     /* flex: 1; */
     font-size: 14px;
@@ -80,11 +87,11 @@ header > div {
     margin: 0px 50px;
 }
 
-header > div.active {
+header>div.active {
     opacity: 1;
 }
 
-header > div.active .number-icon {
+header>div.active .number-icon {
     background: #0000001f;
 }
 
@@ -103,7 +110,7 @@ header .separator {
     flex: 1 1 auto;
 }
 
-header .separator > span {
+header .separator>span {
     display: block;
     border-color: #bdbdbd;
     border-top-style: solid;
@@ -132,7 +139,8 @@ header .separator > span {
     background: #c1e0ff;
     mix-blend-mode: multiply;
     z-index: 10;
-    /* border-radius: 5px; */
+    border-radius: 5px;
     transition: 0.1s;
+    pointer-events: none;
     /* opacity: 0 !important; */
 }

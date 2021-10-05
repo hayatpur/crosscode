@@ -4,6 +4,8 @@ import { EnvironmentState } from '../environment/EnvironmentState';
 // A view is a collection of environments
 export interface ViewState {
     id: string;
+    label: string;
+    isRoot: boolean;
 
     transform: ViewTransform;
     children: (ViewState | EnvironmentState)[];

@@ -1,71 +1,50 @@
+import * as ESTree from 'estree';
 import { DataState } from '../../../environment/data/DataState';
 import { resolvePath } from '../../../environment/environment';
 import { Accessor } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
-import { duration } from '../../animation';
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
 export interface UpdateAnimation extends AnimationNode {
     dataSpecifier: Accessor[];
-    updateStep: string;
-    newValue: any;
+    operator: ESTree.UpdateOperator;
 }
 
-function onBegin(animation: UpdateAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
-
-function onSeek(
-    animation: UpdateAnimation,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {
-    let t = animation.ease(time / duration(animation));
-
+function onBegin(animation: UpdateAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
+    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState;
 
-    const data = resolvePath(
-        environment,
-        animation.dataSpecifier,
-        `${animation.id}_Data`
-    ) as DataState;
-
-    if (t <= 0.8) {
-        // Show the step
-        // data.transform.step = animation.updateStep;
-    } else {
-        // Apply the new value
-        // data.transform.step = null;
-
-        data.value = animation.newValue;
+    switch (animation.operator) {
+        case '++':
+            data.value = (data.value as number) + 1;
+            break;
+        case '--':
+            data.value = (data.value as number) - 1;
+            break;
+        default:
+            console.warn('Unrecognized update operator', animation.operator);
     }
 }
 
-function onEnd(animation: UpdateAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view);
-    // const data = resolvePath(environment, this.dataSpecifier, null) as DataState;
-    // if (options.baking) {
-    //     this.computeReadAndWrites({ location: getMemoryLocation(environment, (data).foundLocation, id: data.id });
-    // }
-}
+function onSeek(animation: UpdateAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+
+function onEnd(animation: UpdateAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
 export function updateAnimation(
     dataSpecifier: Accessor[],
-    updateStep: string,
-    newValue: any,
+    operator: ESTree.UpdateOperator,
     options: AnimationOptions = {}
 ): UpdateAnimation {
     return {
         ...createAnimationNode(null, options),
-        baseDuration: 30,
 
         name: 'UpdateAnimation',
 
         // Attributes
         dataSpecifier,
-        updateStep,
-        newValue,
+        operator,
 
         // Callbacks
         onBegin,

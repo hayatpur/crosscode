@@ -21,12 +21,7 @@ function onBegin(animation: PlaceAnimation, view: ViewState, options: AnimationR
     // }
 }
 
-function onSeek(
-    animation: PlaceAnimation,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {
+function onSeek(animation: PlaceAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation));
 
     const environment = getCurrentEnvironment(view);
@@ -47,7 +42,7 @@ function onEnd(animation: PlaceAnimation, view: ViewState, options: AnimationRun
         } else {
             // Remove the copy
             removeAt(environment, getMemoryLocation(environment, from).foundLocation);
-            replaceDataWith(to, from, { frame: true });
+            replaceDataWith(to, from, { frame: true, id: true });
         }
     }
 

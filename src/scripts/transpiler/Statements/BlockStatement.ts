@@ -2,11 +2,7 @@ import * as ESTree from 'estree';
 import { apply } from '../../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph';
 import { addVertex } from '../../animation/graph/graph';
-import {
-    AnimationContext,
-    ControlOutput,
-    ControlOutputData,
-} from '../../animation/primitive/AnimationNode';
+import { AnimationContext, ControlOutput, ControlOutputData } from '../../animation/primitive/AnimationNode';
 import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation';
 import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation';
 import { ViewState } from '../../view/ViewState';
@@ -19,11 +15,7 @@ import { Compiler, getNodeData } from '../Compiler';
  * @param context
  * @returns {AnimationGraph} animation
  */
-export function BlockStatement(
-    ast: ESTree.BlockStatement,
-    view: ViewState,
-    context: AnimationContext
-): AnimationGraph {
+export function BlockStatement(ast: ESTree.BlockStatement, view: ViewState, context: AnimationContext): AnimationGraph {
     const graph = createAnimationGraph(getNodeData(ast));
 
     context.locationHint = [];
@@ -33,12 +25,25 @@ export function BlockStatement(
     addVertex(graph, createScope, getNodeData(ast));
     apply(createScope, view);
 
+    let section = null;
+    let line = null;
+
     // Add statements
     for (const statement of ast.body) {
+        const delta = statement.loc.start.line - line;
+        line = statement.loc.start.line;
+
+        if (section == null || delta > 1) {
+            if (section != null) {
+                addVertex(graph, section, getNodeData(ast));
+            }
+            section = createAnimationGraph(getNodeData(ast), { isGroup: true });
+        }
+
         const controlOutput: ControlOutputData = { output: ControlOutput.None };
         const animation = Compiler.compile(statement, view, { ...context, controlOutput });
 
-        addVertex(graph, animation, getNodeData(statement));
+        addVertex(section, animation, getNodeData(statement));
 
         if (controlOutput.output == ControlOutput.Break) {
             // Keep propagating 'break' until reaching a ForStatement or WhileStatement
@@ -53,6 +58,10 @@ export function BlockStatement(
             context.controlOutput.output = ControlOutput.Return;
             break;
         }
+    }
+
+    if (section != null) {
+        addVertex(graph, section, getNodeData(ast));
     }
 
     // Pop scope

@@ -1,6 +1,7 @@
 import { Accessor, EnvironmentState } from '../../environment/EnvironmentState';
 import { AnimationNode, NodeData, PlayableAnimation } from '../primitive/AnimationNode';
 import { Edge } from './edges/Edge';
+import { getEmptyNodeData } from './graph';
 
 export interface AnimationGraphOptions {
     shouldDissolve?: boolean;
@@ -39,19 +40,24 @@ export interface AnimationGraph extends PlayableAnimation {
     // Parallel
     isParallel: boolean;
     parallelStarts: number[];
+
+    // Grouping
+    isGroup?: boolean;
 }
 
 export function instanceOfAnimationGraph(animation: any): animation is AnimationGraph {
     return animation._type == 'AnimationGraph';
 }
 
-export function createAnimationGraph(nodeData: NodeData): AnimationGraph {
+export function createAnimationGraph(nodeData: NodeData, options: { isGroup?: boolean } = {}): AnimationGraph {
     if (this.id == undefined) this.id = 0;
+
+    if (options.isGroup) console.log('Creating animation group');
 
     return {
         _type: 'AnimationGraph',
         id: `AG(${++this.id})`,
-        nodeData,
+        nodeData: options.isGroup ? getEmptyNodeData(nodeData) : nodeData,
         vertices: [],
         edges: [],
         delay: 0,
@@ -65,5 +71,6 @@ export function createAnimationGraph(nodeData: NodeData): AnimationGraph {
 
         isParallel: false,
         parallelStarts: [],
+        isGroup: options.isGroup,
     };
 }

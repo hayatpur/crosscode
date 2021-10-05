@@ -1,5 +1,6 @@
 import { Accessor } from '../EnvironmentState';
 import { DataState, DataTransform, DataType, PositionType } from './DataState';
+import { LiteralRenderer } from './literal/LiteralRenderer';
 
 export function createData(
     type: DataType,
@@ -14,8 +15,8 @@ export function createData(
             x: 0,
             y: 0,
             z: 0,
-            width: type == DataType.Literal ? 35 : 0,
-            height: type == DataType.Literal ? 35 : 0,
+            width: type == DataType.Literal ? LiteralRenderer.Size : 0,
+            height: type == DataType.Literal ? LiteralRenderer.Size : 0,
             opacity: 1,
             positionType: PositionType.Relative,
         },
@@ -25,11 +26,7 @@ export function createData(
     };
 }
 
-export function cloneData(
-    data: DataState,
-    copyId: boolean = true,
-    srcId: string = null
-): DataState {
+export function cloneData(data: DataState, copyId: boolean = true, srcId: string = null): DataState {
     let value = data.value;
     if (data.type == DataType.Array) {
         value = (value as DataState[]).map((value) => cloneData(value, copyId));

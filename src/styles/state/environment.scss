@@ -1,10 +1,14 @@
 .environment {
-    background: #ffffff36;
-    transition: 0.6s;
     position: relative;
     transform-origin: top left;
     transform: scale(1);
+}
 
-    padding: 15px;
-    // border: 1px solid rgba(0, 0, 0, 0.137);
+.environment-border {
+    position: absolute;
+    transition: 0.3s ease;
+    border-radius: 5px;
+    user-select: none;
+    pointer-events: none;
+    z-index: -1;
 }

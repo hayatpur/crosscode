@@ -109,42 +109,19 @@ export default class Timeline {
                     if (instanceOfAnimationGraph(child)) {
                         for (let k = 0; k < child.vertices.length; k++) {
                             let child2 = child.vertices[k];
-                            start = this.updateAnimationNode(child2, start, total_duration);
+                            start = this.updateAnimation(child2, start, total_duration);
                         }
                     } else {
-                        start = this.updateAnimationNode(child, start, total_duration);
+                        start = this.updateAnimation(child, start, total_duration);
                     }
                 }
             } else {
-                start = this.updateAnimationNode(animation, start, total_duration);
+                start = this.updateAnimation(animation, start, total_duration);
             }
         }
-
-        // const stack = [];
-
-        // for (const animation of animations) {
-        //     if (animation instanceof SectionStartAnimation) {
-        //         stack.push(animation);
-        //     } else if (animation instanceof SectionEndAnimation) {
-        //         const start_anim = stack.pop();
-        //         const section = new TimeSection(
-        //             this.scrubberParent,
-        //             `Section ${this.sections.length + 1}`,
-        //             start_anim.start + start_anim.delay,
-        //             animation.start + animation.duration - start_anim.start,
-        //             animation.delay,
-        //             total_duration
-        //         );
-        //         this.sections.push(section);
-        //     }
-        // }
     }
 
-    updateAnimationNode(
-        animation: AnimationGraph | AnimationNode,
-        start: number,
-        total_duration: number
-    ): number {
+    updateAnimation(animation: AnimationGraph | AnimationNode, start: number, total_duration: number): number {
         start += animation.delay;
 
         const section = new TimeSection(
@@ -166,13 +143,7 @@ export default class Timeline {
         const bbox = this.scrubberParent.getBoundingClientRect();
 
         // Move scrubber over
-        this.scrubber.style.left = `${remap(
-            t,
-            0,
-            duration(this.executor.animation),
-            0,
-            bbox.width
-        )}px`;
+        this.scrubber.style.left = `${remap(t, 0, duration(this.executor.animation), 0, bbox.width)}px`;
 
         for (const section of this.sections) {
             if (t >= section.start && t <= section.start + section.duration) {

@@ -37,16 +37,16 @@ export class Editor {
                 vertical: 'hidden',
             },
             overviewRulerBorder: false,
-            fontSize: 21,
+            fontSize: 20,
             contextmenu: false,
             mouseWheelScrollSensitivity: 0,
-            lineHeight: 35,
+            lineHeight: 38,
             selectOnLineNumbers: false,
             letterSpacing: -0.5,
             codeLens: true,
             dragAndDrop: false,
-            theme: 'github',
-            fontFamily: 'Ubuntu Mono',
+            theme: 'atom',
+            // fontFamily: 'Noto Sans Mono',
             quickSuggestions: {
                 other: false,
                 comments: false,
@@ -393,13 +393,11 @@ function getDarkTheme() {
                 token: 'variable.parameter.function',
             },
             {
-                foreground: '5f697a',
-                fontStyle: ' italic',
+                foreground: '6b6b6b',
                 token: 'comment',
             },
             {
-                foreground: '5f697a',
-                fontStyle: ' italic',
+                foreground: '6b6b6b',
                 token: 'punctuation.definition.comment',
             },
             {
@@ -411,7 +409,7 @@ function getDarkTheme() {
                 token: 'keyword.operator',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'keyword',
             },
             {
@@ -451,7 +449,7 @@ function getDarkTheme() {
                 token: 'keyword.other.special-method',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'storage',
             },
             {
@@ -503,7 +501,7 @@ function getDarkTheme() {
                 token: 'punctuation.definition.entity',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'meta.selector',
             },
             {
@@ -531,11 +529,11 @@ function getDarkTheme() {
                 token: 'punctuation.definition.bold',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'markup.italic',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'punctuation.definition.italic',
             },
             {
@@ -576,7 +574,7 @@ function getDarkTheme() {
                 token: 'markup.deleted',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'markup.changed',
             },
             {
@@ -636,11 +634,11 @@ function getDarkTheme() {
                 token: 'source.json                       meta.structure.dictionary.json                        meta.structure.dictionary.value.json                       meta.structure.dictionary.json                          meta.structure.dictionary.value.json                            string.quoted.double.json',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'text.html.laravel-blade                        source.php.embedded.line.html                     entity.name.tag.laravel-blade',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'text.html.laravel-blade                         source.php.embedded.line.html                    support.constant.laravel-blade',
             },
             {
@@ -652,7 +650,7 @@ function getDarkTheme() {
                 token: 'source.python meta.function-call.python support.type.python',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'source.python keyword.operator.logical.python',
             },
             {
@@ -680,7 +678,7 @@ function getDarkTheme() {
                 token: 'source.js                              meta.function.js                       support.constant.js',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 token: 'text.html.basic`                               source.php.embedded.block.html                        constant.other.php',
             },
             {
@@ -692,7 +690,7 @@ function getDarkTheme() {
                 token: 'text.tex.latex                               meta.function.environment.math.latex                               string.other.math.block.environment.latex                               meta.definition.label.latex                               variable.parameter.definition.label.latex',
             },
             {
-                foreground: 'cd74e8',
+                foreground: 'f97583',
                 fontStyle: ' italic',
                 token: 'text.tex.latex                           meta.function.emph.latex                              markup.italic.emph.latex',
             },

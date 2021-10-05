@@ -1,0 +1,75 @@
+@import url('./main.scss');
+
+:root {
+    --color-lightest: rgb(0, 0, 0);
+    --color-lighter: #0f0f0f;
+    --color-light: #131313;
+    --color: #1b1b1b;
+    --color-darker: #b9b9b9;
+    --color-darkest: white;
+}
+
+html {
+    background: #1b1b1b;
+}
+
+body {
+    color: white;
+
+}
+
+/** Syntax colors **/
+.mtk6 {
+    color: #79b8ff !important;
+}
+
+.editor-selection {
+    position: absolute;
+    background: #cccccc4d !important;
+    border-radius: 5px;
+    mix-blend-mode: multiply;
+}
+
+.monaco-editor .selected-text {
+    background: #9696963b !important;
+}
+
+.highlight-cursor {
+    background: #3939399c !important;
+    mix-blend-mode: lighten !important;
+}
+
+.data.literal {
+    background: #2b2d2e;
+    border: none;
+}
+
+// .data.array-item:not(.first-array-item):not(.last-array-item) {
+//     border-left: none;
+// }
+
+// .data.last-array-item {
+//     border-left: none;
+// }    
+
+
+.data.floating.literal {
+    background: #2b2d2e;
+}
+
+.data.array.floating>.brace {
+    color: #2b2d2e;
+}
+
+.data.undefined {
+    background: #ebebeb07 !important;
+    box-shadow: none;
+}
+
+.identifier {
+    color: #b9b9b9;
+}
+
+.environment-border {
+    border: 1px solid #333;
+}

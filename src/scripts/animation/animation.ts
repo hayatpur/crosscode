@@ -1,12 +1,7 @@
-import { logEnvironment } from '../environment/environment';
-import { createView, getCurrentEnvironment } from '../view/view';
+import { createView } from '../view/view';
 import { ViewState } from '../view/ViewState';
 import { Cursor } from './Cursor';
-import {
-    AnimationGraph,
-    AnimationRuntimeOptions,
-    instanceOfAnimationGraph,
-} from './graph/AnimationGraph';
+import { AnimationGraph, AnimationRuntimeOptions, instanceOfAnimationGraph } from './graph/AnimationGraph';
 import { Edge } from './graph/edges/Edge';
 import { AnimationNode, instanceOfAnimationNode } from './primitive/AnimationNode';
 
@@ -26,9 +21,7 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
 
     // If a parallel animation, return the end point of the longest animation vertex
     if (animation.isParallel && animation.parallelStarts[0] != undefined) {
-        const ends = animation.parallelStarts.map(
-            (start, i) => start + duration(animation.vertices[i + 1])
-        );
+        const ends = animation.parallelStarts.map((start, i) => start + duration(animation.vertices[i + 1]));
         return Math.max(...ends);
     }
     // Else return the sum of all durations
@@ -64,11 +57,7 @@ export function removeEdge(graph: AnimationGraph, edge: Edge) {
  */
 export function addEdge(graph: AnimationGraph, edge: Edge) {
     for (const other of graph.edges) {
-        if (
-            other.from == edge.from &&
-            other.to == edge.to &&
-            other.constructor.name == edge.constructor.name
-        ) {
+        if (other.from == edge.from && other.to == edge.to && other.constructor.name == edge.constructor.name) {
             return;
         }
     }
@@ -87,7 +76,6 @@ export function begin(
     view: ViewState,
     options: AnimationRuntimeOptions = {}
 ) {
-    // console.log(animation);
     Cursor.instance?.setCodeLocation(animation.nodeData.location);
 
     if (options.baking) {
@@ -104,11 +92,7 @@ export function begin(
  * @param view - View to apply the animation on
  * @param options - Mostly used for setting flags to bake animation
  */
-export function end(
-    animation: AnimationGraph | AnimationNode,
-    view: ViewState,
-    options: AnimationRuntimeOptions = {}
-) {
+export function end(animation: AnimationGraph | AnimationNode, view: ViewState, options: AnimationRuntimeOptions = {}) {
     if (options.baking) {
         // animation.postcondition = cloneEnvironment(view.environments[view.environments.length - 1]);
     }

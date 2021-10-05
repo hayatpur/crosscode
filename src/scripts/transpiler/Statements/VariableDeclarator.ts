@@ -5,19 +5,11 @@ import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext } from '../../animation/primitive/AnimationNode';
 import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation';
 import { moveAndPlaceAnimation } from '../../animation/primitive/Data/MoveAndPlaceAnimation';
-import { placeAnimation } from '../../animation/primitive/Data/PlaceAnimation';
-import { logEnvironment } from '../../environment/environment';
 import { AccessorType } from '../../environment/EnvironmentState';
-import { clone } from '../../utilities/objects';
-import { getCurrentEnvironment } from '../../view/view';
 import { ViewState } from '../../view/ViewState';
 import { Compiler, getNodeData } from '../Compiler';
 
-export function VariableDeclarator(
-    ast: ESTree.VariableDeclarator,
-    view: ViewState,
-    context: AnimationContext
-) {
+export function VariableDeclarator(ast: ESTree.VariableDeclarator, view: ViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     // Create a register to allocate RHS in
@@ -32,8 +24,6 @@ export function VariableDeclarator(
         doNotFloat,
     });
     addVertex(graph, init, getNodeData(ast.init));
-
-    console.log(clone(getCurrentEnvironment(view)));
 
     // Place down the RHS at a free spot
     if (!doNotFloat) {

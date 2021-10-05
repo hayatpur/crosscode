@@ -1,26 +1,10 @@
 import { createData, replaceDataWith } from '../../../environment/data/data';
-import {
-    DataState,
-    DataTransform,
-    DataType,
-    instanceOfData,
-    PositionType,
-} from '../../../environment/data/DataState';
-import {
-    addDataAt,
-    getMemoryLocation,
-    removeAt,
-    resolvePath,
-} from '../../../environment/environment';
-import {
-    Accessor,
-    accessorsToString,
-    instanceOfEnvironment,
-} from '../../../environment/EnvironmentState';
+import { DataState, DataTransform, DataType, instanceOfData, PositionType } from '../../../environment/data/DataState';
+import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
+import { Accessor, accessorsToString, instanceOfEnvironment } from '../../../environment/EnvironmentState';
 import { updateEnvironmentLayout } from '../../../environment/layout';
 import { DataMovementPath } from '../../../utilities/DataMovementPath';
 import { remap } from '../../../utilities/math';
-import { clone } from '../../../utilities/objects';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
@@ -33,11 +17,7 @@ export interface MoveAndPlaceAnimation extends AnimationNode {
     noMove: boolean;
 }
 
-function onBegin(
-    animation: MoveAndPlaceAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {
+function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
 
     const move = resolvePath(environment, animation.inputSpecifier, null, null, {
@@ -54,21 +34,13 @@ function onBegin(
     let endTransform: DataTransform;
 
     if (animation.outputSpecifier.length == 0) {
-        console.log('Finding new');
         // Then it doesn't have a place yet
         // Find an empty space and put it there
         const placeholder = createData(DataType.Literal, '', `${animation.id}_Placeholder`);
         placeholder.transform.z = 1;
         placeholder.transform.positionType = PositionType.Relative;
 
-        const placeholderLocation = addDataAt(
-            environment,
-            placeholder,
-            [],
-            `${animation.id}_Placeholder`
-        );
-
-        console.log(clone(getCurrentEnvironment(view)));
+        const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_Placeholder`);
 
         updateEnvironmentLayout(environment);
         endTransform = { ...placeholder.transform };
@@ -89,12 +61,7 @@ function onBegin(
     environment._temps[`MovePath${animation.id}`] = path;
 }
 
-function onSeek(
-    animation: MoveAndPlaceAnimation,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {
+function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
     let move = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
@@ -103,7 +70,7 @@ function onSeek(
     const tn = time / duration(animation);
 
     // Move
-    if (tn <= 0.7) {
+    if (tn <= 0.7 && !animation.noMove) {
         let t = animation.ease(remap(tn, 0, 0.7, 0, 1));
 
         const path = environment._temps[`MovePath${animation.id}`] as DataMovementPath;
@@ -114,7 +81,7 @@ function onSeek(
         move.transform.y = position.y;
     }
     // Place
-    else if (tn >= 0.8) {
+    else if (tn >= 0.8 || animation.noMove) {
         let t: number;
 
         if (animation.noMove) {
@@ -129,11 +96,7 @@ function onSeek(
     updateEnvironmentLayout(environment);
 }
 
-function onEnd(
-    animation: MoveAndPlaceAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {
+function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
     environment._temps[`MovePath${this.id}`]?.destroy();
     delete environment._temps[`MovePath${this.id}`];
@@ -141,11 +104,7 @@ function onEnd(
     const input = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
     }) as DataState;
-    const to = resolvePath(
-        environment,
-        animation.outputSpecifier,
-        `${animation.id}_EndTo`
-    ) as DataState;
+    const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_EndTo`) as DataState;
 
     // if (options.baking) {
     //     this.computeReadAndWrites(
@@ -162,7 +121,7 @@ function onEnd(
         removeAt(environment, getMemoryLocation(environment, input).foundLocation);
 
         if (instanceOfData(to)) {
-            replaceDataWith(to, input, { frame: true });
+            replaceDataWith(to, input, { frame: true, id: true });
         }
     }
 
@@ -181,9 +140,7 @@ export function moveAndPlaceAnimation(
     return {
         ...createAnimationNode(null, { ...options, duration: noMove ? 30 : 60 }),
 
-        name: `Move data at ${accessorsToString(inputSpecifier)} onto ${accessorsToString(
-            outputSpecifier
-        )}`,
+        name: `Move data at ${accessorsToString(inputSpecifier)} onto ${accessorsToString(outputSpecifier)}`,
 
         // Attributes
         inputSpecifier,
