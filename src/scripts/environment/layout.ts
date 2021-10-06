@@ -16,8 +16,27 @@ export function environmentStateToMemoryLayout(environment: EnvironmentState): L
     };
 }
 
-export function updateLayout(layout: Layout): Transform {
+export function updateLayout(layout: Layout, pivot: Transform): Transform {
     if (layout == null) return;
+
+    // Update memory layout
+    switch ()
+    for (let i = 0; i < layout.children.length; i++) {
+        const item = layout.children[i];
+        pivot = updateLayout(item, pivots);
+
+        // Add space between items in the base layer
+        if (i != search.length - 1 && pivots[0].width > 0) {
+            pivots[0].x += DataRenderer.Padding;
+        }
+
+        pivots[0].width = 0;
+    }
+
+    // Width is the maximum x of the base layer
+    environment.transform.width = pivots[0].x;
+
+    return pivot;
 }
 
 // Pivot transform for a single z pane
