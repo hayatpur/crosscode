@@ -4,62 +4,116 @@ import { DataRenderer } from './data/DataRenderer';
 import { DataState, DataType, getZPane, PositionType, Transform } from './data/DataState';
 import { EnvironmentState } from './EnvironmentState';
 
-export interface Layout {
-    transform: Transform;
-    children: any[];
+export enum LayoutType {
+    Horizontal = 'Horizontal',
+    Vertical = 'Vertical',
+    Grid = 'Grid',
+    Tree = 'Tree',
 }
 
-export function environmentStateToMemoryLayout(environment: EnvironmentState): Layout {
+export interface Layout {
+    type: LayoutType;
+    padding: number;
+}
+
+export interface LayoutEntity {
+    transform: Transform;
+    children: any[];
+    layout: Layout;
+}
+
+export interface PivotTransform {
+    // Properties of the parent transform
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+
+    // Properties of the current pivot transform
+    dx: number;
+    dy: number;
+    dwidth: number;
+    dheight: number;
+
+    positionType: PositionType;
+}
+
+export function environmentStateToMemoryLayout(environment: EnvironmentState): LayoutEntity {
     return {
         transform: environment.transform,
         children: environment.memory,
+        layout: { type: LayoutType.Horizontal, padding: DataRenderer.Padding },
     };
 }
 
-export function updateLayout(layout: Layout, pivot: Transform): Transform {
-    if (layout == null) return;
+/**(x, y)____________
+ * |OOOOOO|         |   O = occupied space
+ * |OOOOOO|         |
+ * |-------(dx, dy) |
+ * |________________|
+ *
+ * @param entity object to update the layout of
+ * @param pivot current pivot point for rendering
+ * @returns updated pivot
+ */
+export function updateLayout(entity: LayoutEntity, pivot: PivotTransform): PivotTransform {
+    if (entity == null) return pivot;
 
-    // Update memory layout
-    switch ()
-    for (let i = 0; i < layout.children.length; i++) {
-        const item = layout.children[i];
-        pivot = updateLayout(item, pivots);
+    let newPivot = clone(pivot);
 
-        // Add space between items in the base layer
-        if (i != search.length - 1 && pivots[0].width > 0) {
-            pivots[0].x += DataRenderer.Padding;
-        }
-
-        pivots[0].width = 0;
+    // Update self by positioning correctly based on position type
+    switch (entity.transform.positionType) {
+        case PositionType.Absolute:
+            newPivot.dx = 0;
+            newPivot.dy = 0;
+            break;
+        case PositionType.Relative:
+            break;
     }
 
-    // Width is the maximum x of the base layer
-    environment.transform.width = pivots[0].x;
+    entity.transform.x = newPivot.x + newPivot.dx;
+    entity.transform.y = newPivot.y + newPivot.dy;
+
+    // Either self has children (and therefore is a container) or is a standalone entity
+    if (entity.children != null) {
+        // Update children by routing to the correct layout algorithm
+        switch (entity.layout.type) {
+            case LayoutType.Horizontal:
+                newPivot = updateHorizontalLayout(entity, clone(newPivot));
+            // case LayoutType.Vertical:
+            //     return updateVerticalLayout(entity, clone(pivot));
+            // case LayoutType.Grid:
+            //     return updateGridLayout(entity, clone(pivot));
+            // case LayoutType.Tree:
+            //     return updateTreeLayout(entity, clone(pivot));
+        }
+
+        newPivot.width = Math.max(newPivot.width, newPivot.dx);
+        newPivot.height = Math.max(newPivot.height, newPivot.dy);
+    } else {
+        newPivot.width = entity.transform.width;
+        newPivot.height = entity.transform.height;
+    }
+}
+
+export function updateHorizontalLayout(
+    entity: LayoutEntity,
+    pivot: PivotTransform
+): PivotTransform {
+    const children = entity.children;
+
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        const newPivot = updateLayout(child, clone(pivot));
+
+        // Update according to the new draw call
+        const padding = i < children.length - 1 ? entity.layout.padding : 0;
+        pivot.dx = newPivot.dx + padding;
+        pivot.width = newPivot.width + padding;
+        pivot.height = newPivot.height;
+    }
 
     return pivot;
-}
-
-// Pivot transform for a single z pane
-export interface PivotTransform extends Transform {
-    floating: boolean;
-}
-
-export interface Offset {
-    z: number;
-}
-
-/**
- * @returns Starting pivot at the top left corner.
- */
-export function getStartPivot(): PivotTransform {
-    return {
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        floating: false,
-        positionType: PositionType.Relative,
-    };
 }
 
 /**
@@ -166,7 +220,11 @@ export function updateLiteralLayout(
  * @param pivots
  * @returns
  */
-export function updateArrayLayout(array: DataState, pivots: PivotTransform[], offset: Offset): PivotTransform[] {
+export function updateArrayLayout(
+    array: DataState,
+    pivots: PivotTransform[],
+    offset: Offset
+): PivotTransform[] {
     // if (array.transform.floating) return { ...position, width: 0, height: 0 };
     const initial = clone(pivots);
 
@@ -194,7 +252,8 @@ export function updateArrayLayout(array: DataState, pivots: PivotTransform[], of
         const item = items[i];
         pivots = updateDataLayout(item, pivots, { z: array.transform.z });
 
-        if (i < items.length - 1) correctPivot(pivots, array.transform.z + offset.z).x += ArrayRenderer.ElementGap;
+        if (i < items.length - 1)
+            correctPivot(pivots, array.transform.z + offset.z).x += ArrayRenderer.ElementGap;
     }
 
     pivot = correctPivot(pivots, array.transform.z + offset.z);
