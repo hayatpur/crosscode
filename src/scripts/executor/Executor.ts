@@ -22,7 +22,7 @@ export class Executor {
     paused = true;
 
     // Global speed of the animation (higher is faster)
-    speed = 1 / 16;
+    speed = 1 / 64;
 
     // Animation
     animation: AnimationGraph;
@@ -40,7 +40,7 @@ export class Executor {
         // General
         this.editor = editor;
 
-        // this.timeline = new Timeline(this);
+        this.timeline = new Timeline(this);
 
         // Update after 0.5s of no keyboard activity
         let typingTimer: number;
@@ -108,7 +108,7 @@ export class Executor {
 
         this.paused = false;
 
-        // this.timeline.updateSections();
+        this.timeline.updateSections();
 
         console.log('[Executor] Finished compiling...');
         console.log('\tAnimation', this.animation);
@@ -121,10 +121,10 @@ export class Executor {
 
         if (this.time > duration(this.animation)) {
             // Loop
-            // this.time = 0;
-            // this.viewRenderer.destroy();
-            // this.view = createView();
-            // this.viewRenderer = new ViewRenderer(true);
+            this.time = 0;
+            this.viewRenderer.destroy();
+            this.view = createView();
+            this.viewRenderer = new ViewRenderer(true);
             return;
         }
 
@@ -136,7 +136,7 @@ export class Executor {
         // Render
         this.viewRenderer.setState(this.view);
 
-        // this.timeline.seek(this.time);
+        this.timeline.seek(this.time);
 
         // logEnvironment(getCurrentEnvironment(this.view));
 

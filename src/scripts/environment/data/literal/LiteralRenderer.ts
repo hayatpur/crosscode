@@ -1,29 +1,26 @@
 import { sigmoid } from '../../../utilities/math';
 import { DataRenderer, DataRendererOptions } from '../DataRenderer';
-import { DataState, getZPane } from '../DataState';
+import { DataState, PositionType } from '../DataState';
 
 export class LiteralRenderer extends DataRenderer {
     static Size = 53;
 
     setState(data: DataState, options: DataRendererOptions) {
+        console.log(
+            data.id,
+            'Rendering literal',
+            data.transform.positionType,
+            data.transform._x,
+            data.transform._y,
+            data.transform.left,
+            data.transform.top
+        );
+
         this.element.classList.add('literal');
 
         options.zOffset = options.zOffset ?? 0;
 
-        const z = data.transform.z + options.zOffset;
-        const zPane = getZPane(z);
-        const elevation =
-            z < 0.3
-                ? ElevationSize.ExtraSmall
-                : z < 0.7
-                ? ElevationSize.Small
-                : z < 1.5
-                ? ElevationSize.Medium
-                : ElevationSize.Large;
-
-        // if (data.value != undefined) {
-        //     this.element.style.boxShadow = getCSSElevation(elevation, zPane >= 0.7);
-        // }
+        const z = data.transform.depth + options.zOffset;
 
         // Apply transform
         this.element.style.width = `${data.transform.width}px`;
@@ -33,8 +30,8 @@ export class LiteralRenderer extends DataRenderer {
         const oldTop = parseInt(this.element.style.top);
         const oldLeft = parseInt(this.element.style.left);
 
-        const top = data.transform.y - 5 * z;
-        const left = data.transform.x + 5 * z;
+        const top = data.transform._y - 5 * z;
+        const left = data.transform._x - 5 * z;
 
         // if (isNaN(oldTop) || isNaN(oldLeft)) {
         this.element.style.top = `${top}px`;
@@ -45,6 +42,8 @@ export class LiteralRenderer extends DataRenderer {
         // }
 
         this.element.style.opacity = `${data.transform.opacity * sigmoid(-5 * (z - 2))}`;
+
+        this.element.style.boxShadow = getCSSElevation(z);
 
         // Set value
         if (typeof data.value == 'boolean') {
@@ -61,7 +60,7 @@ export class LiteralRenderer extends DataRenderer {
             this.element.classList.remove('undefined');
         }
 
-        if (getZPane(z) > 0.7) {
+        if (data.transform.positionType == PositionType.Absolute) {
             this.element.classList.add('floating');
         } else {
             this.element.classList.remove('floating');
@@ -69,19 +68,12 @@ export class LiteralRenderer extends DataRenderer {
     }
 }
 
-export enum ElevationSize {
-    ExtraSmall = 'extra-small',
-    Small = 'small',
-    Medium = 'medium',
-    Large = 'large',
-}
-
-export function getCSSElevation(size: ElevationSize, floating = false) {
+export function getCSSElevation(depth: number, floating = false) {
     const color = floating ? '--floating-shadow-color' : '--shadow-color';
     const opacityMultiplier = floating ? 0.5 : 1;
     const ELEVATIONS = {
         extraSmall: `
-          0px 0px 0px hsl(var(${color}) / ${0 * opacityMultiplier})
+          0.4px 0.8px 0.8px hsl(var(${color}) / ${0 * opacityMultiplier})
         `,
         small: `
           0.5px 1px 1px hsl(var(${color}) / ${0.7 * opacityMultiplier})
@@ -100,14 +92,13 @@ export function getCSSElevation(size: ElevationSize, floating = false) {
         `,
     };
 
-    switch (size) {
-        case ElevationSize.ExtraSmall:
-            return ELEVATIONS.extraSmall;
-        case ElevationSize.Small:
-            return ELEVATIONS.small;
-        case ElevationSize.Medium:
-            return ELEVATIONS.medium;
-        case ElevationSize.Large:
-            return ELEVATIONS.large;
+    if (depth < 0.2) {
+        return ELEVATIONS.extraSmall;
+    } else if (depth < 0.5) {
+        return ELEVATIONS.small;
+    } else if (depth < 1.2) {
+        return ELEVATIONS.medium;
+    } else {
+        return ELEVATIONS.large;
     }
 }

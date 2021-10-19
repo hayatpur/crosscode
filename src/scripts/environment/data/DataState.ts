@@ -9,31 +9,17 @@ export enum DataType {
     Function = 'Function',
 }
 
-export enum PositionType {
-    Absolute = 'Absolute',
-    Relative = 'Relative',
-}
-
 export interface Transform {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    positionType: PositionType;
+    rendered: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    style: CSSStyleDeclaration;
 }
 
-export interface DataTransform extends Transform {
-    z: number;
-    opacity: number;
-}
-
-export function getZPane(z: number): number {
-    if (z < 1) {
-        return 0;
-    } else {
-        return 1;
-    }
-}
+export interface DataTransform extends Transform {}
 
 export interface DataState {
     type: DataType;
@@ -48,7 +34,5 @@ export interface DataState {
 }
 
 export function instanceOfData(data: any): data is DataState {
-    return (
-        'type' in data && 'transform' in data && 'value' in data && 'frame' in data && 'id' in data
-    );
+    return 'type' in data && 'transform' in data && 'value' in data && 'frame' in data && 'id' in data;
 }

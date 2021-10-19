@@ -1,12 +1,15 @@
-import { DataTransform } from '../environment/data/DataState';
+export interface DataMovementLocation {
+    x: number;
+    y: number;
+}
 
 export class DataMovementPath {
-    start: DataTransform;
-    end: DataTransform;
+    start: DataMovementLocation;
+    end: DataMovementLocation;
     movement: SVGPathElement;
     visual: SVGPathElement;
 
-    constructor(start: DataTransform, end: DataTransform) {
+    constructor(start: DataMovementLocation, end: DataMovementLocation) {
         this.start = start;
         this.end = end;
 
@@ -40,10 +43,7 @@ export class DataMovementPath {
 
         this.movement.style['stroke-dasharray'] = this.movement.getTotalLength();
         this.movement.style['stroke-dashoffset'] = this.movement.getTotalLength() * (1 - t);
-        this.movement.setAttribute(
-            'd',
-            `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`
-        );
+        this.movement.setAttribute('d', `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`);
     }
 
     getPosition(t: number) {

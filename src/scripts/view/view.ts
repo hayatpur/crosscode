@@ -1,4 +1,4 @@
-import { PositionType } from '../environment/data/DataState';
+import { LayoutType, PositionType } from '../environment/data/DataState';
 import { createEnvironment } from '../environment/environment';
 import { EnvironmentState, instanceOfEnvironment } from '../environment/EnvironmentState';
 import { ViewState } from './ViewState';
@@ -11,13 +11,21 @@ export function createView(
     return {
         id: `View(${++CUR_VIEW_ID})`,
         transform: {
-            x: 0,
-            y: 0,
+            _x: 0,
+            _y: 0,
+            depth: 0,
+            top: 0,
+            left: 0,
             width: 0,
             height: 0,
             opacity: 1,
             positionModifiers: [],
             positionType: PositionType.Relative,
+            layout: {
+                type: LayoutType.Horizontal,
+                innerPadding: 0,
+                outerPadding: 0,
+            },
         },
         children: options.noChildren ? [] : [createEnvironment()],
         label: '[NONE]',

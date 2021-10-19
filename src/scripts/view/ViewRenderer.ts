@@ -19,8 +19,8 @@ export class ViewRenderer {
 
     setState(state: ViewState) {
         // Apply transform
-        this.element.style.top = `${state.transform.y}px`;
-        this.element.style.left = `${state.transform.x}px`;
+        this.element.style.top = `${state.transform._y}px`;
+        this.element.style.left = `${state.transform._x}px`;
 
         // Hit test
         const hits = new Set();
@@ -64,23 +64,12 @@ export class ViewRenderer {
         }
 
         if (!state.isRoot) {
-            applyPositionModifiers(this.element, state);
+            // applyPositionModifiers(this.element, state);
         }
 
         // Compute width and height
-        const bbox = this.element.getBoundingClientRect();
-        let width = 0;
-        let height = 0;
-
-        for (const [childId, child] of Object.entries(this.childRenderers)) {
-            const element = child.element;
-            const bboxChild = element.getBoundingClientRect();
-            width = Math.max(width, bboxChild.x + bboxChild.width - bbox.x);
-            height = Math.max(height, bboxChild.y + bboxChild.height - bbox.y);
-        }
-
-        state.transform.width = width;
-        state.transform.height = height;
+        let width = state.transform.width;
+        let height = state.transform.height;
 
         this.element.style.width = `${width}px`;
         this.element.style.height = `${height}px`;
@@ -118,7 +107,7 @@ function applyPositionModifiers(element: HTMLDivElement, state: ViewState) {
             const current = element.getBoundingClientRect();
 
             const delta = target.y - current.y;
-            state.transform.y += delta;
+            state.transform._y += delta;
         }
 
         fitted[modifier.type] = true;

@@ -1,8 +1,8 @@
 import { clone } from '../utilities/objects';
 import { createData } from './data/data';
-import { DataState, DataType, instanceOfData, PositionType } from './data/DataState';
+import { DataState, DataType, instanceOfData, LayoutType, PositionType } from './data/DataState';
 import { Accessor, AccessorType, EnvironmentState, instanceOfEnvironment, Scope } from './EnvironmentState';
-import { updateEnvironmentLayout } from './layout';
+import { updateLayout } from './layout';
 
 let CUR_ENV_ID = 0;
 
@@ -17,7 +17,19 @@ export function createEnvironment(): EnvironmentState {
         registers: {},
         _temps: {},
         id: `Env(${++CUR_ENV_ID})`,
-        transform: { x: 0, y: 0, width: 0, height: 0, positionType: PositionType.Absolute, positionModifiers: [] },
+        transform: {
+            _x: 0,
+            _y: 0,
+            depth: 0,
+            top: 0,
+            left: 0,
+            width: 0,
+            height: 0,
+            opacity: 1,
+            positionType: PositionType.Absolute,
+            positionModifiers: [],
+            layout: { type: LayoutType.Horizontal, innerPadding: 10, outerPadding: 0 },
+        },
     };
 }
 
@@ -60,7 +72,7 @@ export function declareVariable(
     shouldBeGlobal = false
 ) {
     environment.scope[environment.scope.length - 1][name] = location;
-    updateEnvironmentLayout(environment);
+    updateLayout(environment);
 }
 
 /**
@@ -78,7 +90,8 @@ export function redeclareVariable(environment: EnvironmentState, name: string, l
             return;
         }
     }
-    updateEnvironmentLayout(environment);
+
+    updateLayout(environment);
 }
 
 /**
@@ -335,7 +348,7 @@ export function addDataAt(
         // No path specified, push it into memory
         if (path.length == 0) {
             origin.memory.push(data);
-            updateEnvironmentLayout(origin);
+            updateLayout(origin);
             return [{ value: origin.memory.length - 1, type: AccessorType.Index }];
         }
 

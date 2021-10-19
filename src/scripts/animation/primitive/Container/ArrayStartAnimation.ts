@@ -13,19 +13,17 @@ export interface ArrayStartAnimation extends AnimationNode {
     doNotFloat: boolean;
 }
 
-function onBegin(
-    animation: ArrayStartAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {
+function onBegin(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
 
     // Create a new array somewhere in memory
     const data = createData(DataType.Array, [], `${animation.id}_CreateArray`);
     if (!animation.doNotFloat) {
-        data.transform.z = 1;
+        data.transform.depth = 1;
     }
     data.transform.positionType = PositionType.Relative;
+    data.transform.left = 0;
+    data.transform.top = 0;
 
     const loc = addDataAt(environment, data, [], null);
 
@@ -41,23 +39,11 @@ function onBegin(
     //         }
 
     // Point the output register to the newly created data
-    const outputRegister = resolvePath(
-        environment,
-        animation.dataSpecifier,
-        `${animation.id}_Floating`
-    ) as DataState;
-    replaceDataWith(
-        outputRegister,
-        createData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
-    );
+    const outputRegister = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Floating`) as DataState;
+    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`));
 }
 
-function onSeek(
-    animation: ArrayStartAnimation,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {
+function onSeek(animation: ArrayStartAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation));
 }
 

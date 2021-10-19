@@ -1,6 +1,6 @@
 import { createDataRenderer } from '../../EnvironmentRenderer';
 import { DataRenderer, DataRendererOptions } from '../DataRenderer';
-import { DataState, getZPane } from '../DataState';
+import { DataState, PositionType } from '../DataState';
 import { LiteralRenderer } from '../literal/LiteralRenderer';
 
 export class ArrayRenderer extends DataRenderer {
@@ -33,13 +33,13 @@ export class ArrayRenderer extends DataRenderer {
         options.zOffset = options.zOffset ?? 0;
 
         // Apply transform
-        this.element.style.top = `${data.transform.y - 5 * (data.transform.z + options.zOffset)}px`;
-        this.element.style.left = `${data.transform.x + 5 * (data.transform.z + options.zOffset)}px`;
+        this.element.style.top = `${data.transform._y - 5 * (data.transform.depth + options.zOffset)}px`;
+        this.element.style.left = `${data.transform._x + 5 * (data.transform.depth + options.zOffset)}px`;
 
         this.element.style.width = `${data.transform.width}px`;
         this.element.style.height = `${data.transform.height}px`;
 
-        if (getZPane(data.transform.z) > 0) {
+        if (data.transform.positionType == PositionType.Absolute) {
             this.element.classList.add('floating');
         } else {
             this.element.classList.remove('floating');
@@ -71,7 +71,7 @@ export class ArrayRenderer extends DataRenderer {
             hits.add(item.id);
             this.dataRenderers[item.id].renderer.setState(item, {
                 environmentRenderer: options.environmentRenderer,
-                zOffset: options.zOffset + data.transform.z,
+                zOffset: options.zOffset + data.transform.depth,
             });
 
             if (i == 0 && items.length == 1) {

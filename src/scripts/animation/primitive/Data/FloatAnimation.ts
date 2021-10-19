@@ -19,25 +19,17 @@ function onBegin(animation: FloatAnimation, view: ViewState, options: AnimationR
     // }
 }
 
-function onSeek(
-    animation: FloatAnimation,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {
+function onSeek(animation: FloatAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation));
 
     const environment = getCurrentEnvironment(view);
     const data = resolvePath(environment, animation.dataSpecifier, null) as DataState;
-    data.transform.z = t;
+    data.transform.depth = t;
 }
 
 function onEnd(animation: FloatAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
-export function floatAnimation(
-    dataSpecifier: Accessor[],
-    options: AnimationOptions = {}
-): FloatAnimation {
+export function floatAnimation(dataSpecifier: Accessor[], options: AnimationOptions = {}): FloatAnimation {
     return {
         ...createAnimationNode(null, options),
 

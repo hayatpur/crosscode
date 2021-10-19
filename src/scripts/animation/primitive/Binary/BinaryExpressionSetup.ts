@@ -15,43 +15,39 @@ export interface BinaryExpressionSetup extends AnimationNode {
     operator: ESTree.BinaryOperator;
 }
 
-function onBegin(
-    animation: BinaryExpressionSetup,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {
+interface IntermediatePositionStorage {
+    initLeft: number;
+    initTop: number;
+    targetLeft: number;
+    targetTop: number;
+}
+
+function onBegin(animation: BinaryExpressionSetup, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
-    //   Find left data
-    let left = resolvePath(
-        environment,
-        animation.leftSpecifier,
-        `${animation.id}_Left`
-    ) as DataState;
+
+    // Find left data
+    let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as DataState;
     environment._temps[`LeftData${animation.id}`] = [{ type: AccessorType.ID, value: left.id }];
 
     // Find right data
-    let right = resolvePath(
-        environment,
-        animation.rightSpecifier,
-        `${animation.id}_Right`
-    ) as DataState;
+    let right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as DataState;
     environment._temps[`RightData${animation.id}`] = [{ type: AccessorType.ID, value: right.id }];
 
     // Target left transform
     environment._temps[`LeftTransform${animation.id}`] = {
-        init_x: left.transform.x,
-        init_y: left.transform.y,
-        x: (left.transform.x + right.transform.x) / 2 - 25,
-        y: (left.transform.y + right.transform.y) / 2 - 5,
-    };
+        initLeft: left.transform.left,
+        initTop: left.transform.top,
+        targetLeft: (left.transform.left + right.transform.left) / 2 - 25,
+        targetTop: (left.transform.top + right.transform.top) / 2 - 5,
+    } as IntermediatePositionStorage;
 
     // Target right transform
     environment._temps[`RightTransform${animation.id}`] = {
-        init_x: right.transform.x,
-        init_y: right.transform.y,
-        x: (left.transform.x + right.transform.x) / 2 + 25,
-        y: (left.transform.y + right.transform.y) / 2 - 5,
-    };
+        initLeft: right.transform.left,
+        initTop: right.transform.top,
+        targetLeft: (left.transform.left + right.transform.left) / 2 + 25,
+        targetTop: (left.transform.top + right.transform.top) / 2 - 5,
+    } as IntermediatePositionStorage;
 
     // if (options.baking) {
     //     animation.computeReadAndWrites(
@@ -61,43 +57,26 @@ function onBegin(
     // }
 }
 
-function onSeek(
-    animation: BinaryExpressionSetup,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {
+function onSeek(animation: BinaryExpressionSetup, view: ViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation));
 
     const environment = getCurrentEnvironment(view);
-    const left = resolvePath(
-        environment,
-        environment._temps[`LeftData${animation.id}`],
-        null
-    ) as DataState;
-    const right = resolvePath(
-        environment,
-        environment._temps[`RightData${animation.id}`],
-        null
-    ) as DataState;
+    const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState;
+    const right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState;
 
     const leftTransform = environment._temps[`LeftTransform${animation.id}`];
     const rightTransform = environment._temps[`RightTransform${animation.id}`];
 
     // Move left
-    left.transform.x = lerp(leftTransform.init_x, leftTransform.x, t);
-    left.transform.y = lerp(leftTransform.init_y, leftTransform.y, t);
+    left.transform.left = lerp(leftTransform.init_x, leftTransform.x, t);
+    left.transform.top = lerp(leftTransform.init_y, leftTransform.y, t);
 
     // Move right
-    right.transform.x = lerp(rightTransform.init_x, rightTransform.x, t);
-    right.transform.y = lerp(rightTransform.init_y, rightTransform.y, t);
+    right.transform.left = lerp(rightTransform.init_x, rightTransform.x, t);
+    right.transform.top = lerp(rightTransform.init_y, rightTransform.y, t);
 }
 
-function onEnd(
-    animation: BinaryExpressionSetup,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {}
+function onEnd(animation: BinaryExpressionSetup, view: ViewState, options: AnimationRuntimeOptions) {}
 
 export function binaryExpressionSetup(
     leftSpecifier: Accessor[],
@@ -109,9 +88,7 @@ export function binaryExpressionSetup(
         ...createAnimationNode(null, options),
         baseDuration: 60,
 
-        name: `Binary Setup ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(
-            rightSpecifier
-        )}`,
+        name: `Binary Setup ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(rightSpecifier)}`,
 
         // Attributes
         leftSpecifier,

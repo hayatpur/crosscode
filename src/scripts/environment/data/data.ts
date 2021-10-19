@@ -1,5 +1,5 @@
 import { Accessor } from '../EnvironmentState';
-import { DataState, DataTransform, DataType, PositionType } from './DataState';
+import { DataState, DataTransform, DataType, LayoutType, PositionType } from './DataState';
 import { LiteralRenderer } from './literal/LiteralRenderer';
 
 export function createData(
@@ -12,13 +12,16 @@ export function createData(
     return {
         type: type,
         transform: transform ?? {
-            x: 0,
-            y: 0,
-            z: 0,
+            _x: 0,
+            _y: 0,
+            top: 0,
+            left: 0,
+            depth: 0,
             width: type == DataType.Literal ? LiteralRenderer.Size : 0,
             height: type == DataType.Literal ? LiteralRenderer.Size : 0,
             opacity: 1,
             positionType: PositionType.Relative,
+            layout: type == DataType.Array ? { type: LayoutType.Horizontal, innerPadding: 0, outerPadding: 0 } : null,
         },
         value: value,
         id: id,

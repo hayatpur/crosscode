@@ -2,7 +2,7 @@
 
 import { duration } from '../../animation/animation';
 import { AnimationGraph, instanceOfAnimationGraph } from '../../animation/graph/AnimationGraph';
-import { AnimationNode, instanceOfAnimationNode } from '../../animation/primitive/AnimationNode';
+import { AnimationNode } from '../../animation/primitive/AnimationNode';
 import { remap } from '../../utilities/math';
 import { Executor } from '../Executor';
 import TimeSection from './TimeSection';
@@ -98,35 +98,29 @@ export default class Timeline {
         const animations = this.executor.animation.vertices;
         const total_duration = duration(this.executor.animation);
 
-        let start = 0;
-
-        for (let i = 0; i < animations.length; i++) {
-            const animation = animations[i];
-            if (instanceOfAnimationGraph(animation)) {
-                for (let j = 0; j < animation.vertices.length; j++) {
-                    let child = animation.vertices[j];
-
-                    if (instanceOfAnimationGraph(child)) {
-                        for (let k = 0; k < child.vertices.length; k++) {
-                            let child2 = child.vertices[k];
-                            start = this.updateAnimation(child2, start, total_duration);
-                        }
-                    } else {
-                        start = this.updateAnimation(child, start, total_duration);
-                    }
-                }
-            } else {
-                start = this.updateAnimation(animation, start, total_duration);
-            }
-        }
+        this.updateAnimationGraph(this.executor.animation, 0, total_duration);
     }
 
-    updateAnimation(animation: AnimationGraph | AnimationNode, start: number, total_duration: number): number {
+    updateAnimationGraph(animation: AnimationGraph, start: number, total_duration: number) {
+        for (let i = 0; i < animation.vertices.length; i++) {
+            let child = animation.vertices[i];
+
+            if (instanceOfAnimationGraph(child)) {
+                start = this.updateAnimationGraph(child, start, total_duration);
+            } else {
+                start = this.updateAnimationNode(child, start, total_duration);
+            }
+        }
+
+        return start;
+    }
+
+    updateAnimationNode(animation: AnimationNode, start: number, total_duration: number): number {
         start += animation.delay;
 
         const section = new TimeSection(
             this.scrubberParent,
-            instanceOfAnimationNode(animation) ? animation.name : animation.nodeData.type,
+            animation.name,
             start,
             duration(animation),
             0,

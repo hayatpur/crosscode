@@ -25,6 +25,8 @@ export class EnvironmentRenderer {
     element: HTMLDivElement;
     border: HTMLDivElement;
 
+    static BorderPadding = 30;
+
     dataRenderers: { [id: string]: DataRenderer } = {};
     identifierRenderers: { [id: string]: IdentifierRenderer } = {};
 
@@ -38,12 +40,12 @@ export class EnvironmentRenderer {
     }
 
     setState(state: EnvironmentState) {
-        state.transform.y = state.transform.y || 0;
-        state.transform.x = state.transform.x || 0;
+        state.transform._y = state.transform._y || 0;
+        state.transform._x = state.transform._x || 0;
 
         // Apply transform
-        this.element.style.top = `${state.transform.y}px`;
-        this.element.style.left = `${state.transform.x}px`;
+        this.element.style.top = `${state.transform._y}px`;
+        this.element.style.left = `${state.transform._x}px`;
 
         // Memory
         this.renderMemory(state);
@@ -52,36 +54,22 @@ export class EnvironmentRenderer {
         this.renderIdentifiers(state);
 
         // Compute width & height
-        const bbox = this.element.getBoundingClientRect();
-        let width = 0;
-        let height = 0;
-
-        for (const [dataId, data] of Object.entries(this.dataRenderers)) {
-            const childState = state.memory.find((m) => m != null && m.id == dataId);
-            if (childState.transform.z >= 0.5) continue;
-
-            const element = data.element;
-            const bboxChild = element.getBoundingClientRect();
-            width = Math.max(width, bboxChild.x + bboxChild.width - bbox.x);
-            height = Math.max(height, bboxChild.y + bboxChild.height - bbox.y);
-        }
+        let width = state.transform.width;
+        let height = state.transform.height;
 
         // Update position
-        applyPositionModifiers(this.element, state);
+        // applyPositionModifiers(this.element, state);
 
         // Update size
-        state.transform.width = width;
-        state.transform.height = height;
         this.element.style.width = `${width}px`;
         this.element.style.height = `${height}px`;
 
         // Set the border
-        const padding = 26;
-        this.border.style.width = `${width + padding * 2}px`;
-        this.border.style.height = `${height + padding * 2 + 30}px`;
+        // this.border.style.width = `${width + EnvironmentRenderer.BorderPadding * 2}px`;
+        // this.border.style.height = `${height + EnvironmentRenderer.BorderPadding * 2 + 30}px`;
 
-        this.border.style.top = `${-padding - 30}px`;
-        this.border.style.left = `${-padding}px`;
+        // this.border.style.top = `${-EnvironmentRenderer.BorderPadding - 30}px`;
+        // this.border.style.left = `${-EnvironmentRenderer.BorderPadding}px`;
     }
 
     renderMemory(state: EnvironmentState) {
@@ -186,7 +174,7 @@ function applyPositionModifiers(element: HTMLDivElement, state: EnvironmentState
             const current = element.getBoundingClientRect();
 
             const delta = target.y - current.y;
-            state.transform.y += delta;
+            state.transform._y += delta;
         }
 
         fitted[modifier.type] = true;

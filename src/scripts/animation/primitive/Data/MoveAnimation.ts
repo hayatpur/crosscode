@@ -21,7 +21,7 @@
 //         const move = resolvePath(environment, this.inputSpecifier, null) as DataState;
 //         const to = resolvePath(environment, this.outputSpecifier, `${this.id}_to`);
 
-//         updateEnvironmentLayout(environment);
+//         updateLayout(view);
 
 //         let end_transform: Transform;
 
@@ -34,7 +34,7 @@
 //             });
 //             const placeholderLocation = environment.addDataAt([], placeholder, `${this.id}_PlaceHolder`);
 
-//             updateEnvironmentLayout(environment);
+//             updateLayout(view);
 //             end_transform = { ...placeholder.transform };
 
 //             removeAt(environment, placeholderLocation);

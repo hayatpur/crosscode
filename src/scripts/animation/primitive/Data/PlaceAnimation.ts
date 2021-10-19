@@ -27,7 +27,7 @@ function onSeek(animation: PlaceAnimation, view: ViewState, time: number, option
     const environment = getCurrentEnvironment(view);
     const data = resolvePath(environment, animation.inputSpecifier, null) as DataState;
 
-    data.transform.z = 1 - t;
+    data.transform.depth = 1 - t;
 }
 
 function onEnd(animation: PlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
@@ -46,8 +46,10 @@ function onEnd(animation: PlaceAnimation, view: ViewState, options: AnimationRun
         }
     }
 
-    from.transform.z = 0;
+    from.transform.depth = 0;
     from.transform.positionType = PositionType.Relative;
+    from.transform.left = 0;
+    from.transform.top = 0;
 }
 
 export function placeAnimation(

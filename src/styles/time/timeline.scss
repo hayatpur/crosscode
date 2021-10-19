@@ -38,10 +38,9 @@
 }
 
 .button {
-    color: #0d0c22;
+    color: var(--color-darker);
     cursor: pointer;
     border-radius: 7px;
-    /* padding: 15px; */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -50,13 +49,13 @@
     height: fit-content;
     height: -moz-fit-content;
     margin-right: 10px;
-    /* border: 1px solid #00000029; */
     box-shadow: 0px 0px 0px 1px #e7e7e9 inset;
     font-weight: 300;
     font-size: 14px;
     padding: 10px 14px;
 }
-.button > ion-icon {
+
+.button>ion-icon {
     color: #747474;
     margin-right: 5px;
 }

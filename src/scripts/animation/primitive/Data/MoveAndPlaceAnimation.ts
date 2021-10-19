@@ -1,10 +1,11 @@
 import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataTransform, DataType, instanceOfData, PositionType } from '../../../environment/data/DataState';
+import { DataState, DataType, instanceOfData, PositionType } from '../../../environment/data/DataState';
 import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString, instanceOfEnvironment } from '../../../environment/EnvironmentState';
-import { updateEnvironmentLayout } from '../../../environment/layout';
-import { DataMovementPath } from '../../../utilities/DataMovementPath';
+import { updateLayout } from '../../../environment/layout';
+import { DataMovementLocation, DataMovementPath } from '../../../utilities/DataMovementPath';
 import { remap } from '../../../utilities/math';
+import { clone } from '../../../utilities/objects';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
@@ -26,28 +27,29 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
 
     const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_to`);
 
-    updateEnvironmentLayout(environment);
+    updateLayout(view);
 
     // Start position
-    const startTransform = { ...move.transform };
+    const startTransform = { x: move.transform._x, y: move.transform._y } as DataMovementLocation;
 
-    let endTransform: DataTransform;
+    let endTransform: DataMovementLocation;
 
     if (animation.outputSpecifier.length == 0) {
         // Then it doesn't have a place yet
         // Find an empty space and put it there
         const placeholder = createData(DataType.Literal, '', `${animation.id}_Placeholder`);
-        placeholder.transform.z = 1;
         placeholder.transform.positionType = PositionType.Relative;
 
         const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_Placeholder`);
 
-        updateEnvironmentLayout(environment);
-        endTransform = { ...placeholder.transform };
+        updateLayout(view);
+
+        endTransform = { x: placeholder.transform._x, y: placeholder.transform._y };
 
         removeAt(environment, placeholderLocation);
     } else {
-        endTransform = { ...(to as DataState).transform };
+        const toTransform = (to as DataState).transform;
+        endTransform = { x: toTransform._x, y: toTransform._y };
     }
 
     // if (startTransform.x == endTransform.x && startTransform.y == endTransform.y) {
@@ -58,11 +60,14 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
     const path = new DataMovementPath(startTransform, endTransform);
     path.seek(0);
 
+    console.log(endTransform.x, startTransform.x);
+
     environment._temps[`MovePath${animation.id}`] = path;
 }
 
 function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
+
     let move = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
     }) as DataState;
@@ -77,8 +82,8 @@ function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number,
         path.seek(t);
 
         const position = path.getPosition(t);
-        move.transform.x = position.x;
-        move.transform.y = position.y;
+        move.transform.left = position.x;
+        move.transform.top = position.y;
     }
     // Place
     else if (tn >= 0.8 || animation.noMove) {
@@ -90,10 +95,10 @@ function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number,
             t = animation.ease(remap(tn, 0.8, 1, 0, 1));
         }
 
-        move.transform.z = 1 - t;
+        move.transform.depth = 1 - t;
     }
 
-    updateEnvironmentLayout(environment);
+    updateLayout(view);
 }
 
 function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
@@ -125,10 +130,14 @@ function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: Anima
         }
     }
 
-    input.transform.z = 0;
+    input.transform.depth = 0;
     input.transform.positionType = PositionType.Relative;
+    input.transform.left = 0;
+    input.transform.top = 0;
 
-    updateEnvironmentLayout(environment);
+    console.log(clone(environment));
+    updateLayout(view);
+    console.log(clone(environment));
 }
 
 export function moveAndPlaceAnimation(
