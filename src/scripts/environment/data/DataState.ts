@@ -16,7 +16,7 @@ export interface Transform {
         width: number;
         height: number;
     };
-    style: CSSStyleDeclaration;
+    styles: CSSStyleDeclaration;
 }
 
 export interface DataTransform extends Transform {}
