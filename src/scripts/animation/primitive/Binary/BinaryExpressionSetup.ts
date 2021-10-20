@@ -35,18 +35,18 @@ function onBegin(animation: BinaryExpressionSetup, view: ViewState, options: Ani
 
     // Target left transform
     environment._temps[`LeftTransform${animation.id}`] = {
-        initLeft: left.transform.left,
-        initTop: left.transform.top,
-        targetLeft: (left.transform.left + right.transform.left) / 2 - 25,
-        targetTop: (left.transform.top + right.transform.top) / 2 - 5,
+        initLeft: left.transform.styles.left,
+        initTop: left.transform.styles.top,
+        targetLeft: (left.transform.styles.left + right.transform.styles.left) / 2 - 25,
+        targetTop: (left.transform.styles.top + right.transform.styles.top) / 2 - 5,
     } as IntermediatePositionStorage;
 
     // Target right transform
     environment._temps[`RightTransform${animation.id}`] = {
-        initLeft: right.transform.left,
-        initTop: right.transform.top,
-        targetLeft: (left.transform.left + right.transform.left) / 2 + 25,
-        targetTop: (left.transform.top + right.transform.top) / 2 - 5,
+        initLeft: right.transform.styles.left,
+        initTop: right.transform.styles.top,
+        targetLeft: (left.transform.styles.left + right.transform.styles.left) / 2 + 25,
+        targetTop: (left.transform.styles.top + right.transform.styles.top) / 2 - 5,
     } as IntermediatePositionStorage;
 
     // if (options.baking) {
@@ -68,12 +68,12 @@ function onSeek(animation: BinaryExpressionSetup, view: ViewState, time: number,
     const rightTransform = environment._temps[`RightTransform${animation.id}`];
 
     // Move left
-    left.transform.left = lerp(leftTransform.init_x, leftTransform.x, t);
-    left.transform.top = lerp(leftTransform.init_y, leftTransform.y, t);
+    left.transform.styles.left = lerp(leftTransform.init_x, leftTransform.x, t);
+    left.transform.styles.top = lerp(leftTransform.init_y, leftTransform.y, t);
 
     // Move right
-    right.transform.left = lerp(rightTransform.init_x, rightTransform.x, t);
-    right.transform.top = lerp(rightTransform.init_y, rightTransform.y, t);
+    right.transform.styles.left = lerp(rightTransform.init_x, rightTransform.x, t);
+    right.transform.styles.top = lerp(rightTransform.init_y, rightTransform.y, t);
 }
 
 function onEnd(animation: BinaryExpressionSetup, view: ViewState, options: AnimationRuntimeOptions) {}

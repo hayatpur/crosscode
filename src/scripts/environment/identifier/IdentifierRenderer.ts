@@ -14,8 +14,8 @@ export class IdentifierRenderer {
         this.element.innerHTML = name;
 
         // const bbox = data.element.getBoundingClientRect();
-        this.element.style.top = `${data.transform._y - 32}px`;
-        this.element.style.left = `${data.transform._x - 3}px`;
+        this.element.style.top = `${data.transform.rendered.y - 32}px`;
+        this.element.style.left = `${data.transform.rendered.x - 3}px`;
     }
 
     destroy() {

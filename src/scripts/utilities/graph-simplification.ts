@@ -323,11 +323,11 @@
 
 //     // Simplify all children
 //     for (let i = graph.vertices.length - 1; i >= 0; i--) {
-//         simplify(graph.vertices[i], { ...options, depth: options.depth + 1 });
+//         simplify(graph.vertices[i], { ...options, depth: options.styles.elevation + 1 });
 //     }
 
 //     dissolve(graph);
-//     while (true && options.depth >= 0) {
+//     while (true && options.styles.elevation >= 0) {
 //         const movements = findMovementsInSubgraph(graph);
 //         if (movements.type1.length == 0) break;
 //         simplifyType1Movement(graph, movements.type1[0]);

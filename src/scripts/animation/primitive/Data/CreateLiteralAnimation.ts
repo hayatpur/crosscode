@@ -1,5 +1,5 @@
 import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataTransform, DataType, PositionType } from '../../../environment/data/DataState';
+import { DataState, DataTransform, DataType } from '../../../environment/data/DataState';
 import { addDataAt, removeAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
 import { updateLayout } from '../../../environment/layout';
@@ -31,7 +31,7 @@ function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: An
     updateLayout(view);
 
     const data = createData(DataType.Literal, animation.value as number | string | boolean, `${animation.id}_Create`);
-    data.transform.positionType = PositionType.Absolute;
+    data.transform.styles.position = 'absolute';
 
     // Add the newly created data to environment
     const loc = addDataAt(environment, data, [], null);
@@ -45,7 +45,7 @@ function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: An
         // Then it doesn't have a place yet
         // Find an empty space and put it there
         const placeholder = createData(DataType.Literal, '', `${animation.id}_Placeholder`);
-        placeholder.transform.positionType = PositionType.Relative;
+        placeholder.transform.styles.position = 'relative';
         const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_PlaceholderLiteral`);
 
         updateLayout(view);
@@ -62,10 +62,10 @@ function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: An
         });
     }
 
-    data.transform.left = location?._x ?? 0;
-    data.transform.top = location?._y ?? 0;
+    data.transform.styles.left = location?.rendered.x ?? 0;
+    data.transform.styles.top = location?.rendered.y ?? 0;
 
-    data.transform.depth = 3;
+    data.transform.styles.elevation = 3;
 
     // Point the output register to the newly created data
     const outputRegister = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState;
@@ -84,7 +84,7 @@ function onSeek(animation: CreateLiteralAnimation, view: ViewState, time: number
         null
     ) as DataState;
 
-    data.transform.depth = remap(t, 0, 1, 3, 1);
+    data.transform.styles.elevation = remap(t, 0, 1, 3, 1);
 }
 
 function onEnd(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {

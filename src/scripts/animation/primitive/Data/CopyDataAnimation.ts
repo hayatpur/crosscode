@@ -1,5 +1,5 @@
 import { cloneData, createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataType, PositionType } from '../../../environment/data/DataState';
+import { DataState, DataType } from '../../../environment/data/DataState';
 import { addDataAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
@@ -18,8 +18,8 @@ function onBegin(animation: CopyDataAnimation, view: ViewState, options: Animati
     const environment = getCurrentEnvironment(view);
     const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState;
     const copy = cloneData(data, false, `${animation.id}_Copy`);
-    copy.transform.depth = 0;
-    copy.transform.positionType = PositionType.Absolute;
+    copy.transform.styles.elevation = 0;
+    copy.transform.styles.position = 'absolute';
 
     const location = addDataAt(environment, copy, [], null);
     environment._temps[`CopyDataAnimation${animation.id}`] = location;
@@ -49,15 +49,15 @@ function onSeek(animation: CopyDataAnimation, view: ViewState, time: number, opt
 
     const environment = getCurrentEnvironment(view);
     const copy = resolvePath(environment, environment._temps[`CopyDataAnimation${animation.id}`], null) as DataState;
-    copy.transform.depth = t;
+    copy.transform.styles.elevation = t;
 }
 
 function onEnd(animation: CopyDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
     const copy = resolvePath(environment, environment._temps[`CopyDataAnimation${animation.id}`], null) as DataState;
-    copy.transform.depth = 1;
+    copy.transform.styles.elevation = 1;
 
-    copy.transform.positionType = PositionType.Absolute;
+    copy.transform.styles.position = 'absolute';
 }
 
 export function copyDataAnimation(

@@ -1,5 +1,5 @@
 import { replaceDataWith } from '../../../environment/data/data';
-import { DataState, PositionType } from '../../../environment/data/DataState';
+import { DataState } from '../../../environment/data/DataState';
 import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
 import { Accessor, instanceOfEnvironment } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
@@ -27,7 +27,7 @@ function onSeek(animation: PlaceAnimation, view: ViewState, time: number, option
     const environment = getCurrentEnvironment(view);
     const data = resolvePath(environment, animation.inputSpecifier, null) as DataState;
 
-    data.transform.depth = 1 - t;
+    data.transform.styles.elevation = 1 - t;
 }
 
 function onEnd(animation: PlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
@@ -46,10 +46,10 @@ function onEnd(animation: PlaceAnimation, view: ViewState, options: AnimationRun
         }
     }
 
-    from.transform.depth = 0;
-    from.transform.positionType = PositionType.Relative;
-    from.transform.left = 0;
-    from.transform.top = 0;
+    from.transform.styles.elevation = 0;
+    from.transform.styles.position = 'relative';
+    from.transform.styles.left = '0';
+    from.transform.styles.top = '0';
 }
 
 export function placeAnimation(

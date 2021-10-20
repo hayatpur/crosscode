@@ -1,5 +1,5 @@
 import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataType, PositionType } from '../../../environment/data/DataState';
+import { DataState, DataType } from '../../../environment/data/DataState';
 import { addDataAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
@@ -19,11 +19,11 @@ function onBegin(animation: ArrayStartAnimation, view: ViewState, options: Anima
     // Create a new array somewhere in memory
     const data = createData(DataType.Array, [], `${animation.id}_CreateArray`);
     if (!animation.doNotFloat) {
-        data.transform.depth = 1;
+        data.transform.styles.elevation = 1;
     }
-    data.transform.positionType = PositionType.Relative;
-    data.transform.left = 0;
-    data.transform.top = 0;
+    data.transform.styles.position = 'relative';
+    data.transform.styles.left = 0;
+    data.transform.styles.top = 0;
 
     const loc = addDataAt(environment, data, [], null);
 

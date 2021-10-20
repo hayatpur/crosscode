@@ -13,7 +13,7 @@
 //             type: config.type,
 //             value: {
 //                 ...config.value,
-//                 Depth: config.value.Depth + 1,
+//                 Depth: config.value.styles.elevation + 1,
 //                 Children: false,
 //             },
 //         });
@@ -25,7 +25,7 @@
 
 //     dissolve(animation);
 
-//     while (true && config.value.Depth >= 0) {
+//     while (true && config.value.styles.elevation >= 0) {
 //         const movements = findMovementsInSubgraph(animation);
 //         if (movements.type1.length == 0) break;
 //         simplifyType1Movement(animation, movements.type1[0]);

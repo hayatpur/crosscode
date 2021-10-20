@@ -11,6 +11,7 @@
     "acorn": "^8.4.1",
     "acorn-walk": "^8.1.1",
     "astring": "^1.7.5",
+    "csstype": "^3.0.9",
     "eaz": "^1.0.2",
     "javascript-lp-solver": "^0.4.24",
     "monaco-editor": "^0.25.2",

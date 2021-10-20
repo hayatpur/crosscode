@@ -1,6 +1,18 @@
 import { Accessor } from '../EnvironmentState';
-import { DataState, DataTransform, DataType, LayoutType, PositionType } from './DataState';
+import { DataState, DataTransform, DataType, Transform } from './DataState';
 import { LiteralRenderer } from './literal/LiteralRenderer';
+
+export function createTransform(): Transform {
+    return {
+        styles: {},
+        rendered: {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+        },
+    };
+}
 
 export function createData(
     type: DataType,
@@ -12,16 +24,13 @@ export function createData(
     return {
         type: type,
         transform: transform ?? {
-            _x: 0,
-            _y: 0,
-            top: 0,
-            left: 0,
-            depth: 0,
-            width: type == DataType.Literal ? LiteralRenderer.Size : 0,
-            height: type == DataType.Literal ? LiteralRenderer.Size : 0,
-            opacity: 1,
-            positionType: PositionType.Relative,
-            layout: type == DataType.Array ? { type: LayoutType.Horizontal, innerPadding: 0, outerPadding: 0 } : null,
+            styles: {},
+            rendered: {
+                x: 0,
+                y: 0,
+                width: type == DataType.Literal ? LiteralRenderer.Size : 0,
+                height: type == DataType.Literal ? LiteralRenderer.Size : 0,
+            },
         },
         value: value,
         id: id,

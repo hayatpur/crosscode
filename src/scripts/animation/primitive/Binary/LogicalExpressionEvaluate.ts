@@ -1,6 +1,6 @@
 import * as ESTree from 'estree';
 import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataType, PositionType } from '../../../environment/data/DataState';
+import { DataState, DataType } from '../../../environment/data/DataState';
 import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString, AccessorType } from '../../../environment/EnvironmentState';
 import { lerp, remap } from '../../../utilities/math';
@@ -36,8 +36,8 @@ function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options:
 
     if (animation.shortCircuit) {
         data = createData(DataType.Literal, left.value, `${animation.id}_EvaluatedData`);
-        data.transform.depth = 1;
-        data.transform.positionType = PositionType.Absolute;
+        data.transform.styles.elevation = 1;
+        data.transform.styles.position = 'absolute';
         addDataAt(environment, data, [], null);
     } else {
         // Find right data
@@ -49,34 +49,34 @@ function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options:
             eval(`${left.value}${animation.operator}${right.value}`),
             `${animation.id}_EvaluatedData`
         );
-        data.transform.depth = 1;
-        data.transform.positionType = PositionType.Absolute;
+        data.transform.styles.elevation = 1;
+        data.transform.styles.position = 'absolute';
         addDataAt(environment, data, [], null);
     }
 
-    data.transform.left = animation.shortCircuit
-        ? left.transform.left
-        : (left.transform.left + right.transform.left) / 2;
-    data.transform.top = left.transform.top;
-    data.transform.depth = 1;
+    data.transform.styles.left = animation.shortCircuit
+        ? left.transform.styles.left
+        : (left.transform.styles.left + right.transform.styles.left) / 2;
+    data.transform.styles.top = left.transform.styles.top;
+    data.transform.styles.elevation = 1;
     data.transform.opacity = 0;
     environment._temps[`EvaluatedData${animation.id}`] = [{ type: AccessorType.ID, value: data.id }];
 
     // Target left transform
     environment._temps[`LeftTransform${animation.id}`] = {
-        initLeft: left.transform.left,
-        initTop: left.transform.top,
-        targetLeft: data.transform.left,
-        targetTop: data.transform.top,
+        initLeft: left.transform.styles.left,
+        initTop: left.transform.styles.top,
+        targetLeft: data.transform.styles.left,
+        targetTop: data.transform.styles.top,
     } as IntermediatePositionStorage;
 
     // Target right transform
     if (!animation.shortCircuit) {
         environment._temps[`RightTransform${animation.id}`] = {
-            initLeft: right.transform.left,
-            initTop: right.transform.top,
-            targetLeft: data.transform.left + data.transform.width / 4,
-            targetTop: data.transform.top,
+            initLeft: right.transform.styles.left,
+            initTop: right.transform.styles.top,
+            targetLeft: data.transform.styles.left + data.transform.rendered.width / 4,
+            targetTop: data.transform.styles.top,
         } as IntermediatePositionStorage;
     }
 }
@@ -93,15 +93,15 @@ function onSeek(animation: LogicalExpressionEvaluate, view: ViewState, time: num
     const rightTransform = environment._temps[`RightTransform${animation.id}`] as IntermediatePositionStorage;
 
     // Move left
-    left.transform.left = lerp(leftTransform.initLeft, leftTransform.targetLeft, t);
-    left.transform.top = lerp(leftTransform.initTop, leftTransform.targetTop, t);
+    left.transform.styles.left = lerp(leftTransform.initLeft, leftTransform.targetLeft, t);
+    left.transform.styles.top = lerp(leftTransform.initTop, leftTransform.targetTop, t);
 
     // Move right
     let right: DataState;
     if (!animation.shortCircuit) {
         right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState;
-        right.transform.left = lerp(rightTransform.initLeft, rightTransform.targetLeft, t);
-        right.transform.top = lerp(rightTransform.initTop, rightTransform.targetTop, t);
+        right.transform.styles.left = lerp(rightTransform.initLeft, rightTransform.targetLeft, t);
+        right.transform.styles.top = lerp(rightTransform.initTop, rightTransform.targetTop, t);
     }
 
     if (t > 0.5) {

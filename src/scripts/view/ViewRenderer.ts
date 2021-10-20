@@ -19,8 +19,8 @@ export class ViewRenderer {
 
     setState(state: ViewState) {
         // Apply transform
-        this.element.style.top = `${state.transform._y}px`;
-        this.element.style.left = `${state.transform._x}px`;
+        this.element.style.top = `${state.transform.rendered.x}px`;
+        this.element.style.left = `${state.transform.rendered.y}px`;
 
         // Hit test
         const hits = new Set();
@@ -68,8 +68,8 @@ export class ViewRenderer {
         }
 
         // Compute width and height
-        let width = state.transform.width;
-        let height = state.transform.height;
+        let width = state.transform.rendered.width;
+        let height = state.transform.rendered.height;
 
         this.element.style.width = `${width}px`;
         this.element.style.height = `${height}px`;
@@ -107,7 +107,7 @@ function applyPositionModifiers(element: HTMLDivElement, state: ViewState) {
             const current = element.getBoundingClientRect();
 
             const delta = target.y - current.y;
-            state.transform._y += delta;
+            state.transform.rendered.y += delta;
         }
 
         fitted[modifier.type] = true;

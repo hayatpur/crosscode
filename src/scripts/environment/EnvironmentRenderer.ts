@@ -40,12 +40,12 @@ export class EnvironmentRenderer {
     }
 
     setState(state: EnvironmentState) {
-        state.transform._y = state.transform._y || 0;
-        state.transform._x = state.transform._x || 0;
+        state.transform.rendered.y = state.transform.rendered.y || 0;
+        state.transform.rendered.x = state.transform.rendered.x || 0;
 
         // Apply transform
-        this.element.style.top = `${state.transform._y}px`;
-        this.element.style.left = `${state.transform._x}px`;
+        this.element.style.top = `${state.transform.rendered.y}px`;
+        this.element.style.left = `${state.transform.rendered.x}px`;
 
         // Memory
         this.renderMemory(state);
@@ -54,8 +54,8 @@ export class EnvironmentRenderer {
         this.renderIdentifiers(state);
 
         // Compute width & height
-        let width = state.transform.width;
-        let height = state.transform.height;
+        let width = state.transform.rendered.width;
+        let height = state.transform.rendered.height;
 
         // Update position
         // applyPositionModifiers(this.element, state);
@@ -174,7 +174,7 @@ function applyPositionModifiers(element: HTMLDivElement, state: EnvironmentState
             const current = element.getBoundingClientRect();
 
             const delta = target.y - current.y;
-            state.transform._y += delta;
+            state.transform.rendered.y += delta;
         }
 
         fitted[modifier.type] = true;

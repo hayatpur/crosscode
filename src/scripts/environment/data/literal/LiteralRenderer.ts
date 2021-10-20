@@ -1,6 +1,6 @@
 import { sigmoid } from '../../../utilities/math';
 import { DataRenderer, DataRendererOptions } from '../DataRenderer';
-import { DataState, PositionType } from '../DataState';
+import { DataState } from '../DataState';
 
 export class LiteralRenderer extends DataRenderer {
     static Size = 53;
@@ -9,29 +9,29 @@ export class LiteralRenderer extends DataRenderer {
         console.log(
             data.id,
             'Rendering literal',
-            data.transform.positionType,
-            data.transform._x,
-            data.transform._y,
-            data.transform.left,
-            data.transform.top
+            data.transform.styles.position,
+            data.transform.rendered.x,
+            data.transform.rendered.y,
+            data.transform.styles.left,
+            data.transform.styles.top
         );
 
         this.element.classList.add('literal');
 
         options.zOffset = options.zOffset ?? 0;
 
-        const z = data.transform.depth + options.zOffset;
+        const z = data.transform.styles.elevation + options.zOffset;
 
         // Apply transform
-        this.element.style.width = `${data.transform.width}px`;
-        this.element.style.height = `${data.transform.height}px`;
+        this.element.style.width = `${data.transform.rendered.width}px`;
+        this.element.style.height = `${data.transform.rendered.height}px`;
 
         // Smooth transition
         const oldTop = parseInt(this.element.style.top);
         const oldLeft = parseInt(this.element.style.left);
 
-        const top = data.transform._y - 5 * z;
-        const left = data.transform._x - 5 * z;
+        const top = data.transform.rendered.y - 5 * z;
+        const left = data.transform.rendered.x - 5 * z;
 
         // if (isNaN(oldTop) || isNaN(oldLeft)) {
         this.element.style.top = `${top}px`;
@@ -60,7 +60,7 @@ export class LiteralRenderer extends DataRenderer {
             this.element.classList.remove('undefined');
         }
 
-        if (data.transform.positionType == PositionType.Absolute) {
+        if (data.transform.styles.position == 'absolute') {
             this.element.classList.add('floating');
         } else {
             this.element.classList.remove('floating');

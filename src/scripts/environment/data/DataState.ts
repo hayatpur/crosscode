@@ -1,3 +1,4 @@
+import * as CSS from 'csstype';
 import { Accessor } from '../EnvironmentState';
 
 export enum DataType {
@@ -9,6 +10,10 @@ export enum DataType {
     Function = 'Function',
 }
 
+export interface TransformStyles extends CSS.Properties {
+    elevation?: number;
+}
+
 export interface Transform {
     rendered: {
         x: number;
@@ -16,7 +21,7 @@ export interface Transform {
         width: number;
         height: number;
     };
-    styles: CSSStyleDeclaration;
+    styles: TransformStyles;
 }
 
 export interface DataTransform extends Transform {}

@@ -1,6 +1,6 @@
 import { clone } from '../utilities/objects';
 import { createData } from './data/data';
-import { DataState, DataType, instanceOfData, LayoutType, PositionType } from './data/DataState';
+import { DataState, DataType, instanceOfData, LayoutType } from './data/DataState';
 import { Accessor, AccessorType, EnvironmentState, instanceOfEnvironment, Scope } from './EnvironmentState';
 import { updateLayout } from './layout';
 
@@ -26,7 +26,7 @@ export function createEnvironment(): EnvironmentState {
             width: 0,
             height: 0,
             opacity: 1,
-            positionType: PositionType.Absolute,
+            positionType: 'absolute',
             positionModifiers: [],
             layout: { type: LayoutType.Horizontal, innerPadding: 10, outerPadding: 0 },
         },

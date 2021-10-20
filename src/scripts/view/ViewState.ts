@@ -12,9 +12,6 @@ export interface ViewState {
 }
 
 export interface ViewTransform extends Transform {
-    // Opacity
-    opacity: number;
-
     // Anchors to align it to lines of code, or to other views
     positionModifiers: ViewPositionModifier[];
 }

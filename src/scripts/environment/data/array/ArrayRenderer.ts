@@ -1,6 +1,6 @@
 import { createDataRenderer } from '../../EnvironmentRenderer';
 import { DataRenderer, DataRendererOptions } from '../DataRenderer';
-import { DataState, PositionType } from '../DataState';
+import { DataState } from '../DataState';
 import { LiteralRenderer } from '../literal/LiteralRenderer';
 
 export class ArrayRenderer extends DataRenderer {
@@ -33,13 +33,17 @@ export class ArrayRenderer extends DataRenderer {
         options.zOffset = options.zOffset ?? 0;
 
         // Apply transform
-        this.element.style.top = `${data.transform._y - 5 * (data.transform.depth + options.zOffset)}px`;
-        this.element.style.left = `${data.transform._x + 5 * (data.transform.depth + options.zOffset)}px`;
+        this.element.style.top = `${
+            data.transform.rendered.y - 5 * (data.transform.styles.elevation + options.zOffset)
+        }px`;
+        this.element.style.left = `${
+            data.transform.rendered.x + 5 * (data.transform.styles.elevation + options.zOffset)
+        }px`;
 
-        this.element.style.width = `${data.transform.width}px`;
-        this.element.style.height = `${data.transform.height}px`;
+        this.element.style.width = `${data.transform.rendered.width}px`;
+        this.element.style.height = `${data.transform.rendered.height}px`;
 
-        if (data.transform.positionType == PositionType.Absolute) {
+        if (data.transform.styles.position == 'absolute') {
             this.element.classList.add('floating');
         } else {
             this.element.classList.remove('floating');
@@ -71,7 +75,7 @@ export class ArrayRenderer extends DataRenderer {
             hits.add(item.id);
             this.dataRenderers[item.id].renderer.setState(item, {
                 environmentRenderer: options.environmentRenderer,
-                zOffset: options.zOffset + data.transform.depth,
+                zOffset: options.zOffset + data.transform.styles.elevation,
             });
 
             if (i == 0 && items.length == 1) {

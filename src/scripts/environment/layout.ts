@@ -48,11 +48,8 @@ export function updateLayout(entity: { transform: Transform }, parent?: HTMLDivE
     }
 
     // Update transform
-    const x = parseFloat(el.style.left);
-    const y = parseFloat(el.style.top);
-    const width = parseFloat(el.style.width);
-    const height = parseFloat(el.style.height);
-    entity.transform.rendered = { x, y, width, height };
+    const bbox = el.getBoundingClientRect();
+    entity.transform.rendered = { ...bbox };
 
     // Remove element
     el.remove();

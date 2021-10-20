@@ -24,7 +24,7 @@ function onSeek(animation: FloatAnimation, view: ViewState, time: number, option
 
     const environment = getCurrentEnvironment(view);
     const data = resolvePath(environment, animation.dataSpecifier, null) as DataState;
-    data.transform.depth = t;
+    data.transform.styles.elevation = t;
 }
 
 function onEnd(animation: FloatAnimation, view: ViewState, options: AnimationRuntimeOptions) {}

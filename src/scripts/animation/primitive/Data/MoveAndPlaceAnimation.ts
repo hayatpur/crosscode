@@ -1,5 +1,5 @@
 import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataType, instanceOfData, PositionType } from '../../../environment/data/DataState';
+import { DataState, DataType, instanceOfData } from '../../../environment/data/DataState';
 import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString, instanceOfEnvironment } from '../../../environment/EnvironmentState';
 import { updateLayout } from '../../../environment/layout';
@@ -30,7 +30,7 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
     updateLayout(view);
 
     // Start position
-    const startTransform = { x: move.transform._x, y: move.transform._y } as DataMovementLocation;
+    const startTransform = { x: move.transform.rendered.x, y: move.transform.rendered.y } as DataMovementLocation;
 
     let endTransform: DataMovementLocation;
 
@@ -38,18 +38,18 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
         // Then it doesn't have a place yet
         // Find an empty space and put it there
         const placeholder = createData(DataType.Literal, '', `${animation.id}_Placeholder`);
-        placeholder.transform.positionType = PositionType.Relative;
+        placeholder.transform.styles.position = 'relative';
 
         const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_Placeholder`);
 
         updateLayout(view);
 
-        endTransform = { x: placeholder.transform._x, y: placeholder.transform._y };
+        endTransform = { x: placeholder.transform.rendered.x, y: placeholder.transform.rendered.y };
 
         removeAt(environment, placeholderLocation);
     } else {
         const toTransform = (to as DataState).transform;
-        endTransform = { x: toTransform._x, y: toTransform._y };
+        endTransform = { x: toTransform.rendered.x, y: toTransform.rendered.y };
     }
 
     // if (startTransform.x == endTransform.x && startTransform.y == endTransform.y) {
@@ -82,8 +82,8 @@ function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number,
         path.seek(t);
 
         const position = path.getPosition(t);
-        move.transform.left = position.x;
-        move.transform.top = position.y;
+        move.transform.styles.left = position.x;
+        move.transform.styles.top = position.y;
     }
     // Place
     else if (tn >= 0.8 || animation.noMove) {
@@ -95,7 +95,7 @@ function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number,
             t = animation.ease(remap(tn, 0.8, 1, 0, 1));
         }
 
-        move.transform.depth = 1 - t;
+        move.transform.styles.elevation = 1 - t;
     }
 
     updateLayout(view);
@@ -130,10 +130,10 @@ function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: Anima
         }
     }
 
-    input.transform.depth = 0;
-    input.transform.positionType = PositionType.Relative;
-    input.transform.left = 0;
-    input.transform.top = 0;
+    input.transform.styles.elevation = 0;
+    input.transform.styles.position = 'relative';
+    input.transform.styles.left = 0;
+    input.transform.styles.top = 0;
 
     console.log(clone(environment));
     updateLayout(view);
