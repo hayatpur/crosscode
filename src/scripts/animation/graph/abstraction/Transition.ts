@@ -1,4 +1,6 @@
+import { getDiff } from 'recursive-diff';
 import { clone } from '../../../utilities/objects';
+import { getCurrentEnvironment } from '../../../view/view';
 import { AnimationNode, instanceOfAnimationNode } from '../../primitive/AnimationNode';
 import { AnimationGraph } from '../AnimationGraph';
 import { AbstractionSpec } from './Abstractor';
@@ -23,10 +25,13 @@ export function applyTransition(animation: AnimationGraph | AnimationNode, confi
         return;
     }
 
-    const startState = clone(animation.precondition);
-    const endState = clone(animation.postcondition);
+    let startEnv = clone(getCurrentEnvironment(animation.precondition));
+    let endEnv = clone(getCurrentEnvironment(animation.postcondition));
 
-    console.log(animation, startState, endState);
+    let delta = getDiff(startEnv, endEnv);
+    delta = delta.filter((diff) => diff.path.indexOf('transform') === -1);
+
+    console.log(delta);
 
     // const traces: { [dataId: string]: Trace[][] } = {};
 

@@ -16,7 +16,8 @@
         "javascript-lp-solver": "^0.4.24",
         "monaco-editor": "^0.25.2",
         "nomnoml": "^1.4.0",
-        "patch-package": "^6.4.7"
+        "patch-package": "^6.4.7",
+        "recursive-diff": "^1.0.8"
     },
     "devDependencies": {
         "css-loader": "^5.2.6",
