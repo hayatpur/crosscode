@@ -5,7 +5,7 @@ import { Accessor, instanceOfEnvironment } from '../../../environment/Environmen
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
 export interface PlaceAnimation extends AnimationNode {
@@ -32,10 +32,12 @@ function onSeek(animation: PlaceAnimation, view: ViewState, time: number, option
 
 function onEnd(animation: PlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
+
     const from = resolvePath(environment, animation.inputSpecifier, null) as DataState;
+    let to: DataState;
 
     if (animation.outputSpecifier != null) {
-        const to = resolvePath(environment, animation.outputSpecifier, null) as DataState;
+        to = resolvePath(environment, animation.outputSpecifier, null) as DataState;
 
         if (instanceOfEnvironment(to)) {
             removeAt(environment, getMemoryLocation(environment, from).foundLocation);
@@ -46,10 +48,20 @@ function onEnd(animation: PlaceAnimation, view: ViewState, options: AnimationRun
         }
     }
 
-    from.transform.styles.elevation = 0;
-    from.transform.styles.position = 'relative';
-    from.transform.styles.left = '0';
-    from.transform.styles.top = '0';
+    if (options.baking) {
+        computeReadAndWrites(
+            animation,
+            { location: getMemoryLocation(environment, from).foundLocation, id: from.id },
+            animation.outputSpecifier != null
+                ? { location: getMemoryLocation(environment, to).foundLocation, id: to.id }
+                : null
+        );
+    }
+}
+
+function computeReadAndWrites(animation: PlaceAnimation, inputData: AnimationData, outputData: AnimationData) {
+    animation._reads = [inputData];
+    animation._writes = [outputData];
 }
 
 export function placeAnimation(

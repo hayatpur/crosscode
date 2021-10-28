@@ -1,6 +1,7 @@
 import acorn = require('acorn');
-import { duration, reset, seek } from '../animation/animation';
+import { begin, duration, end, reset, seek } from '../animation/animation';
 import { Cursor } from '../animation/Cursor';
+import { abstract } from '../animation/graph/abstraction/Abstractor';
 import { AnimationGraph } from '../animation/graph/AnimationGraph';
 import { animationToString } from '../animation/graph/graph';
 import { Editor } from '../editor/Editor';
@@ -22,7 +23,7 @@ export class Executor {
     paused = true;
 
     // Global speed of the animation (higher is faster)
-    speed = 1 / 64;
+    speed = 1 / 16;
 
     // Animation
     animation: AnimationGraph;
@@ -87,16 +88,20 @@ export class Executor {
             return;
         }
 
-        // Transpile program
-        const tempView = createView({ isRoot: true });
-
-        const _t = performance.now();
+        // Create animation from user code
+        let tempView = createView({ isRoot: true });
         this.animation = Compiler.compile(ast, tempView, { outputRegister: [], locationHint: [] });
-        console.log('Compilation time: ' + (performance.now() - _t) + 'ms');
-        // logEnvironment(getCurrentEnvironment(tempView));
-        console.log(tempView);
-
         reset(this.animation);
+
+        // Bake the animation
+        tempView = createView({ isRoot: true });
+        begin(this.animation, tempView, { baking: true });
+        seek(this.animation, tempView, duration(this.animation), { baking: true });
+        end(this.animation, tempView, { baking: true });
+        reset(this.animation);
+
+        // Switch to the default level of abstraction
+        abstract(this.animation);
 
         // Initialize a view of animation
         this.view = createView({ isRoot: true });
@@ -113,7 +118,10 @@ export class Executor {
         console.log('[Executor] Finished compiling...');
         console.log('\tAnimation', this.animation);
 
-        console.log(animationToString(this.animation, 0, { first: false }, true));
+        const [animationString, animationUrl] = animationToString(this.animation, 0, { first: false }, true);
+        document.getElementById('nomnoml-button').onclick = () => {
+            window.open(animationUrl, '_blank');
+        };
     }
 
     tick(dt: number = 10) {
@@ -123,7 +131,7 @@ export class Executor {
             // Loop
             this.time = 0;
             this.viewRenderer.destroy();
-            this.view = createView();
+            this.view = createView({ isRoot: true });
             this.viewRenderer = new ViewRenderer(true);
             return;
         }

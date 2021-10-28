@@ -1,0 +1,26 @@
+/** Data style used for computing layout **/
+.data-i,
+.data {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+/** Data style used for rendering **/
+.data {
+    position: absolute;
+    transition-property: box-shadow;
+    transition-duration: 1s;
+}
+
+.data-literal.floating {
+    z-index: 10;
+    background: #bddeff;
+}
+
+.data-undefined {
+    background: #ebebeb48 !important;
+    box-shadow: 0px 0px 0px 1px rgba(122, 122, 122, 0);
+    z-index: -1 !important;
+}

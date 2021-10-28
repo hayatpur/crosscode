@@ -9,16 +9,12 @@ import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnima
 import { ViewState } from '../../view/ViewState';
 import { Compiler, getNodeData } from '../Compiler';
 
-export function FunctionCall(
-    ast: ESTree.FunctionDeclaration,
-    view: ViewState,
-    context: AnimationContext
-) {
+export function FunctionCall(ast: ESTree.FunctionDeclaration, view: ViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     // Create a scope @TODO: HARD SCOPE
     const createScope = createScopeAnimation();
-    addVertex(graph, createScope, getNodeData(ast));
+    addVertex(graph, createScope, { nodeData: getNodeData(ast) });
     apply(createScope, view);
 
     // Bind arguments
@@ -27,17 +23,17 @@ export function FunctionCall(
         const argRegister = context.args[i];
 
         const bind = bindAnimation(param.name, argRegister);
-        addVertex(graph, bind, getNodeData(ast.params[i]));
+        addVertex(graph, bind, { nodeData: getNodeData(ast.params[i]) });
         apply(bind, view);
     }
 
     // Call function
     const body = Compiler.compile(ast.body, view, { ...context, args: null });
-    addVertex(graph, body, getNodeData(ast));
+    addVertex(graph, body, { nodeData: getNodeData(ast) });
 
     // Pop scope
     const popScope = popScopeAnimation();
-    addVertex(graph, popScope, getNodeData(ast));
+    addVertex(graph, popScope, { nodeData: getNodeData(ast) });
     apply(popScope, view);
 
     return graph;

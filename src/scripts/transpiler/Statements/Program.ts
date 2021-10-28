@@ -33,11 +33,11 @@ export function Program(ast: ESTree.Program, view: ViewState, context: Animation
             if (group != null) {
                 // End the current group
                 const groupEnd = groupEndAnimation();
-                addVertex(group, groupEnd, getNodeData(statement));
+                addVertex(group, groupEnd, { nodeData: getNodeData(statement) });
                 apply(groupEnd, view);
 
                 // Put the group in the overall graph
-                addVertex(graph, group, getNodeData(ast));
+                addVertex(graph, group, { nodeData: getNodeData(ast) });
 
                 first = false;
                 groupInitialized = false;
@@ -50,18 +50,18 @@ export function Program(ast: ESTree.Program, view: ViewState, context: Animation
 
         if (!groupInitialized) {
             // Start the current group
-            const groupStart = groupStartAnimation(first, getNodeData(statement).location, 'Animation Group');
-            addVertex(group, groupStart, getNodeData(statement));
+            const groupStart = groupStartAnimation(first, getNodeData(statement).location, animation.nodeData.type);
+            addVertex(group, groupStart, { nodeData: getNodeData(statement) });
             apply(groupStart, view);
 
             groupInitialized = true;
         }
 
-        addVertex(group, animation, getNodeData(statement));
+        addVertex(group, animation, { nodeData: getNodeData(statement) });
     }
 
     if (group != null) {
-        addVertex(graph, group, getNodeData(ast));
+        addVertex(graph, group, { nodeData: getNodeData(ast) });
     }
 
     return graph;

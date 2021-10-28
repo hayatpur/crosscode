@@ -2,10 +2,11 @@ import { createData, replaceDataWith } from '../../../environment/data/data';
 import { DataState, DataType } from '../../../environment/data/DataState';
 import { addDataAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
+import { updateRootViewLayout } from '../../../environment/layout';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
 export interface ArrayStartAnimation extends AnimationNode {
@@ -26,17 +27,14 @@ function onBegin(animation: ArrayStartAnimation, view: ViewState, options: Anima
     data.transform.styles.top = 0;
 
     const loc = addDataAt(environment, data, [], null);
+    updateRootViewLayout(view);
 
-    // const output = resolvePath(environment, animation.dataSpecifier, null) as DataState;
-    // output.type = DataType.Array;
-    // output.value = [];
-
-    //         if (options.baking) {
-    //             animation.computeReadAndWrites({
-    //                 location: getMemoryLocation(environment, (output).foundLocation,
-    //                 id: output.id,
-    //             });
-    //         }
+    if (options.baking) {
+        computeReadAndWrites(animation, {
+            location: loc,
+            id: data.id,
+        });
+    }
 
     // Point the output register to the newly created data
     const outputRegister = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Floating`) as DataState;
@@ -48,6 +46,11 @@ function onSeek(animation: ArrayStartAnimation, view: ViewState, time: number, o
 }
 
 function onEnd(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+
+function computeReadAndWrites(animation: ArrayStartAnimation, data: AnimationData) {
+    animation._reads = [data];
+    animation._writes = [data];
+}
 
 export function arrayStartAnimation(
     dataSpecifier: Accessor[],

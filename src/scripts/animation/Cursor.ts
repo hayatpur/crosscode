@@ -1,7 +1,5 @@
-import { Editor } from '../editor/Editor';
-import { AnimationGraph } from './graph/AnimationGraph';
-import { AnimationNode } from './primitive/AnimationNode';
 import * as ESTree from 'estree';
+import { Editor } from '../editor/Editor';
 
 export class Cursor {
     static instance: Cursor;
@@ -27,6 +25,8 @@ export class Cursor {
 
     setCodeLocation(loc: ESTree.SourceLocation) {
         const start = Editor.instance.computeBoundingBox(loc.start.line);
+        if (start == null) return;
+
         let charWidth = Editor.instance.computeCharWidth(loc.start.line);
 
         start.y -= 5;

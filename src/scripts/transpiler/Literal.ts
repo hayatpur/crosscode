@@ -11,7 +11,7 @@ export function Literal(ast: ESTree.Literal, view: ViewState, context: Animation
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     const create = createLiteralAnimation(ast.value, context.outputRegister, context.locationHint);
-    addVertex(graph, create, getNodeData(ast));
+    addVertex(graph, create, { nodeData: getNodeData(ast) });
     apply(create, view);
 
     return graph;

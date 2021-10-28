@@ -4,14 +4,22 @@
 /* Generic */
 @import './generic/checkbox.scss';
 
-/* View */
-@import './state/data.scss';
+/* State */
+@import './state/data/data.scss';
+@import './state/data/literal.scss';
+@import './state/data/array.scss';
+@import './state/data/identifier.scss';
 @import './state/environment.scss';
 @import './state/view.scss';
+@import './state/layout.scss';
 
 /* Timeline */
 @import './time/timeline.scss';
 @import './time/timeSection.scss';
+
+/** Renderer **/
+@import './renderer/highlight.scss';
+@import './renderer/svgCanvas.scss';
 
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
@@ -44,115 +52,15 @@ html,
 body {
     margin: 0px;
     height: 100%;
-    font-family: Calibri;
+    font-family: Inter;
     overflow: hidden;
     font-size: 24px;
 }
 
-#svg-canvas {
-    z-index: 1;
-    pointer-events: none;
-}
-
-#editor {
-    width: 100%;
-    height: 100%;
-    padding: 7rem;
-}
-
-header {
-    align-items: center;
-    flex-direction: row;
-    display: flex;
-    margin-top: 2rem;
-    justify-content: center;
-    z-index: 10;
-    background: #fff;
-    position: fixed;
-    bottom: 0px;
-    width: 100%;
-    margin-bottom: 4rem;
-}
-
-header>div {
-    /* padding-right: 8px; */
-    /* flex: 1; */
-    font-size: 14px;
-    white-space: pre;
-    opacity: 0.5;
-    display: flex;
-    /* flex-direction: column; */
-    justify-content: center;
-    align-items: center;
-    margin: 0px 50px;
-}
-
-header>div.active {
-    opacity: 1;
-}
-
-header>div.active .number-icon {
-    background: #0000001f;
-}
-
-header .number-icon {
-    background: #0000001f;
-    width: 25px;
-    border-radius: 50%;
-    height: 25px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    margin-right: 10px;
-}
-
-header .separator {
-    flex: 1 1 auto;
-}
-
-header .separator>span {
-    display: block;
-    border-color: #bdbdbd;
-    border-top-style: solid;
-    border-top-width: 1px;
-}
-
-.question {
-    margin-bottom: 5em;
-    margin-top: -2rem;
-    margin-left: 2.5rem;
-}
-
-.separator-path {
-    fill: transparent;
-    stroke: rgba(0, 0, 0, 0.2);
-    stroke-width: 0.5px;
-    opacity: 1;
-    /* transition-property: opacity; */
-    transition-duration: 0.2s;
-}
-
-.highlight-cursor {
+.renderer-stage {
     position: absolute;
-    /* background: #264f78; */
-    /* background: #62b0ff; */
-    background: #c1e0ff;
-    mix-blend-mode: multiply;
-    z-index: 10;
-    border-radius: 5px;
-    transition: 0.1s;
-    pointer-events: none;
-    /* opacity: 0 !important; */
-}
-
-#temporary-layout {
-    opacity: 0.2;
-    z-index: -1;
-    pointer-events: none;
-    position: absolute;
-    display: block;
-    width: 100%;
-    height: 100%;
     left: 0px;
-    right: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
 }

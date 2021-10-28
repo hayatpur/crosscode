@@ -1,11 +1,13 @@
 import { cloneData, createData, replaceDataWith } from '../../../environment/data/data';
 import { DataState, DataType } from '../../../environment/data/DataState';
-import { addDataAt, resolvePath } from '../../../environment/environment';
+import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
+import { updateRootViewLayout } from '../../../environment/layout';
+import { getRelativeLocation } from '../../../utilities/math';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
 export interface CopyDataAnimation extends AnimationNode {
@@ -21,8 +23,14 @@ function onBegin(animation: CopyDataAnimation, view: ViewState, options: Animati
     copy.transform.styles.elevation = 0;
     copy.transform.styles.position = 'absolute';
 
+    // Copy the correct render location
+    const renderLocation = getRelativeLocation(data.transform.rendered, environment.transform.rendered);
+    copy.transform.styles.left = `${renderLocation.x}px`;
+    copy.transform.styles.top = `${renderLocation.y}px`;
+
     const location = addDataAt(environment, copy, [], null);
     environment._temps[`CopyDataAnimation${animation.id}`] = location;
+    updateRootViewLayout(view);
 
     // Put it in the floating stack
     const register = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState;
@@ -34,13 +42,14 @@ function onBegin(animation: CopyDataAnimation, view: ViewState, options: Animati
     }
 
     if (options.baking) {
-        // animation.computeReadAndWrites(
-        //     {
-        //         location: getMemoryLocation(environment, data).foundLocation,
-        //         id: data.id,
-        //     },
-        //     { location, id: copy.id }
-        // );
+        computeReadAndWrites(
+            animation,
+            {
+                location: getMemoryLocation(environment, data).foundLocation,
+                id: data.id,
+            },
+            { location, id: copy.id }
+        );
     }
 }
 
@@ -58,6 +67,11 @@ function onEnd(animation: CopyDataAnimation, view: ViewState, options: Animation
     copy.transform.styles.elevation = 1;
 
     copy.transform.styles.position = 'absolute';
+}
+
+function computeReadAndWrites(animation: CopyDataAnimation, original: AnimationData, copy: AnimationData) {
+    animation._reads = [original];
+    animation._writes = [copy];
 }
 
 export function copyDataAnimation(

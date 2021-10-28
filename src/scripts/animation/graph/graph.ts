@@ -2,6 +2,12 @@ import { AnimationNode, instanceOfAnimationNode, NodeData } from '../primitive/A
 import { AnimationGraph, instanceOfAnimationGraph } from './AnimationGraph';
 import { Edge, EdgeType } from './edges/Edge';
 
+export interface VertexOptions {
+    nodeData?: NodeData;
+    shouldDissolve?: boolean;
+    abstractionIndex?: number;
+}
+
 /**
  * Adds a vertex to the end of an animation graph. If shouldDissolve is true (and the vertex is an animation graph),
  * then the children of the vertex are directly added, rather than the vertex itself.
@@ -11,34 +17,41 @@ import { Edge, EdgeType } from './edges/Edge';
  * @param nodeData - Data of AST node for vertex
  * @param shouldDissolve - If vertex should dissolve or not
  */
-export function addVertex(
-    graph: AnimationGraph,
-    vertex: AnimationGraph | AnimationNode,
-    nodeData: NodeData = null,
-    shouldDissolve = false
-) {
-    if (instanceOfAnimationNode(vertex) || (instanceOfAnimationGraph(vertex) && !shouldDissolve)) {
+export function addVertex(graph: AnimationGraph, vertex: AnimationGraph | AnimationNode, options: VertexOptions = {}) {
+    // Defaults
+    options.shouldDissolve = options.shouldDissolve ?? false;
+    options.abstractionIndex = options.abstractionIndex ?? graph.currentAbstractionIndex;
+
+    const { vertices: graphVertices, edges: graphEdges } = graph.abstractions[options.abstractionIndex];
+
+    if (instanceOfAnimationNode(vertex) || (instanceOfAnimationGraph(vertex) && !options.shouldDissolve)) {
         if (instanceOfAnimationGraph(vertex) && vertex.isGroup) {
             updateGroupNodeData(vertex);
-            graph.vertices.push(vertex);
+            graphVertices.push(vertex);
         } else {
-            vertex.nodeData = nodeData;
-            graph.vertices.push(vertex);
+            vertex.nodeData = options.nodeData;
+            graphVertices.push(vertex);
         }
     } else {
+        const { vertices: vertexVertices, edges: vertexEdges } = vertex.abstractions[options.abstractionIndex];
+
         // Offset all the edges
-        const offset = graph.vertices.length + 1;
+        const offset = graphVertices.length + 1;
 
         // Add all the vertices
-        const vertices = [...vertex.vertices];
-        vertices.forEach((vertex) => addVertex(graph, vertex, nodeData));
+        const vertices = [...vertexVertices];
+        vertices.forEach((vertex) =>
+            addVertex(graph, vertex, {
+                nodeData: options.nodeData,
+            })
+        );
 
         // Add all the edges
-        for (let j = 0; j < vertex.edges.length; j++) {
-            vertex.edges[j].from += offset;
-            vertex.edges[j].to += offset;
+        for (let j = 0; j < vertexEdges.length; j++) {
+            vertexEdges[j].from += offset;
+            vertexEdges[j].to += offset;
 
-            graph.edges.push(vertex.edges[j]);
+            graphEdges.push(vertexEdges[j]);
         }
     }
 
@@ -63,12 +76,16 @@ export function getEmptyNodeData(pivot: NodeData): NodeData {
     };
 }
 
-export function updateGroupNodeData(graph: AnimationGraph) {
-    if (graph.vertices.length === 0) {
+export function updateGroupNodeData(graph: AnimationGraph, options: VertexOptions = {}) {
+    options.abstractionIndex = options.abstractionIndex ?? graph.currentAbstractionIndex;
+
+    const { vertices: graphVertices, edges: graphEdges } = graph.abstractions[options.abstractionIndex];
+
+    if (graphVertices.length === 0) {
         graph.nodeData = getEmptyNodeData(graph.nodeData);
     }
 
-    const vertices = graph.vertices;
+    const vertices = graphVertices;
 
     let startLine = 0;
     let endLine = 0;
@@ -108,19 +125,23 @@ export function updateGroupNodeData(graph: AnimationGraph) {
  * @param graph - Animation graph to remove from
  * @param i - Vertex to remove at
  */
-export function removeVertexAt(graph: AnimationGraph, i: number) {
+export function removeVertexAt(graph: AnimationGraph, i: number, options: VertexOptions = {}) {
+    options.abstractionIndex = options.abstractionIndex ?? graph.currentAbstractionIndex;
+
+    const { vertices: graphVertices, edges: graphEdges } = graph.abstractions[options.abstractionIndex];
+
     // Remove vertex
-    graph.vertices.splice(i, 1);
+    graphVertices.splice(i, 1);
 
     // Shift over all edges
-    for (let j = graph.edges.length - 1; j >= 0; j--) {
-        if (graph.edges[j].from == i || graph.edges[j].to == i) {
-            graph.edges.splice(j, 1);
+    for (let j = graphEdges.length - 1; j >= 0; j--) {
+        if (graphEdges[j].from == i || graphEdges[j].to == i) {
+            graphEdges.splice(j, 1);
             continue;
         }
 
-        if (graph.edges[j].from > i) graph.edges[j].from -= 1;
-        if (graph.edges[j].to > i) graph.edges[j].to -= 1;
+        if (graphEdges[j].from > i) graphEdges[j].from -= 1;
+        if (graphEdges[j].to > i) graphEdges[j].to -= 1;
     }
 }
 
@@ -129,8 +150,15 @@ export function removeVertexAt(graph: AnimationGraph, i: number) {
  * @param graph - Animation graph to remove vertex from
  * @param vertex - Vertex to remove
  */
-export function removeVertex(graph: AnimationGraph, vertex: AnimationGraph | AnimationNode) {
-    const index = graph.vertices.indexOf(vertex);
+export function removeVertex(
+    graph: AnimationGraph,
+    vertex: AnimationGraph | AnimationNode,
+    options: VertexOptions = {}
+) {
+    options.abstractionIndex = options.abstractionIndex ?? graph.currentAbstractionIndex;
+    const { vertices: graphVertices, edges: graphEdges } = graph.abstractions[options.abstractionIndex];
+
+    const index = graphVertices.indexOf(vertex);
     if (index == -1) {
         console.warn('Attempting to remove non-existent vertex', vertex);
         return;
@@ -513,8 +541,11 @@ export function animationToString(
 
     const lookup = {};
 
+    const { vertices: animationVertices, edges: animationEdges } =
+        animation.abstractions[animation.currentAbstractionIndex];
+
     // Sequential edges
-    for (let i = animation.vertices.length - 1; i >= 1; i--) {
+    for (let i = animationVertices.length - 1; i >= 1; i--) {
         const from = i - 1;
         const to = i;
 
@@ -529,15 +560,15 @@ export function animationToString(
         // if (animation.vertices[from] == animation) console.log('CIRCULAR');
 
         if (!(from in lookup)) {
-            let v1 = animation.vertices[from]
-                ? animationToString(animation.vertices[from], indent + 1, { first: true })
+            let v1 = animationVertices[from]
+                ? animationToString(animationVertices[from], indent + 1, { first: true })
                 : `[${from}_Null]`;
             lookup[from] = v1;
         }
 
         if (!(to in lookup)) {
-            let v2 = animation.vertices[to]
-                ? animationToString(animation.vertices[to], indent + 1, { first: true })
+            let v2 = animationVertices[to]
+                ? animationToString(animationVertices[to], indent + 1, { first: true })
                 : `[${to}_Null]`;
             lookup[to] = v2;
         }
@@ -546,12 +577,12 @@ export function animationToString(
     }
 
     // Left out vertices
-    for (let i = 0; i < animation.vertices.length; i++) {
-        if (animation.vertices[i] == null) continue;
+    for (let i = 0; i < animationVertices.length; i++) {
+        if (animationVertices[i] == null) continue;
         if (i in lookup) continue;
 
         if (!visited_vertices.has(i)) {
-            output += `${animationToString(animation.vertices[i], indent + 1, {
+            output += `${animationToString(animationVertices[i], indent + 1, {
                 first: false,
             })}\n`;
         }
@@ -571,7 +602,8 @@ export function animationToString(
 #ranker: longest-path
 #lineWidth: 1`;
 
-        console.log(`https://nomnoml.com/image.svg?source=${encodeURIComponent(`${config}\n${output}`)}`);
+        const url = `https://nomnoml.com/image.svg?source=${encodeURIComponent(`${config}\n${output}`)}`;
+        return [output, url];
     }
 
     return output;

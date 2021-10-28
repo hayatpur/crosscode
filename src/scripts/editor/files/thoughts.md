@@ -453,3 +453,15 @@ AG(75) 1 2
 AG(75) 0 1
 AG(78) 1 2
 AG(78) 0 1
+
+
+// // Bubble-sort:
+// // Maybe it's hard to move from low-level to high-level.
+// // Easier to see the high-level first, and then move to the low-level.
+// // Or, connection between animation and code is not very strong
+
+// // Do you see visual feedback on if you're moving down?
+// // These visual feedbacks are important during
+// // "orient" user
+
+// // Gradually dictate animations they want to see. Combine them, let user combine them in a way that fits their workflow.

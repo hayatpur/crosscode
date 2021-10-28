@@ -8,11 +8,7 @@ import { AccessorType } from '../../../environment/EnvironmentState';
 import { ViewState } from '../../../view/ViewState';
 import { Compiler, getNodeData } from '../../Compiler';
 
-export function AssignmentExpression(
-    ast: ESTree.AssignmentExpression,
-    view: ViewState,
-    context: AnimationContext
-) {
+export function AssignmentExpression(ast: ESTree.AssignmentExpression, view: ViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     const leftRegister = [{ type: AccessorType.Register, value: `${graph.id}_Assignment_Left` }];
@@ -24,17 +20,17 @@ export function AssignmentExpression(
         outputRegister: leftRegister,
         feed: true,
     });
-    addVertex(graph, left, getNodeData(ast.left));
+    addVertex(graph, left, { nodeData: getNodeData(ast.left) });
 
     // Right should be in the floating stack
     const right = Compiler.compile(ast.right, view, {
         ...context,
         outputRegister: rightRegister,
     });
-    addVertex(graph, right, getNodeData(ast.right));
+    addVertex(graph, right, { nodeData: getNodeData(ast.right) });
 
     const place = moveAndPlaceAnimation(rightRegister, leftRegister);
-    addVertex(graph, place, getNodeData(ast));
+    addVertex(graph, place, { nodeData: getNodeData(ast) });
     apply(place, view);
 
     return graph;

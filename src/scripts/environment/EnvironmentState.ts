@@ -26,8 +26,14 @@ export function accessorsToString(accessors: Accessor[]): string {
     return `${accessors.map((acc) => accessorToString(acc)).join(' > ')}`;
 }
 
+export interface IdentifierState {
+    name: string;
+    location: Accessor[];
+    transform: Transform;
+}
+
 export interface Scope {
-    [name: string]: Accessor[];
+    [name: string]: IdentifierState;
 }
 
 export interface EnvironmentTransform extends Transform {
@@ -36,6 +42,8 @@ export interface EnvironmentTransform extends Transform {
 }
 
 export interface EnvironmentState {
+    _type: 'EnvironmentState';
+
     transform: EnvironmentTransform;
 
     // Variable name bindings
@@ -65,5 +73,5 @@ export enum EnvironmentPositionModifierType {
 }
 
 export function instanceOfEnvironment(environment: any): environment is EnvironmentState {
-    return 'scope' in environment && 'memory' in environment && 'registers' in environment && '_temps' in environment;
+    return environment['_type'] === 'EnvironmentState';
 }

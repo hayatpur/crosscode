@@ -2,11 +2,7 @@ import * as ESTree from 'estree';
 import { apply } from '../../../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
 import { addVertex } from '../../../animation/graph/graph';
-import {
-    AnimationContext,
-    ControlOutput,
-    ControlOutputData,
-} from '../../../animation/primitive/AnimationNode';
+import { AnimationContext, ControlOutput, ControlOutputData } from '../../../animation/primitive/AnimationNode';
 import { createScopeAnimation } from '../../../animation/primitive/Scope/CreateScopeAnimation';
 import { popScopeAnimation } from '../../../animation/primitive/Scope/PopScopeAnimation';
 import { DataState } from '../../../environment/data/DataState';
@@ -21,12 +17,12 @@ export function ForStatement(ast: ESTree.ForStatement, view: ViewState, context:
 
     // Create a scope
     const createScope = createScopeAnimation();
-    addVertex(graph, createScope, getNodeData(ast));
+    addVertex(graph, createScope, { nodeData: getNodeData(ast) });
     apply(createScope, view);
 
     // Init
     const init = Compiler.compile(ast.init, view, context);
-    addVertex(graph, init, getNodeData(ast.init));
+    addVertex(graph, init, { nodeData: getNodeData(ast.init) });
 
     // Points to the result of test
 
@@ -36,7 +32,7 @@ export function ForStatement(ast: ESTree.ForStatement, view: ViewState, context:
         // Test
         const testRegister = [{ type: AccessorType.Register, value: `${graph.id}_TestIf${_i}` }];
         const test = Compiler.compile(ast.test, view, { ...context, outputRegister: testRegister });
-        addVertex(graph, test, getNodeData(ast.test));
+        addVertex(graph, test, { nodeData: getNodeData(ast.test) });
         const testData = resolvePath(getCurrentEnvironment(view), testRegister, null) as DataState; // @TODO: Add a probe test animation
         const testValue = testData.value as boolean;
         if (!testValue) break;
@@ -44,7 +40,7 @@ export function ForStatement(ast: ESTree.ForStatement, view: ViewState, context:
         // Body
         const controlOutput: ControlOutputData = { output: ControlOutput.None };
         const body = Compiler.compile(ast.body, view, { ...context, controlOutput: controlOutput });
-        addVertex(graph, body, getNodeData(ast.body));
+        addVertex(graph, body, { nodeData: getNodeData(ast.body) });
 
         if (controlOutput.output == ControlOutput.Break) {
             context.controlOutput.output = ControlOutput.None;
@@ -58,7 +54,7 @@ export function ForStatement(ast: ESTree.ForStatement, view: ViewState, context:
 
         // Update
         const update = Compiler.compile(ast.update, view, context);
-        addVertex(graph, update, getNodeData(ast.update));
+        addVertex(graph, update, { nodeData: getNodeData(ast.update) });
 
         _i++;
     }
@@ -69,7 +65,7 @@ export function ForStatement(ast: ESTree.ForStatement, view: ViewState, context:
 
     // Pop scope
     const popScope = popScopeAnimation();
-    addVertex(graph, popScope, getNodeData(ast));
+    addVertex(graph, popScope, { nodeData: getNodeData(ast) });
     apply(popScope, view);
 
     return graph;

@@ -1,7 +1,13 @@
+import { clone } from '../utilities/objects';
 import { createView } from '../view/view';
 import { ViewState } from '../view/ViewState';
 import { Cursor } from './Cursor';
-import { AnimationGraph, AnimationRuntimeOptions, instanceOfAnimationGraph } from './graph/AnimationGraph';
+import {
+    AnimationData,
+    AnimationGraph,
+    AnimationRuntimeOptions,
+    instanceOfAnimationGraph,
+} from './graph/AnimationGraph';
 import { Edge } from './graph/edges/Edge';
 import { AnimationNode, instanceOfAnimationNode } from './primitive/AnimationNode';
 
@@ -19,15 +25,19 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
         return animation.baseDuration * (1 / animation.speed);
     }
 
+    const currentAbstraction = animation.abstractions[animation.currentAbstractionIndex];
+
     // If a parallel animation, return the end point of the longest animation vertex
-    if (animation.isParallel && animation.parallelStarts[0] != undefined) {
-        const ends = animation.parallelStarts.map((start, i) => start + duration(animation.vertices[i + 1]));
+    if (currentAbstraction.isParallel && currentAbstraction.parallelStarts[0] != undefined) {
+        const ends = currentAbstraction.parallelStarts.map(
+            (start, i) => start + duration(currentAbstraction.vertices[i + 1])
+        );
         return Math.max(...ends);
     }
     // Else return the sum of all durations
     else {
         let baseDuration = 0;
-        for (const vertex of animation.vertices) {
+        for (const vertex of currentAbstraction.vertices) {
             if (vertex == null) continue;
             baseDuration += duration(vertex) + vertex.delay;
         }
@@ -41,13 +51,14 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
  * @param edge - Edge to remove
  */
 export function removeEdge(graph: AnimationGraph, edge: Edge) {
-    const index = graph.edges.findIndex((e) => e.id == edge.id);
+    const currentAbstraction = graph.abstractions[graph.currentAbstractionIndex];
+    const index = currentAbstraction.edges.findIndex((e) => e.id == edge.id);
     if (index == -1) {
         console.warn('Attempting to remove non-existent edge', edge);
         return;
     }
 
-    graph.edges.splice(index, 1);
+    currentAbstraction.edges.splice(index, 1);
 }
 
 /**
@@ -56,13 +67,15 @@ export function removeEdge(graph: AnimationGraph, edge: Edge) {
  * @param edge - Edge to add
  */
 export function addEdge(graph: AnimationGraph, edge: Edge) {
-    for (const other of graph.edges) {
+    const currentAbstraction = graph.abstractions[graph.currentAbstractionIndex];
+
+    for (const other of currentAbstraction.edges) {
         if (other.from == edge.from && other.to == edge.to && other.constructor.name == edge.constructor.name) {
             return;
         }
     }
 
-    graph.edges.push(edge);
+    currentAbstraction.edges.push(edge);
 }
 
 /**
@@ -79,6 +92,7 @@ export function begin(
     Cursor.instance?.setCodeLocation(animation.nodeData.location);
 
     if (options.baking) {
+        animation.precondition = clone(view) as ViewState;
     }
 
     if (instanceOfAnimationNode(animation)) {
@@ -94,7 +108,7 @@ export function begin(
  */
 export function end(animation: AnimationGraph | AnimationNode, view: ViewState, options: AnimationRuntimeOptions = {}) {
     if (options.baking) {
-        // animation.postcondition = cloneEnvironment(view.environments[view.environments.length - 1]);
+        animation.postcondition = clone(view);
     }
 
     if (instanceOfAnimationNode(animation)) {
@@ -120,20 +134,22 @@ export function seek(
         return;
     }
 
+    const currentAbstraction = animation.abstractions[animation.currentAbstractionIndex];
+
     // Keep track of the start time (for sequential animations)
     let start = 0;
 
     // Loop through each child vertex and seek into it
-    for (let i = 0; i < animation.vertices.length; i++) {
-        if (animation.vertices[i] == null) continue;
+    for (let i = 0; i < currentAbstraction.vertices.length; i++) {
+        if (currentAbstraction.vertices[i] == null) continue;
 
-        const vertex = animation.vertices[i];
+        const vertex = currentAbstraction.vertices[i];
 
         start += vertex.delay;
 
         // If parallel animation, override with parallel start time
-        if (animation.isParallel) {
-            start = animation.parallelStarts[i];
+        if (currentAbstraction.isParallel) {
+            start = currentAbstraction.parallelStarts[i];
         }
 
         // If the animation should be playing
@@ -142,7 +158,7 @@ export function seek(
         // End animation
         if (vertex.isPlaying && !shouldBePlaying) {
             // Before ending, seek into the animation at it's end time
-            seek(vertex, view, duration(vertex));
+            seek(vertex, view, duration(vertex), options);
             end(vertex, view, options);
 
             if (instanceOfAnimationNode(vertex)) {
@@ -164,7 +180,7 @@ export function seek(
         // Skip over this animation
         if (time >= start + duration(vertex) && !vertex.isPlaying && !vertex.hasPlayed) {
             begin(vertex, view, options);
-            seek(vertex, view, duration(vertex));
+            seek(vertex, view, duration(vertex), options);
             end(vertex, view, options);
 
             vertex.hasPlayed = true;
@@ -201,7 +217,9 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     animation.hasPlayed = false;
 
     if (instanceOfAnimationGraph(animation)) {
-        animation.vertices.forEach((vertex) => reset(vertex));
+        const currentAbstraction = animation.abstractions[animation.currentAbstractionIndex];
+
+        currentAbstraction.vertices.forEach((vertex) => reset(vertex));
     }
 }
 
@@ -219,4 +237,46 @@ export function apply(animation: AnimationGraph | AnimationNode, view: ViewState
     begin(animation, view);
     seek(animation, view, duration(animation));
     end(animation, view);
+}
+
+/**
+ *
+ * TODO: Specify abstraction level
+ * @param animation
+ * @returns
+ */
+export function reads(animation: AnimationGraph | AnimationNode): AnimationData[] {
+    if (instanceOfAnimationNode(animation)) {
+        return animation._reads;
+    }
+
+    let result = [];
+    const { vertices } = animation.abstractions[animation.currentAbstractionIndex];
+
+    for (const vertex of vertices) {
+        result.push(...reads(vertex));
+    }
+
+    return result;
+}
+
+/**
+ *
+ * TODO: Specify abstraction level
+ * @param animation
+ * @returns
+ */
+export function writes(animation: AnimationGraph | AnimationNode): AnimationData[] {
+    if (instanceOfAnimationNode(animation)) {
+        return animation._writes;
+    }
+
+    let result = [];
+    const { vertices } = animation.abstractions[animation.currentAbstractionIndex];
+
+    for (const vertex of vertices) {
+        result.push(...writes(vertex));
+    }
+
+    return result;
 }

@@ -40,29 +40,16 @@ body {
     mix-blend-mode: lighten !important;
 }
 
-.data.literal {
+.data-literal {
     background: #2b2d2e;
-    border: none;
+    border: 1px solid #1b1b1b;
 }
 
-// .data.array-item:not(.first-array-item):not(.last-array-item) {
-//     border-left: none;
-// }
-
-// .data.last-array-item {
-//     border-left: none;
-// }    
-
-
-.data.floating.literal {
+.data-literal.floating {
     background: #2b2d2e;
 }
 
-.data.array.floating>.brace {
-    color: #2b2d2e;
-}
-
-.data.undefined {
+.data-undefined {
     background: #ebebeb07 !important;
     box-shadow: none;
 }

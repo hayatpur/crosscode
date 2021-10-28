@@ -95,15 +95,16 @@ export default class Timeline {
         document.querySelectorAll('.time-section').forEach((section) => section.remove());
         this.sections = [];
 
-        const animations = this.executor.animation.vertices;
         const total_duration = duration(this.executor.animation);
 
         this.updateAnimationGraph(this.executor.animation, 0, total_duration);
     }
 
     updateAnimationGraph(animation: AnimationGraph, start: number, total_duration: number) {
-        for (let i = 0; i < animation.vertices.length; i++) {
-            let child = animation.vertices[i];
+        const { vertices } = animation.abstractions[animation.currentAbstractionIndex];
+
+        for (let i = 0; i < vertices.length; i++) {
+            let child = vertices[i];
 
             if (instanceOfAnimationGraph(child)) {
                 start = this.updateAnimationGraph(child, start, total_duration);

@@ -1,0 +1,44 @@
+/** Array style used for computing layout **/
+.data-array-i {
+    display: flex;
+    min-height: 50px;
+}
+
+.data-array-i>*:not(last-child) {
+    margin-right: 1px;
+}
+
+.data-array-brace {
+    opacity: 0.7;
+}
+
+.data-array-opening-brace {
+    flex: 1;
+}
+
+.data-array-closing-brace {
+    flex: 0;
+}
+
+.data.array-item:not(.first-array-item):not(.last-array-item) {
+    border-radius: 0px;
+    border-left: none;
+}
+
+.data.first-array-item {
+    border-radius: 7px 0px 0px 7px;
+}
+
+.data.last-array-item {
+    border-radius: 0px 7px 7px 0px;
+    border-left: none;
+}
+
+.data-array-index {
+    background: none;
+    position: absolute;
+    font-size: 12px;
+    opacity: 0.2;
+    margin-left: 8px;
+    margin-top: 6px;
+}

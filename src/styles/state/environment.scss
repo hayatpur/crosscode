@@ -1,15 +1,30 @@
+.environment-i,
 .environment {
-    position: relative;
     transform-origin: top left;
     transform: scale(1);
-    border: 1px solid red;
+    display: flex;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 50px;
+    padding-bottom: 25px;
+}
+
+.environment-i>*:not(.floating-i):not(.identifier-i) {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.environment {
+    position: absolute;
 }
 
 .environment-border {
     position: absolute;
     transition: 0.3s ease;
-    border-radius: 5px;
+    border-radius: 7px;
     user-select: none;
     pointer-events: none;
     z-index: -1;
+    left: 0px;
+    top: 0px;
 }

@@ -1,5 +1,7 @@
-import { Accessor, EnvironmentState } from '../../environment/EnvironmentState';
+import { Accessor } from '../../environment/EnvironmentState';
+import { ViewState } from '../../view/ViewState';
 import { AnimationNode, NodeData, PlayableAnimation } from '../primitive/AnimationNode';
+import { AbstractionSpec, AbstractionType } from './abstraction/Abstractor';
 import { Edge } from './edges/Edge';
 import { getEmptyNodeData } from './graph';
 
@@ -27,22 +29,32 @@ export interface AnimationGraphPath {
 }
 
 export interface AnimationGraph extends PlayableAnimation {
+    // Meta info
     _type: 'AnimationGraph';
-
     id: string;
     nodeData: NodeData;
+
+    // Invariant to abstraction info
+    precondition: ViewState;
+    postcondition: ViewState;
+    isGroup: boolean;
+
+    // Variant to abstraction info
+    abstractions: AnimationGraphVariant[];
+
+    // Index of current abstraction chosen
+    currentAbstractionIndex: number;
+}
+
+export interface AnimationGraphVariant {
+    // Info about the abstraction
+    spec: AbstractionSpec;
+
+    // Variant to abstraction info
     vertices: (AnimationGraph | AnimationNode)[];
     edges: Edge[];
-
-    precondition: EnvironmentState;
-    postcondition: EnvironmentState;
-
-    // Parallel
     isParallel: boolean;
     parallelStarts: number[];
-
-    // Grouping
-    isGroup?: boolean;
 }
 
 export function instanceOfAnimationGraph(animation: any): animation is AnimationGraph {
@@ -52,25 +64,33 @@ export function instanceOfAnimationGraph(animation: any): animation is Animation
 export function createAnimationGraph(nodeData: NodeData, options: { isGroup?: boolean } = {}): AnimationGraph {
     if (this.id == undefined) this.id = 0;
 
-    if (options.isGroup) console.log('Creating animation group');
-
     return {
+        // Meta info
         _type: 'AnimationGraph',
         id: `AG(${++this.id})`,
         nodeData: options.isGroup ? getEmptyNodeData(nodeData) : nodeData,
-        vertices: [],
-        edges: [],
-        delay: 0,
+
+        // Invariant to abstraction info
         precondition: null,
         postcondition: null,
-
         isPlaying: false,
         hasPlayed: false,
         speed: 1,
+        delay: 0,
         ease: (t) => t,
+        isGroup: options.isGroup || false,
 
-        isParallel: false,
-        parallelStarts: [],
-        isGroup: options.isGroup,
+        // Variant to abstraction info
+        abstractions: [
+            {
+                spec: { type: AbstractionType.None, value: null },
+                vertices: [],
+                edges: [],
+                isParallel: false,
+                parallelStarts: [],
+            },
+        ],
+
+        currentAbstractionIndex: 0,
     };
 }

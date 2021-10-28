@@ -1,36 +1,36 @@
 import { clone } from '../utilities/objects';
-import { createData } from './data/data';
-import { DataState, DataType, instanceOfData, LayoutType } from './data/DataState';
-import { Accessor, AccessorType, EnvironmentState, instanceOfEnvironment, Scope } from './EnvironmentState';
-import { updateLayout } from './layout';
+import { createData, createTransform } from './data/data';
+import { DataState, DataType, instanceOfData } from './data/DataState';
+import {
+    Accessor,
+    AccessorType,
+    EnvironmentState,
+    IdentifierState,
+    instanceOfEnvironment,
+    Scope,
+} from './EnvironmentState';
 
 let CUR_ENV_ID = 0;
 
 export function createEnvironment(): EnvironmentState {
     return {
-        scope: [
-            {
-                // _ArrayExpression: [{ type: AccessorType.Index, value: 0 }],
-            },
-        ],
+        _type: 'EnvironmentState',
+        scope: [{}],
         memory: [],
         registers: {},
         _temps: {},
         id: `Env(${++CUR_ENV_ID})`,
         transform: {
-            _x: 0,
-            _y: 0,
-            depth: 0,
-            top: 0,
-            left: 0,
-            width: 0,
-            height: 0,
-            opacity: 1,
-            positionType: 'absolute',
+            ...createTransform(),
+            styles: {},
             positionModifiers: [],
-            layout: { type: LayoutType.Horizontal, innerPadding: 10, outerPadding: 0 },
+            classList: ['environment-i'],
         },
     };
+}
+
+export function createIdentifier(name: string, location: Accessor[]): IdentifierState {
+    return { name, location, transform: { ...createTransform(), classList: ['identifier-i'] } };
 }
 
 /**
@@ -71,8 +71,8 @@ export function declareVariable(
     location: Accessor[],
     shouldBeGlobal = false
 ) {
-    environment.scope[environment.scope.length - 1][name] = location;
-    updateLayout(environment);
+    environment.scope[environment.scope.length - 1][name] = createIdentifier(name, location);
+    // updateLayout(environment);
 }
 
 /**
@@ -86,12 +86,12 @@ export function redeclareVariable(environment: EnvironmentState, name: string, l
         let scope = environment.scope[i];
 
         if (name in scope) {
-            scope[name] = location;
+            scope[name] = createIdentifier(name, location);
             return;
         }
     }
 
-    updateLayout(environment);
+    // updateLayout(environment);
 }
 
 /**
@@ -104,7 +104,7 @@ export function lookupVariable(environment: EnvironmentState, name: string): Acc
     for (let i = environment.scope.length - 1; i >= 0; i--) {
         let scope = environment.scope[i];
         if (name in scope) {
-            return scope[name];
+            return scope[name].location;
         }
     }
 }
@@ -115,6 +115,7 @@ export function lookupVariable(environment: EnvironmentState, name: string): Acc
  */
 export function cloneEnvironment(environment: EnvironmentState, assignNewId: boolean = false): EnvironmentState {
     return {
+        _type: 'EnvironmentState',
         scope: clone(environment.scope),
         memory: clone(environment.memory),
         registers: clone(environment.registers),
@@ -348,7 +349,7 @@ export function addDataAt(
         // No path specified, push it into memory
         if (path.length == 0) {
             origin.memory.push(data);
-            updateLayout(origin);
+            // updateLayout(origin);
             return [{ value: origin.memory.length - 1, type: AccessorType.Index }];
         }
 

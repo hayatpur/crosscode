@@ -1,4 +1,4 @@
-import { DataState } from '../data/DataState';
+import { IdentifierState } from '../EnvironmentState';
 
 export class IdentifierRenderer {
     element: HTMLElement;
@@ -6,16 +6,14 @@ export class IdentifierRenderer {
     constructor() {
         this.element = document.createElement('div');
         this.element.classList.add('identifier');
-
-        setTimeout(() => (this.element.style.transform = `scale(1)`));
     }
 
-    setState(name: string, data: DataState) {
-        this.element.innerHTML = name;
+    setState(state: IdentifierState) {
+        this.element.innerHTML = state.name;
 
         // const bbox = data.element.getBoundingClientRect();
-        this.element.style.top = `${data.transform.rendered.y - 32}px`;
-        this.element.style.left = `${data.transform.rendered.x - 3}px`;
+        this.element.style.top = `${state.transform.rendered.y}px`;
+        this.element.style.left = `${state.transform.rendered.x}px`;
     }
 
     destroy() {

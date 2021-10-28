@@ -2,14 +2,13 @@ import { createData, replaceDataWith } from '../../../environment/data/data';
 import { DataState, DataType, instanceOfData } from '../../../environment/data/DataState';
 import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString, instanceOfEnvironment } from '../../../environment/EnvironmentState';
-import { updateLayout } from '../../../environment/layout';
+import { updateRootViewLayout } from '../../../environment/layout';
 import { DataMovementLocation, DataMovementPath } from '../../../utilities/DataMovementPath';
-import { remap } from '../../../utilities/math';
-import { clone } from '../../../utilities/objects';
+import { getRelativeLocation, remap } from '../../../utilities/math';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
 export interface MoveAndPlaceAnimation extends AnimationNode {
@@ -27,10 +26,13 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
 
     const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_to`);
 
-    updateLayout(view);
+    updateRootViewLayout(view);
 
     // Start position
-    const startTransform = { x: move.transform.rendered.x, y: move.transform.rendered.y } as DataMovementLocation;
+    const startTransform = getRelativeLocation(
+        move.transform.rendered,
+        environment.transform.rendered
+    ) as DataMovementLocation;
 
     let endTransform: DataMovementLocation;
 
@@ -41,15 +43,20 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
         placeholder.transform.styles.position = 'relative';
 
         const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_Placeholder`);
+        updateRootViewLayout(view);
 
-        updateLayout(view);
-
-        endTransform = { x: placeholder.transform.rendered.x, y: placeholder.transform.rendered.y };
+        endTransform = getRelativeLocation(
+            placeholder.transform.rendered,
+            environment.transform.rendered
+        ) as DataMovementLocation;
 
         removeAt(environment, placeholderLocation);
     } else {
         const toTransform = (to as DataState).transform;
-        endTransform = { x: toTransform.rendered.x, y: toTransform.rendered.y };
+        endTransform = getRelativeLocation(
+            toTransform.rendered,
+            environment.transform.rendered
+        ) as DataMovementLocation;
     }
 
     // if (startTransform.x == endTransform.x && startTransform.y == endTransform.y) {
@@ -59,8 +66,6 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
     // Create a movement path to translate the floating container along
     const path = new DataMovementPath(startTransform, endTransform);
     path.seek(0);
-
-    console.log(endTransform.x, startTransform.x);
 
     environment._temps[`MovePath${animation.id}`] = path;
 }
@@ -82,8 +87,8 @@ function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number,
         path.seek(t);
 
         const position = path.getPosition(t);
-        move.transform.styles.left = position.x;
-        move.transform.styles.top = position.y;
+        move.transform.styles.left = `${position.x}px`;
+        move.transform.styles.top = `${position.y}px`;
     }
     // Place
     else if (tn >= 0.8 || animation.noMove) {
@@ -98,7 +103,7 @@ function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number,
         move.transform.styles.elevation = 1 - t;
     }
 
-    updateLayout(view);
+    updateRootViewLayout(view);
 }
 
 function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
@@ -111,15 +116,16 @@ function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: Anima
     }) as DataState;
     const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_EndTo`) as DataState;
 
-    // if (options.baking) {
-    //     this.computeReadAndWrites(
-    //         {
-    //             location: getMemoryLocation(environment, (input).foundLocation,
-    //             id: input.id,
-    //         },
-    //         { location: getMemoryLocation(environment, (to).foundLocation, id: to.id }
-    //     );
-    // }
+    if (options.baking) {
+        computeReadAndWrites(
+            animation,
+            {
+                location: getMemoryLocation(environment, input).foundLocation,
+                id: input.id,
+            },
+            { location: getMemoryLocation(environment, to).foundLocation, id: to.id }
+        );
+    }
 
     if (instanceOfEnvironment(to)) {
     } else {
@@ -128,16 +134,20 @@ function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: Anima
         if (instanceOfData(to)) {
             replaceDataWith(to, input, { frame: true, id: true });
         }
+
+        to.transform.styles.elevation = 0;
+        to.transform.styles.position = 'relative';
+        to.transform.styles.left = 0;
+        to.transform.styles.top = 0;
+        to.transform.styles.borderRadius = input.transform.styles.borderRadius;
     }
 
-    input.transform.styles.elevation = 0;
-    input.transform.styles.position = 'relative';
-    input.transform.styles.left = 0;
-    input.transform.styles.top = 0;
+    updateRootViewLayout(view);
+}
 
-    console.log(clone(environment));
-    updateLayout(view);
-    console.log(clone(environment));
+function computeReadAndWrites(animation: MoveAndPlaceAnimation, inputData: AnimationData, outputData: AnimationData) {
+    animation._reads = [inputData];
+    animation._writes = [outputData, inputData];
 }
 
 export function moveAndPlaceAnimation(

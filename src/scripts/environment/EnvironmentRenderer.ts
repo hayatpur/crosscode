@@ -4,7 +4,6 @@ import { ArrayRenderer } from './data/array/ArrayRenderer';
 import { DataRenderer } from './data/DataRenderer';
 import { DataState, DataType } from './data/DataState';
 import { LiteralRenderer } from './data/literal/LiteralRenderer';
-import { resolvePath } from './environment';
 import { EnvironmentPositionModifierType, EnvironmentState } from './EnvironmentState';
 import { IdentifierRenderer } from './identifier/IdentifierRenderer';
 
@@ -25,8 +24,6 @@ export class EnvironmentRenderer {
     element: HTMLDivElement;
     border: HTMLDivElement;
 
-    static BorderPadding = 30;
-
     dataRenderers: { [id: string]: DataRenderer } = {};
     identifierRenderers: { [id: string]: IdentifierRenderer } = {};
 
@@ -40,9 +37,6 @@ export class EnvironmentRenderer {
     }
 
     setState(state: EnvironmentState) {
-        state.transform.rendered.y = state.transform.rendered.y || 0;
-        state.transform.rendered.x = state.transform.rendered.x || 0;
-
         // Apply transform
         this.element.style.top = `${state.transform.rendered.y}px`;
         this.element.style.left = `${state.transform.rendered.x}px`;
@@ -53,29 +47,20 @@ export class EnvironmentRenderer {
         // Render identifiers
         this.renderIdentifiers(state);
 
-        // Compute width & height
-        let width = state.transform.rendered.width;
-        let height = state.transform.rendered.height;
-
-        // Update position
-        // applyPositionModifiers(this.element, state);
-
         // Update size
-        this.element.style.width = `${width}px`;
-        this.element.style.height = `${height}px`;
+        this.element.style.width = `${state.transform.rendered.width}px`;
+        this.element.style.height = `${state.transform.rendered.height}px`;
 
-        // Set the border
-        // this.border.style.width = `${width + EnvironmentRenderer.BorderPadding * 2}px`;
-        // this.border.style.height = `${height + EnvironmentRenderer.BorderPadding * 2 + 30}px`;
-
-        // this.border.style.top = `${-EnvironmentRenderer.BorderPadding - 30}px`;
-        // this.border.style.left = `${-EnvironmentRenderer.BorderPadding}px`;
+        // Update border
+        this.border.style.width = `${state.transform.rendered.width}px`;
+        this.border.style.height = `${state.transform.rendered.height}px`;
     }
 
     renderMemory(state: EnvironmentState) {
         // Hit test
         const hits = new Set();
 
+        // Only render literals and arrays
         const memory = state.memory
             .filter((m) => m != null)
             .filter((data) => data.type == DataType.Literal || data.type == DataType.Array);
@@ -86,11 +71,12 @@ export class EnvironmentRenderer {
             if (!(data.id in this.dataRenderers)) {
                 const renderer = createDataRenderer(data);
                 this.dataRenderers[data.id] = renderer;
-                this.element.appendChild(renderer.element);
+
+                DataRenderer.getStage().append(renderer.element);
             }
 
             hits.add(data.id);
-            this.dataRenderers[data.id].setState(data, { environmentRenderer: this });
+            this.dataRenderers[data.id].setState(data);
         }
 
         // Remove data that are no longer in the view
@@ -113,14 +99,12 @@ export class EnvironmentRenderer {
                 if (!(name in this.identifierRenderers)) {
                     const renderer = new IdentifierRenderer();
                     this.identifierRenderers[name] = renderer;
-                    this.element.appendChild(renderer.element);
+
+                    DataRenderer.getStage().appendChild(renderer.element);
                 }
 
                 hits.add(name);
-
-                const reference = scope[name];
-                const data = resolvePath(state, reference, null) as DataState;
-                this.identifierRenderers[name].setState(name, data);
+                this.identifierRenderers[name].setState(scope[name]);
             }
         }
 
@@ -145,6 +129,7 @@ export class EnvironmentRenderer {
         for (const name in this.identifierRenderers) {
             const renderer = this.identifierRenderers[name];
             renderer.destroy();
+            renderer.element.remove();
         }
 
         this.element.remove();

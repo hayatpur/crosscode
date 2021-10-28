@@ -22,11 +22,14 @@ export interface Transform {
         height: number;
     };
     styles: TransformStyles;
+    classList: string[];
 }
 
 export interface DataTransform extends Transform {}
 
 export interface DataState {
+    _type: 'DataState';
+
     type: DataType;
     transform: DataTransform;
 
@@ -39,5 +42,6 @@ export interface DataState {
 }
 
 export function instanceOfData(data: any): data is DataState {
-    return 'type' in data && 'transform' in data && 'value' in data && 'frame' in data && 'id' in data;
+    const x = document.createElement('div');
+    return data['_type'] === 'DataState';
 }

@@ -1,12 +1,8 @@
-import { cloneData, createData, replaceDataWith } from '../../../environment/data/data';
+import { createData, replaceDataWith } from '../../../environment/data/data';
 import { DataState, DataType } from '../../../environment/data/DataState';
-import {
-    addDataAt,
-    getMemoryLocation,
-    removeAt,
-    resolvePath,
-} from '../../../environment/environment';
+import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
 import { Accessor } from '../../../environment/EnvironmentState';
+import { updateRootViewLayout } from '../../../environment/layout';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
@@ -25,11 +21,7 @@ export interface GetMember extends AnimationNode {
 function onBegin(animation: GetMember, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
 
-    const object = resolvePath(
-        environment,
-        animation.objectRegister,
-        `${animation.id}_Object`
-    ) as DataState;
+    const object = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`) as DataState;
 
     if (object.type != DataType.Array) {
         console.error('Invalid object type in index');
@@ -40,11 +32,7 @@ function onBegin(animation: GetMember, view: ViewState, options: AnimationRuntim
 
     if (animation.computed) {
         // Get property
-        const property = resolvePath(
-            environment,
-            animation.propertyRegister,
-            `${animation.id}_Property`
-        ) as DataState;
+        const property = resolvePath(environment, animation.propertyRegister, `${animation.id}_Property`) as DataState;
         animation.property = property.value;
         removeAt(environment, getMemoryLocation(environment, property).foundLocation);
         // const data = (object.value as DataState[])[animation.property];
@@ -60,18 +48,13 @@ function onBegin(animation: GetMember, view: ViewState, options: AnimationRuntim
 
         copy = createData(DataType.Literal, value, `${animation.id}_CreateNonComputed`);
         addDataAt(environment, copy, [], null);
+        updateRootViewLayout(view);
     }
 
     // Remove object (reference)
-    const objectReference = resolvePath(
-        environment,
-        animation.objectRegister,
-        `${animation.id}_Object`,
-        null,
-        {
-            noResolvingReference: true,
-        }
-    ) as DataState;
+    const objectReference = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`, null, {
+        noResolvingReference: true,
+    }) as DataState;
     removeAt(environment, getMemoryLocation(environment, objectReference).foundLocation, {
         noResolvingReference: true,
     });
@@ -83,19 +66,11 @@ function onBegin(animation: GetMember, view: ViewState, options: AnimationRuntim
             animation.outputRegister,
             `${animation.id}_Floating`
         ) as DataState;
-        replaceDataWith(
-            outputRegister,
-            createData(DataType.ID, copy.id, `${animation.id}_OutputRegister`)
-        );
+        replaceDataWith(outputRegister, createData(DataType.ID, copy.id, `${animation.id}_OutputRegister`));
     }
 }
 
-function onSeek(
-    animation: GetMember,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {
+function onSeek(animation: GetMember, view: ViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation));
 }
 

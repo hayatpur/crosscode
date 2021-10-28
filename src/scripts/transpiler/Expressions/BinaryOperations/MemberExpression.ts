@@ -13,11 +13,7 @@ import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { Compiler, getNodeData } from '../../Compiler';
 
-export function MemberExpression(
-    ast: ESTree.MemberExpression,
-    view: ViewState,
-    context: AnimationContext
-) {
+export function MemberExpression(ast: ESTree.MemberExpression, view: ViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     // Create a register which'll *point* to the location of object
@@ -27,7 +23,7 @@ export function MemberExpression(
         feed: false,
         outputRegister: objectRegister,
     });
-    addVertex(graph, object, getNodeData(ast.object));
+    addVertex(graph, object, { nodeData: getNodeData(ast.object) });
 
     // Create a register that'll point to the location of computed property
     const propertyRegister = [{ type: AccessorType.Register, value: `${graph.id}_Property` }];
@@ -39,7 +35,7 @@ export function MemberExpression(
             outputRegister: propertyRegister,
             feed: false,
         });
-        addVertex(graph, property, getNodeData(ast.property));
+        addVertex(graph, property, { nodeData: getNodeData(ast.property) });
     }
 
     // Compute the result
@@ -51,22 +47,14 @@ export function MemberExpression(
             !ast.computed ? (ast.property as ESTree.Identifier).name : null,
             ast.computed
         );
-        addVertex(graph, find, getNodeData(ast));
+        addVertex(graph, find, { nodeData: getNodeData(ast) });
         apply(find, view);
     } else {
         const environment = getCurrentEnvironment(view);
         if (ast.computed) {
-            const object = resolvePath(
-                environment,
-                objectRegister,
-                `${graph.id}_Object`
-            ) as DataState;
+            const object = resolvePath(environment, objectRegister, `${graph.id}_Object`) as DataState;
 
-            const property = resolvePath(
-                environment,
-                propertyRegister,
-                `${graph.id}_Property`
-            ) as DataState;
+            const property = resolvePath(environment, propertyRegister, `${graph.id}_Property`) as DataState;
             const index = property.value as number;
 
             // Find the data & float up a copy of it
@@ -79,15 +67,12 @@ export function MemberExpression(
                 !ast.computed ? (ast.property as ESTree.Identifier).name : null,
                 ast.computed
             );
-            addVertex(graph, dmember, getNodeData(ast));
+            addVertex(graph, dmember, { nodeData: getNodeData(ast) });
             apply(dmember, view);
 
             // Create a copy of it
-            const copy = copyDataAnimation(
-                [{ type: AccessorType.ID, value: member.id }],
-                context.outputRegister
-            );
-            addVertex(graph, copy, getNodeData(ast));
+            const copy = copyDataAnimation([{ type: AccessorType.ID, value: member.id }], context.outputRegister);
+            addVertex(graph, copy, { nodeData: getNodeData(ast) });
             apply(copy, view);
         } else {
             const member = getMember(
@@ -97,7 +82,7 @@ export function MemberExpression(
                 !ast.computed ? (ast.property as ESTree.Identifier).name : null,
                 ast.computed
             );
-            addVertex(graph, member, getNodeData(ast));
+            addVertex(graph, member, { nodeData: getNodeData(ast) });
             apply(member, view);
         }
     }

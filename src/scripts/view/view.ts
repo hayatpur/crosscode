@@ -1,3 +1,4 @@
+import { createTransform } from '../environment/data/data';
 import { createEnvironment } from '../environment/environment';
 import { EnvironmentState, instanceOfEnvironment } from '../environment/EnvironmentState';
 import { ViewState } from './ViewState';
@@ -8,19 +9,16 @@ export function createView(
     options: { noChildren?: boolean; isRoot?: boolean } = { noChildren: false, isRoot: false }
 ): ViewState {
     return {
+        _type: 'ViewState',
         id: `View(${++CUR_VIEW_ID})`,
         transform: {
+            ...createTransform(),
             styles: {},
-            rendered: {
-                x: 0,
-                y: 0,
-                width: 0,
-                height: 0,
-            },
             positionModifiers: [],
+            classList: ['view-i'],
         },
         children: options.noChildren ? [] : [createEnvironment()],
-        label: '[NONE]',
+        label: '',
         isRoot: options.isRoot ? true : false,
     };
 }

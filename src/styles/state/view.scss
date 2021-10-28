@@ -1,21 +1,61 @@
+.view-i,
 .view {
-    padding: 10px;
-    margin: 20px 20px;
     display: flex;
     flex-direction: column;
     width: fit-content;
     transform: scale(1);
     transform-origin: top left;
-    position: absolute;
+    padding-top: 36px;
+    padding-bottom: 20px;
+    padding-left: 15px;
+    border-width: 1px;
+    border-style: solid;
+    border-image: linear-gradient(to bottom, #3f3f3f, rgba(0, 0, 0, 0)) 1 100%;
+    margin-bottom: 15px;
+    margin-top: 15px;
+    border-right: none;
 }
 
-#view-container {
+.view.is-root {
+    border: none;
+}
+
+.root-view-container {
     position: absolute;
-    top: 100px;
+    top: 200px;
     left: 650px;
+}
+
+.view {
+    position: absolute;
 }
 
 .view.root {
     top: 0;
     left: 0;
+}
+
+.view-label {
+    position: absolute;
+    top: -8px;
+    left: 0px;
+    display: flex;
+    align-items: center;
+    height: 14px;
+}
+
+.view-label.is-root {
+    opacity: 0;
+}
+
+.view-label-edge {
+    width: 5px;
+    height: 1px;
+    background: #494949;
+}
+
+.view-label-text {
+    font-size: 12px;
+    margin-left: 5px;
+    color: #737373;
 }

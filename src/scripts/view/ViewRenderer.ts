@@ -1,26 +1,48 @@
 import * as ESTree from 'estree';
 import { Editor } from '../editor/Editor';
+import { DataRenderer } from '../environment/data/DataRenderer';
 import { EnvironmentRenderer } from '../environment/EnvironmentRenderer';
 import { instanceOfEnvironment } from '../environment/EnvironmentState';
 import { ViewPositionModifierType, ViewState } from './ViewState';
 
 export class ViewRenderer {
     element: HTMLDivElement;
+
+    // Label
+    labelElement: HTMLDivElement;
+    labelTextElement: HTMLDivElement;
+    labelEdgeElement: HTMLDivElement;
+
     childRenderers: { [id: string]: EnvironmentRenderer | ViewRenderer } = {};
 
     constructor(root = false) {
         this.element = document.createElement('div');
         this.element.classList.add('view');
 
+        this.labelElement = document.createElement('div');
+        this.labelElement.classList.add('view-label');
+
+        this.labelEdgeElement = document.createElement('div');
+        this.labelEdgeElement.classList.add('view-label-edge');
+        this.labelElement.append(this.labelEdgeElement);
+
+        this.labelTextElement = document.createElement('div');
+        this.labelTextElement.classList.add('view-label-text');
+        this.labelElement.append(this.labelTextElement);
+
+        this.element.append(this.labelElement);
+
         if (root) {
-            document.querySelector('#view-container').appendChild(this.element);
+            DataRenderer.getStage().append(this.element);
+            this.element.classList.add('is-root');
+            this.labelElement.classList.add('is-root');
         }
     }
 
     setState(state: ViewState) {
         // Apply transform
-        this.element.style.top = `${state.transform.rendered.x}px`;
-        this.element.style.left = `${state.transform.rendered.y}px`;
+        this.element.style.top = `${state.transform.rendered.y}px`;
+        this.element.style.left = `${state.transform.rendered.x}px`;
 
         // Hit test
         const hits = new Set();
@@ -28,11 +50,10 @@ export class ViewRenderer {
         // Render environments
         for (const child of state.children) {
             if (!(child.id in this.childRenderers)) {
-                console.log(state.id, 'Creating a new child...', child.id);
                 const renderer = instanceOfEnvironment(child) ? new EnvironmentRenderer() : new ViewRenderer();
 
                 this.childRenderers[child.id] = renderer;
-                this.element.appendChild(renderer.element);
+                DataRenderer.getStage().append(renderer.element);
             }
 
             hits.add(child.id);
@@ -49,7 +70,6 @@ export class ViewRenderer {
         // Remove environments that are no longer in the view
         for (const id in this.childRenderers) {
             if (!hits.has(id)) {
-                console.log(state.id, 'Destroying a new child...', id);
                 const renderer = this.childRenderers[id];
                 renderer.destroy();
                 renderer.element.remove();
@@ -67,18 +87,19 @@ export class ViewRenderer {
             // applyPositionModifiers(this.element, state);
         }
 
-        // Compute width and height
-        let width = state.transform.rendered.width;
-        let height = state.transform.rendered.height;
+        // Set width and height
+        this.element.style.width = `${state.transform.rendered.width}px`;
+        this.element.style.height = `${state.transform.rendered.height}px`;
 
-        this.element.style.width = `${width}px`;
-        this.element.style.height = `${height}px`;
+        // Set label
+        this.labelTextElement.innerText = state.label;
     }
 
     destroy() {
         for (const id in this.childRenderers) {
             const renderer = this.childRenderers[id];
             renderer.destroy();
+            renderer.element.remove();
         }
 
         this.element.remove();

@@ -2,6 +2,7 @@ import * as ESTree from 'estree';
 import { createData } from '../../../environment/data/data';
 import { DataType } from '../../../environment/data/DataState';
 import { addDataAt, declareVariable } from '../../../environment/environment';
+import { updateRootViewLayout } from '../../../environment/layout';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
@@ -12,41 +13,27 @@ export interface BindFunctionAnimation extends AnimationNode {
     ast: ESTree.FunctionDeclaration;
 }
 
-function onBegin(
-    animation: BindFunctionAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {
+function onBegin(animation: BindFunctionAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
 
     // Create a reference for variable
     const reference = createData(DataType.Reference, [], `${animation.id}_ReferenceFunction`);
     const referenceLocation = addDataAt(environment, reference, [], `${animation.id}_AddFunction`);
+    updateRootViewLayout(view);
 
-    const data = createData(
-        DataType.Function,
-        JSON.stringify(animation.ast),
-        `${animation.id}_BindFunctionNew`
-    );
+    const data = createData(DataType.Function, JSON.stringify(animation.ast), `${animation.id}_BindFunctionNew`);
     const location = addDataAt(environment, data, [], null);
+    updateRootViewLayout(view);
 
     reference.value = location;
 
     declareVariable(environment, animation.identifier, referenceLocation);
+    updateRootViewLayout(view);
 }
 
-function onSeek(
-    animation: BindFunctionAnimation,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {}
+function onSeek(animation: BindFunctionAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
 
-function onEnd(
-    animation: BindFunctionAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {}
+function onEnd(animation: BindFunctionAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
 export function bindFunctionAnimation(
     identifier: string,

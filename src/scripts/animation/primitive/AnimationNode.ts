@@ -1,8 +1,8 @@
 import { Easing } from 'eaz';
 import * as ESTree from 'estree';
-import { Accessor, EnvironmentState } from '../../environment/EnvironmentState';
+import { Accessor } from '../../environment/EnvironmentState';
 import { ViewState } from '../../view/ViewState';
-import { AnimationRuntimeOptions } from '../graph/AnimationGraph';
+import { AnimationData, AnimationRuntimeOptions } from '../graph/AnimationGraph';
 
 export interface NodeData {
     location: ESTree.SourceLocation;
@@ -68,18 +68,17 @@ export interface AnimationNode extends PlayableAnimation {
     name: string;
 
     id: string;
-    precondition: EnvironmentState;
-    postcondition: EnvironmentState;
+
+    precondition: ViewState;
+    postcondition: ViewState;
+
+    _reads: AnimationData[];
+    _writes: AnimationData[];
 
     baseDuration: number;
 
     onBegin: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void;
-    onSeek: (
-        animation: AnimationNode,
-        view: ViewState,
-        time: number,
-        options: AnimationRuntimeOptions
-    ) => void;
+    onSeek: (animation: AnimationNode, view: ViewState, time: number, options: AnimationRuntimeOptions) => void;
     onEnd: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void;
 }
 
@@ -103,6 +102,9 @@ export function createAnimationNode(
         id: `AN(${++this.id})`,
         precondition: null,
         postcondition: null,
+
+        _reads: null,
+        _writes: null,
 
         nodeData,
 

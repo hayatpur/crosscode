@@ -1,12 +1,12 @@
 import * as ESTree from 'estree';
 import { DataState } from '../../../environment/data/DataState';
-import { resolvePath } from '../../../environment/environment';
+import { getMemoryLocation, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString, AccessorType } from '../../../environment/EnvironmentState';
 import { lerp } from '../../../utilities/math';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
 export interface BinaryExpressionSetup extends AnimationNode {
@@ -37,24 +37,35 @@ function onBegin(animation: BinaryExpressionSetup, view: ViewState, options: Ani
     environment._temps[`LeftTransform${animation.id}`] = {
         initLeft: left.transform.styles.left,
         initTop: left.transform.styles.top,
-        targetLeft: (left.transform.styles.left + right.transform.styles.left) / 2 - 25,
-        targetTop: (left.transform.styles.top + right.transform.styles.top) / 2 - 5,
+        targetLeft:
+            (parseFloat(left.transform.styles.left.toString()) + parseFloat(right.transform.styles.left.toString())) /
+                2 -
+            25,
+        targetTop:
+            (parseFloat(left.transform.styles.top.toString()) + parseFloat(right.transform.styles.top.toString())) / 2 -
+            5,
     } as IntermediatePositionStorage;
 
     // Target right transform
     environment._temps[`RightTransform${animation.id}`] = {
         initLeft: right.transform.styles.left,
         initTop: right.transform.styles.top,
-        targetLeft: (left.transform.styles.left + right.transform.styles.left) / 2 + 25,
-        targetTop: (left.transform.styles.top + right.transform.styles.top) / 2 - 5,
+        targetLeft:
+            (parseFloat(left.transform.styles.left.toString()) + parseFloat(right.transform.styles.left.toString())) /
+                2 +
+            25,
+        targetTop:
+            (parseFloat(left.transform.styles.top.toString()) + parseFloat(right.transform.styles.top.toString())) / 2 -
+            5,
     } as IntermediatePositionStorage;
 
-    // if (options.baking) {
-    //     animation.computeReadAndWrites(
-    //         { location: getMemoryLocation(environment, left).foundLocation, id: left.id },
-    //         { location: getMemoryLocation(environment, right).foundLocation, id: right.id }
-    //     );
-    // }
+    if (options.baking) {
+        computeReadAndWrites(
+            animation,
+            { location: getMemoryLocation(environment, left).foundLocation, id: left.id },
+            { location: getMemoryLocation(environment, right).foundLocation, id: right.id }
+        );
+    }
 }
 
 function onSeek(animation: BinaryExpressionSetup, view: ViewState, time: number, options: AnimationRuntimeOptions) {
@@ -68,15 +79,20 @@ function onSeek(animation: BinaryExpressionSetup, view: ViewState, time: number,
     const rightTransform = environment._temps[`RightTransform${animation.id}`];
 
     // Move left
-    left.transform.styles.left = lerp(leftTransform.init_x, leftTransform.x, t);
-    left.transform.styles.top = lerp(leftTransform.init_y, leftTransform.y, t);
+    left.transform.styles.left = `${lerp(leftTransform.init_x, leftTransform.x, t)}px`;
+    left.transform.styles.top = `${lerp(leftTransform.init_y, leftTransform.y, t)}px`;
 
     // Move right
-    right.transform.styles.left = lerp(rightTransform.init_x, rightTransform.x, t);
-    right.transform.styles.top = lerp(rightTransform.init_y, rightTransform.y, t);
+    right.transform.styles.left = `${lerp(rightTransform.init_x, rightTransform.x, t)}px`;
+    right.transform.styles.top = `${lerp(rightTransform.init_y, rightTransform.y, t)}px`;
 }
 
 function onEnd(animation: BinaryExpressionSetup, view: ViewState, options: AnimationRuntimeOptions) {}
+
+function computeReadAndWrites(animation: BinaryExpressionSetup, leftData: AnimationData, rightData: AnimationData) {
+    animation._reads = [leftData, rightData];
+    animation._writes = [];
+}
 
 export function binaryExpressionSetup(
     leftSpecifier: Accessor[],

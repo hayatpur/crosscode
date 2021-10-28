@@ -1,10 +1,16 @@
 import './glpk';
 
+export interface Vector {
+    x: number;
+    y: number;
+    z?: number;
+}
+
 export function lerp(a: number, b: number, t: number) {
     return a * (1 - t) + t * b;
 }
 
-export function lerp2(a: { x: number; y: number }, b: { x: number; y: number }, t: number) {
+export function lerp2(a: Vector, b: Vector, t: number) {
     return {
         x: lerp(a.x, b.x, t),
         y: lerp(a.y, b.y, t),
@@ -13,6 +19,23 @@ export function lerp2(a: { x: number; y: number }, b: { x: number; y: number }, 
 
 export function sigmoid(x: number) {
     return 1 / (1 + Math.exp(-x));
+}
+
+export function getRelativeLocation(point: Vector, parent: Vector) {
+    return {
+        x: point.x - parent.x,
+        y: point.y - parent.y,
+    };
+}
+
+export function getNumericalValueOfStyle(styleValue: string, fallback: number = 0): number {
+    let parsed = parseFloat(styleValue ?? fallback.toString());
+
+    if (isNaN(parsed)) {
+        return fallback;
+    } else {
+        return parsed;
+    }
 }
 
 /**

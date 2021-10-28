@@ -1,0 +1,12 @@
+.highlight-cursor {
+    position: absolute;
+    /* background: #264f78; */
+    /* background: #62b0ff; */
+    background: #c1e0ff;
+    mix-blend-mode: multiply;
+    z-index: 10;
+    border-radius: 5px;
+    transition: 0.1s;
+    pointer-events: none;
+    /* opacity: 0 !important; */
+}

@@ -1,23 +1,14 @@
 import * as ESTree from 'estree';
-import { apply } from '../../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph';
 import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext, ControlOutput } from '../../animation/primitive/AnimationNode';
-import { bindFunctionAnimation } from '../../animation/primitive/Binding/BindFunctionAnimation';
-import { moveAndPlaceAnimation } from '../../animation/primitive/Data/MoveAndPlaceAnimation';
 import { DataState } from '../../environment/data/DataState';
-import { logEnvironment, resolvePath } from '../../environment/environment';
-import { AccessorType } from '../../environment/EnvironmentState';
-import { clone } from '../../utilities/objects';
+import { resolvePath } from '../../environment/environment';
 import { getCurrentEnvironment } from '../../view/view';
 import { ViewState } from '../../view/ViewState';
 import { Compiler, getNodeData } from '../Compiler';
 
-export function ReturnStatement(
-    ast: ESTree.ReturnStatement,
-    view: ViewState,
-    context: AnimationContext
-) {
+export function ReturnStatement(ast: ESTree.ReturnStatement, view: ViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     // Evaluate the result of argument into register
@@ -25,7 +16,7 @@ export function ReturnStatement(
         ...context,
         outputRegister: context.returnData.register,
     });
-    addVertex(graph, argument, getNodeData(ast.argument));
+    addVertex(graph, argument, { nodeData: getNodeData(ast.argument) });
 
     // Make sure the memory this register is pointing at doesn't get destroyed
     // when popping scopes

@@ -37,6 +37,10 @@
     margin-left: 120px;
 }
 
+.controls>* {
+    margin-right: 10px;
+}
+
 .button {
     color: var(--color-darker);
     cursor: pointer;
@@ -48,7 +52,6 @@
     transition: 0.1s ease;
     height: fit-content;
     height: -moz-fit-content;
-    margin-right: 10px;
     box-shadow: 0px 0px 0px 1px #e7e7e9 inset;
     font-weight: 300;
     font-size: 14px;

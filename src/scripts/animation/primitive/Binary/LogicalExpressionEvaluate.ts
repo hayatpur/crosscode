@@ -3,7 +3,7 @@ import { createData, replaceDataWith } from '../../../environment/data/data';
 import { DataState, DataType } from '../../../environment/data/DataState';
 import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
 import { Accessor, accessorsToString, AccessorType } from '../../../environment/EnvironmentState';
-import { lerp, remap } from '../../../utilities/math';
+import { updateRootViewLayout } from '../../../environment/layout';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
@@ -39,6 +39,7 @@ function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options:
         data.transform.styles.elevation = 1;
         data.transform.styles.position = 'absolute';
         addDataAt(environment, data, [], null);
+        updateRootViewLayout(view);
     } else {
         // Find right data
         right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as DataState;
@@ -52,15 +53,16 @@ function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options:
         data.transform.styles.elevation = 1;
         data.transform.styles.position = 'absolute';
         addDataAt(environment, data, [], null);
+        updateRootViewLayout(view);
     }
 
-    data.transform.styles.left = animation.shortCircuit
-        ? left.transform.styles.left
-        : (left.transform.styles.left + right.transform.styles.left) / 2;
-    data.transform.styles.top = left.transform.styles.top;
-    data.transform.styles.elevation = 1;
-    data.transform.opacity = 0;
-    environment._temps[`EvaluatedData${animation.id}`] = [{ type: AccessorType.ID, value: data.id }];
+    // data.transform.styles.left = animation.shortCircuit
+    //     ? left.transform.styles.left
+    //     : (left.transform.styles.left + right.transform.styles.left) / 2;
+    // data.transform.styles.top = left.transform.styles.top;
+    // data.transform.styles.elevation = 1;
+    // data.transform.opacity = 0;
+    // environment._temps[`EvaluatedData${animation.id}`] = [{ type: AccessorType.ID, value: data.id }];
 
     // Target left transform
     environment._temps[`LeftTransform${animation.id}`] = {
@@ -71,14 +73,14 @@ function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options:
     } as IntermediatePositionStorage;
 
     // Target right transform
-    if (!animation.shortCircuit) {
-        environment._temps[`RightTransform${animation.id}`] = {
-            initLeft: right.transform.styles.left,
-            initTop: right.transform.styles.top,
-            targetLeft: data.transform.styles.left + data.transform.rendered.width / 4,
-            targetTop: data.transform.styles.top,
-        } as IntermediatePositionStorage;
-    }
+    // if (!animation.shortCircuit) {
+    //     environment._temps[`RightTransform${animation.id}`] = {
+    //         initLeft: right.transform.styles.left,
+    //         initTop: right.transform.styles.top,
+    //         targetLeft: data.transform.styles.left + data.transform.rendered.width / 4,
+    //         targetTop: data.transform.styles.top,
+    //     } as IntermediatePositionStorage;
+    // }
 }
 
 function onSeek(animation: LogicalExpressionEvaluate, view: ViewState, time: number, options: AnimationRuntimeOptions) {
@@ -93,28 +95,28 @@ function onSeek(animation: LogicalExpressionEvaluate, view: ViewState, time: num
     const rightTransform = environment._temps[`RightTransform${animation.id}`] as IntermediatePositionStorage;
 
     // Move left
-    left.transform.styles.left = lerp(leftTransform.initLeft, leftTransform.targetLeft, t);
-    left.transform.styles.top = lerp(leftTransform.initTop, leftTransform.targetTop, t);
+    // left.transform.styles.left = lerp(leftTransform.initLeft, leftTransform.targetLeft, t);
+    // left.transform.styles.top = lerp(leftTransform.initTop, leftTransform.targetTop, t);
 
     // Move right
     let right: DataState;
-    if (!animation.shortCircuit) {
-        right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState;
-        right.transform.styles.left = lerp(rightTransform.initLeft, rightTransform.targetLeft, t);
-        right.transform.styles.top = lerp(rightTransform.initTop, rightTransform.targetTop, t);
-    }
+    // if (!animation.shortCircuit) {
+    //     right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState;
+    //     right.transform.styles.left = lerp(rightTransform.initLeft, rightTransform.targetLeft, t);
+    //     right.transform.styles.top = lerp(rightTransform.initTop, rightTransform.targetTop, t);
+    // }
 
-    if (t > 0.5) {
-        evaluated.transform.opacity = remap(t, 0.5, 1, 0, 1);
-    }
+    // if (t > 0.5) {
+    //     evaluated.transform.opacity = remap(t, 0.5, 1, 0, 1);
+    // }
 
-    if (t > 0.9) {
-        left.transform.opacity = remap(t, 0.9, 1, 1, 0);
+    // if (t > 0.9) {
+    //     left.transform.opacity = remap(t, 0.9, 1, 1, 0);
 
-        if (!animation.shortCircuit) {
-            right.transform.opacity = remap(t, 0.9, 1, 1, 0);
-        }
-    }
+    //     if (!animation.shortCircuit) {
+    //         right.transform.opacity = remap(t, 0.9, 1, 1, 0);
+    //     }
+    // }
 }
 
 function onEnd(animation: LogicalExpressionEvaluate, view: ViewState, options: AnimationRuntimeOptions) {

@@ -1,7 +1,6 @@
 import * as ESTree from 'estree';
 import { cloneEnvironment } from '../../../environment/environment';
 import { EnvironmentState } from '../../../environment/EnvironmentState';
-import { clone } from '../../../utilities/objects';
 import { createView, getCurrentEnvironment } from '../../../view/view';
 import { ViewPositionModifierType, ViewState } from '../../../view/ViewState';
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
@@ -42,12 +41,19 @@ function onBegin(animation: GroupStartAnimation, view: ViewState, options: Anima
     // Add the new view to the current view state
     view.children.push(newView);
 
-    console.log(clone(view));
+    if (options.baking) {
+        computeReadAndWrites(animation);
+    }
 }
 
 function onSeek(animation: GroupStartAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
 
 function onEnd(animation: GroupStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+
+function computeReadAndWrites(animation: GroupStartAnimation) {
+    animation._reads = [];
+    animation._writes = [];
+}
 
 export function groupStartAnimation(
     firstGroup: boolean = false,

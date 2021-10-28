@@ -19,7 +19,7 @@ export function Identifier(ast: ESTree.Identifier, view: ViewState, context: Ani
     if (context.feed) {
         // Feeding
         const reference = findVariableAnimation(ast.name, context.outputRegister);
-        addVertex(graph, reference, getNodeData(ast));
+        addVertex(graph, reference, { nodeData: getNodeData(ast) });
         apply(reference, view);
     } else {
         const data = resolvePath(
@@ -34,12 +34,12 @@ export function Identifier(ast: ESTree.Identifier, view: ViewState, context: Ani
                 [{ type: AccessorType.Symbol, value: ast.name }],
                 context.outputRegister
             );
-            addVertex(graph, copyReference, getNodeData(ast));
+            addVertex(graph, copyReference, { nodeData: getNodeData(ast) });
             apply(copyReference, view);
         } else if (data.type == DataType.Literal) {
             // Create a copy of it
             const copy = copyDataAnimation([{ type: AccessorType.Symbol, value: ast.name }], context.outputRegister);
-            addVertex(graph, copy, getNodeData(ast));
+            addVertex(graph, copy, { nodeData: getNodeData(ast) });
             apply(copy, view);
         }
     }

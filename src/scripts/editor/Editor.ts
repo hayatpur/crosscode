@@ -147,6 +147,10 @@ export class Editor {
         const lines = document.body.getElementsByClassName('view-lines')[0];
         const line = lines.children[ln - 1]?.children[0] as HTMLElement;
 
+        if (line == null) {
+            return 0;
+        }
+
         return line.getBoundingClientRect().width / line.innerText.length;
     }
 

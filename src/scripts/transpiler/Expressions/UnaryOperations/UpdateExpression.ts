@@ -19,12 +19,12 @@ export function UpdateExpression(ast: ESTree.UpdateExpression, view: ViewState, 
         outputRegister: argRegister,
         feed: true,
     });
-    addVertex(graph, argument, getNodeData(ast.argument));
+    addVertex(graph, argument, { nodeData: getNodeData(ast.argument) });
 
     // Apply the operation
     const update = updateAnimation(argRegister, ast.operator);
     apply(update, view);
-    addVertex(graph, update, getNodeData(ast.argument));
+    addVertex(graph, update, { nodeData: getNodeData(ast.argument) });
 
     return graph;
 }

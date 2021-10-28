@@ -1,47 +1,26 @@
-import { sigmoid } from '../../../utilities/math';
-import { DataRenderer, DataRendererOptions } from '../DataRenderer';
+import { getNumericalValueOfStyle, lerp, sigmoid } from '../../../utilities/math';
+import { DataRenderer } from '../DataRenderer';
 import { DataState } from '../DataState';
 
 export class LiteralRenderer extends DataRenderer {
-    static Size = 53;
+    setState(data: DataState) {
+        this.element.classList.add('data-literal');
 
-    setState(data: DataState, options: DataRendererOptions) {
-        console.log(
-            data.id,
-            'Rendering literal',
-            data.transform.styles.position,
-            data.transform.rendered.x,
-            data.transform.rendered.y,
-            data.transform.styles.left,
-            data.transform.styles.top
-        );
-
-        this.element.classList.add('literal');
-
-        options.zOffset = options.zOffset ?? 0;
-
-        const z = data.transform.styles.elevation + options.zOffset;
+        const z = data.transform.styles.elevation ?? 0;
 
         // Apply transform
         this.element.style.width = `${data.transform.rendered.width}px`;
         this.element.style.height = `${data.transform.rendered.height}px`;
 
-        // Smooth transition
-        const oldTop = parseInt(this.element.style.top);
-        const oldLeft = parseInt(this.element.style.left);
-
         const top = data.transform.rendered.y - 5 * z;
         const left = data.transform.rendered.x - 5 * z;
 
-        // if (isNaN(oldTop) || isNaN(oldLeft)) {
-        this.element.style.top = `${top}px`;
-        this.element.style.left = `${left}px`;
-        // } else {
-        //     this.element.style.top = `${lerp(oldTop, top, 0.01)}px`;
-        //     this.element.style.left = `${lerp(oldLeft, left, 0.01)}px`;
-        // }
+        this.element.style.top = `${lerp(getNumericalValueOfStyle(this.element.style.top, top), top, 1)}px`;
+        this.element.style.left = `${lerp(getNumericalValueOfStyle(this.element.style.left, left), left, 1)}px`;
 
-        this.element.style.opacity = `${data.transform.opacity * sigmoid(-5 * (z - 2))}`;
+        this.element.style.opacity = `${
+            parseFloat(data.transform.styles.opacity?.toString() || '1') * sigmoid(-5 * (z - 2))
+        }`;
 
         this.element.style.boxShadow = getCSSElevation(z);
 
@@ -55,9 +34,9 @@ export class LiteralRenderer extends DataRenderer {
         }
 
         if (data.value == undefined) {
-            this.element.classList.add('undefined');
+            this.element.classList.add('data-undefined');
         } else {
-            this.element.classList.remove('undefined');
+            this.element.classList.remove('data-undefined');
         }
 
         if (data.transform.styles.position == 'absolute') {
@@ -70,7 +49,7 @@ export class LiteralRenderer extends DataRenderer {
 
 export function getCSSElevation(depth: number, floating = false) {
     const color = floating ? '--floating-shadow-color' : '--shadow-color';
-    const opacityMultiplier = floating ? 0.5 : 1;
+    const opacityMultiplier = floating ? 1 : 1;
     const ELEVATIONS = {
         extraSmall: `
           0.4px 0.8px 0.8px hsl(var(${color}) / ${0 * opacityMultiplier})

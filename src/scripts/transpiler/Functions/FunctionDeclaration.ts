@@ -12,7 +12,7 @@ export function FunctionDeclaration(ast: ESTree.FunctionDeclaration, view: ViewS
 
     // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier
     const bind = bindFunctionAnimation((ast.id as ESTree.Identifier).name, ast);
-    addVertex(graph, bind, getNodeData(ast.id));
+    addVertex(graph, bind, { nodeData: getNodeData(ast.id) });
     apply(bind, view);
 
     // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, view: ViewState, context: AnimationContext) => {

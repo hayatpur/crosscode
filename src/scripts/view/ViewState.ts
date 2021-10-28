@@ -3,6 +3,8 @@ import { EnvironmentState } from '../environment/EnvironmentState';
 
 // A view is a collection of environments
 export interface ViewState {
+    _type: 'ViewState';
+
     id: string;
     label: string;
     isRoot: boolean;
@@ -25,4 +27,8 @@ export enum ViewPositionModifierType {
     NextToCode = 'NextToCode',
     AboveView = 'AboveView',
     BelowView = 'BelowView',
+}
+
+export function instanceOfView(view: any): view is ViewState {
+    return view['_type'] == 'ViewState';
 }
