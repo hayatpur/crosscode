@@ -14,11 +14,11 @@ export interface Accessor {
 }
 
 export function accessorToString(accessor: Accessor): string {
-    if (accessor.type === AccessorType.Register) {
-        return `${accessor.type}(0x${stringHashCode(accessor.value as string)
-            .toString()
-            .substring(0, 6)})`;
-    }
+    // if (accessor.type === AccessorType.Register) {
+    //     return `${accessor.type}(0x${stringHashCode(accessor.value as string)
+    //         .toString()
+    //         .substring(0, 6)})`;
+    // }
     return `${accessor.type}(${accessor.value})`;
 }
 

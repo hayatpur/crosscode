@@ -1,8 +1,10 @@
 import { getDiff } from 'recursive-diff';
+import { DataType } from '../../../environment/data/DataState';
 import { clone } from '../../../utilities/objects';
 import { getCurrentEnvironment } from '../../../view/view';
 import { AnimationNode, instanceOfAnimationNode } from '../../primitive/AnimationNode';
 import { AnimationGraph } from '../AnimationGraph';
+import { DataTraceChains, getTrace } from '../graph';
 import { AbstractionSpec } from './Abstractor';
 
 // export interface Trace {
@@ -17,7 +19,10 @@ import { AbstractionSpec } from './Abstractor';
 //     NoChangeMove = 'NoChangeMove',
 // }
 
-export function applyTransition(animation: AnimationGraph | AnimationNode, config: AbstractionSpec) {
+export function applyTransition(
+    animation: AnimationGraph | AnimationNode,
+    config: AbstractionSpec
+) {
     // const dependencies = ...
     // ^ based on that provide a transition
 
@@ -31,7 +36,33 @@ export function applyTransition(animation: AnimationGraph | AnimationNode, confi
     let delta = getDiff(startEnv, endEnv);
     delta = delta.filter((diff) => diff.path.indexOf('transform') === -1);
 
-    console.log(delta);
+    console.log('Delta', startEnv, endEnv);
+
+    const startTrace: DataTraceChains[] = [];
+
+    // Only render literals and arrays
+    const endMemory = endEnv.memory
+        .filter((m) => m != null)
+        .filter((data) => data.type == DataType.Literal || data.type == DataType.Array);
+
+    endMemory.forEach((d) => startTrace.push({ id: d.id, trace: [] }));
+
+    const trace = getTrace(animation, startTrace);
+
+    // Concatenate the trace to start & end transition (if no trace => creation)
+    for (const chain of trace) {
+        if (chain.trace.length > 0) {
+            chain.trace = [chain.trace[chain.trace.length - 1]];
+        }
+    }
+
+    // TODO Find unused traces => deletions
+    // const startMemory = startEnv.memory
+    //     .filter((m) => m != null)
+    //     .filter((data) => data.type == DataType.Literal || data.type == DataType.Array);
+    // startMemory.forEach((d) => startTrace.push({ id: d.id, trace: [] }));
+
+    console.log('Final trace', trace);
 
     // const traces: { [dataId: string]: Trace[][] } = {};
 

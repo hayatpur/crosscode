@@ -469,7 +469,8 @@ AG(78) 0 1
 TODO:
 
 1. Get rid of memory as a list (so diffs become simpler)
-2. Write a createDiffAnimation(diff) function, which, for each diff, converts it to an animation
+2. Write a createDiffAnimation(diff) - SHOULD BE RECURSIVE - IE FOR RECURSIVE MEMORY function, which, for each diff, converts it to an animation
 3. Construct an in-parallel graph of animations, and then animate them all at once
 4. The problem is, you probably want separate animations, because these ones are not in dependency order.
+    UNLESS YOU SET TO THE END STATE FIRST (SO THE DEPENDENCY ORDER DOES NOT MATTER, and THEN YOU CAN JUST PLAY A EASE-IN ANIMATION )
 

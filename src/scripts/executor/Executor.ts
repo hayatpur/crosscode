@@ -3,7 +3,7 @@ import { begin, duration, end, reset, seek } from '../animation/animation';
 import { Cursor } from '../animation/Cursor';
 import { abstract } from '../animation/graph/abstraction/Abstractor';
 import { AnimationGraph } from '../animation/graph/AnimationGraph';
-import { animationToString } from '../animation/graph/graph';
+import { animationToString, computeAllGraphEdges } from '../animation/graph/graph';
 import { Editor } from '../editor/Editor';
 import { Compiler } from '../transpiler/Compiler';
 import { Ticker } from '../utilities/Ticker';
@@ -100,6 +100,9 @@ export class Executor {
         end(this.animation, tempView, { baking: true });
         reset(this.animation);
 
+        // Compute the edges
+        computeAllGraphEdges(this.animation);
+
         // Switch to the default level of abstraction
         abstract(this.animation);
 
@@ -118,7 +121,12 @@ export class Executor {
         console.log('[Executor] Finished compiling...');
         console.log('\tAnimation', this.animation);
 
-        const [animationString, animationUrl] = animationToString(this.animation, 0, { first: false }, true);
+        const [animationString, animationUrl] = animationToString(
+            this.animation,
+            0,
+            { first: false },
+            true
+        );
         document.getElementById('nomnoml-button').onclick = () => {
             window.open(animationUrl, '_blank');
         };

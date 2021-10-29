@@ -1,3 +1,5 @@
+import { clone } from '../../../utilities/objects';
+import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
@@ -8,9 +10,16 @@ function onBegin(animation: GroupEndAnimation, view: ViewState, options: Animati
     if (options.baking) {
         computeReadAndWrites(animation);
     }
+
+    console.log('Ending group', clone(getCurrentEnvironment(view)));
 }
 
-function onSeek(animation: GroupEndAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: GroupEndAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
 function onEnd(animation: GroupEndAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 

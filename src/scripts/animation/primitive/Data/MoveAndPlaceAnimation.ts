@@ -1,10 +1,20 @@
 import { createData, replaceDataWith } from '../../../environment/data/data';
 import { DataState, DataType, instanceOfData } from '../../../environment/data/DataState';
-import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
-import { Accessor, accessorsToString, instanceOfEnvironment } from '../../../environment/EnvironmentState';
+import {
+    addDataAt,
+    getMemoryLocation,
+    removeAt,
+    resolvePath,
+} from '../../../environment/environment';
+import {
+    Accessor,
+    accessorsToString,
+    instanceOfEnvironment,
+} from '../../../environment/EnvironmentState';
 import { updateRootViewLayout } from '../../../environment/layout';
 import { DataMovementLocation, DataMovementPath } from '../../../utilities/DataMovementPath';
 import { getRelativeLocation, remap } from '../../../utilities/math';
+import { clone } from '../../../utilities/objects';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
@@ -17,7 +27,11 @@ export interface MoveAndPlaceAnimation extends AnimationNode {
     noMove: boolean;
 }
 
-function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+function onBegin(
+    animation: MoveAndPlaceAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {
     const environment = getCurrentEnvironment(view);
 
     const move = resolvePath(environment, animation.inputSpecifier, null, null, {
@@ -42,7 +56,12 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
         const placeholder = createData(DataType.Literal, '', `${animation.id}_Placeholder`);
         placeholder.transform.styles.position = 'relative';
 
-        const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_Placeholder`);
+        const placeholderLocation = addDataAt(
+            environment,
+            placeholder,
+            [],
+            `${animation.id}_Placeholder`
+        );
         updateRootViewLayout(view);
 
         endTransform = getRelativeLocation(
@@ -70,7 +89,12 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
     environment._temps[`MovePath${animation.id}`] = path;
 }
 
-function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: MoveAndPlaceAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     const environment = getCurrentEnvironment(view);
 
     let move = resolvePath(environment, animation.inputSpecifier, null, null, {
@@ -106,7 +130,11 @@ function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number,
     updateRootViewLayout(view);
 }
 
-function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+function onEnd(
+    animation: MoveAndPlaceAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {
     const environment = getCurrentEnvironment(view);
     environment._temps[`MovePath${this.id}`]?.destroy();
     delete environment._temps[`MovePath${this.id}`];
@@ -114,40 +142,62 @@ function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: Anima
     const input = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
     }) as DataState;
-    const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_EndTo`) as DataState;
-
-    if (options.baking) {
-        computeReadAndWrites(
-            animation,
-            {
-                location: getMemoryLocation(environment, input).foundLocation,
-                id: input.id,
-            },
-            { location: getMemoryLocation(environment, to).foundLocation, id: to.id }
-        );
-    }
+    const to = resolvePath(
+        environment,
+        animation.outputSpecifier,
+        `${animation.id}_EndTo`
+    ) as DataState;
 
     if (instanceOfEnvironment(to)) {
+        if (options.baking) {
+            computeReadAndWrites(
+                animation,
+                {
+                    location: getMemoryLocation(environment, input).foundLocation,
+                    id: input.id,
+                },
+                null
+            );
+        }
     } else {
+        if (options.baking) {
+            computeReadAndWrites(
+                animation,
+                {
+                    location: getMemoryLocation(environment, input).foundLocation,
+                    id: input.id,
+                },
+                { location: getMemoryLocation(environment, to).foundLocation, id: to.id }
+            );
+        }
+
         removeAt(environment, getMemoryLocation(environment, input).foundLocation);
 
         if (instanceOfData(to)) {
             replaceDataWith(to, input, { frame: true, id: true });
         }
-
-        to.transform.styles.elevation = 0;
-        to.transform.styles.position = 'relative';
-        to.transform.styles.left = 0;
-        to.transform.styles.top = 0;
-        to.transform.styles.borderRadius = input.transform.styles.borderRadius;
     }
+
+    input.transform.styles.elevation = 0;
+    input.transform.styles.position = 'relative';
+    input.transform.styles.left = 0;
+    input.transform.styles.top = 0;
+
+    to.transform.styles.elevation = 0;
+    to.transform.styles.position = 'relative';
+    to.transform.styles.left = 0;
+    to.transform.styles.top = 0;
 
     updateRootViewLayout(view);
 }
 
-function computeReadAndWrites(animation: MoveAndPlaceAnimation, inputData: AnimationData, outputData: AnimationData) {
+function computeReadAndWrites(
+    animation: MoveAndPlaceAnimation,
+    inputData: AnimationData,
+    outputData: AnimationData
+) {
     animation._reads = [inputData];
-    animation._writes = [outputData, inputData];
+    animation._writes = outputData ? [outputData, inputData] : [inputData];
 }
 
 export function moveAndPlaceAnimation(
@@ -159,7 +209,9 @@ export function moveAndPlaceAnimation(
     return {
         ...createAnimationNode(null, { ...options, duration: noMove ? 30 : 60 }),
 
-        name: `Move data at ${accessorsToString(inputSpecifier)} onto ${accessorsToString(outputSpecifier)}`,
+        name: `Move data at ${accessorsToString(inputSpecifier)} onto ${accessorsToString(
+            outputSpecifier
+        )}`,
 
         // Attributes
         inputSpecifier,

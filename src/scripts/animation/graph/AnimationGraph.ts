@@ -18,9 +18,16 @@ export interface AnimationRuntimeOptions {
     globalTime?: number;
 }
 
+export enum AnimationDataFlags {
+    Create = 'Create',
+    Destroy = 'Destroy',
+    Update = 'Update',
+}
+
 export interface AnimationData {
     location: Accessor[];
     id: string;
+    flags?: Set<AnimationDataFlags>;
 }
 
 export interface AnimationGraphPath {
@@ -61,7 +68,10 @@ export function instanceOfAnimationGraph(animation: any): animation is Animation
     return animation._type == 'AnimationGraph';
 }
 
-export function createAnimationGraph(nodeData: NodeData, options: { isGroup?: boolean } = {}): AnimationGraph {
+export function createAnimationGraph(
+    nodeData: NodeData,
+    options: { isGroup?: boolean } = {}
+): AnimationGraph {
     if (this.id == undefined) this.id = 0;
 
     return {

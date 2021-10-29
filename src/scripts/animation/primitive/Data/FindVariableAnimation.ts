@@ -5,7 +5,7 @@ import { Accessor, AccessorType } from '../../../environment/EnvironmentState';
 import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { duration } from '../../animation';
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
 
 export interface FindVariableAnimation extends AnimationNode {
@@ -36,6 +36,10 @@ function onBegin(
     ) as DataState;
 
     replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`));
+
+    if (options.baking) {
+        computeReadAndWrites(animation);
+    }
 }
 
 function onSeek(
@@ -52,6 +56,16 @@ function onEnd(
     view: ViewState,
     options: AnimationRuntimeOptions
 ) {}
+
+/**
+ * TODO
+ * @param animation
+ * @param input
+ */
+function computeReadAndWrites(animation: FindVariableAnimation) {
+    animation._reads = [];
+    animation._writes = [];
+}
 
 export function findVariableAnimation(
     identifier: string,

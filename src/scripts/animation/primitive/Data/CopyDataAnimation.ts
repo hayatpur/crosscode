@@ -18,13 +18,20 @@ export interface CopyDataAnimation extends AnimationNode {
 
 function onBegin(animation: CopyDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
-    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState;
+    const data = resolvePath(
+        environment,
+        animation.dataSpecifier,
+        `${animation.id}_Data`
+    ) as DataState;
     const copy = cloneData(data, false, `${animation.id}_Copy`);
     copy.transform.styles.elevation = 0;
     copy.transform.styles.position = 'absolute';
 
     // Copy the correct render location
-    const renderLocation = getRelativeLocation(data.transform.rendered, environment.transform.rendered);
+    const renderLocation = getRelativeLocation(
+        data.transform.rendered,
+        environment.transform.rendered
+    );
     copy.transform.styles.left = `${renderLocation.x}px`;
     copy.transform.styles.top = `${renderLocation.y}px`;
 
@@ -33,7 +40,11 @@ function onBegin(animation: CopyDataAnimation, view: ViewState, options: Animati
     updateRootViewLayout(view);
 
     // Put it in the floating stack
-    const register = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState;
+    const register = resolvePath(
+        environment,
+        animation.outputRegister,
+        `${animation.id}_Floating`
+    ) as DataState;
     replaceDataWith(register, createData(DataType.ID, copy.id, `${animation.id}_Floating`));
 
     if (animation.hardCopy) {
@@ -53,23 +64,40 @@ function onBegin(animation: CopyDataAnimation, view: ViewState, options: Animati
     }
 }
 
-function onSeek(animation: CopyDataAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: CopyDataAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation));
 
     const environment = getCurrentEnvironment(view);
-    const copy = resolvePath(environment, environment._temps[`CopyDataAnimation${animation.id}`], null) as DataState;
+    const copy = resolvePath(
+        environment,
+        environment._temps[`CopyDataAnimation${animation.id}`],
+        null
+    ) as DataState;
     copy.transform.styles.elevation = t;
 }
 
 function onEnd(animation: CopyDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {
     const environment = getCurrentEnvironment(view);
-    const copy = resolvePath(environment, environment._temps[`CopyDataAnimation${animation.id}`], null) as DataState;
+    const copy = resolvePath(
+        environment,
+        environment._temps[`CopyDataAnimation${animation.id}`],
+        null
+    ) as DataState;
     copy.transform.styles.elevation = 1;
 
     copy.transform.styles.position = 'absolute';
 }
 
-function computeReadAndWrites(animation: CopyDataAnimation, original: AnimationData, copy: AnimationData) {
+function computeReadAndWrites(
+    animation: CopyDataAnimation,
+    original: AnimationData,
+    copy: AnimationData
+) {
     animation._reads = [original];
     animation._writes = [copy];
 }

@@ -70,7 +70,11 @@ export function addEdge(graph: AnimationGraph, edge: Edge) {
     const currentAbstraction = graph.abstractions[graph.currentAbstractionIndex];
 
     for (const other of currentAbstraction.edges) {
-        if (other.from == edge.from && other.to == edge.to && other.constructor.name == edge.constructor.name) {
+        if (
+            other.from == edge.from &&
+            other.to == edge.to &&
+            other.constructor.name == edge.constructor.name
+        ) {
             return;
         }
     }
@@ -106,7 +110,11 @@ export function begin(
  * @param view - View to apply the animation on
  * @param options - Mostly used for setting flags to bake animation
  */
-export function end(animation: AnimationGraph | AnimationNode, view: ViewState, options: AnimationRuntimeOptions = {}) {
+export function end(
+    animation: AnimationGraph | AnimationNode,
+    view: ViewState,
+    options: AnimationRuntimeOptions = {}
+) {
     if (options.baking) {
         animation.postcondition = clone(view);
     }
@@ -247,6 +255,9 @@ export function apply(animation: AnimationGraph | AnimationNode, view: ViewState
  */
 export function reads(animation: AnimationGraph | AnimationNode): AnimationData[] {
     if (instanceOfAnimationNode(animation)) {
+        if (animation._reads == null) {
+            console.error('Animation reads not set for', animation);
+        }
         return animation._reads;
     }
 

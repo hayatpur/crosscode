@@ -45,7 +45,11 @@ export function getDataClassNames(type: DataType): string[] {
     return mapping[type] ?? [];
 }
 
-export function cloneData(data: DataState, copyId: boolean = true, srcId: string = null): DataState {
+export function cloneData(
+    data: DataState,
+    copyId: boolean = true,
+    srcId: string = null
+): DataState {
     let value = data.value;
     if (data.type == DataType.Array) {
         value = (value as DataState[]).map((value) => cloneData(value, copyId));

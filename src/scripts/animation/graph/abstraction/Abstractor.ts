@@ -34,10 +34,14 @@ export interface AbstractOptions {
  * @param animation
  * @param options
  */
-export function abstract(animation: AnimationGraph | AnimationNode, options: AbstractOptions = null) {
+export function abstract(
+    animation: AnimationGraph | AnimationNode,
+    options: AbstractOptions = null
+) {
     if (options == null) {
         options = {
-            query: (animation: AnimationGraph | AnimationNode) => animation.nodeData.type == 'AnimationGroup',
+            query: (animation: AnimationGraph | AnimationNode) =>
+                animation.nodeData.type == 'AnimationGroup' && animation.id != 'AG(2)',
             spec: { type: AbstractionType.Transition, value: null },
         };
     }
@@ -49,7 +53,7 @@ export function abstract(animation: AnimationGraph | AnimationNode, options: Abs
             const { vertices } = animation.abstractions[animation.currentAbstractionIndex];
             vertices.forEach((v) => abstract(v, options));
         } else {
-            abstract(animation, options);
+            // abstract(animation, options);
         }
     }
 }
