@@ -1,3 +1,4 @@
+import * as ESTree from 'estree';
 import { clone } from '../../utilities/objects';
 import { Accessor } from '../EnvironmentState';
 import { DataState, DataTransform, DataType, Transform } from './DataState';
@@ -5,6 +6,7 @@ import { DataState, DataTransform, DataType, Transform } from './DataState';
 export function createTransform(): Transform {
     return {
         styles: {},
+        renderOnlyStyles: {},
         rendered: {
             x: 0,
             y: 0,
@@ -45,11 +47,7 @@ export function getDataClassNames(type: DataType): string[] {
     return mapping[type] ?? [];
 }
 
-export function cloneData(
-    data: DataState,
-    copyId: boolean = true,
-    srcId: string = null
-): DataState {
+export function cloneData(data: DataState, copyId: boolean = true, srcId: string = null): DataState {
     let value = data.value;
     if (data.type == DataType.Array) {
         value = (value as DataState[]).map((value) => cloneData(value, copyId));
@@ -101,4 +99,12 @@ export function replaceDataWith(
     if (mask.frame && copy.type == DataType.Array) {
         (original.value as DataState[]).forEach((el) => (el.frame = original.frame));
     }
+}
+
+export function convertIdentifierToLiteral(data: ESTree.Identifier): ESTree.Literal {
+    return {
+        ...data,
+        type: 'Literal',
+        value: data.name,
+    };
 }

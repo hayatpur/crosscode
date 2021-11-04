@@ -1,7 +1,9 @@
 import * as ESTree from 'estree';
+import { apply } from '../../../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
 import { addVertex } from '../../../animation/graph/graph';
 import { AnimationContext, ControlOutput, ControlOutputData } from '../../../animation/primitive/AnimationNode';
+import { consumeDataAnimation } from '../../../animation/primitive/Data/ConsumeDataAnimation';
 import { DataState } from '../../../environment/data/DataState';
 import { resolvePath } from '../../../environment/environment';
 import { AccessorType } from '../../../environment/EnvironmentState';
@@ -21,6 +23,11 @@ export function IfStatement(ast: ESTree.IfStatement, view: ViewState, context: A
     // @TODO: Add a probe test animation
     const testData = resolvePath(getCurrentEnvironment(view), testRegister, null) as DataState;
     const testValue = testData.value as boolean;
+
+    // Consume testData
+    const consume = consumeDataAnimation(testRegister);
+    addVertex(graph, consume, { nodeData: getNodeData(ast.test) });
+    apply(consume, view);
 
     const controlOutput: ControlOutputData = { output: ControlOutput.None };
 

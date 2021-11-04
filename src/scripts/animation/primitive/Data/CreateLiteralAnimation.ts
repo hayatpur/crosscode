@@ -1,19 +1,19 @@
-import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataTransform, DataType } from '../../../environment/data/DataState';
-import { addDataAt, removeAt, resolvePath } from '../../../environment/environment';
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
-import { updateRootViewLayout } from '../../../environment/layout';
-import { getRelativeLocation, remap, Vector } from '../../../utilities/math';
-import { getCurrentEnvironment } from '../../../view/view';
-import { ViewState } from '../../../view/ViewState';
-import { duration } from '../../animation';
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataTransform, DataType } from '../../../environment/data/DataState'
+import { addDataAt, removeAt, resolvePath } from '../../../environment/environment'
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
+import { updateRootViewLayout } from '../../../environment/layout'
+import { getRelativeLocation, remap, Vector } from '../../../utilities/math'
+import { getCurrentEnvironment } from '../../../view/view'
+import { ViewState } from '../../../view/ViewState'
+import { duration } from '../../animation'
+import { AnimationData, AnimationDataFlags, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface CreateLiteralAnimation extends AnimationNode {
-    value: string | number | bigint | boolean | RegExp;
-    locationHint: Accessor[];
-    outputRegister: Accessor[];
+    value: string | number | bigint | boolean | RegExp
+    locationHint: Accessor[]
+    outputRegister: Accessor[]
 }
 
 /**
@@ -23,87 +23,90 @@ export interface CreateLiteralAnimation extends AnimationNode {
  * @param options
  */
 function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view);
+    const environment = getCurrentEnvironment(view)
 
-    let referenceTransform: DataTransform;
+    let referenceTransform: DataTransform
 
-    updateRootViewLayout(view);
+    updateRootViewLayout(view)
 
-    const data = createData(DataType.Literal, animation.value as number | string | boolean, `${animation.id}_Create`);
-    data.transform.styles.position = 'absolute';
+    const data = createData(DataType.Literal, animation.value as number | string | boolean, `${animation.id}_Create`)
+    data.transform.styles.position = 'absolute'
 
     // Add the newly created data to environment
-    const loc = addDataAt(environment, data, [], null);
-    environment._temps[`CreateLiteralAnimation${animation.id}`] = loc;
-    updateRootViewLayout(view);
+    const loc = addDataAt(environment, data, [], null)
+    environment._temps[`CreateLiteralAnimation${animation.id}`] = loc
+    updateRootViewLayout(view)
 
     if (animation.locationHint.length > 0) {
         // Get the output data
         referenceTransform = (resolvePath(environment, animation.locationHint, `${animation.id}_Location`) as DataState)
-            .transform;
+            .transform
     } else {
         // Then it doesn't have a place yet
         // Find an empty space and put it there
-        const placeholder = createData(DataType.Literal, '', `${animation.id}_Placeholder`);
-        placeholder.transform.styles.position = 'relative';
-        const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_PlaceholderLiteral`);
-        updateRootViewLayout(view);
+        const placeholder = createData(DataType.Literal, '', `${animation.id}_Placeholder`)
+        placeholder.transform.styles.position = 'relative'
+        const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_PlaceholderLiteral`)
+        updateRootViewLayout(view)
 
-        updateRootViewLayout(view);
-        referenceTransform = { ...placeholder.transform };
-        removeAt(environment, placeholderLocation);
+        updateRootViewLayout(view)
+        referenceTransform = { ...placeholder.transform }
+        removeAt(environment, placeholderLocation)
     }
 
     if (options.baking) {
         computeReadAndWrites(animation, {
             location: environment._temps[`CreateLiteralAnimation${this.id}`],
             id: data.id,
-        });
+        })
     }
 
     // Get the relative location w.r.t environment
-    let location: Vector = getRelativeLocation(referenceTransform.rendered, environment.transform.rendered);
+    let location: Vector = getRelativeLocation(referenceTransform.rendered, environment.transform.rendered)
 
     if (options.baking) {
         computeReadAndWrites(animation, {
             location: environment._temps[`CreateLiteralAnimation${this.id}`],
             id: data.id,
-        });
+        })
     }
 
-    data.transform.styles.left = `${location.x}px`;
-    data.transform.styles.top = `${location.y}px`;
+    data.transform.styles.left = `${location.x}px`
+    data.transform.styles.top = `${location.y}px`
 
-    data.transform.styles.elevation = 3;
+    data.transform.styles.elevation = 3
 
     // Point the output register to the newly created data
-    const outputRegister = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState;
-    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`));
+    const outputRegister = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState
+    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`))
 
-    updateRootViewLayout(view);
+    updateRootViewLayout(view)
 }
 
 function onSeek(animation: CreateLiteralAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
-    let t = animation.ease(time / duration(animation));
+    let t = animation.ease(time / duration(animation))
 
-    const environment = getCurrentEnvironment(view);
+    const environment = getCurrentEnvironment(view)
     const data = resolvePath(
         environment,
         environment._temps[`CreateLiteralAnimation${animation.id}`],
         null
-    ) as DataState;
+    ) as DataState
 
-    data.transform.styles.elevation = remap(t, 0, 1, 3, 1);
+    data.transform.styles.elevation = remap(t, 0, 1, 3, 1)
 }
 
 function onEnd(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view);
-    delete environment._temps[`CreateLiteralAnimation${animation.id}`];
+    const environment = getCurrentEnvironment(view)
+    delete environment._temps[`CreateLiteralAnimation${animation.id}`]
 }
 
-export function computeReadAndWrites(animation: CreateLiteralAnimation, data: AnimationData) {
-    animation._reads = [];
-    animation._writes = [data];
+function computeReadAndWrites(animation: CreateLiteralAnimation, data: AnimationData) {
+    if (data.flags == null) data.flags = new Set()
+    data.flags.add(AnimationDataFlags.Create)
+
+    animation._reads = []
+    animation._writes = [data]
 }
 
 export function createLiteralAnimation(
@@ -114,6 +117,8 @@ export function createLiteralAnimation(
 ): CreateLiteralAnimation {
     return {
         ...createAnimationNode(null, options),
+        _name: 'CreateLiteralAnimation',
+
         baseDuration: 30,
 
         name: `Create Literal ${value} at ${accessorsToString(outputRegister)}`,
@@ -127,5 +132,5 @@ export function createLiteralAnimation(
         onBegin,
         onSeek,
         onEnd,
-    };
+    }
 }

@@ -1,12 +1,12 @@
-import { Easing } from 'eaz';
-import * as ESTree from 'estree';
-import { Accessor } from '../../environment/EnvironmentState';
-import { ViewState } from '../../view/ViewState';
-import { AnimationData, AnimationRuntimeOptions } from '../graph/AnimationGraph';
+import { Easing } from 'eaz'
+import * as ESTree from 'estree'
+import { Accessor } from '../../environment/EnvironmentState'
+import { ViewState } from '../../view/ViewState'
+import { AnimationData, AnimationRuntimeOptions } from '../graph/AnimationGraph'
 
 export interface NodeData {
-    location: ESTree.SourceLocation;
-    type: string;
+    location: ESTree.SourceLocation
+    type: string
 }
 
 export enum AnimationPlayback {
@@ -22,68 +22,69 @@ export enum ControlOutput {
 }
 
 export interface ControlOutputData {
-    output: ControlOutput;
+    output: ControlOutput
 }
 
 export interface ReturnData {
-    frame: number;
-    register: Accessor[];
+    frame: number
+    register: Accessor[]
 }
 
 export interface AnimationContext {
-    locationHint?: Accessor[]; // Hint of where to place data (for aesthetic reasons)
-    outputRegister?: Accessor[]; // Register to place data at
-    feed?: boolean; // Puts the location of data instead of data itself - used for feeding (assignment / declaration)'
-    args?: Accessor[][]; // Arguments to pass to the function
-    controlOutput?: ControlOutputData;
-    returnData?: ReturnData; // Register to place the return value at
-    doNotFloat?: boolean;
+    locationHint?: Accessor[] // Hint of where to place data (for aesthetic reasons)
+    outputRegister?: Accessor[] // Register to place data at
+    feed?: boolean // Puts the location of data instead of data itself - used for feeding (assignment / declaration)'
+    args?: Accessor[][] // Arguments to pass to the function
+    controlOutput?: ControlOutputData
+    returnData?: ReturnData // Register to place the return value at
+    doNotFloat?: boolean
 }
 
 export interface AnimationOptions {
-    playback?: AnimationPlayback;
-    delay?: number;
+    playback?: AnimationPlayback
+    delay?: number
 
     // Length of animation
-    duration?: number;
-    speedMultiplier?: number;
+    duration?: number
+    speedMultiplier?: number
 }
 
 export interface PlayableAnimation {
     // Playback state
-    isPlaying: boolean;
-    hasPlayed: boolean;
+    isPlaying: boolean
+    hasPlayed: boolean
 
     // Playback options
-    speed: number;
-    delay: number;
+    speed: number
+    delay: number
 
-    nodeData: NodeData;
-    ease: (t: number) => number;
+    nodeData: NodeData
+    ease: (t: number) => number
 }
 
 export interface AnimationNode extends PlayableAnimation {
-    _type: 'AnimationNode';
+    _type: 'AnimationNode'
 
-    name: string;
+    _name: string // Name of the node
+    name: string // Name of operation
 
-    id: string;
+    id: string
 
-    precondition: ViewState;
-    postcondition: ViewState;
+    precondition: ViewState
+    postcondition: ViewState
 
-    _reads: AnimationData[];
-    _writes: AnimationData[];
+    _reads: AnimationData[]
+    _writes: AnimationData[]
 
-    baseDuration: number;
+    baseDuration: number
 
-    onBegin: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void;
-    onSeek: (animation: AnimationNode, view: ViewState, time: number, options: AnimationRuntimeOptions) => void;
-    onEnd: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void;
+    onBegin: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void
+    onSeek: (animation: AnimationNode, view: ViewState, time: number, options: AnimationRuntimeOptions) => void
+    onEnd: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void
 }
 
 export function instanceOfAnimationNode(animation: any): animation is AnimationNode {
-    return animation._type == 'AnimationNode';
+    return animation._type == 'AnimationNode'
 }
 
 export function createAnimationNode(
@@ -93,10 +94,12 @@ export function createAnimationNode(
     },
     options: AnimationOptions = {}
 ): AnimationNode {
-    Easing.cubic;
-    if (this.id == undefined) this.id = 0;
+    Easing.cubic
+    if (this.id == undefined) this.id = 0
     return {
         _type: 'AnimationNode',
+
+        _name: 'AnimationNode',
         name: 'Animation Node',
 
         id: `AN(${++this.id})`,
@@ -114,10 +117,15 @@ export function createAnimationNode(
         isPlaying: false,
         hasPlayed: false,
         speed: 1,
-        ease: (t) => t,
+        ease: (t) => ParametricBlend(t),
 
         onBegin: () => console.warn('[AnimationNode] Non-implemented on begin callback'),
         onSeek: () => console.warn('[AnimationNode] Non-implemented on seek callback'),
         onEnd: () => console.warn('[AnimationNode] Non-implemented on end callback'),
-    };
+    }
+}
+
+function ParametricBlend(t: number) {
+    const sqt = t * t
+    return sqt / (2.0 * (sqt - t) + 1.0)
 }

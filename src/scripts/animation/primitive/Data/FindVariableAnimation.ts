@@ -1,24 +1,20 @@
-import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataType } from '../../../environment/data/DataState';
-import { resolvePath } from '../../../environment/environment';
-import { Accessor, AccessorType } from '../../../environment/EnvironmentState';
-import { getCurrentEnvironment } from '../../../view/view';
-import { ViewState } from '../../../view/ViewState';
-import { duration } from '../../animation';
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
+import { resolvePath } from '../../../environment/environment'
+import { Accessor, AccessorType } from '../../../environment/EnvironmentState'
+import { getCurrentEnvironment } from '../../../view/view'
+import { ViewState } from '../../../view/ViewState'
+import { duration } from '../../animation'
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface FindVariableAnimation extends AnimationNode {
-    identifier: string;
-    outputRegister: Accessor[];
+    identifier: string
+    outputRegister: Accessor[]
 }
 
-function onBegin(
-    animation: FindVariableAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {
-    const environment = getCurrentEnvironment(view);
+function onBegin(animation: FindVariableAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view)
 
     const reference = resolvePath(
         environment,
@@ -26,36 +22,23 @@ function onBegin(
         null,
         null,
         { noResolvingReference: true }
-    );
+    )
 
     // Put it in the floating stack
-    const register = resolvePath(
-        environment,
-        animation.outputRegister,
-        `${animation.id}_FloatingRegister`
-    ) as DataState;
+    const register = resolvePath(environment, animation.outputRegister, `${animation.id}_FloatingRegister`) as DataState
 
-    replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`));
+    replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
 
     if (options.baking) {
-        computeReadAndWrites(animation);
+        computeReadAndWrites(animation)
     }
 }
 
-function onSeek(
-    animation: FindVariableAnimation,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {
-    let t = animation.ease(time / duration(animation));
+function onSeek(animation: FindVariableAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+    let t = animation.ease(time / duration(animation))
 }
 
-function onEnd(
-    animation: FindVariableAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {}
+function onEnd(animation: FindVariableAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
 /**
  * TODO
@@ -63,8 +46,8 @@ function onEnd(
  * @param input
  */
 function computeReadAndWrites(animation: FindVariableAnimation) {
-    animation._reads = [];
-    animation._writes = [];
+    animation._reads = []
+    animation._writes = []
 }
 
 export function findVariableAnimation(
@@ -74,6 +57,7 @@ export function findVariableAnimation(
 ): FindVariableAnimation {
     return {
         ...createAnimationNode(null, options),
+        _name: 'FindVariableAnimation',
 
         name: `Locating ${identifier}`,
 
@@ -85,5 +69,5 @@ export function findVariableAnimation(
         onBegin,
         onSeek,
         onEnd,
-    };
+    }
 }

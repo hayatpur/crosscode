@@ -1,6 +1,6 @@
-import { Editor } from './scripts/editor/Editor';
-import { Executor } from './scripts/executor/Executor';
-import './styles/dark.scss';
+import { Editor } from './scripts/editor/Editor'
+import { Executor } from './scripts/executor/Executor'
+import './styles/dark.scss'
 
 // import './styles/main.scss';
 
@@ -8,24 +8,24 @@ import './styles/dark.scss';
 self.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
         if (label === 'json') {
-            return './json.worker.bundle.js';
+            return './json.worker.bundle.js'
         }
         if (label === 'css' || label === 'scss' || label === 'less') {
-            return './css.worker.bundle.js';
+            return './css.worker.bundle.js'
         }
         if (label === 'html' || label === 'handlebars' || label === 'razor') {
-            return './html.worker.bundle.js';
+            return './html.worker.bundle.js'
         }
         if (label === 'typescript' || label === 'javascript') {
-            return './ts.worker.bundle.js';
+            return './ts.worker.bundle.js'
         }
-        return './editor.worker.bundle.js';
+        return './editor.worker.bundle.js'
     },
-};
+}
 
 function main() {
-    const editor = new Editor();
-    const executor = new Executor(editor);
+    const editor = new Editor()
+    const executor = new Executor(editor)
 
     // // View controller
     // const view = new ViewController();
@@ -41,4 +41,4 @@ function main() {
     // });
 }
 
-main();
+main()

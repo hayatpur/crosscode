@@ -1,21 +1,21 @@
-import { Accessor } from '../../environment/EnvironmentState';
-import { ViewState } from '../../view/ViewState';
-import { AnimationNode, NodeData, PlayableAnimation } from '../primitive/AnimationNode';
-import { AbstractionSpec, AbstractionType } from './abstraction/Abstractor';
-import { Edge } from './edges/Edge';
-import { getEmptyNodeData } from './graph';
+import { Accessor } from '../../environment/EnvironmentState'
+import { ViewState } from '../../view/ViewState'
+import { AnimationNode, NodeData, PlayableAnimation } from '../primitive/AnimationNode'
+import { AbstractionSpec, AbstractionType } from './abstraction/Abstractor'
+import { Edge } from './edges/Edge'
+import { getEmptyNodeData } from './graph'
 
 export interface AnimationGraphOptions {
-    shouldDissolve?: boolean;
-    isSequence?: boolean;
-    isSection?: boolean;
-    isCollapsed?: boolean;
+    shouldDissolve?: boolean
+    isSequence?: boolean
+    isSection?: boolean
+    isCollapsed?: boolean
 }
 
 export interface AnimationRuntimeOptions {
-    indent?: number;
-    baking?: boolean;
-    globalTime?: number;
+    indent?: number
+    baking?: boolean
+    globalTime?: number
 }
 
 export enum AnimationDataFlags {
@@ -25,54 +25,51 @@ export enum AnimationDataFlags {
 }
 
 export interface AnimationData {
-    location: Accessor[];
-    id: string;
-    flags?: Set<AnimationDataFlags>;
+    location: Accessor[]
+    id: string
+    flags?: Set<AnimationDataFlags>
 }
 
 export interface AnimationGraphPath {
-    node: AnimationGraph | AnimationNode;
-    edge?: Edge;
+    node: AnimationGraph | AnimationNode
+    edge?: Edge
 }
 
 export interface AnimationGraph extends PlayableAnimation {
     // Meta info
-    _type: 'AnimationGraph';
-    id: string;
-    nodeData: NodeData;
+    _type: 'AnimationGraph'
+    id: string
+    nodeData: NodeData
 
     // Invariant to abstraction info
-    precondition: ViewState;
-    postcondition: ViewState;
-    isGroup: boolean;
+    precondition: ViewState
+    postcondition: ViewState
+    isGroup: boolean
 
     // Variant to abstraction info
-    abstractions: AnimationGraphVariant[];
+    abstractions: AnimationGraphVariant[]
 
     // Index of current abstraction chosen
-    currentAbstractionIndex: number;
+    currentAbstractionIndex: number
 }
 
 export interface AnimationGraphVariant {
     // Info about the abstraction
-    spec: AbstractionSpec;
+    spec: AbstractionSpec
 
     // Variant to abstraction info
-    vertices: (AnimationGraph | AnimationNode)[];
-    edges: Edge[];
-    isParallel: boolean;
-    parallelStarts: number[];
+    vertices: (AnimationGraph | AnimationNode)[]
+    edges: Edge[]
+    isParallel: boolean
+    parallelStarts: number[]
 }
 
 export function instanceOfAnimationGraph(animation: any): animation is AnimationGraph {
-    return animation._type == 'AnimationGraph';
+    return animation._type == 'AnimationGraph'
 }
 
-export function createAnimationGraph(
-    nodeData: NodeData,
-    options: { isGroup?: boolean } = {}
-): AnimationGraph {
-    if (this.id == undefined) this.id = 0;
+export function createAnimationGraph(nodeData: NodeData, options: { isGroup?: boolean } = {}): AnimationGraph {
+    if (this.id == undefined) this.id = 0
 
     return {
         // Meta info
@@ -91,16 +88,18 @@ export function createAnimationGraph(
         isGroup: options.isGroup || false,
 
         // Variant to abstraction info
-        abstractions: [
-            {
-                spec: { type: AbstractionType.None, value: null },
-                vertices: [],
-                edges: [],
-                isParallel: false,
-                parallelStarts: [],
-            },
-        ],
+        abstractions: [createAbstraction()],
 
         currentAbstractionIndex: 0,
-    };
+    }
+}
+
+export function createAbstraction(): AnimationGraphVariant {
+    return {
+        spec: { type: AbstractionType.None, value: null },
+        vertices: [],
+        edges: [],
+        isParallel: false,
+        parallelStarts: [],
+    }
 }

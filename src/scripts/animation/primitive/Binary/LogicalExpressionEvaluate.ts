@@ -1,59 +1,59 @@
-import * as ESTree from 'estree';
-import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataType } from '../../../environment/data/DataState';
-import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment';
-import { Accessor, accessorsToString, AccessorType } from '../../../environment/EnvironmentState';
-import { updateRootViewLayout } from '../../../environment/layout';
-import { getCurrentEnvironment } from '../../../view/view';
-import { ViewState } from '../../../view/ViewState';
-import { duration } from '../../animation';
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
+import * as ESTree from 'estree'
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
+import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
+import { Accessor, accessorsToString, AccessorType } from '../../../environment/EnvironmentState'
+import { updateRootViewLayout } from '../../../environment/layout'
+import { getCurrentEnvironment } from '../../../view/view'
+import { ViewState } from '../../../view/ViewState'
+import { duration } from '../../animation'
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface LogicalExpressionEvaluate extends AnimationNode {
-    leftSpecifier: Accessor[];
-    rightSpecifier: Accessor[];
-    shortCircuit: boolean;
-    operator: ESTree.LogicalOperator;
-    outputRegister: Accessor[];
+    leftSpecifier: Accessor[]
+    rightSpecifier: Accessor[]
+    shortCircuit: boolean
+    operator: ESTree.LogicalOperator
+    outputRegister: Accessor[]
 }
 
 interface IntermediatePositionStorage {
-    initLeft: number;
-    initTop: number;
-    targetLeft: number;
-    targetTop: number;
+    initLeft: number
+    initTop: number
+    targetLeft: number
+    targetTop: number
 }
 
 function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view);
+    const environment = getCurrentEnvironment(view)
 
     // Find left data
-    let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as DataState;
-    environment._temps[`LeftData${animation.id}`] = [{ type: AccessorType.ID, value: left.id }];
+    let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as DataState
+    environment._temps[`LeftData${animation.id}`] = [{ type: AccessorType.ID, value: left.id }]
 
-    let data: DataState, right: DataState;
+    let data: DataState, right: DataState
 
     if (animation.shortCircuit) {
-        data = createData(DataType.Literal, left.value, `${animation.id}_EvaluatedData`);
-        data.transform.styles.elevation = 1;
-        data.transform.styles.position = 'absolute';
-        addDataAt(environment, data, [], null);
-        updateRootViewLayout(view);
+        data = createData(DataType.Literal, left.value, `${animation.id}_EvaluatedData`)
+        data.transform.styles.elevation = 1
+        data.transform.styles.position = 'absolute'
+        addDataAt(environment, data, [], null)
+        updateRootViewLayout(view)
     } else {
         // Find right data
-        right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as DataState;
-        environment._temps[`RightData${animation.id}`] = [{ type: AccessorType.ID, value: right.id }];
+        right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as DataState
+        environment._temps[`RightData${animation.id}`] = [{ type: AccessorType.ID, value: right.id }]
 
         data = createData(
             DataType.Literal,
             eval(`${left.value}${animation.operator}${right.value}`),
             `${animation.id}_EvaluatedData`
-        );
-        data.transform.styles.elevation = 1;
-        data.transform.styles.position = 'absolute';
-        addDataAt(environment, data, [], null);
-        updateRootViewLayout(view);
+        )
+        data.transform.styles.elevation = 1
+        data.transform.styles.position = 'absolute'
+        addDataAt(environment, data, [], null)
+        updateRootViewLayout(view)
     }
 
     // data.transform.styles.left = animation.shortCircuit
@@ -70,7 +70,7 @@ function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options:
         initTop: left.transform.styles.top,
         targetLeft: data.transform.styles.left,
         targetTop: data.transform.styles.top,
-    } as IntermediatePositionStorage;
+    } as IntermediatePositionStorage
 
     // Target right transform
     // if (!animation.shortCircuit) {
@@ -84,22 +84,22 @@ function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options:
 }
 
 function onSeek(animation: LogicalExpressionEvaluate, view: ViewState, time: number, options: AnimationRuntimeOptions) {
-    let t = animation.ease(time / duration(animation));
+    let t = animation.ease(time / duration(animation))
 
-    const environment = getCurrentEnvironment(view);
-    const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState;
+    const environment = getCurrentEnvironment(view)
+    const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState
 
-    const evaluated = resolvePath(environment, environment._temps[`EvaluatedData${animation.id}`], null) as DataState;
+    const evaluated = resolvePath(environment, environment._temps[`EvaluatedData${animation.id}`], null) as DataState
 
-    const leftTransform = environment._temps[`LeftTransform${animation.id}`] as IntermediatePositionStorage;
-    const rightTransform = environment._temps[`RightTransform${animation.id}`] as IntermediatePositionStorage;
+    const leftTransform = environment._temps[`LeftTransform${animation.id}`] as IntermediatePositionStorage
+    const rightTransform = environment._temps[`RightTransform${animation.id}`] as IntermediatePositionStorage
 
     // Move left
     // left.transform.styles.left = lerp(leftTransform.initLeft, leftTransform.targetLeft, t);
     // left.transform.styles.top = lerp(leftTransform.initTop, leftTransform.targetTop, t);
 
     // Move right
-    let right: DataState;
+    let right: DataState
     // if (!animation.shortCircuit) {
     //     right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState;
     //     right.transform.styles.left = lerp(rightTransform.initLeft, rightTransform.targetLeft, t);
@@ -120,14 +120,14 @@ function onSeek(animation: LogicalExpressionEvaluate, view: ViewState, time: num
 }
 
 function onEnd(animation: LogicalExpressionEvaluate, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view);
+    const environment = getCurrentEnvironment(view)
 
-    const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState;
+    const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState
 
     if (animation.shortCircuit) {
     }
 
-    const evaluated = resolvePath(environment, environment._temps[`EvaluatedData${animation.id}`], null) as DataState;
+    const evaluated = resolvePath(environment, environment._temps[`EvaluatedData${animation.id}`], null) as DataState
 
     // if (options.baking) {
     //     animation.computeReadAndWrites(
@@ -141,17 +141,17 @@ function onEnd(animation: LogicalExpressionEvaluate, view: ViewState, options: A
 
     // Put it in the output register (if any)
     if (animation.outputRegister.length > 0) {
-        const output = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState;
-        replaceDataWith(output, createData(DataType.ID, evaluated.id, `${animation.id}_Placed`));
+        const output = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState
+        replaceDataWith(output, createData(DataType.ID, evaluated.id, `${animation.id}_Placed`))
     } else {
-        removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation);
+        removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
     }
 
-    removeAt(environment, getMemoryLocation(environment, left).foundLocation);
+    removeAt(environment, getMemoryLocation(environment, left).foundLocation)
 
     if (!animation.shortCircuit) {
-        const right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState;
-        removeAt(environment, getMemoryLocation(environment, right).foundLocation);
+        const right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState
+        removeAt(environment, getMemoryLocation(environment, right).foundLocation)
     }
 }
 
@@ -165,6 +165,8 @@ export function logicalExpressionEvaluate(
 ): LogicalExpressionEvaluate {
     return {
         ...createAnimationNode(null, options),
+        _name: 'LogicalExpressionEvaluate',
+
         baseDuration: 30,
 
         name: `Logical Evaluate ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(
@@ -182,5 +184,5 @@ export function logicalExpressionEvaluate(
         onBegin,
         onSeek,
         onEnd,
-    };
+    }
 }

@@ -1,55 +1,55 @@
-import { createData, replaceDataWith } from '../../../environment/data/data';
-import { DataState, DataType } from '../../../environment/data/DataState';
-import { addDataAt, resolvePath } from '../../../environment/environment';
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
-import { updateRootViewLayout } from '../../../environment/layout';
-import { getCurrentEnvironment } from '../../../view/view';
-import { ViewState } from '../../../view/ViewState';
-import { duration } from '../../animation';
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
+import { addDataAt, resolvePath } from '../../../environment/environment'
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
+import { updateRootViewLayout } from '../../../environment/layout'
+import { getCurrentEnvironment } from '../../../view/view'
+import { ViewState } from '../../../view/ViewState'
+import { duration } from '../../animation'
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface ArrayStartAnimation extends AnimationNode {
-    dataSpecifier: Accessor[];
-    doNotFloat: boolean;
+    dataSpecifier: Accessor[]
+    doNotFloat: boolean
 }
 
 function onBegin(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view);
+    const environment = getCurrentEnvironment(view)
 
     // Create a new array somewhere in memory
-    const data = createData(DataType.Array, [], `${animation.id}_CreateArray`);
+    const data = createData(DataType.Array, [], `${animation.id}_CreateArray`)
     if (!animation.doNotFloat) {
-        data.transform.styles.elevation = 1;
+        data.transform.styles.elevation = 1
     }
-    data.transform.styles.position = 'relative';
-    data.transform.styles.left = 0;
-    data.transform.styles.top = 0;
+    data.transform.styles.position = 'relative'
+    data.transform.styles.left = 0
+    data.transform.styles.top = 0
 
-    const loc = addDataAt(environment, data, [], null);
-    updateRootViewLayout(view);
+    const loc = addDataAt(environment, data, [], null)
+    updateRootViewLayout(view)
 
     if (options.baking) {
         computeReadAndWrites(animation, {
             location: loc,
             id: data.id,
-        });
+        })
     }
 
     // Point the output register to the newly created data
-    const outputRegister = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Floating`) as DataState;
-    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`));
+    const outputRegister = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Floating`) as DataState
+    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`))
 }
 
 function onSeek(animation: ArrayStartAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
-    let t = animation.ease(time / duration(animation));
+    let t = animation.ease(time / duration(animation))
 }
 
 function onEnd(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
 function computeReadAndWrites(animation: ArrayStartAnimation, data: AnimationData) {
-    animation._reads = [data];
-    animation._writes = [data];
+    animation._reads = [data]
+    animation._writes = [data]
 }
 
 export function arrayStartAnimation(
@@ -59,6 +59,8 @@ export function arrayStartAnimation(
 ): ArrayStartAnimation {
     return {
         ...createAnimationNode(null, { ...options, duration: 10 }),
+
+        _name: 'ArrayStartAnimation',
 
         name: `Initialize array at ${accessorsToString(dataSpecifier)}`,
 
@@ -70,7 +72,7 @@ export function arrayStartAnimation(
         onBegin,
         onSeek,
         onEnd,
-    };
+    }
 }
 
 // import { Accessor, AccessorType, DataType } from '../../../environment/data/data';

@@ -1,36 +1,33 @@
-import { createScope } from '../../../environment/environment';
-import { getCurrentEnvironment } from '../../../view/view';
-import { ViewState } from '../../../view/ViewState';
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
+import { createScope } from '../../../environment/environment'
+import { getCurrentEnvironment } from '../../../view/view'
+import { ViewState } from '../../../view/ViewState'
+import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface CreateScopeAnimation extends AnimationNode {}
 
-function onBegin(
-    animation: CreateScopeAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {
-    const environment = getCurrentEnvironment(view);
-    createScope(environment);
+function onBegin(animation: CreateScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {
+    const environment = getCurrentEnvironment(view)
+    createScope(environment)
+
+    if (options.baking) {
+        computeReadAndWrites(animation)
+    }
 }
 
-function onSeek(
-    animation: CreateScopeAnimation,
-    view: ViewState,
-    time: number,
-    options: AnimationRuntimeOptions
-) {}
+function onSeek(animation: CreateScopeAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
 
-function onEnd(
-    animation: CreateScopeAnimation,
-    view: ViewState,
-    options: AnimationRuntimeOptions
-) {}
+function onEnd(animation: CreateScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+
+function computeReadAndWrites(animation: CreateScopeAnimation) {
+    animation._reads = []
+    animation._writes = []
+}
 
 export function createScopeAnimation(options: AnimationOptions = {}): CreateScopeAnimation {
     return {
         ...createAnimationNode(null, options),
+        _name: 'CreateScopeAnimation',
 
         name: 'CreateScopeAnimation',
 
@@ -38,7 +35,7 @@ export function createScopeAnimation(options: AnimationOptions = {}): CreateScop
         onBegin,
         onSeek,
         onEnd,
-    };
+    }
 }
 
 // function begin(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {

@@ -3,16 +3,20 @@ import { apply } from '../../../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
 import { addVertex } from '../../../animation/graph/graph';
 import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-import { copyDataAnimation } from '../../../animation/primitive/Data/CopyDataAnimation';
 import { findMember } from '../../../animation/primitive/Data/FindMember';
 import { getMember } from '../../../animation/primitive/Data/GetMember';
-import { DataState } from '../../../environment/data/DataState';
-import { resolvePath } from '../../../environment/environment';
+import { convertIdentifierToLiteral } from '../../../environment/data/data';
 import { AccessorType } from '../../../environment/EnvironmentState';
-import { getCurrentEnvironment } from '../../../view/view';
 import { ViewState } from '../../../view/ViewState';
 import { Compiler, getNodeData } from '../../Compiler';
 
+/**
+ *
+ * @param ast
+ * @param view
+ * @param context
+ * @returns
+ */
 export function MemberExpression(ast: ESTree.MemberExpression, view: ViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
@@ -28,63 +32,27 @@ export function MemberExpression(ast: ESTree.MemberExpression, view: ViewState, 
     // Create a register that'll point to the location of computed property
     const propertyRegister = [{ type: AccessorType.Register, value: `${graph.id}_Property` }];
 
-    if (ast.computed) {
-        // Something like obj[i], or obj['x']
-        const property = Compiler.compile(ast.property, view, {
+    // Something like obj[i], or obj['x']
+    const property = Compiler.compile(
+        ast.computed ? ast.property : convertIdentifierToLiteral(ast.property as ESTree.Identifier),
+        view,
+        {
             ...context,
             outputRegister: propertyRegister,
             feed: false,
-        });
-        addVertex(graph, property, { nodeData: getNodeData(ast.property) });
-    }
+        }
+    );
+    addVertex(graph, property, { nodeData: getNodeData(ast.property) });
 
     // Compute the result
     if (context.feed) {
-        const find = findMember(
-            objectRegister,
-            ast.computed ? propertyRegister : null,
-            context.outputRegister,
-            !ast.computed ? (ast.property as ESTree.Identifier).name : null,
-            ast.computed
-        );
+        const find = findMember(objectRegister, propertyRegister, context.outputRegister);
         addVertex(graph, find, { nodeData: getNodeData(ast) });
         apply(find, view);
     } else {
-        const environment = getCurrentEnvironment(view);
-        if (ast.computed) {
-            const object = resolvePath(environment, objectRegister, `${graph.id}_Object`) as DataState;
-
-            const property = resolvePath(environment, propertyRegister, `${graph.id}_Property`) as DataState;
-            const index = property.value as number;
-
-            // Find the data & float up a copy of it
-            const member = (object.value as DataState[])[index];
-
-            const dmember = getMember(
-                objectRegister,
-                ast.computed ? propertyRegister : null,
-                context.outputRegister,
-                !ast.computed ? (ast.property as ESTree.Identifier).name : null,
-                ast.computed
-            );
-            addVertex(graph, dmember, { nodeData: getNodeData(ast) });
-            apply(dmember, view);
-
-            // Create a copy of it
-            const copy = copyDataAnimation([{ type: AccessorType.ID, value: member.id }], context.outputRegister);
-            addVertex(graph, copy, { nodeData: getNodeData(ast) });
-            apply(copy, view);
-        } else {
-            const member = getMember(
-                objectRegister,
-                ast.computed ? propertyRegister : null,
-                context.outputRegister,
-                !ast.computed ? (ast.property as ESTree.Identifier).name : null,
-                ast.computed
-            );
-            addVertex(graph, member, { nodeData: getNodeData(ast) });
-            apply(member, view);
-        }
+        const member = getMember(objectRegister, propertyRegister, context.outputRegister);
+        addVertex(graph, member, { nodeData: getNodeData(ast) });
+        apply(member, view);
     }
 
     return graph;

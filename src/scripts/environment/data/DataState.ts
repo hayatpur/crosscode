@@ -22,6 +22,7 @@ export interface Transform {
         height: number;
     };
     styles: TransformStyles;
+    renderOnlyStyles: TransformStyles;
     classList: string[];
 }
 

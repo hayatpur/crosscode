@@ -1,45 +1,50 @@
-import { createData } from '../../../environment/data/data';
-import { DataState, DataType } from '../../../environment/data/DataState';
-import { addDataAt, declareVariable, getMemoryLocation, resolvePath } from '../../../environment/environment';
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState';
-import { updateRootViewLayout } from '../../../environment/layout';
-import { getCurrentEnvironment } from '../../../view/view';
-import { ViewState } from '../../../view/ViewState';
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode';
+import { createData } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
+import { addDataAt, declareVariable, getMemoryLocation, resolvePath } from '../../../environment/environment'
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
+import { updateRootViewLayout } from '../../../environment/layout'
+import { getCurrentEnvironment } from '../../../view/view'
+import { ViewState } from '../../../view/ViewState'
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
+import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface BindAnimation extends AnimationNode {
-    identifier: string;
-    existingMemorySpecifier: Accessor[];
+    identifier: string
+    existingMemorySpecifier: Accessor[]
 }
 
 function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view);
+    const environment = getCurrentEnvironment(view)
 
-    let data = null;
-    let location = null;
+    let data = null
+    let location = null
 
     // Create a reference for variable
-    const reference = createData(DataType.Reference, [], `${animation.id}_Reference`);
-    const loc = addDataAt(environment, reference, [], `${animation.id}_Add`);
-    updateRootViewLayout(view);
+    const reference = createData(DataType.Reference, [], `${animation.id}_Reference`)
+    const loc = addDataAt(environment, reference, [], `${animation.id}_Add`)
+    updateRootViewLayout(view)
 
     if (animation.existingMemorySpecifier != null) {
-        data = resolvePath(environment, animation.existingMemorySpecifier, `${animation.id}_Existing`) as DataState;
-        location = getMemoryLocation(environment, data).foundLocation;
+        data = resolvePath(environment, animation.existingMemorySpecifier, `${animation.id}_Existing`) as DataState
+        location = getMemoryLocation(environment, data).foundLocation
     } else {
-        data = createData(DataType.Literal, undefined, `${animation.id}_BindNew`);
-        location = addDataAt(environment, data, [], null);
-        updateRootViewLayout(view);
+        data = createData(DataType.Literal, undefined, `${animation.id}_BindNew`)
+        location = addDataAt(environment, data, [], null)
+        updateRootViewLayout(view)
     }
 
-    reference.value = location;
+    reference.value = location
 
-    declareVariable(environment, animation.identifier, loc);
-    updateRootViewLayout(view);
+    declareVariable(environment, animation.identifier, loc)
+    updateRootViewLayout(view)
 
     if (options.baking) {
-        computeReadAndWrites(animation, { location, id: data.id });
+        computeReadAndWrites(
+            animation,
+            { location, id: data.id },
+            { location: loc, id: reference.id },
+            animation.existingMemorySpecifier == null
+        )
     }
 }
 
@@ -47,9 +52,15 @@ function onSeek(animation: BindAnimation, view: ViewState, time: number, options
 
 function onEnd(animation: BindAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
 
-function computeReadAndWrites(animation: BindAnimation, data: AnimationData) {
-    animation._reads = [data];
-    animation._writes = [];
+// TODO also add variable identifier as read
+function computeReadAndWrites(
+    animation: BindAnimation,
+    data: AnimationData,
+    reference: AnimationData,
+    dataCreated: boolean
+) {
+    animation._reads = [data]
+    animation._writes = dataCreated ? [reference, data] : [reference]
 }
 
 export function bindAnimation(
@@ -59,6 +70,8 @@ export function bindAnimation(
 ): BindAnimation {
     return {
         ...createAnimationNode(null, options),
+        _name: 'BindAnimation',
+
         baseDuration: 5,
         name: `Bind Variable (${identifier}), with data at ${accessorsToString(existingMemorySpecifier ?? [])}`,
 
@@ -70,5 +83,5 @@ export function bindAnimation(
         onBegin,
         onSeek,
         onEnd,
-    };
+    }
 }

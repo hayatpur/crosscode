@@ -1,5 +1,4 @@
-import { stringHashCode } from '../utilities/string';
-import { DataState, Transform } from './data/DataState';
+import { DataState, Transform } from './data/DataState'
 
 export enum AccessorType {
     ID = 'ID',
@@ -9,8 +8,8 @@ export enum AccessorType {
 }
 
 export interface Accessor {
-    type: AccessorType;
-    value: number | string;
+    type: AccessorType
+    value: number | string
 }
 
 export function accessorToString(accessor: Accessor): string {
@@ -19,51 +18,51 @@ export function accessorToString(accessor: Accessor): string {
     //         .toString()
     //         .substring(0, 6)})`;
     // }
-    return `${accessor.type}(${accessor.value})`;
+    return `${accessor.type}(${accessor.value})`
 }
 
 export function accessorsToString(accessors: Accessor[]): string {
-    return `${accessors.map((acc) => accessorToString(acc)).join(' > ')}`;
+    return `${accessors.map((acc) => accessorToString(acc)).join(' > ')}`
 }
 
 export interface IdentifierState {
-    name: string;
-    location: Accessor[];
-    transform: Transform;
+    name: string
+    location: Accessor[]
+    transform: Transform
 }
 
 export interface Scope {
-    [name: string]: IdentifierState;
+    [name: string]: IdentifierState
 }
 
 export interface EnvironmentTransform extends Transform {
     // Anchors to align it to lines of code, or to other views
-    positionModifiers: EnvironmentPositionModifier[];
+    positionModifiers: EnvironmentPositionModifier[]
 }
 
 export interface EnvironmentState {
-    _type: 'EnvironmentState';
+    _type: 'EnvironmentState'
 
-    transform: EnvironmentTransform;
+    transform: EnvironmentTransform
 
     // Variable name bindings
-    scope: Scope[];
+    scope: Scope[]
 
     // Storage data
-    memory: (DataState | null)[];
+    memory: (DataState | null)[]
 
     // Temporary data
-    registers: { [name: string]: DataState };
+    registers: { [name: string]: DataState }
 
     // Unsafe temporary data (used to exchange data within an animation)
-    _temps: { [name: string]: any };
+    _temps: { [name: string]: any }
 
-    id: string;
+    id: string
 }
 
 export interface EnvironmentPositionModifier {
-    type: EnvironmentPositionModifierType;
-    value: any;
+    type: EnvironmentPositionModifierType
+    value: any
 }
 
 export enum EnvironmentPositionModifierType {
@@ -73,5 +72,5 @@ export enum EnvironmentPositionModifierType {
 }
 
 export function instanceOfEnvironment(environment: any): environment is EnvironmentState {
-    return environment['_type'] === 'EnvironmentState';
+    return environment['_type'] === 'EnvironmentState'
 }
