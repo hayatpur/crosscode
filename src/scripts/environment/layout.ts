@@ -1,5 +1,6 @@
 import { reflow } from '../utilities/dom';
 import { getRelativeLocation } from '../utilities/math';
+import { clone } from '../utilities/objects';
 import { ViewState } from '../view/ViewState';
 import { DataState, DataType, instanceOfData, Transform } from './data/DataState';
 import { resolvePath } from './environment';
@@ -92,8 +93,12 @@ export function updateLayout(entity: { transform: Transform }, parent: HTMLDivEl
     if (instanceOfEnvironment(entity)) {
         const bindings = getChildren(entity, { getBindings: true }) as IdentifierState[];
         for (const binding of bindings) {
+            console.log(entity, binding.location);
             const item = resolvePath(entity, binding.location, null);
-            const location = getRelativeLocation(item.transform.rendered, entity.transform.rendered);
+            const location = getRelativeLocation(
+                item.transform.rendered,
+                entity.transform.rendered
+            );
             binding.transform.styles.top = `${location.y - 30}px`;
             binding.transform.styles.left = `${location.x}px`;
             updateLayout(binding, el);

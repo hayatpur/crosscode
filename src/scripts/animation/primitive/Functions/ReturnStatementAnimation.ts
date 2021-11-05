@@ -1,33 +1,70 @@
-// import { Accessor } from '../../../environment/data/data';
-// import { Environment } from '../../../environment/environment';
-// import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
-// import { AnimationNode, AnimationOptions } from '../AnimationNode';
+import { DataState } from '../../../environment/data/DataState';
+import { getMemoryLocation, resolvePath } from '../../../environment/environment';
+import { Accessor } from '../../../environment/EnvironmentState';
+import { getCurrentEnvironment } from '../../../view/view';
+import { ViewState } from '../../../view/ViewState';
+import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph';
+import { AnimationNode, AnimationOptions, createAnimationNode, ReturnData } from '../AnimationNode';
 
-// export class ReturnStatementAnimation extends AnimationNode {
-//     inputSpecifier: Accessor[];
+export interface ReturnStatementAnimation extends AnimationNode {
+    returnData: ReturnData;
+}
 
-//     constructor(inputSpecifier: Accessor[], options: AnimationOptions = {}) {
-//         super(options);
-//         this.inputSpecifier = inputSpecifier;
-//     }
+function onBegin(
+    animation: ReturnStatementAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = getCurrentEnvironment(view);
 
-//     begin(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {
-//         super.begin(environment, options);
-//         let data = resolvePath(environment, this.inputSpecifier, `${this.id}_Data`) as DataState;
+    const data = resolvePath(
+        environment,
+        animation.returnData.register,
+        `${animation.id}_Data`
+    ) as DataState;
+    data.frame = animation.returnData.frame;
 
-//         data.frame -= 2;
+    if (options.baking) {
+        computeReadAndWrites(animation, {
+            location: getMemoryLocation(environment, data).foundLocation,
+            id: data.id,
+        });
+    }
+}
 
-//         if (options.baking) {
-//             this.computeReadAndWrites({ location: getMemoryLocation(environment, (data).foundLocation, id: data.id });
-//         }
-//     }
+function onSeek(
+    animation: ReturnStatementAnimation,
+    view: ViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-//     seek(environment: Environment, time: number) {}
+function onEnd(
+    animation: ReturnStatementAnimation,
+    view: ViewState,
+    options: AnimationRuntimeOptions
+) {}
 
-//     end(environment: Environment, options: AnimationRuntimeOptions = { indent: 0, baking: false, globalTime: 0 }) {}
+function computeReadAndWrites(animation: ReturnStatementAnimation, data: AnimationData) {
+    animation._reads = [data];
+    animation._writes = [];
+}
 
-//     computeReadAndWrites(data: AnimationData) {
-//         this._reads = [data];
-//         this._writes = [];
-//     }
-// }
+export function returnStatementAnimation(
+    returnData: ReturnData,
+    options: AnimationOptions = {}
+): ReturnStatementAnimation {
+    return {
+        ...createAnimationNode(null, options),
+        _name: 'ReturnStatementAnimation',
+
+        name: 'Return Statement',
+
+        returnData,
+
+        // Callbacks
+        onBegin,
+        onSeek,
+        onEnd,
+    };
+}

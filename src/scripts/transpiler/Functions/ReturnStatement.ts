@@ -1,14 +1,20 @@
 import * as ESTree from 'estree';
+import { apply } from '../../animation/animation';
 import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph';
 import { addVertex } from '../../animation/graph/graph';
 import { AnimationContext, ControlOutput } from '../../animation/primitive/AnimationNode';
+import { returnStatementAnimation } from '../../animation/primitive/Functions/ReturnStatementAnimation';
 import { DataState } from '../../environment/data/DataState';
 import { resolvePath } from '../../environment/environment';
 import { getCurrentEnvironment } from '../../view/view';
 import { ViewState } from '../../view/ViewState';
 import { Compiler, getNodeData } from '../Compiler';
 
-export function ReturnStatement(ast: ESTree.ReturnStatement, view: ViewState, context: AnimationContext) {
+export function ReturnStatement(
+    ast: ESTree.ReturnStatement,
+    view: ViewState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     // Evaluate the result of argument into register
@@ -20,9 +26,9 @@ export function ReturnStatement(ast: ESTree.ReturnStatement, view: ViewState, co
 
     // Make sure the memory this register is pointing at doesn't get destroyed
     // when popping scopes
-    const environment = getCurrentEnvironment(view);
-    const memory = resolvePath(environment, context.returnData.register, null) as DataState;
-    memory.frame = context.returnData.frame;
+    const ret = returnStatementAnimation(context.returnData);
+    apply(ret, view);
+    addVertex(graph, ret, { nodeData: getNodeData(ast) });
 
     // TODO: Does this need a move and place?
     // const place = moveAndPlaceAnimation(register, context.returnData.register);

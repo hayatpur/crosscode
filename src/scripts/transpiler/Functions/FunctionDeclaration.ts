@@ -7,7 +7,11 @@ import { bindFunctionAnimation } from '../../animation/primitive/Binding/BindFun
 import { ViewState } from '../../view/ViewState';
 import { getNodeData } from '../Compiler';
 
-export function FunctionDeclaration(ast: ESTree.FunctionDeclaration, view: ViewState, context: AnimationContext) {
+export function FunctionDeclaration(
+    ast: ESTree.FunctionDeclaration,
+    view: ViewState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
 
     // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier

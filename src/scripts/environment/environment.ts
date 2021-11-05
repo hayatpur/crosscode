@@ -1,6 +1,6 @@
-import { clone } from '../utilities/objects'
-import { createData, createTransform } from './data/data'
-import { DataState, DataType, instanceOfData } from './data/DataState'
+import { clone } from '../utilities/objects';
+import { createData, createTransform } from './data/data';
+import { DataState, DataType, instanceOfData } from './data/DataState';
 import {
     Accessor,
     AccessorType,
@@ -8,9 +8,9 @@ import {
     IdentifierState,
     instanceOfEnvironment,
     Scope,
-} from './EnvironmentState'
+} from './EnvironmentState';
 
-let CUR_ENV_ID = 0
+let CUR_ENV_ID = 0;
 
 export function createEnvironment(): EnvironmentState {
     return {
@@ -26,11 +26,11 @@ export function createEnvironment(): EnvironmentState {
             positionModifiers: [],
             classList: ['environment-i'],
         },
-    }
+    };
 }
 
 export function createIdentifier(name: string, location: Accessor[]): IdentifierState {
-    return { name, location, transform: { ...createTransform(), classList: ['identifier-i'] } }
+    return { name, location, transform: { ...createTransform(), classList: ['identifier-i'] } };
 }
 
 /**
@@ -38,7 +38,7 @@ export function createIdentifier(name: string, location: Accessor[]): Identifier
  * @param environment
  */
 export function createScope(environment: EnvironmentState) {
-    environment.scope.push({})
+    environment.scope.push({});
 }
 
 /**
@@ -47,15 +47,15 @@ export function createScope(environment: EnvironmentState) {
  * @returns the latest scope
  */
 export function popScope(environment: EnvironmentState): Scope {
-    const frame = environment.scope.length
+    const frame = environment.scope.length;
     for (let i = environment.memory.length - 1; i >= 0; i--) {
-        if (environment.memory[i] == null) continue
+        if (environment.memory[i] == null) continue;
         // TODO: Nested structures
         if (environment.memory[i].frame == frame) {
-            environment.memory[i] = null
+            environment.memory[i] = null;
         }
     }
-    return environment.scope.pop()
+    return environment.scope.pop();
 }
 
 /**
@@ -71,7 +71,7 @@ export function declareVariable(
     location: Accessor[],
     shouldBeGlobal = false
 ) {
-    environment.scope[environment.scope.length - 1][name] = createIdentifier(name, location)
+    environment.scope[environment.scope.length - 1][name] = createIdentifier(name, location);
     // updateLayout(environment);
 }
 
@@ -81,13 +81,17 @@ export function declareVariable(
  * @param name name of the variable to reassign
  * @param location location of new storage
  */
-export function redeclareVariable(environment: EnvironmentState, name: string, location: Accessor[]) {
+export function redeclareVariable(
+    environment: EnvironmentState,
+    name: string,
+    location: Accessor[]
+) {
     for (let i = environment.scope.length - 1; i >= 0; i--) {
-        let scope = environment.scope[i]
+        let scope = environment.scope[i];
 
         if (name in scope) {
-            scope[name] = createIdentifier(name, location)
-            return
+            scope[name] = createIdentifier(name, location);
+            return;
         }
     }
 
@@ -102,9 +106,9 @@ export function redeclareVariable(environment: EnvironmentState, name: string, l
  */
 export function lookupVariable(environment: EnvironmentState, name: string): Accessor[] {
     for (let i = environment.scope.length - 1; i >= 0; i--) {
-        let scope = environment.scope[i]
+        let scope = environment.scope[i];
         if (name in scope) {
-            return scope[name].location
+            return scope[name].location;
         }
     }
 }
@@ -113,7 +117,10 @@ export function lookupVariable(environment: EnvironmentState, name: string): Acc
  * @param environment
  * @returns Returns a deep clone of the environment
  */
-export function cloneEnvironment(environment: EnvironmentState, assignNewId: boolean = false): EnvironmentState {
+export function cloneEnvironment(
+    environment: EnvironmentState,
+    assignNewId: boolean = false
+): EnvironmentState {
     return {
         _type: 'EnvironmentState',
         scope: clone(environment.scope),
@@ -122,7 +129,7 @@ export function cloneEnvironment(environment: EnvironmentState, assignNewId: boo
         _temps: clone(environment._temps),
         id: assignNewId ? `Env(${++CUR_ENV_ID})` : environment.id,
         transform: clone(environment.transform),
-    }
+    };
 }
 
 /**
@@ -131,11 +138,11 @@ export function cloneEnvironment(environment: EnvironmentState, assignNewId: boo
  * @param newEnv
  */
 export function replaceEnvironmentWith(current: EnvironmentState, newEnv: EnvironmentState) {
-    const clone = cloneEnvironment(newEnv)
-    current.scope = clone.scope
-    current.memory = clone.memory
-    current._temps = clone._temps
-    current.registers = clone.registers
+    const clone = cloneEnvironment(newEnv);
+    current.scope = clone.scope;
+    current.memory = clone.memory;
+    current._temps = clone._temps;
+    current.registers = clone.registers;
 }
 
 /**
@@ -148,17 +155,17 @@ export function removeAt(
     location: Accessor[],
     options: { noResolvingId?: boolean; noResolvingReference?: boolean } = null
 ) {
-    const parentPath = location.slice(0, -1)
-    const parent = resolvePath(environment, parentPath, null, null, options)
+    const parentPath = location.slice(0, -1);
+    const parent = resolvePath(environment, parentPath, null, null, options);
 
-    const index = location[location.length - 1]
+    const index = location[location.length - 1];
 
     if (instanceOfData(parent)) {
-        parent.value[index.value] = null
+        parent.value[index.value] = null;
     } else if (instanceOfEnvironment(parent)) {
-        parent.memory[index.value] = null
+        parent.memory[index.value] = null;
     } else {
-        console.error('Unknown parent type', parent)
+        console.error('Unknown parent type', parent);
     }
 }
 
@@ -167,8 +174,8 @@ export function removeAt(
  * @param environment
  */
 export function logEnvironment(environment: EnvironmentState) {
-    console.table(environment.scope)
-    console.table(environment.memory)
+    console.table(environment.scope);
+    console.table(environment.memory);
 }
 
 /**
@@ -177,18 +184,18 @@ export function logEnvironment(environment: EnvironmentState) {
  * @returns
  */
 export function flattenedEnvironmentMemory(environment: EnvironmentState): DataState[] {
-    const search = [...environment.memory]
-    const flattened: DataState[] = []
+    const search = [...environment.memory];
+    const flattened: DataState[] = [];
 
     while (search.length > 0) {
-        const data = search.shift()
-        if (data == null) continue
-        flattened.push(data)
+        const data = search.shift();
+        if (data == null) continue;
+        flattened.push(data);
 
-        if (data.type == DataType.Array) search.push(...(data.value as DataState[]))
+        if (data.type == DataType.Array) search.push(...(data.value as DataState[]));
     }
 
-    return flattened
+    return flattened;
 }
 
 export function resolve(
@@ -200,17 +207,17 @@ export function resolve(
 ): DataState | EnvironmentState {
     // By default, make focus the overall environment if none is specified
     if (parent == null) {
-        parent = root
+        parent = root;
     }
 
     // If parent is the environment
     if (accessor.type == AccessorType.Register) {
         // Registers are always located in the root
         if (root.registers[accessor.value] == null) {
-            root.registers[accessor.value] = createData(DataType.Register, null, srcId)
+            root.registers[accessor.value] = createData(DataType.Register, null, srcId);
         }
 
-        const registerData = root.registers[accessor.value]
+        const registerData = root.registers[accessor.value];
 
         if (registerData.type == DataType.ID) {
             return resolvePath(
@@ -219,45 +226,58 @@ export function resolve(
                 srcId,
                 null,
                 options
-            )
+            );
         } else if (registerData.type == DataType.Register) {
-            return registerData
+            return registerData;
         } else {
-            console.error('Invalid register type, has to be either ID or Register', registerData.type)
+            console.error(
+                'Invalid register type, has to be either ID or Register',
+                registerData.type
+            );
         }
     } else if (accessor.type == AccessorType.ID) {
-        const search = [...(instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)]
+        const search = [
+            ...(instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory),
+        ];
 
         while (search.length > 0) {
-            const data = search.shift()
-            if (data == null) continue
+            const data = search.shift();
+            if (data == null) continue;
 
             if (data.id == accessor.value) {
-                return resolvePath(root, getMemoryLocation(root, data).foundLocation, srcId, null, options)
+                return resolvePath(
+                    root,
+                    getMemoryLocation(root, data).foundLocation,
+                    srcId,
+                    null,
+                    options
+                );
             } else if (data.type == DataType.Array) {
-                search.push(...(data.value as DataState[]))
+                search.push(...(data.value as DataState[]));
             }
         }
 
-        return null
+        return null;
     } else if (accessor.type == AccessorType.Symbol) {
         // Symbols are located in the root
-        const accessors = lookupVariable(root, accessor.value as string)
-        return resolvePath(root, accessors, srcId, null, options)
+        const accessors = lookupVariable(root, accessor.value as string);
+        return resolvePath(root, accessors, srcId, null, options);
     } else if (accessor.type == AccessorType.Index) {
         if (instanceOfData(parent) && parent.type == DataType.Array) {
-            const value = parent.value as DataState[]
+            const value = parent.value as DataState[];
             if (accessor.value >= value.length) {
-                value[accessor.value] = createData(DataType.Literal, null, srcId)
-                value[accessor.value].frame = parent.frame
+                value[accessor.value] = createData(DataType.Literal, null, srcId);
+                value[accessor.value].frame = parent.frame;
             }
         }
 
-        let data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[accessor.value]
+        let data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[
+            accessor.value
+        ];
 
         if (data.type == DataType.ID) {
             if (options.noResolvingId) {
-                return data
+                return data;
             } else {
                 return resolve(
                     root,
@@ -268,17 +288,17 @@ export function resolve(
                     srcId,
                     null,
                     options
-                )
+                );
             }
         } else if (data.type == DataType.Reference) {
             if (options.noResolvingReference) {
-                return data
+                return data;
             } else {
-                return resolvePath(root, data.value as Accessor[], srcId, null, options)
+                return resolvePath(root, data.value as Accessor[], srcId, null, options);
             }
         }
 
-        return data
+        return data;
     }
 }
 
@@ -290,11 +310,11 @@ export function resolvePath(
     options: { noResolvingId?: boolean; noResolvingReference?: boolean } = {}
 ): DataState | EnvironmentState {
     if (path.length == 0) {
-        return parent ?? root
+        return parent ?? root;
     }
 
-    let resolution = resolve(root, path[0], srcId, parent, options)
-    let ret = resolvePath(root, path.slice(1), srcId, resolution, options)
+    let resolution = resolve(root, path[0], srcId, parent, options);
+    let ret = resolvePath(root, path.slice(1), srcId, resolution, options);
 
     // if (instanceOfData(ret) && ret.type == DataType.ID && !options.noResolvingId) {
     //     ret = resolve(
@@ -307,7 +327,7 @@ export function resolvePath(
     //     ) as DataState;
     // }
 
-    return ret
+    return ret;
 }
 
 export function addDataAt(
@@ -319,51 +339,53 @@ export function addDataAt(
 ): Accessor[] {
     // By default, make focus the overall environment if none is specified
     if (origin == null) {
-        origin = root
+        origin = root;
     }
 
     if (instanceOfData(origin)) {
-        if (origin.type != DataType.Array) console.error('[Data] Invalid addAt, trying to add to a non-addable type')
+        if (origin.type != DataType.Array)
+            console.error('[Data] Invalid addAt, trying to add to a non-addable type');
 
         // No path specified, push it into memory
         if (path.length == 0) {
-            ;(origin.value as DataState[]).push(data)
-            return
+            (origin.value as DataState[]).push(data);
+            return;
         }
 
-        const parentPath = path.slice(0, -1)
-        const parent = resolvePath(root, parentPath, srcId, origin)
+        const parentPath = path.slice(0, -1);
+        const parent = resolvePath(root, parentPath, srcId, origin);
 
         if (parent == origin) {
-            const index = path[path.length - 1]
-            parent.value[index.value] = data
-            data.frame = origin.frame
+            const index = path[path.length - 1];
+            parent.value[index.value] = data;
+            data.frame = origin.frame;
         } else {
-            addDataAt(root, data, path.slice(-2, -1), srcId, parent)
+            addDataAt(root, data, path.slice(-2, -1), srcId, parent);
         }
 
-        return path
+        return path;
     } else {
-        data.frame = origin.scope.length
+        data.frame = origin.scope.length;
 
         // No path specified, push it into memory
         if (path.length == 0) {
-            origin.memory.push(data)
+            origin.memory.push(data);
+            console.log('Updating environment...');
             // updateLayout(origin);
-            return [{ value: origin.memory.length - 1, type: AccessorType.Index }]
+            return [{ value: origin.memory.length - 1, type: AccessorType.Index }];
         }
 
-        const parentPath = path.slice(0, -1)
-        const parent = resolvePath(root, parentPath, srcId, origin)
+        const parentPath = path.slice(0, -1);
+        const parent = resolvePath(root, parentPath, srcId, origin);
 
         if (parent == origin) {
-            const index = path[path.length - 1]
-            origin.memory[index.value] = data
+            const index = path[path.length - 1];
+            origin.memory[index.value] = data;
         } else {
-            addDataAt(root, data, path.slice(-1), srcId, parent)
+            addDataAt(root, data, path.slice(-1), srcId, parent);
         }
 
-        return path
+        return path;
     }
 }
 
@@ -373,23 +395,28 @@ export function getMemoryLocation(
     location: Accessor[] = [],
     parent: DataState | EnvironmentState | null = null
 ): { found: boolean; foundLocation: Accessor[] } {
-    let search: DataState[] = []
+    let search: DataState[] = [];
 
-    if (parent != null && instanceOfData(parent) && parent.type == DataType.Array && parent.frame >= 0) {
-        search = parent.value as DataState[]
+    if (
+        parent != null &&
+        instanceOfData(parent) &&
+        parent.type == DataType.Array &&
+        parent.frame >= 0
+    ) {
+        search = parent.value as DataState[];
     } else if (parent == null) {
-        search = root.memory
+        search = root.memory;
     }
 
     for (let i = 0; i < search.length; i++) {
-        if (search[i] == null) continue
+        if (search[i] == null) continue;
 
         // Check if this item is the data
         if (search[i].id == data.id) {
             return {
                 found: true,
                 foundLocation: [...location, { type: AccessorType.Index, value: i }],
-            }
+            };
         }
 
         // Check if this item contains data
@@ -398,22 +425,22 @@ export function getMemoryLocation(
             data,
             [...location, { type: AccessorType.Index, value: i }],
             search[i]
-        )
+        );
 
         if (found) {
-            return { found: true, foundLocation }
+            return { found: true, foundLocation };
         }
     }
 
-    return { found: false, foundLocation: undefined }
+    return { found: false, foundLocation: undefined };
 }
 
 // Converts register IDs to memory counter-parts
 export function getTrueId(environment: EnvironmentState, id: string) {
-    const register = environment.registers[id]
-    if (register == null) return id
+    const register = environment.registers[id];
+    if (register == null) return id;
 
     if (register.type == DataType.ID) {
-        return getTrueId(environment, register.value as string)
+        return getTrueId(environment, register.value as string);
     }
 }
