@@ -1,26 +1,28 @@
-import { Transform } from '../environment/data/DataState';
-import { EnvironmentState } from '../environment/EnvironmentState';
+import { Transform } from '../environment/data/DataState'
+import { EnvironmentState } from '../environment/EnvironmentState'
 
 // A view is a collection of environments
 export interface ViewState {
-    _type: 'ViewState';
+    _type: 'ViewState'
 
-    id: string;
-    label: string;
-    isRoot: boolean;
+    id: string
+    label: string
+    isRoot: boolean
+    isActive: boolean
+    lastActive: number
 
-    transform: ViewTransform;
-    children: (ViewState | EnvironmentState)[];
+    transform: ViewTransform
+    children: (ViewState | EnvironmentState)[]
 }
 
 export interface ViewTransform extends Transform {
     // Anchors to align it to lines of code, or to other views
-    positionModifiers: ViewPositionModifier[];
+    positionModifiers: ViewPositionModifier[]
 }
 
 export interface ViewPositionModifier {
-    type: ViewPositionModifierType;
-    value: any;
+    type: ViewPositionModifierType
+    value: any
 }
 
 export enum ViewPositionModifierType {
@@ -30,5 +32,5 @@ export enum ViewPositionModifierType {
 }
 
 export function instanceOfView(view: any): view is ViewState {
-    return view['_type'] == 'ViewState';
+    return view['_type'] == 'ViewState'
 }

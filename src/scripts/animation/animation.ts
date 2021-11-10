@@ -214,7 +214,7 @@ export function seek(
 }
 
 export function restoreInitialState(vertex: AnimationGraph | AnimationNode, view: ViewState) {
-    console.log('Restoring initial layout for', vertex)
+    // console.log('Restoring initial layout for', vertex)
 
     if (vertex.precondition != null) {
         replaceViewWith(view, vertex.precondition)
@@ -232,14 +232,19 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     }
 }
 
-export function bake(animation: AnimationGraph | AnimationNode) {
-    seek(animation, createView(), duration(animation), {
+export function bake(animation: AnimationGraph | AnimationNode, view: ViewState = null) {
+    if (view == null) {
+        view = createView({ isRoot: true })
+    }
+
+    begin(animation, view, { baking: true })
+    seek(animation, view, duration(animation), {
         baking: true,
         indent: 0,
         globalTime: 0,
     })
+    end(animation, view, { baking: true })
     reset(animation)
-    // computeAllGraphEdges(this.animation);
 }
 
 export function apply(animation: AnimationGraph | AnimationNode, view: ViewState) {

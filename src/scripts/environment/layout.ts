@@ -1,10 +1,9 @@
-import { reflow } from '../utilities/dom';
-import { getRelativeLocation } from '../utilities/math';
-import { clone } from '../utilities/objects';
-import { ViewState } from '../view/ViewState';
-import { DataState, DataType, instanceOfData, Transform } from './data/DataState';
-import { resolvePath } from './environment';
-import { IdentifierState, instanceOfEnvironment } from './EnvironmentState';
+import { reflow } from '../utilities/dom'
+import { getRelativeLocation } from '../utilities/math'
+import { ViewState } from '../view/ViewState'
+import { DataState, DataType, instanceOfData, Transform } from './data/DataState'
+import { resolvePath } from './environment'
+import { IdentifierState, instanceOfEnvironment } from './EnvironmentState'
 
 export function getChildren(
     obj: any,
@@ -12,43 +11,43 @@ export function getChildren(
 ): null | { transform: Transform }[] {
     if (instanceOfData(obj)) {
         if (obj.type == DataType.Array) {
-            return obj.value as DataState[];
+            return obj.value as DataState[]
         } else {
-            return null;
+            return null
         }
     } else if (instanceOfEnvironment(obj) && !options.getBindings) {
         return obj.memory.filter(
             (item) => item != null && (item.type == DataType.Array || item.type == DataType.Literal)
-        );
+        )
     } else if (instanceOfEnvironment(obj) && options.getBindings) {
-        let bindings: IdentifierState[] = [];
+        let bindings: IdentifierState[] = []
         for (let scope of obj.scope) {
-            bindings = [...bindings, ...Object.values(scope)];
+            bindings = [...bindings, ...Object.values(scope)]
         }
-        return bindings;
+        return bindings
     } else if ('children' in obj) {
-        return obj.children;
+        return obj.children
     }
 
-    return null;
+    return null
 }
 
 export function updateRootViewLayout(view: ViewState) {
     if (!view.isRoot) {
-        console.warn('Update root layout of a non-root view', view);
-        console.trace();
+        console.warn('Update root layout of a non-root view', view)
+        console.trace()
     }
 
     // Clear current temporary layout
-    document.getElementById('temporary-layout').innerHTML = '';
+    document.getElementById('temporary-layout').innerHTML = ''
 
     // Create root view container
-    const rootViewContainer = document.createElement('div');
-    rootViewContainer.classList.add('root-view-container');
-    document.getElementById('temporary-layout').append(rootViewContainer);
+    const rootViewContainer = document.createElement('div')
+    rootViewContainer.classList.add('root-view-container')
+    document.getElementById('temporary-layout').append(rootViewContainer)
 
     // Update the view's layout
-    updateLayout(view, rootViewContainer);
+    updateLayout(view, rootViewContainer)
 }
 
 /**
@@ -58,57 +57,55 @@ export function updateRootViewLayout(view: ViewState) {
  */
 export function updateLayout(entity: { transform: Transform }, parent: HTMLDivElement) {
     // Get initial CSS layout
-    const el = document.createElement('div');
+    const el = document.createElement('div')
 
     if (instanceOfData(entity) && entity.transform.styles.position == 'absolute') {
-        el.classList.add('floating-i');
+        el.classList.add('floating-i')
     }
 
     // Append to parent
-    parent.appendChild(el);
+    parent.appendChild(el)
 
     // Assign appropriate class
-    el.classList.add(...entity.transform.classList);
+    el.classList.add(...entity.transform.classList)
 
     // Apply styles
     for (const style of Object.keys(entity.transform.styles)) {
-        el.style[style] = entity.transform.styles[style];
+        el.style[style] = entity.transform.styles[style]
     }
 
     // Reflow
-    reflow(el);
-    reflow(parent);
+    reflow(el)
+    reflow(parent)
 
-    const children = getChildren(entity);
+    const children = getChildren(entity)
 
     for (const child of children ?? []) {
-        updateLayout(child, el);
+        updateLayout(child, el)
     }
 
     // Reflow
-    reflow(el);
-    reflow(parent);
+    reflow(el)
+    reflow(parent)
 
     // Update bindings
     if (instanceOfEnvironment(entity)) {
-        const bindings = getChildren(entity, { getBindings: true }) as IdentifierState[];
+        const bindings = getChildren(entity, { getBindings: true }) as IdentifierState[]
         for (const binding of bindings) {
-            console.log(entity, binding.location);
-            const item = resolvePath(entity, binding.location, null);
-            const location = getRelativeLocation(
-                item.transform.rendered,
-                entity.transform.rendered
-            );
-            binding.transform.styles.top = `${location.y - 30}px`;
-            binding.transform.styles.left = `${location.x}px`;
-            updateLayout(binding, el);
+            // console.log(clone(entity), clone(binding))
+            const item = resolvePath(entity, binding.location, null)
+
+            const location = getRelativeLocation(item.transform.rendered, entity.transform.rendered)
+            binding.transform.styles.top = `${location.y - 30}px`
+            binding.transform.styles.left = `${location.x}px`
+            updateLayout(binding, el)
         }
     }
 
     // Update transform
-    const bbox = el.getBoundingClientRect();
-    entity.transform.rendered.x = bbox.x;
-    entity.transform.rendered.y = bbox.y;
-    entity.transform.rendered.width = bbox.width;
-    entity.transform.rendered.height = bbox.height;
+    const bbox = el.getBoundingClientRect()
+    entity.transform.rendered.x = bbox.x
+    entity.transform.rendered.y = bbox.y
+    entity.transform.rendered.width = bbox.width
+    entity.transform.rendered.height = bbox.height
 }

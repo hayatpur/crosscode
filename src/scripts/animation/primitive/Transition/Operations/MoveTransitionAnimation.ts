@@ -3,9 +3,8 @@ import { resolvePath } from '../../../../environment/environment'
 import { AccessorType } from '../../../../environment/EnvironmentState'
 import { reflow } from '../../../../utilities/dom'
 import { getNumericalValueOfStyle, lerp } from '../../../../utilities/math'
-import { getCurrentEnvironment, getPreviousEnvironment } from '../../../../view/view'
+import { getCurrentEnvironment, getLastActiveEnvironment } from '../../../../view/view'
 import { ViewState } from '../../../../view/ViewState'
-import { duration } from '../../../animation'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
 import { AnimationData, AnimationRuntimeOptions } from '../../../graph/AnimationGraph'
 import { AnimationOptions, createAnimationNode } from '../../AnimationNode'
@@ -23,16 +22,18 @@ function onBegin(animation: TransitionMove, view: ViewState, options: AnimationR
 }
 
 function onSeek(animation: TransitionMove, view: ViewState, time: number, options: AnimationRuntimeOptions) {
-    let t = animation.ease(time / duration(animation))
-    const environment = getCurrentEnvironment(view)
-    const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
-    const start = environment._temps[`${animation.output.id}TransitionMove`]
+    if (time <= 80) {
+        let t = animation.ease(time / 80)
+        const environment = getCurrentEnvironment(view)
+        const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
+        const start = environment._temps[`${animation.output.id}TransitionMove`]
 
-    data.transform.renderOnlyStyles.left = `${lerp(start.x, data.transform.rendered.x, t)}px`
-    data.transform.renderOnlyStyles.top = `${lerp(start.y, data.transform.rendered.y, t)}px`
+        data.transform.renderOnlyStyles.left = `${lerp(start.x, data.transform.rendered.x, t)}px`
+        data.transform.renderOnlyStyles.top = `${lerp(start.y, data.transform.rendered.y, t)}px`
 
-    if (t > 0.5) {
-        delete data.transform.renderOnlyStyles.borderRadius
+        if (t > 0.5) {
+            delete data.transform.renderOnlyStyles.borderRadius
+        }
     }
 }
 
@@ -48,7 +49,7 @@ function onEnd(animation: TransitionMove, view: ViewState, options: AnimationRun
 
 function applyInvariant(animation: TransitionMove, view: ViewState) {
     const environment = getCurrentEnvironment(view)
-    const prevEnvironment = getPreviousEnvironment(view)
+    const prevEnvironment = getLastActiveEnvironment(view)
 
     const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
     const origin = resolvePath(prevEnvironment, [{ type: AccessorType.ID, value: animation.origins[0].id }], null)
@@ -66,7 +67,7 @@ export function transitionMove(
     options: AnimationOptions = {}
 ): TransitionMove {
     return {
-        ...createAnimationNode(null, { ...options, duration: 80 }),
+        ...createAnimationNode(null, { ...options, duration: 150 }),
 
         name: 'TransitionMove',
 

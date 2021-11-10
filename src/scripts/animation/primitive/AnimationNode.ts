@@ -28,6 +28,7 @@ export interface ControlOutputData {
 export interface ReturnData {
     frame: number
     register: Accessor[]
+    environmentId: string
 }
 
 export interface AnimationContext {
