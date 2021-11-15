@@ -1,12 +1,12 @@
 import { getNumericalValueOfStyle, lerp, sigmoid } from '../../../utilities/math'
 import { clone } from '../../../utilities/objects'
 import { DataRenderer } from '../DataRenderer'
-import { DataState, TransformStyles } from '../DataState'
+import { ConcreteDataState, TransformStyles } from '../DataState'
 
 export class LiteralRenderer extends DataRenderer {
     prevRenderStyles: TransformStyles
 
-    setState(data: DataState) {
+    setState(data: ConcreteDataState) {
         this.element.classList.add('data-literal')
 
         const z = data.transform.styles.elevation ?? 0

@@ -4,8 +4,7 @@ import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
 import { getRelativeLocation } from '../../../utilities/math'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -16,8 +15,8 @@ export interface CopyDataAnimation extends AnimationNode {
     hardCopy: boolean
 }
 
-function onBegin(animation: CopyDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: CopyDataAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
     const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState
     const copy = cloneData(data, false, `${animation.id}_Copy`)
     copy.transform.styles.elevation = 0
@@ -52,16 +51,16 @@ function onBegin(animation: CopyDataAnimation, view: ViewState, options: Animati
     }
 }
 
-function onSeek(animation: CopyDataAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(animation: CopyDataAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation))
 
-    const environment = getCurrentEnvironment(view)
+    const environment = view.environment
     const copy = resolvePath(environment, environment._temps[`CopyDataAnimation${animation.id}`], null) as DataState
     copy.transform.styles.elevation = t
 }
 
-function onEnd(animation: CopyDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onEnd(animation: CopyDataAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
     const copy = resolvePath(environment, environment._temps[`CopyDataAnimation${animation.id}`], null) as DataState
     copy.transform.styles.elevation = 1
 

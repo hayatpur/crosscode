@@ -5,8 +5,7 @@ import { Accessor, accessorsToString, instanceOfEnvironment } from '../../../env
 import { updateRootViewLayout } from '../../../environment/layout'
 import { DataMovementLocation, DataMovementPath } from '../../../utilities/DataMovementPath'
 import { getRelativeLocation, remap } from '../../../utilities/math'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -17,8 +16,8 @@ export interface MoveAndPlaceAnimation extends AnimationNode {
     noMove: boolean
 }
 
-function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: MoveAndPlaceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     const move = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
@@ -71,8 +70,8 @@ function onBegin(animation: MoveAndPlaceAnimation, view: ViewState, options: Ani
     environment._temps[`MovePath${animation.id}`] = path
 }
 
-function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     let move = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
@@ -107,8 +106,8 @@ function onSeek(animation: MoveAndPlaceAnimation, view: ViewState, time: number,
     updateRootViewLayout(view)
 }
 
-function onEnd(animation: MoveAndPlaceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onEnd(animation: MoveAndPlaceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
     environment._temps[`MovePath${this.id}`]?.destroy()
     delete environment._temps[`MovePath${this.id}`]
 

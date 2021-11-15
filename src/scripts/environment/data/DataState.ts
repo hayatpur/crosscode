@@ -1,5 +1,6 @@
-import * as CSS from 'csstype';
-import { Accessor } from '../EnvironmentState';
+import * as CSS from 'csstype'
+import { Accessor } from '../EnvironmentState'
+import { PrototypicalPath } from './path'
 
 export enum DataType {
     Literal = 'Literal',
@@ -11,38 +12,54 @@ export enum DataType {
 }
 
 export interface TransformStyles extends CSS.Properties {
-    elevation?: number;
+    elevation?: number
 }
 
 export interface Transform {
     rendered: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-    };
-    styles: TransformStyles;
-    renderOnlyStyles: TransformStyles;
-    classList: string[];
+        x: number
+        y: number
+        width: number
+        height: number
+    }
+    styles: TransformStyles
+    renderOnlyStyles: TransformStyles
+    classList: string[]
 }
 
-export interface DataTransform extends Transform {}
+export interface ConcreteDataTransform extends Transform {}
 
-export interface DataState {
-    _type: 'DataState';
+export interface PrototypicalDataTransform {
+    classList: string[]
+    paths: PrototypicalPath[]
+}
 
-    type: DataType;
-    transform: DataTransform;
+export interface PrototypicalDataState {
+    _type: 'PrototypicalDataState'
 
-    value: string | boolean | Number | DataState[] | Accessor[];
+    type: DataType
+    hints: PrototypicalDataTransform
+
+    value: string | boolean | Number | PrototypicalDataState[] | Accessor[]
 
     // Binding frame
-    frame: number;
+    frame: number
 
-    id: string;
+    id: string
 }
 
-export function instanceOfData(data: any): data is DataState {
-    const x = document.createElement('div');
-    return data['_type'] === 'DataState';
+export interface ConcreteDataState {
+    _type: 'ConcreteDataState'
+
+    prototype: PrototypicalDataState
+    transform: ConcreteDataTransform
+    value: string | boolean | Number | ConcreteDataState[] | Accessor[]
+}
+
+export function instanceOfPrototypicalData(data: any): data is PrototypicalDataState {
+    return data['_type'] === 'PrototypicalDataState'
+}
+
+export function instanceOfConcreteData(data: any): data is ConcreteDataState {
+    return data['_type'] === 'ConcreteDataState'
 }

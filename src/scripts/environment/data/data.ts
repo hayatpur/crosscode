@@ -1,7 +1,14 @@
-import * as ESTree from 'estree';
-import { clone } from '../../utilities/objects';
-import { Accessor } from '../EnvironmentState';
-import { DataState, DataTransform, DataType, Transform } from './DataState';
+import * as ESTree from 'estree'
+import { clone } from '../../utilities/objects'
+import { Accessor } from '../EnvironmentState'
+import {
+    ConcreteDataState,
+    ConcreteDataTransform,
+    DataType,
+    PrototypicalDataState,
+    PrototypicalDataTransform,
+    Transform,
+} from './DataState'
 
 export function createTransform(): Transform {
     return {
@@ -14,90 +21,91 @@ export function createTransform(): Transform {
             height: 0,
         },
         classList: [],
-    };
+    }
 }
 
 export function createData(
     type: DataType,
-    value: string | boolean | Number | DataState[] | Accessor[],
+    value: string | boolean | Number | PrototypicalDataState[] | Accessor[],
     id: string,
-    transform: DataTransform = null,
+    hints: PrototypicalDataTransform = null,
     frame: number = -1
-): DataState {
+): PrototypicalDataState {
     return {
-        _type: 'DataState',
+        _type: 'PrototypicalDataState',
         type: type,
-        transform: transform ?? {
-            ...createTransform(),
-            styles: {},
+        hints: hints ?? {
+            paths: [],
             classList: ['data-i', ...getDataClassNames(type)],
         },
         value: value,
         id: id,
         frame: frame,
-    };
+    }
+}
+
+export function createConcreteData(
+    prototype: PrototypicalDataState = null,
+    value: string | boolean | Number | ConcreteDataState[] | Accessor[] = null,
+    transform: ConcreteDataTransform = null
+): ConcreteDataState {
+    return {
+        _type: 'ConcreteDataState',
+        prototype,
+        transform: transform ?? {
+            ...createTransform(),
+            styles: {},
+            classList: ['data-i', ...getDataClassNames(prototype.type)],
+        },
+        value: value,
+    }
 }
 
 export function getDataClassNames(type: DataType): string[] {
     const mapping = {
         [DataType.Literal]: ['data-literal-i'],
         [DataType.Array]: ['data-array-i'],
-    };
-
-    return mapping[type] ?? [];
-}
-
-export function cloneData(data: DataState, copyId: boolean = true, srcId: string = null): DataState {
-    let value = data.value;
-    if (data.type == DataType.Array) {
-        value = (value as DataState[]).map((value) => cloneData(value, copyId));
     }
 
-    const copy: DataState = {
-        _type: 'DataState',
-        id: copyId ? data.id : srcId,
-        type: data.type,
-        transform: clone(data.transform),
-        value: value,
-        frame: data.frame,
-    };
-
-    return copy;
+    return mapping[type] ?? []
 }
 
-export function replaceDataWithMutable(
-    original: DataState,
-    data: DataState,
-    mask: { id?: boolean; frame?: boolean } = { id: false, frame: false }
-) {
-    if (!mask.id) original.id = data.id;
-    if (!mask.frame) original.frame = data.frame;
-
-    original.value = data.value;
-    original.type = data.type;
-    original.transform = data.transform;
-
-    if (mask.frame && data.type == DataType.Array) {
-        (data.value as DataState[]).forEach((data) => (data.frame = original.frame));
-    }
+export function clonePrototypicalData(
+    data: PrototypicalDataState,
+    copyId: boolean = true,
+    srcId: string = null
+): PrototypicalDataState {
+    const copy = clone(data)
+    copy.id = copyId ? data.id : srcId
+    return copy
 }
 
-export function replaceDataWith(
-    original: DataState,
-    data: DataState,
+export function cloneConcreteData(
+    data: ConcreteDataState,
+    copyId: boolean = true,
+    srcId: string = null
+): ConcreteDataState {
+    const copy = clone(data)
+    copy.prototype.id = copyId ? data.prototype.id : srcId
+    return copy
+}
+
+export function replacePrototypicalDataWith(
+    original: PrototypicalDataState,
+    data: PrototypicalDataState,
     mask: { id?: boolean; frame?: boolean } = { id: false, frame: false }
 ) {
-    const copy = cloneData(data);
+    const copy = clonePrototypicalData(data)
 
-    if (!mask.id) original.id = copy.id;
-    if (!mask.frame) original.frame = copy.frame;
+    if (!mask.id) original.id = copy.id
+    if (!mask.frame) original.frame = copy.frame
 
-    original.value = copy.value;
-    original.type = copy.type;
-    original.transform = copy.transform;
+    original.value = copy.value
+    original.type = copy.type
+    original.hints = copy.hints
 
     if (mask.frame && copy.type == DataType.Array) {
-        (original.value as DataState[]).forEach((el) => (el.frame = original.frame));
+        ;(original.value as PrototypicalDataState[]).forEach((el) => (el.frame = original.frame))
     }
 }
 
@@ -106,5 +114,5 @@ export function convertIdentifierToLiteral(data: ESTree.Identifier): ESTree.Lite
         ...data,
         type: 'Literal',
         value: data.name,
-    };
+    }
 }

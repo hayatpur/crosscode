@@ -1,14 +1,19 @@
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface EndTransitionAnimation extends AnimationNode {}
 
-function onBegin(animation: EndTransitionAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onBegin(animation: EndTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
-function onSeek(animation: EndTransitionAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: EndTransitionAnimation,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: EndTransitionAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: EndTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 export function endTransitionAnimation(options: AnimationOptions = {}): EndTransitionAnimation {
     return {

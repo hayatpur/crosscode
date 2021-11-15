@@ -1,7 +1,7 @@
 import { Easing } from 'eaz'
 import * as ESTree from 'estree'
 import { Accessor } from '../../environment/EnvironmentState'
-import { ViewState } from '../../view/ViewState'
+import { RootViewState } from '../../view/ViewState'
 import { AnimationData, AnimationRuntimeOptions } from '../graph/AnimationGraph'
 
 export interface NodeData {
@@ -71,17 +71,17 @@ export interface AnimationNode extends PlayableAnimation {
 
     id: string
 
-    precondition: ViewState
-    postcondition: ViewState
+    precondition: RootViewState
+    postcondition: RootViewState
 
     _reads: AnimationData[]
     _writes: AnimationData[]
 
     baseDuration: number
 
-    onBegin: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void
-    onSeek: (animation: AnimationNode, view: ViewState, time: number, options: AnimationRuntimeOptions) => void
-    onEnd: (animation: AnimationNode, view: ViewState, options: AnimationRuntimeOptions) => void
+    onBegin: (animation: AnimationNode, view: RootViewState, options: AnimationRuntimeOptions) => void
+    onSeek: (animation: AnimationNode, view: RootViewState, time: number, options: AnimationRuntimeOptions) => void
+    onEnd: (animation: AnimationNode, view: RootViewState, options: AnimationRuntimeOptions) => void
 }
 
 export function instanceOfAnimationNode(animation: any): animation is AnimationNode {

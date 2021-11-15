@@ -7,10 +7,10 @@ import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation'
 import { moveAndPlaceAnimation } from '../../animation/primitive/Data/MoveAndPlaceAnimation'
 import { AccessorType } from '../../environment/EnvironmentState'
 import { clone } from '../../utilities/objects'
-import { ViewState } from '../../view/ViewState'
+import { RootViewState } from '../../view/ViewState'
 import { Compiler, getNodeData } from '../Compiler'
 
-export function VariableDeclarator(ast: ESTree.VariableDeclarator, view: ViewState, context: AnimationContext) {
+export function VariableDeclarator(ast: ESTree.VariableDeclarator, view: RootViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Create a register to allocate RHS in

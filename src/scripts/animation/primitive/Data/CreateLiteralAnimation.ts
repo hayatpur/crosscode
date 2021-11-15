@@ -4,8 +4,7 @@ import { addDataAt, removeAt, resolvePath } from '../../../environment/environme
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
 import { getRelativeLocation, remap, Vector } from '../../../utilities/math'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationDataFlags, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -22,8 +21,8 @@ export interface CreateLiteralAnimation extends AnimationNode {
  * @param view
  * @param options
  */
-function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: CreateLiteralAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     let referenceTransform: DataTransform
 
@@ -49,7 +48,6 @@ function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: An
         const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_PlaceholderLiteral`)
         updateRootViewLayout(view)
 
-        updateRootViewLayout(view)
         referenceTransform = { ...placeholder.transform }
         removeAt(environment, placeholderLocation)
     }
@@ -83,10 +81,15 @@ function onBegin(animation: CreateLiteralAnimation, view: ViewState, options: An
     updateRootViewLayout(view)
 }
 
-function onSeek(animation: CreateLiteralAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: CreateLiteralAnimation,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 
-    const environment = getCurrentEnvironment(view)
+    const environment = view.environment
     const data = resolvePath(
         environment,
         environment._temps[`CreateLiteralAnimation${animation.id}`],
@@ -94,10 +97,11 @@ function onSeek(animation: CreateLiteralAnimation, view: ViewState, time: number
     ) as DataState
 
     data.transform.styles.elevation = remap(t, 0, 1, 3, 1)
+    updateRootViewLayout(view)
 }
 
-function onEnd(animation: CreateLiteralAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onEnd(animation: CreateLiteralAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
     delete environment._temps[`CreateLiteralAnimation${animation.id}`]
 }
 

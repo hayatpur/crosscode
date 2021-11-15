@@ -1,4 +1,4 @@
-import { DataState, Transform } from './data/DataState'
+import { ConcreteDataState, PrototypicalDataState, Transform } from './data/DataState'
 
 export enum AccessorType {
     ID = 'ID',
@@ -25,14 +25,22 @@ export function accessorsToString(accessors: Accessor[]): string {
     return `${accessors.map((acc) => accessorToString(acc)).join(' > ')}`
 }
 
-export interface IdentifierState {
+export interface PrototypicalIdentifierState {
     name: string
     location: Accessor[]
+}
+
+export interface ConcreteIdentifierState {
+    prototype: PrototypicalIdentifierState
     transform: Transform
 }
 
-export interface Scope {
-    [name: string]: IdentifierState
+export interface PrototypicalScope {
+    [name: string]: PrototypicalIdentifierState
+}
+
+export interface ConcreteScope {
+    [name: string]: ConcreteIdentifierState
 }
 
 export interface EnvironmentTransform extends Transform {
@@ -40,24 +48,34 @@ export interface EnvironmentTransform extends Transform {
     positionModifiers: EnvironmentPositionModifier[]
 }
 
-export interface EnvironmentState {
-    _type: 'EnvironmentState'
-
-    transform: EnvironmentTransform
+export interface PrototypicalEnvironmentState {
+    _type: 'PrototypicalEnvironmentState'
 
     // Variable name bindings
-    scope: Scope[]
+    scope: PrototypicalScope[]
 
     // Storage data
-    memory: (DataState | null)[]
+    memory: (PrototypicalDataState | null)[]
 
     // Temporary data
-    registers: { [name: string]: DataState }
+    registers: { [name: string]: PrototypicalDataState }
 
     // Unsafe temporary data (used to exchange data within an animation)
     _temps: { [name: string]: any }
 
     id: string
+}
+
+export interface ConcreteEnvironmentState {
+    _type: 'ConcreteEnvironmentState'
+    prototype: PrototypicalEnvironmentState
+
+    // Variable name bindings
+    scope: ConcreteScope[]
+
+    // Storage data
+    memory: (ConcreteDataState | null)[]
+    transform: EnvironmentTransform
 }
 
 export interface EnvironmentPositionModifier {
@@ -71,6 +89,10 @@ export enum EnvironmentPositionModifierType {
     BelowView = 'BelowView',
 }
 
-export function instanceOfEnvironment(environment: any): environment is EnvironmentState {
-    return environment['_type'] === 'EnvironmentState'
+export function instanceOfPrototypicalEnvironment(environment: any): environment is PrototypicalEnvironmentState {
+    return environment['_type'] === 'PrototypicalEnvironmentState'
+}
+
+export function instanceOfConcreteEnvironment(environment: any): environment is ConcreteEnvironmentState {
+    return environment['_type'] === 'ConcreteEnvironmentState'
 }

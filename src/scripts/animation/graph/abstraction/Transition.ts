@@ -1,7 +1,6 @@
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { clone } from '../../../utilities/objects'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { AnimationNode, instanceOfAnimationNode } from '../../primitive/AnimationNode'
 import { GroupStartAnimation } from '../../primitive/Group/GroupStartAnimation'
 import { beginTransitionAnimation } from '../../primitive/Transition/BeginTransitionAnimation'
@@ -88,7 +87,7 @@ export function applyTransition(animation: AnimationGraph | AnimationNode, confi
 }
 
 export interface TransitionAnimationNode extends AnimationNode {
-    applyInvariant: (animation: TransitionAnimationNode, view: ViewState) => void
+    applyInvariant: (animation: TransitionAnimationNode, view: RootViewState) => void
     output: AnimationData
     origins: AnimationData[]
 }
@@ -98,7 +97,7 @@ function getTransitionsFromTrace(
     trace: AnimationTraceChain[]
 ): [EnvironmentState, TransitionAnimationNode[]] {
     const view = clone(animation.postcondition)
-    const environment = getCurrentEnvironment(view)
+    const environment = view.environment
     const transitions: TransitionAnimationNode[] = []
 
     for (const chain of trace) {

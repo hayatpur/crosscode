@@ -3,8 +3,7 @@ import { createData } from '../../../environment/data/data'
 import { DataType } from '../../../environment/data/DataState'
 import { addDataAt, declareVariable } from '../../../environment/environment'
 import { updateRootViewLayout } from '../../../environment/layout'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
@@ -13,8 +12,8 @@ export interface BindFunctionAnimation extends AnimationNode {
     ast: ESTree.FunctionDeclaration
 }
 
-function onBegin(animation: BindFunctionAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: BindFunctionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     // Create a reference for variable
     const reference = createData(DataType.Reference, [], `${animation.id}_ReferenceFunction`)
@@ -35,9 +34,14 @@ function onBegin(animation: BindFunctionAnimation, view: ViewState, options: Ani
     }
 }
 
-function onSeek(animation: BindFunctionAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: BindFunctionAnimation,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: BindFunctionAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: BindFunctionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 function computeReadAndWrites(animation: BindFunctionAnimation) {
     animation._reads = []

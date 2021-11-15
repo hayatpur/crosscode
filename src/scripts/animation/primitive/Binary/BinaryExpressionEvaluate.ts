@@ -1,12 +1,11 @@
 import * as ESTree from 'estree'
-import { createData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { createData } from '../../../environment/data/data'
+import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
 import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
 import { Accessor, accessorsToString, AccessorType } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
 import { getNumericalValueOfStyle, getRelativeLocation, lerp, remap, Vector } from '../../../utilities/math'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -18,15 +17,15 @@ export interface BinaryExpressionEvaluate extends AnimationNode {
     outputRegister: Accessor[]
 }
 
-function onBegin(animation: BinaryExpressionEvaluate, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: BinaryExpressionEvaluate, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     // Find left data
-    let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as DataState
+    let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as PrototypicalDataState
     environment._temps[`LeftData${animation.id}`] = [{ type: AccessorType.ID, value: left.id }]
 
     // Find right data
-    let right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as DataState
+    let right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as PrototypicalDataState
     environment._temps[`RightData${animation.id}`] = [{ type: AccessorType.ID, value: right.id }]
 
     const data = createData(
@@ -34,21 +33,21 @@ function onBegin(animation: BinaryExpressionEvaluate, view: ViewState, options: 
         eval(`${left.value}${animation.operator}${right.value}`),
         `${animation.id}_EvaluatedData`
     )
-    data.transform.styles.elevation = 1
-    data.transform.styles.position = 'absolute'
+    data.hints.elevation = 1
+    data.hints.positionType = 'absolute'
 
     addDataAt(environment, data, [], null)
     updateRootViewLayout(view)
 
     // Get relative rendered positions
-    const leftRenderLocation = getRelativeLocation(left.transform.rendered, environment.transform.rendered)
-    const rightRenderLocation = getRelativeLocation(right.transform.rendered, environment.transform.rendered)
-
-    data.transform.styles.left = `${(leftRenderLocation.x + rightRenderLocation.y) / 2}px`
-    data.transform.styles.top = `${leftRenderLocation.y}px`
-    data.transform.styles.opacity = 0
+    data.hints.position = ['lerp', animation.leftSpecifier, animation.leftSpecifier, 0.5]
+    data.hints.opacity = 0
 
     updateRootViewLayout(view)
+
+    const dataAccessor = [{ type: AccessorType.ID, value: data.id }]
+    left.hints.position = ['lerp', animation.leftSpecifier, dataAccessor, 0]
+    right.hints.position = ['lerp', animation.rightSpecifier, dataAccessor, 0]
 
     environment._temps[`EvaluatedData${animation.id}`] = [{ type: AccessorType.ID, value: data.id }]
 
@@ -59,10 +58,15 @@ function onBegin(animation: BinaryExpressionEvaluate, view: ViewState, options: 
     environment._temps[`InitialRightTransform${animation.id}`] = rightRenderLocation
 }
 
-function onSeek(animation: BinaryExpressionEvaluate, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: BinaryExpressionEvaluate,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 
-    const environment = getCurrentEnvironment(view)
+    const environment = view.environment
     const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState
     const right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState
     const evaluated = resolvePath(environment, environment._temps[`EvaluatedData${animation.id}`], null) as DataState
@@ -89,8 +93,8 @@ function onSeek(animation: BinaryExpressionEvaluate, view: ViewState, time: numb
     }
 }
 
-function onEnd(animation: BinaryExpressionEvaluate, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onEnd(animation: BinaryExpressionEvaluate, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState
     const right = resolvePath(environment, environment._temps[`RightData${animation.id}`], null) as DataState

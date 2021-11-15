@@ -1,8 +1,6 @@
-import { updateRootViewLayout } from '../environment/layout'
 import { clone } from '../utilities/objects'
-import { createView, replaceViewWith } from '../view/view'
-import { ViewState } from '../view/ViewState'
-import { Cursor } from './Cursor'
+import { createRootView, replaceRootViewWith } from '../view/view'
+import { RootViewState } from '../view/ViewState'
 import {
     AnimationData,
     AnimationGraph,
@@ -87,13 +85,13 @@ export function addEdge(graph: AnimationGraph, edge: Edge) {
  */
 export function begin(
     animation: AnimationGraph | AnimationNode,
-    view: ViewState,
+    view: RootViewState,
     options: AnimationRuntimeOptions = {}
 ) {
-    Cursor.instance?.setCodeLocation(animation.nodeData.location)
+    view.cursor.location = animation.nodeData.location
 
     if (options.baking) {
-        animation.precondition = clone(view) as ViewState
+        animation.precondition = clone(view)
     }
 
     if (instanceOfAnimationNode(animation)) {
@@ -107,7 +105,11 @@ export function begin(
  * @param view - View to apply the animation on
  * @param options - Mostly used for setting flags to bake animation
  */
-export function end(animation: AnimationGraph | AnimationNode, view: ViewState, options: AnimationRuntimeOptions = {}) {
+export function end(
+    animation: AnimationGraph | AnimationNode,
+    view: RootViewState,
+    options: AnimationRuntimeOptions = {}
+) {
     if (options.baking) {
         animation.postcondition = clone(view)
     }
@@ -126,7 +128,7 @@ export function end(animation: AnimationGraph | AnimationNode, view: ViewState, 
  */
 export function seek(
     animation: AnimationGraph | AnimationNode,
-    view: ViewState,
+    view: RootViewState,
     time: number,
     options: AnimationRuntimeOptions = {}
 ) {
@@ -157,21 +159,21 @@ export function seek(
         const shouldBePlaying = time >= start && time < start + duration(vertex)
 
         // Reverse this animation
-        if (time < start + duration(vertex) && vertex.hasPlayed) {
-            restoreInitialState(vertex, view)
-            updateRootViewLayout(view)
-            updateRootViewLayout(view)
+        // if (time < start + duration(vertex) && vertex.hasPlayed) {
+        //     restoreInitialState(vertex, view)
+        //     updateRootViewLayout(view)
+        //     updateRootViewLayout(view)
 
-            vertex.hasPlayed = false
+        //     vertex.hasPlayed = false
 
-            if (time >= start) {
-                begin(vertex, view, options)
-                seek(vertex, view, time - start, options)
-                vertex.isPlaying = true
-            } else if (time < start) {
-                vertex.isPlaying = false
-            }
-        }
+        //     if (time >= start) {
+        //         begin(vertex, view, options)
+        //         seek(vertex, view, time - start, options)
+        //         vertex.isPlaying = true
+        //     } else if (time < start) {
+        //         vertex.isPlaying = false
+        //     }
+        // }
 
         // End animation
         if (vertex.isPlaying && !shouldBePlaying) {
@@ -180,9 +182,7 @@ export function seek(
             end(vertex, view, options)
 
             if (instanceOfAnimationNode(vertex)) {
-                // console.clear();
                 console.log(`[${~~time}ms] ${vertex.name}`)
-                // logEnvironment(getCurrentEnvironment(view));
             }
 
             vertex.hasPlayed = true
@@ -213,11 +213,11 @@ export function seek(
     }
 }
 
-export function restoreInitialState(vertex: AnimationGraph | AnimationNode, view: ViewState) {
+export function restoreInitialState(vertex: AnimationGraph | AnimationNode, view: RootViewState) {
     // console.log('Restoring initial layout for', vertex)
 
     if (vertex.precondition != null) {
-        replaceViewWith(view, vertex.precondition)
+        replaceRootViewWith(view, vertex.precondition)
     }
 }
 
@@ -232,9 +232,9 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     }
 }
 
-export function bake(animation: AnimationGraph | AnimationNode, view: ViewState = null) {
+export function bake(animation: AnimationGraph | AnimationNode, view: RootViewState = null) {
     if (view == null) {
-        view = createView({ isRoot: true })
+        view = createRootView()
     }
 
     begin(animation, view, { baking: true })
@@ -247,7 +247,7 @@ export function bake(animation: AnimationGraph | AnimationNode, view: ViewState 
     reset(animation)
 }
 
-export function apply(animation: AnimationGraph | AnimationNode, view: ViewState) {
+export function apply(animation: AnimationGraph | AnimationNode, view: RootViewState) {
     begin(animation, view)
     seek(animation, view, duration(animation))
     end(animation, view)

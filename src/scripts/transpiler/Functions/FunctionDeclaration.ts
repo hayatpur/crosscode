@@ -1,33 +1,29 @@
-import * as ESTree from 'estree';
-import { apply } from '../../animation/animation';
-import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph';
-import { addVertex } from '../../animation/graph/graph';
-import { AnimationContext } from '../../animation/primitive/AnimationNode';
-import { bindFunctionAnimation } from '../../animation/primitive/Binding/BindFunctionAnimation';
-import { ViewState } from '../../view/ViewState';
-import { getNodeData } from '../Compiler';
+import * as ESTree from 'estree'
+import { apply } from '../../animation/animation'
+import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph'
+import { addVertex } from '../../animation/graph/graph'
+import { AnimationContext } from '../../animation/primitive/AnimationNode'
+import { bindFunctionAnimation } from '../../animation/primitive/Binding/BindFunctionAnimation'
+import { RootViewState } from '../../view/ViewState'
+import { getNodeData } from '../Compiler'
 
-export function FunctionDeclaration(
-    ast: ESTree.FunctionDeclaration,
-    view: ViewState,
-    context: AnimationContext
-) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
+export function FunctionDeclaration(ast: ESTree.FunctionDeclaration, view: RootViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier
-    const bind = bindFunctionAnimation((ast.id as ESTree.Identifier).name, ast);
-    addVertex(graph, bind, { nodeData: getNodeData(ast.id) });
-    apply(bind, view);
+    const bind = bindFunctionAnimation((ast.id as ESTree.Identifier).name, ast)
+    addVertex(graph, bind, { nodeData: getNodeData(ast.id) })
+    apply(bind, view)
 
-    // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, view: ViewState, context: AnimationContext) => {
+    // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, view: RootViewState, context: AnimationContext) => {
     //     const subScope = createScopeAnimation();
 
     //     for (let i = 0; i < params.length; i++) {
     //         const param = params[i] as ESTree.Identifier;
-    //         const environment = getCurrentEnvironment(view);
+    //         const environment = view.environment
     //         const bind = bindAnimation(param.name, context.args[i], subScope);
     //     }
     // };
 
-    return graph;
+    return graph
 }

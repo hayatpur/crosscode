@@ -2,7 +2,6 @@ import * as ESTree from 'estree'
 import { DataType } from '../../environment/data/DataState'
 import { flattenedEnvironmentMemory, getMemoryLocation } from '../../environment/environment'
 import { clone } from '../../utilities/objects'
-import { getCurrentEnvironment, getLastActiveEnvironment } from '../../view/view'
 import { addEdge, reads, writes } from '../animation'
 import { AnimationNode, instanceOfAnimationNode, NodeData } from '../primitive/AnimationNode'
 import { AnimationData, AnimationGraph, instanceOfAnimationGraph } from './AnimationGraph'
@@ -667,9 +666,7 @@ export function getTrace(
 ): AnimationTraceChain[] {
     // Set default flow to ids of literals and arrays in environment
     if (flow == null) {
-        const environment = clone(
-            getCurrentEnvironment(animation.postcondition) ?? getLastActiveEnvironment(animation.postcondition)
-        )
+        const environment = clone(animation.postcondition.environment)
 
         flow = []
 

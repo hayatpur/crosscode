@@ -9,12 +9,11 @@ import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnima
 import { DataState } from '../../environment/data/DataState'
 import { resolvePath } from '../../environment/environment'
 import { Accessor, AccessorType } from '../../environment/EnvironmentState'
-import { getCurrentEnvironment } from '../../view/view'
-import { ViewState } from '../../view/ViewState'
+import { RootViewState } from '../../view/ViewState'
 import { Compiler, getNodeData } from '../Compiler'
 import { FunctionCall } from '../Functions/FunctionCall'
 
-export function CallExpression(ast: ESTree.CallExpression, view: ViewState, context: AnimationContext) {
+export function CallExpression(ast: ESTree.CallExpression, view: RootViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Create a scope @TODO: HARD SCOPE
@@ -37,7 +36,7 @@ export function CallExpression(ast: ESTree.CallExpression, view: ViewState, cont
 
     if (ast.callee.type === 'Identifier') {
         const funcLocation = [{ type: AccessorType.Symbol, value: ast.callee.name }]
-        const environment = getCurrentEnvironment(view)
+        const environment = view.environment
         const funcData = resolvePath(environment, funcLocation, `${graph.id}_CallExpressionFunc`) as DataState
         const funcAST: ESTree.FunctionDeclaration = JSON.parse(funcData.value as string)
 

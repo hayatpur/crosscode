@@ -3,8 +3,7 @@ import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, resolvePath } from '../../../environment/environment'
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -14,8 +13,8 @@ export interface ArrayStartAnimation extends AnimationNode {
     doNotFloat: boolean
 }
 
-function onBegin(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: ArrayStartAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     // Create a new array somewhere in memory
     const data = createData(DataType.Array, [], `${animation.id}_CreateArray`)
@@ -41,11 +40,11 @@ function onBegin(animation: ArrayStartAnimation, view: ViewState, options: Anima
     replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`))
 }
 
-function onSeek(animation: ArrayStartAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(animation: ArrayStartAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation))
 }
 
-function onEnd(animation: ArrayStartAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: ArrayStartAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 function computeReadAndWrites(animation: ArrayStartAnimation, data: AnimationData) {
     animation._reads = [data]

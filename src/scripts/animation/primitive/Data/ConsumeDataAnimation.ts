@@ -1,8 +1,7 @@
-import { DataState } from '../../../environment/data/DataState'
+import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
 import { Accessor } from '../../../environment/EnvironmentState'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
@@ -10,11 +9,11 @@ export interface ConsumeDataAnimation extends AnimationNode {
     register: Accessor[]
 }
 
-function onBegin(animation: ConsumeDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: ConsumeDataAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     // Get data
-    const data = resolvePath(environment, animation.register, `${animation.id}_Property`) as DataState
+    const data = resolvePath(environment, animation.register, `${animation.id}_Property`) as PrototypicalDataState
     const dataLocation = getMemoryLocation(environment, data).foundLocation
 
     // Consume data
@@ -28,9 +27,9 @@ function onBegin(animation: ConsumeDataAnimation, view: ViewState, options: Anim
     }
 }
 
-function onSeek(animation: ConsumeDataAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(animation: ConsumeDataAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}
 
-function onEnd(animation: ConsumeDataAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: ConsumeDataAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 function computeReadAndWrites(animation: ConsumeDataAnimation, data: AnimationData) {
     animation._reads = []

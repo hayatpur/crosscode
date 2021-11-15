@@ -4,8 +4,7 @@ import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
 import { Accessor, accessorsToString, AccessorType } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -25,8 +24,8 @@ interface IntermediatePositionStorage {
     targetTop: number
 }
 
-function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: LogicalExpressionEvaluate, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     // Find left data
     let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as DataState
@@ -83,10 +82,15 @@ function onBegin(animation: LogicalExpressionEvaluate, view: ViewState, options:
     // }
 }
 
-function onSeek(animation: LogicalExpressionEvaluate, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: LogicalExpressionEvaluate,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 
-    const environment = getCurrentEnvironment(view)
+    const environment = view.environment
     const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState
 
     const evaluated = resolvePath(environment, environment._temps[`EvaluatedData${animation.id}`], null) as DataState
@@ -119,8 +123,8 @@ function onSeek(animation: LogicalExpressionEvaluate, view: ViewState, time: num
     // }
 }
 
-function onEnd(animation: LogicalExpressionEvaluate, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onEnd(animation: LogicalExpressionEvaluate, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     const left = resolvePath(environment, environment._temps[`LeftData${animation.id}`], null) as DataState
 

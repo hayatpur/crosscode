@@ -1,10 +1,9 @@
 import { createData } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
 import { addDataAt, declareVariable, getMemoryLocation, resolvePath } from '../../../environment/environment'
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
@@ -13,8 +12,8 @@ export interface BindAnimation extends AnimationNode {
     existingMemorySpecifier: Accessor[]
 }
 
-function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: BindAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     let data = null
     let location = null
@@ -25,7 +24,11 @@ function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRu
     updateRootViewLayout(view)
 
     if (animation.existingMemorySpecifier != null) {
-        data = resolvePath(environment, animation.existingMemorySpecifier, `${animation.id}_Existing`) as DataState
+        data = resolvePath(
+            environment,
+            animation.existingMemorySpecifier,
+            `${animation.id}_Existing`
+        ) as PrototypicalDataState
         location = getMemoryLocation(environment, data).foundLocation
     } else {
         data = createData(DataType.Literal, undefined, `${animation.id}_BindNew`)
@@ -49,9 +52,9 @@ function onBegin(animation: BindAnimation, view: ViewState, options: AnimationRu
     }
 }
 
-function onSeek(animation: BindAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(animation: BindAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}
 
-function onEnd(animation: BindAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: BindAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 // TODO also add variable identifier as read
 function computeReadAndWrites(

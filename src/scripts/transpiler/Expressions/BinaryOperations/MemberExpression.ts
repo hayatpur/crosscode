@@ -1,14 +1,14 @@
-import * as ESTree from 'estree';
-import { apply } from '../../../animation/animation';
-import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
-import { addVertex } from '../../../animation/graph/graph';
-import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-import { findMember } from '../../../animation/primitive/Data/FindMember';
-import { getMember } from '../../../animation/primitive/Data/GetMember';
-import { convertIdentifierToLiteral } from '../../../environment/data/data';
-import { AccessorType } from '../../../environment/EnvironmentState';
-import { ViewState } from '../../../view/ViewState';
-import { Compiler, getNodeData } from '../../Compiler';
+import * as ESTree from 'estree'
+import { apply } from '../../../animation/animation'
+import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph'
+import { addVertex } from '../../../animation/graph/graph'
+import { AnimationContext } from '../../../animation/primitive/AnimationNode'
+import { findMember } from '../../../animation/primitive/Data/FindMember'
+import { getMember } from '../../../animation/primitive/Data/GetMember'
+import { convertIdentifierToLiteral } from '../../../environment/data/data'
+import { AccessorType } from '../../../environment/EnvironmentState'
+import { RootViewState } from '../../../view/ViewState'
+import { Compiler, getNodeData } from '../../Compiler'
 
 /**
  *
@@ -17,20 +17,20 @@ import { Compiler, getNodeData } from '../../Compiler';
  * @param context
  * @returns
  */
-export function MemberExpression(ast: ESTree.MemberExpression, view: ViewState, context: AnimationContext) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
+export function MemberExpression(ast: ESTree.MemberExpression, view: RootViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Create a register which'll *point* to the location of object
-    const objectRegister = [{ type: AccessorType.Register, value: `${graph.id}_Object` }];
+    const objectRegister = [{ type: AccessorType.Register, value: `${graph.id}_Object` }]
     const object = Compiler.compile(ast.object, view, {
         ...context,
         feed: false,
         outputRegister: objectRegister,
-    });
-    addVertex(graph, object, { nodeData: getNodeData(ast.object) });
+    })
+    addVertex(graph, object, { nodeData: getNodeData(ast.object) })
 
     // Create a register that'll point to the location of computed property
-    const propertyRegister = [{ type: AccessorType.Register, value: `${graph.id}_Property` }];
+    const propertyRegister = [{ type: AccessorType.Register, value: `${graph.id}_Property` }]
 
     // Something like obj[i], or obj['x']
     const property = Compiler.compile(
@@ -41,21 +41,21 @@ export function MemberExpression(ast: ESTree.MemberExpression, view: ViewState, 
             outputRegister: propertyRegister,
             feed: false,
         }
-    );
-    addVertex(graph, property, { nodeData: getNodeData(ast.property) });
+    )
+    addVertex(graph, property, { nodeData: getNodeData(ast.property) })
 
     // Compute the result
     if (context.feed) {
-        const find = findMember(objectRegister, propertyRegister, context.outputRegister);
-        addVertex(graph, find, { nodeData: getNodeData(ast) });
-        apply(find, view);
+        const find = findMember(objectRegister, propertyRegister, context.outputRegister)
+        addVertex(graph, find, { nodeData: getNodeData(ast) })
+        apply(find, view)
     } else {
-        const member = getMember(objectRegister, propertyRegister, context.outputRegister);
-        addVertex(graph, member, { nodeData: getNodeData(ast) });
-        apply(member, view);
+        const member = getMember(objectRegister, propertyRegister, context.outputRegister)
+        addVertex(graph, member, { nodeData: getNodeData(ast) })
+        apply(member, view)
     }
 
-    return graph;
+    return graph
 }
 
 // export class MemberExpression extends Node {

@@ -1,13 +1,15 @@
+import { createCursorState } from '../animation/Cursor'
 import { createTransform } from '../environment/data/data'
-import { EnvironmentState, instanceOfEnvironment } from '../environment/EnvironmentState'
+import { createPrototypicalEnvironment } from '../environment/environment'
+import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
 import { clone } from '../utilities/objects'
-import { instanceOfView, ViewState } from './ViewState'
+import { GroupViewState, instanceOfGroupView, instanceOfLeafView, LeafViewState, RootViewState } from './ViewState'
 
 let CUR_VIEW_ID = 0
 
-export function createView(options: { isRoot?: boolean } = { isRoot: false }): ViewState {
+export function createGroupView(): GroupViewState {
     return {
-        _type: 'ViewState',
+        _type: 'GroupViewState',
         id: `View(${++CUR_VIEW_ID})`,
         transform: {
             ...createTransform(),
@@ -16,125 +18,79 @@ export function createView(options: { isRoot?: boolean } = { isRoot: false }): V
             classList: ['view-i'],
         },
         isActive: false,
-        lastActive: -1,
+        lastActive: 0,
         children: [],
         label: '',
-        isRoot: options.isRoot ? true : false,
     }
 }
 
-export function getCurrentEnvironmentInView(view: ViewState): EnvironmentState {
-    const lastChild = view.children[view.children.length - 1]
-
-    if (instanceOfEnvironment(lastChild)) {
-        return lastChild
-    } else {
-        return getCurrentEnvironment(lastChild)
-    }
-}
-
-export function getPreviousEnvironmentInView(view: ViewState): EnvironmentState {
-    const lastChild = view.children[view.children.length - 2]
-    if (lastChild == null) return null
-
-    if (instanceOfEnvironment(lastChild)) {
-        return lastChild
-    } else {
-        return getCurrentEnvironment(lastChild)
-    }
-}
-
-export function getCurrentEnvironment(view: ViewState): EnvironmentState {
-    // Find the current view
-    const active = view.children.find((child) => instanceOfView(child) && child.isActive) as ViewState
-
-    if (active != null) {
-        return getCurrentEnvironmentInView(active)
-    } else {
-        for (const child of view.children) {
-            if (instanceOfView(child)) {
-                const environment = getCurrentEnvironment(child)
-                if (environment != null) {
-                    return environment
-                }
-            }
-        }
-        return null
-    }
-}
-
-export function getActiveView(view: ViewState): ViewState {
-    // Find the current view
-    const active = view.children.find((child) => instanceOfView(child) && child.isActive) as ViewState
-
-    if (active != null) {
-        return active
-    } else {
-        for (const child of view.children) {
-            if (instanceOfView(child)) {
-                const v = getActiveView(child)
-                if (v != null) {
-                    return v
-                }
-            }
-        }
-        return null
-    }
-}
-
-export function getLastActiveEnvironment(view: ViewState): EnvironmentState {
-    // Find all child views
-    const views = getFlattenedChildren(view).filter((child) => instanceOfView(child)) as ViewState[]
-
-    let candidate: ViewState = null
-    let max = -1
-    for (const child of views) {
-        if (child.lastActive > max) {
-            max = child.lastActive
-            candidate = child
-        }
-    }
-
-    if (candidate == null || candidate.lastActive < 0) {
-        return null
-    } else {
-        return getCurrentEnvironmentInView(candidate)
-    }
-}
-
-/**
- * @param environment
- * @returns Returns a deep clone of the view
- */
-export function cloneView(view: ViewState, assignNewId: boolean = false): ViewState {
+export function createLeafViewState(): LeafViewState {
     return {
-        _type: 'ViewState',
-        id: assignNewId ? `View(${++CUR_VIEW_ID})` : clone(view.id),
-        label: clone(view.label),
-        isRoot: clone(view.isRoot),
-        transform: clone(view.transform),
-        children: clone(view.children),
-        isActive: clone(view.isActive),
-        lastActive: clone(view.lastActive),
+        _type: 'LeafViewState',
+        id: `View(${++CUR_VIEW_ID})`,
+        transform: {
+            ...createTransform(),
+            styles: {},
+            classList: ['view-i'],
+        },
+        isActive: false,
+        lastActive: 0,
+        _environment: null,
+        mapping: {
+            f: (env: PrototypicalEnvironmentState) => clone(env),
+        },
+        label: '',
     }
 }
 
-export function replaceViewWith(current: ViewState, newView: ViewState) {
-    const clone = cloneView(newView)
+export function createRootView(): RootViewState {
+    return {
+        ...createGroupView(),
+        _type: 'RootViewState',
+        environment: createPrototypicalEnvironment(),
+        cursor: createCursorState(),
+    }
+}
+
+export function cloneGroupView(view: GroupViewState, assignNewId: boolean = false): GroupViewState {
+    return {
+        ...clone(view),
+        id: assignNewId ? `View(${++CUR_VIEW_ID})` : clone(view.id),
+    }
+}
+
+export function cloneRootView(view: RootViewState, assignNewId: boolean = false): RootViewState {
+    return {
+        ...clone(view),
+        id: assignNewId ? `View(${++CUR_VIEW_ID})` : clone(view.id),
+    }
+}
+
+export function replaceGroupViewWith(current: GroupViewState, newView: GroupViewState) {
+    const clone = cloneGroupView(newView)
     current.id = clone.id
     current.label = clone.label
-    current.isRoot = clone.isRoot
     current.transform = clone.transform
     current.children = clone.children
 }
 
-export function getFlattenedChildren(view: ViewState): (ViewState | EnvironmentState)[] {
+export function replaceRootViewWith(current: RootViewState, newView: RootViewState) {
+    const clone = cloneRootView(newView)
+    current.id = clone.id
+    current.label = clone.label
+    current.transform = clone.transform
+    current.children = clone.children
+    current.environment = clone.environment
+    current.cursor = clone.cursor
+}
+
+export function getFlattenedChildren(view: RootViewState | GroupViewState): (GroupViewState | LeafViewState)[] {
     const children = []
 
     for (const child of view.children) {
         children.push(child)
 
-        if (instanceOfView(child)) {
+        if (!instanceOfLeafView(child)) {
             children.push(...getFlattenedChildren(child))
         }
     }
@@ -142,19 +98,38 @@ export function getFlattenedChildren(view: ViewState): (ViewState | EnvironmentS
     return children
 }
 
-export function findViewById(view: ViewState, id: string): ViewState {
+export function getCurrentLeafView(view: GroupViewState | RootViewState): LeafViewState {
     const children = getFlattenedChildren(view)
     for (const child of children) {
-        if (instanceOfView(child) && child.id === id) {
+        if (instanceOfLeafView(child) && child.isActive) {
             return child
         }
     }
 }
 
-export function findEnvironmentById(view: ViewState, id: string): EnvironmentState {
+export function getLastActiveLeafView(view: GroupViewState | RootViewState): LeafViewState {
+    let children = getFlattenedChildren(view)
+    children = children.filter((child) => instanceOfLeafView(child) && !child.isActive)
+
+    // Return child with the largest lastActive
+    return children.reduce((candidate, other) =>
+        candidate.lastActive > other.lastActive ? candidate : other
+    ) as LeafViewState
+}
+
+export function findViewById(view: GroupViewState | RootViewState, id: string): GroupViewState {
     const children = getFlattenedChildren(view)
     for (const child of children) {
-        if (instanceOfEnvironment(child) && child.id === id) {
+        if (instanceOfGroupView(child) && child.id === id) {
+            return child
+        }
+    }
+}
+
+export function findLeafViewById(view: GroupViewState | RootViewState, id: string): LeafViewState {
+    const children = getFlattenedChildren(view)
+    for (const child of children) {
+        if (instanceOfLeafView(child) && child.id === id) {
             return child
         }
     }

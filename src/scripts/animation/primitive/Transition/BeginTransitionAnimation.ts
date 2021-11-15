@@ -1,28 +1,32 @@
 import { replaceEnvironmentWith } from '../../../environment/environment'
-import { EnvironmentState } from '../../../environment/EnvironmentState'
+import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface BeginTransitionAnimation extends AnimationNode {
-    transitionCondition: EnvironmentState
+    transitionCondition: PrototypicalEnvironmentState
 }
 
-function onBegin(animation: BeginTransitionAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    replaceEnvironmentWith(getCurrentEnvironment(view), animation.transitionCondition)
+function onBegin(animation: BeginTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    replaceEnvironmentWith(view.environment, animation.transitionCondition)
 
     updateRootViewLayout(view)
     updateRootViewLayout(view)
 }
 
-function onSeek(animation: BeginTransitionAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: BeginTransitionAnimation,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: BeginTransitionAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: BeginTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 export function beginTransitionAnimation(
-    transitionCondition: EnvironmentState,
+    transitionCondition: PrototypicalEnvironmentState,
     options: AnimationOptions = {}
 ): BeginTransitionAnimation {
     return {

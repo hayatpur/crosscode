@@ -1,13 +1,12 @@
 import { createScope } from '../../../environment/environment'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
 export interface CreateScopeAnimation extends AnimationNode {}
 
-function onBegin(animation: CreateScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: CreateScopeAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
     createScope(environment)
 
     if (options.baking) {
@@ -15,9 +14,9 @@ function onBegin(animation: CreateScopeAnimation, view: ViewState, options: Anim
     }
 }
 
-function onSeek(animation: CreateScopeAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(animation: CreateScopeAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}
 
-function onEnd(animation: CreateScopeAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: CreateScopeAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 function computeReadAndWrites(animation: CreateScopeAnimation) {
     animation._reads = []

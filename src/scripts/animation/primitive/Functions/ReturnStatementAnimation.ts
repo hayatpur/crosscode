@@ -1,8 +1,6 @@
-import { DataState } from '../../../environment/data/DataState'
+import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { clone } from '../../../utilities/objects'
-import { findEnvironmentById } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode, ReturnData } from '../AnimationNode'
 
@@ -10,13 +8,15 @@ export interface ReturnStatementAnimation extends AnimationNode {
     returnData: ReturnData
 }
 
-function onBegin(animation: ReturnStatementAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = findEnvironmentById(view, animation.returnData.environmentId)
+function onBegin(animation: ReturnStatementAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
-    const data = resolvePath(environment, animation.returnData.register, `${animation.id}_Data`) as DataState
+    const data = resolvePath(
+        environment,
+        animation.returnData.register,
+        `${animation.id}_Data`
+    ) as PrototypicalDataState
     data.frame = animation.returnData.frame
-
-    console.log('I AM RETURNING!', clone(environment))
 
     if (options.baking) {
         computeReadAndWrites(animation, {
@@ -26,9 +26,14 @@ function onBegin(animation: ReturnStatementAnimation, view: ViewState, options: 
     }
 }
 
-function onSeek(animation: ReturnStatementAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: ReturnStatementAnimation,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: ReturnStatementAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: ReturnStatementAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 function computeReadAndWrites(animation: ReturnStatementAnimation, data: AnimationData) {
     animation._reads = [data]

@@ -3,8 +3,7 @@ import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -14,8 +13,8 @@ export interface CopyReferenceAnimation extends AnimationNode {
     outputRegister: Accessor[]
 }
 
-function onBegin(animation: CopyReferenceAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: CopyReferenceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState
     const reference = createData(
@@ -39,11 +38,16 @@ function onBegin(animation: CopyReferenceAnimation, view: ViewState, options: An
     replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
 }
 
-function onSeek(animation: CopyReferenceAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: CopyReferenceAnimation,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 }
 
-function onEnd(animation: CopyReferenceAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: CopyReferenceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 function computeReadAndWrites(animation: CopyReferenceAnimation, original: AnimationData, copy: AnimationData) {
     animation._reads = [original]

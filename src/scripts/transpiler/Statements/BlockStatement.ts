@@ -5,7 +5,7 @@ import { addVertex } from '../../animation/graph/graph'
 import { AnimationContext, ControlOutput, ControlOutputData } from '../../animation/primitive/AnimationNode'
 import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
-import { ViewState } from '../../view/ViewState'
+import { RootViewState } from '../../view/ViewState'
 import { Compiler, getNodeData } from '../Compiler'
 
 /**
@@ -15,7 +15,11 @@ import { Compiler, getNodeData } from '../Compiler'
  * @param context
  * @returns {AnimationGraph} animation
  */
-export function BlockStatement(ast: ESTree.BlockStatement, view: ViewState, context: AnimationContext): AnimationGraph {
+export function BlockStatement(
+    ast: ESTree.BlockStatement,
+    view: RootViewState,
+    context: AnimationContext
+): AnimationGraph {
     const graph = createAnimationGraph(getNodeData(ast))
 
     context.locationHint = []

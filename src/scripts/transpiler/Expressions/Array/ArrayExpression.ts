@@ -1,44 +1,44 @@
-import * as ESTree from 'estree';
-import { apply } from '../../../animation/animation';
-import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
-import { addVertex } from '../../../animation/graph/graph';
-import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-import { arrayStartAnimation } from '../../../animation/primitive/Container/ArrayStartAnimation';
-import { moveAndPlaceAnimation } from '../../../animation/primitive/Data/MoveAndPlaceAnimation';
-import { AccessorType } from '../../../environment/EnvironmentState';
-import { ViewState } from '../../../view/ViewState';
-import { Compiler, getNodeData } from '../../Compiler';
+import * as ESTree from 'estree'
+import { apply } from '../../../animation/animation'
+import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph'
+import { addVertex } from '../../../animation/graph/graph'
+import { AnimationContext } from '../../../animation/primitive/AnimationNode'
+import { arrayStartAnimation } from '../../../animation/primitive/Container/ArrayStartAnimation'
+import { moveAndPlaceAnimation } from '../../../animation/primitive/Data/MoveAndPlaceAnimation'
+import { AccessorType } from '../../../environment/EnvironmentState'
+import { RootViewState } from '../../../view/ViewState'
+import { Compiler, getNodeData } from '../../Compiler'
 
-export function ArrayExpression(ast: ESTree.ArrayExpression, view: ViewState, context: AnimationContext) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
+export function ArrayExpression(ast: ESTree.ArrayExpression, view: RootViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
-    const start = arrayStartAnimation(context.outputRegister, context.doNotFloat);
-    addVertex(graph, start, { nodeData: getNodeData(ast) });
-    apply(start, view);
+    const start = arrayStartAnimation(context.outputRegister, context.doNotFloat)
+    addVertex(graph, start, { nodeData: getNodeData(ast) })
+    apply(start, view)
 
     for (let i = 0; i < ast.elements.length; i++) {
         // Create a register that'll point to the RHS
-        const register = [{ type: AccessorType.Register, value: `${graph.id}_ArrayExpression_${i}` }];
+        const register = [{ type: AccessorType.Register, value: `${graph.id}_ArrayExpression_${i}` }]
 
         const animation = Compiler.compile(ast.elements[i], view, {
             ...context,
             outputRegister: register,
-        });
-        addVertex(graph, animation, { nodeData: getNodeData(ast.elements[i]) });
+        })
+        addVertex(graph, animation, { nodeData: getNodeData(ast.elements[i]) })
 
         const place = moveAndPlaceAnimation(register, [
             ...context.outputRegister,
             { type: AccessorType.Index, value: i },
-        ]);
-        addVertex(graph, place, { nodeData: getNodeData(ast.elements[i]) });
-        apply(place, view);
+        ])
+        addVertex(graph, place, { nodeData: getNodeData(ast.elements[i]) })
+        apply(place, view)
     }
 
     // const end = arrayEndAnimation(context.outputRegister);
     // addVertex(graph, end, getNodeData(ast));
     // apply(end, view);
 
-    return graph;
+    return graph
 }
 
 // import * as ESTree from 'estree';

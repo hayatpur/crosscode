@@ -1,42 +1,51 @@
 import { reflow } from '../utilities/dom'
 import { getRelativeLocation } from '../utilities/math'
-import { ViewState } from '../view/ViewState'
-import { DataState, DataType, instanceOfData, Transform } from './data/DataState'
-import { resolvePath } from './environment'
-import { IdentifierState, instanceOfEnvironment } from './EnvironmentState'
+import { getFlattenedChildren } from '../view/view'
+import { instanceOfLeafView, LeafViewState, RootViewState } from '../view/ViewState'
+import { createConcreteData } from './data/data'
+import { ConcreteDataState, DataType, instanceOfConcreteData, PrototypicalDataState, Transform } from './data/DataState'
+import { createConcreteIdentifier, flattenedConcreteEnvironmentMemory, resolvePath } from './environment'
+import {
+    Accessor,
+    ConcreteEnvironmentState,
+    ConcreteIdentifierState,
+    ConcreteScope,
+    instanceOfConcreteEnvironment,
+    PrototypicalScope,
+} from './EnvironmentState'
 
 export function getChildren(
-    obj: any,
+    concrete: any,
     options: { getBindings: boolean } = { getBindings: false }
 ): null | { transform: Transform }[] {
-    if (instanceOfData(obj)) {
-        if (obj.type == DataType.Array) {
-            return obj.value as DataState[]
+    if (instanceOfConcreteData(concrete)) {
+        if (concrete.prototype.type == DataType.Array) {
+            return concrete.value as ConcreteDataState[]
         } else {
             return null
         }
-    } else if (instanceOfEnvironment(obj) && !options.getBindings) {
-        return obj.memory.filter(
-            (item) => item != null && (item.type == DataType.Array || item.type == DataType.Literal)
+    } else if (instanceOfConcreteEnvironment(concrete) && !options.getBindings) {
+        return concrete.memory.filter(
+            (item) => item != null && (item.prototype.type == DataType.Array || item.prototype.type == DataType.Literal)
         )
-    } else if (instanceOfEnvironment(obj) && options.getBindings) {
-        let bindings: IdentifierState[] = []
-        for (let scope of obj.scope) {
+    } else if (instanceOfConcreteEnvironment(concrete) && options.getBindings) {
+        let bindings: ConcreteIdentifierState[] = []
+        for (let scope of concrete.scope) {
             bindings = [...bindings, ...Object.values(scope)]
         }
         return bindings
-    } else if ('children' in obj) {
-        return obj.children
+    } else if ('children' in concrete) {
+        return concrete.children
+    } else if (instanceOfLeafView(concrete)) {
+        return [concrete._environment]
     }
 
     return null
 }
 
-export function updateRootViewLayout(view: ViewState) {
-    if (!view.isRoot) {
-        console.warn('Update root layout of a non-root view', view)
-        console.trace()
-    }
+export function updateRootViewLayout(root: RootViewState) {
+    // Propagate environment, now all the concrete entities have the correct prototype
+    propagateRoot(root)
 
     // Clear current temporary layout
     document.getElementById('temporary-layout').innerHTML = ''
@@ -47,7 +56,7 @@ export function updateRootViewLayout(view: ViewState) {
     document.getElementById('temporary-layout').append(rootViewContainer)
 
     // Update the view's layout
-    updateLayout(view, rootViewContainer)
+    updateLayout(root, rootViewContainer)
 }
 
 /**
@@ -55,11 +64,11 @@ export function updateRootViewLayout(view: ViewState) {
  * @param pivot current pivot point for rendering
  * @returns updated pivot
  */
-export function updateLayout(entity: { transform: Transform }, parent: HTMLDivElement) {
+export function updateLayout(concrete: { transform: Transform }, parent: HTMLDivElement) {
     // Get initial CSS layout
     const el = document.createElement('div')
 
-    if (instanceOfData(entity) && entity.transform.styles.position == 'absolute') {
+    if (instanceOfConcreteData(concrete) && concrete.transform.styles.position == 'absolute') {
         el.classList.add('floating-i')
     }
 
@@ -67,45 +76,171 @@ export function updateLayout(entity: { transform: Transform }, parent: HTMLDivEl
     parent.appendChild(el)
 
     // Assign appropriate class
-    el.classList.add(...entity.transform.classList)
+    el.classList.add(...concrete.transform.classList)
 
     // Apply styles
-    for (const style of Object.keys(entity.transform.styles)) {
-        el.style[style] = entity.transform.styles[style]
+    for (const style of Object.keys(concrete.transform.styles)) {
+        el.style[style] = concrete.transform.styles[style]
     }
 
     // Reflow
     reflow(el)
     reflow(parent)
 
-    const children = getChildren(entity)
+    const children = getChildren(concrete)
 
-    for (const child of children ?? []) {
-        updateLayout(child, el)
+    if (instanceOfConcreteEnvironment(concrete)) {
+        // Redirect to an environment container
+        const container = document.createElement('div')
+        container.classList.add('environment-i-container')
+        el.appendChild(container)
+
+        for (const child of children ?? []) {
+            updateLayout(child, container)
+        }
+    } else {
+        for (const child of children ?? []) {
+            updateLayout(child, el)
+        }
     }
 
     // Reflow
     reflow(el)
     reflow(parent)
+
+    // Update transform
+    const bbox = el.getBoundingClientRect()
+    concrete.transform.rendered.x = bbox.x
+    concrete.transform.rendered.y = bbox.y
+    concrete.transform.rendered.width = bbox.width
+    concrete.transform.rendered.height = bbox.height
 
     // Update bindings
-    if (instanceOfEnvironment(entity)) {
-        const bindings = getChildren(entity, { getBindings: true }) as IdentifierState[]
+    if (instanceOfConcreteEnvironment(concrete)) {
+        const bindings = getChildren(concrete, { getBindings: true }) as ConcreteIdentifierState[]
+        const flattenedMemory = flattenedConcreteEnvironmentMemory(concrete)
         for (const binding of bindings) {
-            // console.log(clone(entity), clone(binding))
-            const item = resolvePath(entity, binding.location, null)
+            const itemPrototype = resolvePath(
+                concrete.prototype,
+                binding.prototype.location,
+                null
+            ) as PrototypicalDataState
+            const item = flattenedMemory.find((item) => item.prototype.id == itemPrototype.id)
 
-            const location = getRelativeLocation(item.transform.rendered, entity.transform.rendered)
+            const location = getRelativeLocation(item.transform.rendered, concrete.transform.rendered)
             binding.transform.styles.top = `${location.y - 30}px`
             binding.transform.styles.left = `${location.x}px`
             updateLayout(binding, el)
         }
     }
+}
 
-    // Update transform
-    const bbox = el.getBoundingClientRect()
-    entity.transform.rendered.x = bbox.x
-    entity.transform.rendered.y = bbox.y
-    entity.transform.rendered.width = bbox.width
-    entity.transform.rendered.height = bbox.height
+export function propagateRoot(root: RootViewState) {
+    const children = getFlattenedChildren(root).filter((child) => instanceOfLeafView(child)) as LeafViewState[]
+
+    // Assign environment prototype to each concrete view
+    for (const child of children) {
+        child._environment.prototype = child.mapping.f(root.environment)
+        propagateEnvironment(child._environment)
+    }
+}
+
+// environment has the updated prototype, but it's children don't.
+export function propagateEnvironment(environment: ConcreteEnvironmentState) {
+    // 1. Synchronize the environment memory with the prototype memory
+    propagateEnvironmentMemory(environment)
+
+    // 2. Synchronize the environment scope with the prototype scope
+    while (environment.scope.length < environment.prototype.scope.length) {
+        environment.scope.push({})
+    }
+
+    while (environment.scope.length > environment.prototype.scope.length) {
+        environment.scope.pop()
+    }
+
+    for (let i = 0; i < environment.prototype.scope.length; i++) {
+        const prototype = environment.prototype.scope[i]
+        const scope = environment.scope[i]
+        propagateEnvironmentScope(scope, prototype)
+    }
+}
+
+// Synchronize the environment memory with the prototype memory
+export function propagateEnvironmentMemory(environment: ConcreteEnvironmentState) {
+    // Hit test
+    const hits = new Set()
+
+    // Update data
+    for (const prototype of environment.prototype.memory) {
+        if (prototype == null) continue
+
+        let item = environment.memory.find((item) => item.prototype.id == prototype.id)
+
+        if (item == null) {
+            // Need to create an item in the concrete environment
+            item = createConcreteData()
+        }
+
+        hits.add(prototype.id)
+
+        item.prototype = prototype
+        propagateData(item)
+    }
+
+    // Remove data that are no longer in the view
+    for (let i = environment.memory.length - 1; i >= 0; i--) {
+        const item = environment.memory[i]
+        if (!hits.has(item.prototype.id)) {
+            environment.memory.splice(i, 1)
+        }
+    }
+}
+
+// Synchronize the environment scope with the prototype scope
+export function propagateEnvironmentScope(scope: ConcreteScope, prototype: PrototypicalScope) {
+    // Hit test
+    const hits = new Set()
+
+    for (const prototypeName in Object.keys(prototype)) {
+        let item = scope[prototypeName]
+        if (item == null) {
+            // Need to create an identifier in the concrete environment
+            item = createConcreteIdentifier()
+        }
+
+        item.prototype = prototype[prototypeName]
+        hits.add(prototypeName)
+    }
+
+    // Remove identifiers that are no longer in the view
+    for (const name in Object.keys(scope)) {
+        if (!hits.has(name)) {
+            delete scope[name]
+        }
+    }
+}
+
+export function propagateData(data: ConcreteDataState) {
+    // Synchronize the data value with the prototype value
+    if (data.prototype.type == DataType.Array) {
+        const prototypeItems = data.prototype.value as PrototypicalDataState[]
+        const items = data.value as ConcreteDataState[]
+
+        while (items.length < prototypeItems.length) {
+            items.push(createConcreteData())
+        }
+
+        while (items.length > prototypeItems.length) {
+            items.pop()
+        }
+
+        for (let i = 0; i < prototypeItems.length; i++) {
+            const item = items[i]
+            item.prototype = prototypeItems[i]
+            propagateData(item)
+        }
+    } else {
+        data.value = data.prototype.value as string | number | boolean | Accessor[]
+    }
 }

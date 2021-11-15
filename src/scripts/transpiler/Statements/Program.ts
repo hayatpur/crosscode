@@ -5,10 +5,10 @@ import { addVertex } from '../../animation/graph/graph'
 import { AnimationContext, ControlOutput } from '../../animation/primitive/AnimationNode'
 import { groupEndAnimation } from '../../animation/primitive/Group/GroupEndAnimation'
 import { groupStartAnimation } from '../../animation/primitive/Group/GroupStartAnimation'
-import { ViewState } from '../../view/ViewState'
+import { RootViewState } from '../../view/ViewState'
 import { Compiler, getNodeData } from '../Compiler'
 
-export function Program(ast: ESTree.Program, view: ViewState, context: AnimationContext) {
+export function Program(ast: ESTree.Program, view: RootViewState, context: AnimationContext) {
     const graph = createAnimationGraph(getNodeData(ast))
 
     const controlOutput = { output: ControlOutput.None }

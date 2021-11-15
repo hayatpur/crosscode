@@ -1,32 +1,32 @@
-import * as ESTree from 'estree';
-import { apply } from '../../../animation/animation';
-import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph';
-import { addVertex } from '../../../animation/graph/graph';
-import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-import { updateAnimation } from '../../../animation/primitive/Data/UpdateAnimation';
-import { AccessorType } from '../../../environment/EnvironmentState';
-import { ViewState } from '../../../view/ViewState';
-import { Compiler, getNodeData } from '../../Compiler';
+import * as ESTree from 'estree'
+import { apply } from '../../../animation/animation'
+import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph'
+import { addVertex } from '../../../animation/graph/graph'
+import { AnimationContext } from '../../../animation/primitive/AnimationNode'
+import { updateAnimation } from '../../../animation/primitive/Data/UpdateAnimation'
+import { AccessorType } from '../../../environment/EnvironmentState'
+import { RootViewState } from '../../../view/ViewState'
+import { Compiler, getNodeData } from '../../Compiler'
 
-export function UpdateExpression(ast: ESTree.UpdateExpression, view: ViewState, context: AnimationContext) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast));
+export function UpdateExpression(ast: ESTree.UpdateExpression, view: RootViewState, context: AnimationContext) {
+    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
-    const argRegister = [{ type: AccessorType.Register, value: `${graph.id}_UpdateExpr` }];
+    const argRegister = [{ type: AccessorType.Register, value: `${graph.id}_UpdateExpr` }]
 
     // Put the *location* of argument in a register
     const argument = Compiler.compile(ast.argument, view, {
         ...context,
         outputRegister: argRegister,
         feed: true,
-    });
-    addVertex(graph, argument, { nodeData: getNodeData(ast.argument) });
+    })
+    addVertex(graph, argument, { nodeData: getNodeData(ast.argument) })
 
     // Apply the operation
-    const update = updateAnimation(argRegister, ast.operator);
-    apply(update, view);
-    addVertex(graph, update, { nodeData: getNodeData(ast.argument) });
+    const update = updateAnimation(argRegister, ast.operator)
+    apply(update, view)
+    addVertex(graph, update, { nodeData: getNodeData(ast.argument) })
 
-    return graph;
+    return graph
 }
 
 // import * as astring from 'astring';

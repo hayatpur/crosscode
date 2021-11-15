@@ -2,8 +2,7 @@ import { createData, replaceDataWith } from '../../../environment/data/data'
 import { DataState, DataType } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
 import { Accessor, AccessorType } from '../../../environment/EnvironmentState'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -13,8 +12,8 @@ export interface FindVariableAnimation extends AnimationNode {
     outputRegister: Accessor[]
 }
 
-function onBegin(animation: FindVariableAnimation, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: FindVariableAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     const reference = resolvePath(
         environment,
@@ -34,11 +33,11 @@ function onBegin(animation: FindVariableAnimation, view: ViewState, options: Ani
     }
 }
 
-function onSeek(animation: FindVariableAnimation, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(animation: FindVariableAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation))
 }
 
-function onEnd(animation: FindVariableAnimation, view: ViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: FindVariableAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
 /**
  * TODO

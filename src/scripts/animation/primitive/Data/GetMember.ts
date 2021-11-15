@@ -4,8 +4,7 @@ import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../en
 import { Accessor } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
 import { getRelativeLocation } from '../../../utilities/math'
-import { getCurrentEnvironment } from '../../../view/view'
-import { ViewState } from '../../../view/ViewState'
+import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -16,8 +15,8 @@ export interface GetMember extends AnimationNode {
     outputRegister: Accessor[]
 }
 
-function onBegin(animation: GetMember, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onBegin(animation: GetMember, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
 
     // Get object
     const object = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`) as DataState
@@ -75,16 +74,16 @@ function onBegin(animation: GetMember, view: ViewState, options: AnimationRuntim
     replaceDataWith(outputRegister, createData(DataType.ID, copy.id, `${animation.id}_OutputRegister`))
 }
 
-function onSeek(animation: GetMember, view: ViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(animation: GetMember, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation))
 
-    const environment = getCurrentEnvironment(view)
+    const environment = view.environment
     const copy = resolvePath(environment, environment._temps[`CopyMemberAnimation${animation.id}`], null) as DataState
     copy.transform.styles.elevation = t
 }
 
-function onEnd(animation: GetMember, view: ViewState, options: AnimationRuntimeOptions) {
-    const environment = getCurrentEnvironment(view)
+function onEnd(animation: GetMember, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
     const copy = resolvePath(environment, environment._temps[`CopyMemberAnimation${animation.id}`], null) as DataState
     copy.transform.styles.elevation = 1
     copy.transform.styles.position = 'absolute'

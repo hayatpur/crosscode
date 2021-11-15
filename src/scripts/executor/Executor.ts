@@ -1,14 +1,14 @@
 import acorn = require('acorn')
 import { bake, duration, reset, seek } from '../animation/animation'
-import { Cursor } from '../animation/Cursor'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
 import { animationToString, computeAllGraphEdges } from '../animation/graph/graph'
 import { Editor } from '../editor/Editor'
 import { Compiler } from '../transpiler/Compiler'
+import { clone } from '../utilities/objects'
 import { Ticker } from '../utilities/Ticker'
-import { createView } from '../view/view'
-import { ViewRenderer } from '../view/ViewRenderer'
-import { ViewState } from '../view/ViewState'
+import { RootViewRenderer } from '../view/RootViewRenderer'
+import { createRootView, replaceRootViewWith } from '../view/view'
+import { RootViewState } from '../view/ViewState'
 import Timeline from './timeline/Timeline'
 
 export class Executor {
@@ -22,15 +22,16 @@ export class Executor {
     paused = true
 
     // Global speed of the animation (higher is faster)
-    speed = 1 / 16
+    speed = 1 / 64
 
     // Animation
     animation: AnimationGraph
 
     // View
-    view: ViewState
-    viewRenderer: ViewRenderer
+    rootView: RootViewState
+    rootViewRenderer: RootViewRenderer
 
+    // Timeline
     timeline: Timeline
 
     constructor(editor: Editor) {
@@ -63,12 +64,11 @@ export class Executor {
 
     reset() {
         this.time = 0
-        this.view = undefined
+        this.rootView = undefined
         this.animation = undefined
 
-        this.viewRenderer?.destroy()
-        this.viewRenderer = undefined
-        Cursor.instance?.destroy()
+        this.rootViewRenderer?.destroy()
+        this.rootViewRenderer = undefined
     }
 
     compile() {
@@ -88,7 +88,7 @@ export class Executor {
         }
 
         // Create animation from user code
-        this.animation = Compiler.compile(ast, createView({ isRoot: true }), { outputRegister: [], locationHint: [] })
+        this.animation = Compiler.compile(ast, createRootView(), { outputRegister: [], locationHint: [] })
         reset(this.animation)
 
         // Bake the animation
@@ -101,12 +101,10 @@ export class Executor {
         // abstract(this.animation)
 
         // Initialize a view of animation
-        this.view = createView({ isRoot: true })
-
-        const cursor = new Cursor()
+        this.rootView = createRootView()
 
         // Initialize a renderer
-        this.viewRenderer = new ViewRenderer(true)
+        this.rootViewRenderer = new RootViewRenderer()
 
         this.paused = false
 
@@ -127,9 +125,12 @@ export class Executor {
         if (this.time > duration(this.animation)) {
             // Loop
             this.time = 0
-            this.viewRenderer.destroy()
-            this.view = createView({ isRoot: true })
-            this.viewRenderer = new ViewRenderer(true)
+            this.rootViewRenderer.destroy()
+            replaceRootViewWith(this.rootView, createRootView())
+            this.rootViewRenderer = new RootViewRenderer()
+
+            console.log('Re-running animation')
+            console.log(clone(this.rootView).children.length)
             return
         }
 
@@ -138,17 +139,16 @@ export class Executor {
 
         this.render()
 
-        // logEnvironment(getCurrentEnvironment(this.view));
-
         // Update renderer
         // this.viewRenderer.setState(this.view);
     }
 
     render() {
         // Apply animation
-        seek(this.animation, this.view, this.time)
+        console.log(clone(this.rootView).children.length)
+        seek(this.animation, this.rootView, this.time)
 
         // Render
-        this.viewRenderer.setState(this.view)
+        this.rootViewRenderer.setState(this.rootView)
     }
 }

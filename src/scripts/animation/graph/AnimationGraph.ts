@@ -1,5 +1,5 @@
 import { Accessor } from '../../environment/EnvironmentState'
-import { ViewState } from '../../view/ViewState'
+import { RootViewState } from '../../view/ViewState'
 import { AnimationNode, NodeData, PlayableAnimation } from '../primitive/AnimationNode'
 import { AbstractionSpec, AbstractionType } from './abstraction/Abstractor'
 import { Edge } from './edges/Edge'
@@ -42,8 +42,8 @@ export interface AnimationGraph extends PlayableAnimation {
     nodeData: NodeData
 
     // Invariant to abstraction info
-    precondition: ViewState
-    postcondition: ViewState
+    precondition: RootViewState
+    postcondition: RootViewState
     isGroup: boolean
 
     // Variant to abstraction info
