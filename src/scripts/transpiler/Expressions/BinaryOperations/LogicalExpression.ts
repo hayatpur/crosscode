@@ -4,7 +4,7 @@ import { createAnimationGraph } from '../../../animation/graph/AnimationGraph'
 import { addVertex } from '../../../animation/graph/graph'
 import { AnimationContext } from '../../../animation/primitive/AnimationNode'
 import { logicalExpressionEvaluate } from '../../../animation/primitive/Binary/LogicalExpressionEvaluate'
-import { DataState } from '../../../environment/data/DataState'
+import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
 import { AccessorType } from '../../../environment/EnvironmentState'
 import { RootViewState } from '../../../view/ViewState'
@@ -19,7 +19,7 @@ export function LogicalExpression(ast: ESTree.LogicalExpression, view: RootViewS
     addVertex(graph, left, { nodeData: getNodeData(ast) })
 
     const environment = view.environment
-    const leftValue = resolvePath(environment, leftRegister, null) as DataState
+    const leftValue = resolvePath(environment, leftRegister, null) as PrototypicalDataState
 
     let shortCircuit = false
 

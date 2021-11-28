@@ -21,6 +21,7 @@ export function createPrototypicalEnvironment(): PrototypicalEnvironmentState {
         memory: [],
         registers: {},
         _temps: {},
+        paths: {},
         id: `Env(${++CUR_ENV_ID})`,
     }
 }
@@ -28,8 +29,9 @@ export function createPrototypicalEnvironment(): PrototypicalEnvironmentState {
 export function createConcreteEnvironment(prototype: PrototypicalEnvironmentState): ConcreteEnvironmentState {
     return {
         _type: 'ConcreteEnvironmentState',
-        prototype: null,
+        prototype: prototype,
         memory: [],
+        paths: {},
         scope: [{}],
         transform: {
             ...createTransform(),
@@ -138,6 +140,7 @@ export function cloneEnvironment(
         memory: clone(environment.memory),
         registers: clone(environment.registers),
         _temps: clone(environment._temps),
+        paths: clone(environment.paths),
         id: assignNewId ? `Env(${++CUR_ENV_ID})` : environment.id,
     }
 }
@@ -458,3 +461,21 @@ export function getTrueId(environment: PrototypicalEnvironmentState, id: string)
         return getTrueId(environment, register.value as string)
     }
 }
+
+// export function getEmptyPosition(view: RootViewState, id: string) {
+//     // Then it doesn't have a place yet
+//     // Find an empty space and put it there
+//     const placeholder = createData(DataType.Literal, '', `${id}_Placeholder`)
+
+//     const placeholderLocation = addDataAt(view.environment, placeholder, [], `${id}_Placeholder`)
+//     updateRootViewLayout(view)
+
+//     const transform = getRelativeLocation(
+//         placeholder.transform.rendered,
+//         environment.transform.rendered
+//     ) as DataMovementLocation
+
+//     removeAt(environment, placeholderLocation)
+
+//     return
+// }

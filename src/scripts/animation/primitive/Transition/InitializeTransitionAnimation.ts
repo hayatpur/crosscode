@@ -1,39 +1,41 @@
 import { replaceEnvironmentWith } from '../../../environment/environment'
 import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
+import { clone } from '../../../utilities/objects'
 import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
 
-export interface BeginTransitionAnimation extends AnimationNode {
+export interface InitializeTransitionAnimation extends AnimationNode {
     transitionCondition: PrototypicalEnvironmentState
 }
 
-function onBegin(animation: BeginTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+function onBegin(animation: InitializeTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
     replaceEnvironmentWith(view.environment, animation.transitionCondition)
 
-    updateRootViewLayout(view)
+    console.log(clone(view))
+
     updateRootViewLayout(view)
 }
 
 function onSeek(
-    animation: BeginTransitionAnimation,
+    animation: InitializeTransitionAnimation,
     view: RootViewState,
     time: number,
     options: AnimationRuntimeOptions
 ) {}
 
-function onEnd(animation: BeginTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(animation: InitializeTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
-export function beginTransitionAnimation(
+export function initializeTransitionAnimation(
     transitionCondition: PrototypicalEnvironmentState,
     options: AnimationOptions = {}
-): BeginTransitionAnimation {
+): InitializeTransitionAnimation {
     return {
         ...createAnimationNode(null, options),
-        _name: 'BeginTransitionAnimation',
+        _name: 'InitializeTransitionAnimation',
 
-        name: 'BeginTransitionAnimation',
+        name: 'InitializeTransitionAnimation',
 
         transitionCondition,
 

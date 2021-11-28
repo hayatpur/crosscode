@@ -2,8 +2,9 @@ import { createCursorState } from '../animation/Cursor'
 import { createTransform } from '../environment/data/data'
 import { createPrototypicalEnvironment } from '../environment/environment'
 import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { updateRootViewLayout } from '../environment/layout'
 import { clone } from '../utilities/objects'
-import { GroupViewState, instanceOfGroupView, instanceOfLeafView, LeafViewState, RootViewState } from './ViewState'
+import { GroupViewState, instanceOfLeafView, LeafViewState, RootViewState } from './ViewState'
 
 let CUR_VIEW_ID = 0
 
@@ -31,7 +32,7 @@ export function createLeafViewState(): LeafViewState {
         transform: {
             ...createTransform(),
             styles: {},
-            classList: ['view-i'],
+            classList: ['leaf-view-i'],
         },
         isActive: false,
         lastActive: 0,
@@ -44,12 +45,25 @@ export function createLeafViewState(): LeafViewState {
 }
 
 export function createRootView(): RootViewState {
-    return {
+    const root: RootViewState = {
         ...createGroupView(),
         _type: 'RootViewState',
         environment: createPrototypicalEnvironment(),
         cursor: createCursorState(),
     }
+
+    // Create a new view
+    const newView = createLeafViewState()
+    newView.label = 'Program'
+
+    // Add the new view to the current view state
+    root.children.push(newView)
+    newView.isActive = true
+    newView.lastActive = performance.now()
+
+    updateRootViewLayout(root)
+
+    return root
 }
 
 export function cloneGroupView(view: GroupViewState, assignNewId: boolean = false): GroupViewState {
@@ -112,15 +126,20 @@ export function getLastActiveLeafView(view: GroupViewState | RootViewState): Lea
     children = children.filter((child) => instanceOfLeafView(child) && !child.isActive)
 
     // Return child with the largest lastActive
+    if (children.length == 0) {
+        console.warn('No last active view, returning current view')
+        return getCurrentLeafView(view)
+    }
+
     return children.reduce((candidate, other) =>
         candidate.lastActive > other.lastActive ? candidate : other
     ) as LeafViewState
 }
 
-export function findViewById(view: GroupViewState | RootViewState, id: string): GroupViewState {
+export function findViewById(view: GroupViewState | RootViewState, id: string): GroupViewState | LeafViewState {
     const children = getFlattenedChildren(view)
     for (const child of children) {
-        if (instanceOfGroupView(child) && child.id === id) {
+        if (child.id === id) {
             return child
         }
     }

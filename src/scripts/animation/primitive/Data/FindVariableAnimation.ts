@@ -1,5 +1,5 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
+import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
 import { Accessor, AccessorType } from '../../../environment/EnvironmentState'
 import { RootViewState } from '../../../view/ViewState'
@@ -24,9 +24,13 @@ function onBegin(animation: FindVariableAnimation, view: RootViewState, options:
     )
 
     // Put it in the floating stack
-    const register = resolvePath(environment, animation.outputRegister, `${animation.id}_FloatingRegister`) as DataState
+    const register = resolvePath(
+        environment,
+        animation.outputRegister,
+        `${animation.id}_FloatingRegister`
+    ) as PrototypicalDataState
 
-    replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
+    replacePrototypicalDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
 
     if (options.baking) {
         computeReadAndWrites(animation)

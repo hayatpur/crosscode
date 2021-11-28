@@ -145,7 +145,6 @@ export class Executor {
 
     render() {
         // Apply animation
-        console.log(clone(this.rootView).children.length)
         seek(this.animation, this.rootView, this.time)
 
         // Render

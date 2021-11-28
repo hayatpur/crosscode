@@ -1,5 +1,5 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
+import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
 import { Accessor } from '../../../environment/EnvironmentState'
 import { RootViewState } from '../../../view/ViewState'
@@ -17,15 +17,19 @@ function onBegin(animation: FindMember, view: RootViewState, options: AnimationR
     const environment = view.environment
 
     // Get object
-    const object = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`) as DataState
+    const object = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`) as PrototypicalDataState
     console.assert(object.type === DataType.Array, `${animation.id}_Object is not an object`)
 
     // Get property
-    const property = resolvePath(environment, animation.propertyRegister, `${animation.id}_Property`) as DataState
+    const property = resolvePath(
+        environment,
+        animation.propertyRegister,
+        `${animation.id}_Property`
+    ) as PrototypicalDataState
     const propertyLocation = getMemoryLocation(environment, property).foundLocation
 
     // Get original data
-    const original = (object.value as DataState[])[property.value as number] as DataState
+    const original = (object.value as PrototypicalDataState[])[property.value as number] as PrototypicalDataState
 
     // Consume property
     removeAt(environment, getMemoryLocation(environment, property).foundLocation)
@@ -33,7 +37,7 @@ function onBegin(animation: FindMember, view: RootViewState, options: AnimationR
     // Remove object (reference)
     const objectReference = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`, null, {
         noResolvingReference: true,
-    }) as DataState
+    }) as PrototypicalDataState
     const objectLocation = getMemoryLocation(environment, objectReference).foundLocation
     removeAt(environment, getMemoryLocation(environment, objectReference).foundLocation, {
         noResolvingReference: true,
@@ -54,8 +58,12 @@ function onBegin(animation: FindMember, view: RootViewState, options: AnimationR
     }
 
     // Point the output register to the newly created data
-    const outputRegister = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState
-    replaceDataWith(outputRegister, createData(DataType.ID, original.id, `${animation.id}_OutputRegister`))
+    const outputRegister = resolvePath(
+        environment,
+        animation.outputRegister,
+        `${animation.id}_Floating`
+    ) as PrototypicalDataState
+    replacePrototypicalDataWith(outputRegister, createData(DataType.ID, original.id, `${animation.id}_OutputRegister`))
 }
 
 function onSeek(animation: FindMember, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}

@@ -80,7 +80,7 @@ export class EnvironmentRenderer {
         }
 
         // Remove data that are no longer in the view
-        for (const id in this.dataRenderers) {
+        for (const id of Object.keys(this.dataRenderers)) {
             if (!hits.has(id)) {
                 const renderer = this.dataRenderers[id]
                 renderer.destroy()
@@ -95,7 +95,7 @@ export class EnvironmentRenderer {
         const hits = new Set()
 
         for (const scope of state.scope) {
-            for (const name in scope) {
+            for (const name of Object.keys(scope)) {
                 if (!(name in this.identifierRenderers)) {
                     const renderer = new IdentifierRenderer()
                     this.identifierRenderers[name] = renderer
@@ -109,7 +109,7 @@ export class EnvironmentRenderer {
         }
 
         // Remove hits that aren't used
-        for (const name in this.identifierRenderers) {
+        for (const name of Object.keys(this.identifierRenderers)) {
             if (!hits.has(name)) {
                 const renderer = this.identifierRenderers[name]
                 renderer.destroy()
@@ -120,13 +120,13 @@ export class EnvironmentRenderer {
     }
 
     destroy() {
-        for (const id in this.dataRenderers) {
+        for (const id of Object.keys(this.dataRenderers)) {
             const renderer = this.dataRenderers[id]
             renderer.destroy()
             renderer.element.remove()
         }
 
-        for (const name in this.identifierRenderers) {
+        for (const name of Object.keys(this.identifierRenderers)) {
             const renderer = this.identifierRenderers[name]
             renderer.destroy()
             renderer.element.remove()

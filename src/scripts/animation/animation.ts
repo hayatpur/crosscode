@@ -24,19 +24,19 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
         return animation.baseDuration * (1 / animation.speed)
     }
 
-    const currentAbstraction = animation.abstractions[animation.currentAbstractionIndex]
+    const abstraction = currentAbstraction(animation)
 
     // If a parallel animation, return the end point of the longest animation vertex
-    if (currentAbstraction.isParallel && currentAbstraction.parallelStarts[0] != undefined) {
-        const ends = currentAbstraction.parallelStarts.map(
-            (start, i) => start + duration(currentAbstraction.vertices[i]) + currentAbstraction.vertices[i].delay
+    if (abstraction.isParallel && abstraction.parallelStarts[0] != undefined) {
+        const ends = abstraction.parallelStarts.map(
+            (start, i) => start + duration(abstraction.vertices[i]) + abstraction.vertices[i].delay
         )
         return Math.max(...ends)
     }
     // Else return the sum of all durations
     else {
         let baseDuration = 0
-        for (const vertex of currentAbstraction.vertices) {
+        for (const vertex of abstraction.vertices) {
             if (vertex == null) continue
             baseDuration += duration(vertex) + vertex.delay
         }
@@ -137,22 +137,22 @@ export function seek(
         return
     }
 
-    const currentAbstraction = animation.abstractions[animation.currentAbstractionIndex]
+    const abstraction = currentAbstraction(animation)
 
     // Keep track of the start time (for sequential animations)
     let start = 0
 
     // Loop through each child vertex and seek into it
-    for (let i = 0; i < currentAbstraction.vertices.length; i++) {
-        if (currentAbstraction.vertices[i] == null) continue
+    for (let i = 0; i < abstraction.vertices.length; i++) {
+        if (abstraction.vertices[i] == null) continue
 
-        const vertex = currentAbstraction.vertices[i]
+        const vertex = abstraction.vertices[i]
 
         start += vertex.delay
 
         // If parallel animation, override with parallel start time
-        if (currentAbstraction.isParallel) {
-            start = currentAbstraction.parallelStarts[i] + vertex.delay
+        if (abstraction.isParallel) {
+            start = abstraction.parallelStarts[i] + vertex.delay
         }
 
         // If the animation should be playing
@@ -183,6 +183,7 @@ export function seek(
 
             if (instanceOfAnimationNode(vertex)) {
                 console.log(`[${~~time}ms] ${vertex.name}`)
+                console.log(clone(view))
             }
 
             vertex.hasPlayed = true
@@ -226,9 +227,7 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     animation.hasPlayed = false
 
     if (instanceOfAnimationGraph(animation)) {
-        const currentAbstraction = animation.abstractions[animation.currentAbstractionIndex]
-
-        currentAbstraction.vertices.forEach((vertex) => reset(vertex))
+        currentAbstraction(animation).vertices.forEach((vertex) => reset(vertex))
     }
 }
 
@@ -268,7 +267,7 @@ export function reads(animation: AnimationGraph | AnimationNode): AnimationData[
     }
 
     let result = []
-    const { vertices } = animation.abstractions[animation.currentAbstractionIndex]
+    const { vertices } = currentAbstraction(animation)
 
     for (const vertex of vertices) {
         result.push(...reads(vertex))
@@ -289,11 +288,15 @@ export function writes(animation: AnimationGraph | AnimationNode): AnimationData
     }
 
     let result = []
-    const { vertices } = animation.abstractions[animation.currentAbstractionIndex]
+    const { vertices } = currentAbstraction(animation)
 
     for (const vertex of vertices) {
         result.push(...writes(vertex))
     }
 
     return result
+}
+
+export function currentAbstraction(animation: AnimationGraph) {
+    return animation.abstractions[animation.currentAbstractionIndex]
 }

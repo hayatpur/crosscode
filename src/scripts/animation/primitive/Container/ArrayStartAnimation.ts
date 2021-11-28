@@ -1,5 +1,5 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
+import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
 import { addDataAt, resolvePath } from '../../../environment/environment'
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
@@ -18,12 +18,6 @@ function onBegin(animation: ArrayStartAnimation, view: RootViewState, options: A
 
     // Create a new array somewhere in memory
     const data = createData(DataType.Array, [], `${animation.id}_CreateArray`)
-    if (!animation.doNotFloat) {
-        data.transform.styles.elevation = 1
-    }
-    data.transform.styles.position = 'relative'
-    data.transform.styles.left = 0
-    data.transform.styles.top = 0
 
     const loc = addDataAt(environment, data, [], null)
     updateRootViewLayout(view)
@@ -36,8 +30,12 @@ function onBegin(animation: ArrayStartAnimation, view: RootViewState, options: A
     }
 
     // Point the output register to the newly created data
-    const outputRegister = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Floating`) as DataState
-    replaceDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`))
+    const outputRegister = resolvePath(
+        environment,
+        animation.dataSpecifier,
+        `${animation.id}_Floating`
+    ) as PrototypicalDataState
+    replacePrototypicalDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`))
 }
 
 function onSeek(animation: ArrayStartAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {

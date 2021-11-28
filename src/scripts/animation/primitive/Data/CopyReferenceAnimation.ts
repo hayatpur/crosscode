@@ -1,5 +1,5 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
+import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
 import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
 import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
@@ -16,7 +16,7 @@ export interface CopyReferenceAnimation extends AnimationNode {
 function onBegin(animation: CopyReferenceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
     const environment = view.environment
 
-    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as DataState
+    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as PrototypicalDataState
     const reference = createData(
         DataType.Reference,
         getMemoryLocation(environment, data).foundLocation,
@@ -34,8 +34,12 @@ function onBegin(animation: CopyReferenceAnimation, view: RootViewState, options
     }
 
     // Put it in the floating stack
-    const register = resolvePath(environment, animation.outputRegister, `${animation.id}_FloatingRegister`) as DataState
-    replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
+    const register = resolvePath(
+        environment,
+        animation.outputRegister,
+        `${animation.id}_FloatingRegister`
+    ) as PrototypicalDataState
+    replacePrototypicalDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
 }
 
 function onSeek(

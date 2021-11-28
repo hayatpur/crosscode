@@ -67,7 +67,7 @@ export class ArrayRenderer extends DataRenderer {
         }
 
         // Remove data that are no longer in the view
-        for (const id in this.dataRenderers) {
+        for (const id of Object.keys(this.dataRenderers)) {
             if (!hits.has(id)) {
                 const renderer = this.dataRenderers[id]
                 renderer.renderer.destroy()
@@ -81,7 +81,7 @@ export class ArrayRenderer extends DataRenderer {
     destroy(): void {
         super.destroy()
 
-        for (const id in this.dataRenderers) {
+        for (const id of Object.keys(this.dataRenderers)) {
             const renderer = this.dataRenderers[id]
             renderer.renderer.destroy()
             renderer.index.element.remove()

@@ -7,11 +7,13 @@
 // import { applyLayout } from './Layout';
 // import { applyTransition } from './Transition';
 
-import { AnimationNode } from '../../primitive/AnimationNode'
-import { AnimationGraph, instanceOfAnimationGraph } from '../AnimationGraph'
+import { currentAbstraction } from '../../animation'
+import { AnimationNode, instanceOfAnimationNode } from '../../primitive/AnimationNode'
+import { AnimationGraph } from '../AnimationGraph'
 import { applyTransition } from './Transition'
 
 export enum AbstractionType {
+    Unknown = 'Unknown',
     None = 'None',
     Aggregation = 'Aggregation',
     Transition = 'Transition',
@@ -24,9 +26,26 @@ export interface AbstractionSpec {
     value: any
 }
 
+export enum AbstractionSelectionType {
+    Unknown = 'Unknown',
+    ChunkLine = 'ChunkLine',
+    Manual = 'Manual',
+}
+
+export interface AbstractionSelection {
+    type: AbstractionSelectionType
+    value?: any
+}
+
 export interface AbstractOptions {
-    query?: (animation: AnimationGraph | AnimationNode) => boolean
+    selection: AbstractionSelection
     spec: AbstractionSpec
+}
+
+// A chunk is a list of consecutive animation nodes
+export interface AnimationChunk {
+    parent: AnimationGraph
+    nodes: (AnimationNode | AnimationGraph)[]
 }
 
 /**
@@ -34,33 +53,77 @@ export interface AbstractOptions {
  * @param animation
  * @param options
  */
-export function abstract(animation: AnimationGraph | AnimationNode, options: AbstractOptions = null) {
+export function abstract(parent: AnimationGraph, options: AbstractOptions = null) {
     if (options == null) {
         options = {
-            query: (animation: AnimationGraph | AnimationNode) => animation.nodeData.type == 'AnimationGroup',
+            selection: { type: AbstractionSelectionType.ChunkLine },
             spec: { type: AbstractionType.Transition, value: null },
         }
     }
 
-    if (options.query(animation)) {
-        applyAbstraction(animation, options.spec)
-    } else {
-        if (instanceOfAnimationGraph(animation)) {
-            const { vertices } = animation.abstractions[animation.currentAbstractionIndex]
-            vertices.forEach((v) => abstract(v, options))
-        } else {
-            // abstract(animation, options);
-        }
+    // 1. Get all the chunks
+    const chunks =
+        options.selection.type == AbstractionSelectionType.Manual
+            ? (options.selection.value as AnimationChunk[])
+            : getAnimationChunks(parent, options.selection)
+
+    console.log('Chunks', chunks)
+
+    // 2. Abstract each chunk
+    for (const chunk of chunks) {
+        applyAbstraction(chunk, options)
     }
 }
 
-export function applyAbstraction(animation: AnimationGraph | AnimationNode, spec: AbstractionSpec) {
-    switch (spec.type) {
+/**
+ * TODO consider selection
+ * @param animation
+ * @param selection
+ * @returns
+ */
+export function getAnimationChunks(parent: AnimationGraph, selection: AbstractionSelection): AnimationChunk[] {
+    const vertices = currentAbstraction(parent).vertices
+    const chunks: AnimationChunk[] = [{ nodes: [], parent }]
+
+    let line = null
+
+    for (const vertex of vertices) {
+        const delta = vertex.nodeData.location.start.line - line
+
+        // Create a new chunk
+        if (delta > 1) {
+            chunks.push({ nodes: [], parent })
+        }
+
+        line = vertex.nodeData.location.start.line
+
+        chunks[chunks.length - 1].nodes.push(vertex)
+    }
+
+    if (chunks.length == 1) {
+        const childrenChunks: AnimationChunk[] = []
+
+        // Then there was no chunking actually performed
+        for (const child of vertices) {
+            if (instanceOfAnimationNode(child)) continue
+
+            const childChunks = getAnimationChunks(child, selection)
+            childrenChunks.push(...childChunks)
+        }
+
+        return childrenChunks.length == 0 ? chunks : childrenChunks
+    }
+
+    return chunks
+}
+
+export function applyAbstraction(chunk: AnimationChunk, spec: AbstractOptions) {
+    switch (spec.spec.type) {
         // case AbstractionType.Aggregation:
         //     applyAggregation(animation, spec);
         //     break;
         case AbstractionType.Transition:
-            applyTransition(animation, spec)
+            applyTransition(chunk, spec)
             break
         // case AbstractionType.Annotation:
         //     applyAnnotation(animation, spec);
@@ -69,7 +132,7 @@ export function applyAbstraction(animation: AnimationGraph | AnimationNode, spec
         //     applyLayout(animation, spec);
         //     break;
         default:
-            throw new Error(`Unsupported abstraction type: ${spec.type}`)
+            throw new Error(`Unsupported abstraction type: ${spec.spec.type}`)
     }
 
     // View.views[animation.id].update();

@@ -1,4 +1,5 @@
 import { createScope } from '../../../environment/environment'
+import { updateRootViewLayout } from '../../../environment/layout'
 import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -12,6 +13,8 @@ function onBegin(animation: CreateScopeAnimation, view: RootViewState, options: 
     if (options.baking) {
         computeReadAndWrites(animation)
     }
+
+    updateRootViewLayout(view)
 }
 
 function onSeek(animation: CreateScopeAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}

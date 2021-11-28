@@ -6,7 +6,7 @@
     mix-blend-mode: multiply;
     z-index: 10;
     border-radius: 5px;
-    transition: 0.1s;
+    transition: 0.1s var(--transition-type);
     pointer-events: none;
     /* opacity: 0 !important; */
 }

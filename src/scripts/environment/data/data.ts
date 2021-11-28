@@ -45,7 +45,7 @@ export function createData(
 }
 
 export function createConcreteData(
-    prototype: PrototypicalDataState = null,
+    prototype: PrototypicalDataState,
     value: string | boolean | Number | ConcreteDataState[] | Accessor[] = null,
     transform: ConcreteDataTransform = null
 ): ConcreteDataState {
@@ -55,7 +55,7 @@ export function createConcreteData(
         transform: transform ?? {
             ...createTransform(),
             styles: {},
-            classList: ['data-i', ...getDataClassNames(prototype.type)],
+            classList: ['data-i', ...(prototype ? getDataClassNames(prototype.type) : [])],
         },
         value: value,
     }

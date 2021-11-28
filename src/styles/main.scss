@@ -3,6 +3,7 @@
 
 /* Generic */
 @import './generic/checkbox.scss';
+@import './generic/pushable.scss';
 
 /* State */
 @import './state/data/data.scss';
@@ -26,7 +27,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=PT+Sans&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@100;200;300;400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@200;300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;300;400;600;700&display=swap');
 
 /* Icons */
@@ -34,27 +35,35 @@
 @import url('https://css.gg/close.css');
 
 :root {
-    --color-lightest: white;
-    --color-lighter: #f3f5fa;
-    --color-light: #a4aec7;
-    --color: #7d89a5;
-    --color-darker: #48536d;
-    --color-darkest: black;
-    --shadow-color: 0deg 0% 50%;
+    // Pallette
+    --color-0: white;
+    --color-1: #a4aec7;
+    --color-2: #7d89a5;
+    --color-3: #48536d;
+    --color-4: #35383b;
+    --color-5: black;
+    --color-6: black;
+
+    // Misc colors
+    --color-shadow: 0deg 0% 50%;
     --floating-shadow-color: 200deg 60% 70%;
+
+    // --transition-type: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    --transition-type: cubic-bezier(0.21, -0.07, 0.32, 1.6);
 }
 
 html {
-    background: white;
+    background: var(--color-0);
 }
 
 html,
 body {
     margin: 0px;
     height: 100%;
-    font-family: Inter;
+    font-family: Source Sans Pro;
     overflow: hidden;
     font-size: 24px;
+    color: var(--color-5);
 }
 
 .renderer-stage {
@@ -63,4 +72,28 @@ body {
     top: 0px;
     width: 100%;
     height: 100%;
+}
+
+.mtk18 {
+    color: var(--color-4) !important;
+    font-weight: bolder;
+}
+
+.mtk7,
+.mtk1 {
+    color: var(--color-5) !important;
+}
+
+:root {
+    // Coffee pallette
+    --color-0: #f7f4f3;
+    --color-1: #eae2de;
+    --color-2: #D2C8C6;
+    --color-3: #ae9a98;
+    --color-4: #482528;
+    --color-5: #2f2625;
+    --color-6: #171212;
+
+    --s-color-0: #cfe2ea;
+    --s-color-1: #bdc3c5;
 }

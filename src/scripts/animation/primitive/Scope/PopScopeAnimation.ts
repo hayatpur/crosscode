@@ -15,7 +15,6 @@ function onBegin(animation: PopScopeAnimation, view: RootViewState, options: Ani
     }
 
     updateRootViewLayout(view)
-    updateRootViewLayout(view)
 }
 
 function onSeek(animation: PopScopeAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}

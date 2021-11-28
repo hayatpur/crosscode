@@ -2,8 +2,9 @@ import * as ESTree from 'estree'
 import { DataType } from '../../environment/data/DataState'
 import { flattenedEnvironmentMemory, getMemoryLocation } from '../../environment/environment'
 import { clone } from '../../utilities/objects'
-import { addEdge, reads, writes } from '../animation'
+import { addEdge, currentAbstraction, reads, writes } from '../animation'
 import { AnimationNode, instanceOfAnimationNode, NodeData } from '../primitive/AnimationNode'
+import { AnimationChunk } from './abstraction/Abstractor'
 import { AnimationData, AnimationGraph, instanceOfAnimationGraph } from './AnimationGraph'
 import { createEdge, Edge, EdgeType } from './edges/Edge'
 
@@ -62,6 +63,26 @@ export function addVertex(graph: AnimationGraph, vertex: AnimationGraph | Animat
 
     if (graph.isGroup) {
         updateGroupNodeData(graph)
+    }
+}
+
+export function addVertexAt(
+    graph: AnimationGraph,
+    i: number,
+    vertex: AnimationGraph | AnimationNode,
+    options: VertexOptions = {}
+) {
+    const { vertices: graphVertices, edges: graphEdges } = graph.abstractions[graph.currentAbstractionIndex]
+
+    vertex.nodeData = options.nodeData
+
+    // Add vertex
+    graphVertices.splice(i, 0, vertex)
+
+    // Shift over all edges
+    for (let j = graphEdges.length - 1; j >= 0; j--) {
+        if (graphEdges[j].from > i) graphEdges[j].from += 1
+        if (graphEdges[j].to > i) graphEdges[j].to += 1
     }
 }
 
@@ -458,7 +479,7 @@ export function computeAllEdges(graph: AnimationGraph, masks: Set<string>[] = []
 
 export function computeAllGraphEdges(animation: AnimationGraph) {
     if (instanceOfAnimationGraph(animation)) {
-        const { vertices } = animation.abstractions[animation.currentAbstractionIndex]
+        const { vertices } = currentAbstraction(animation)
 
         for (const node of vertices) {
             if (instanceOfAnimationGraph(node)) {
@@ -537,8 +558,7 @@ export function animationToString(
 
     const lookup = {}
 
-    const { vertices: animationVertices, edges: animationEdges } =
-        animation.abstractions[animation.currentAbstractionIndex]
+    const { vertices: animationVertices, edges: animationEdges } = currentAbstraction(animation)
 
     const sortedEdges = clone(animationEdges)
 
@@ -701,11 +721,41 @@ export function getTrace(
             }
         }
     } else {
-        const { vertices } = animation.abstractions[animation.currentAbstractionIndex]
+        const { vertices } = currentAbstraction(animation)
 
         for (let i = vertices.length - 1; i >= 0; i--) {
             flow = getTrace(vertices[i], clone(flow))
         }
+    }
+
+    return flow
+}
+
+export function getChunkTrace(chunk: AnimationChunk, flow: AnimationTraceChain[] = null): AnimationTraceChain[] {
+    const postcondition = chunk.nodes[chunk.nodes.length - 1].postcondition
+
+    // Set default flow to ids of literals and arrays in environment
+    if (flow == null) {
+        const environment = clone(postcondition.environment)
+
+        flow = []
+
+        // Only render literals and arrays
+        const endMemory = flattenedEnvironmentMemory(environment)
+            .filter((m) => m != null)
+            .filter((data) => data.type == DataType.Literal || data.type == DataType.Array)
+
+        // Add each memory ID as start to flow
+        for (const data of endMemory) {
+            flow.push({
+                value: { id: data.id, location: getMemoryLocation(environment, data).foundLocation },
+            })
+        }
+    }
+
+    // Update the flow based on operation of animation node
+    for (let i = chunk.nodes.length - 1; i >= 0; i--) {
+        flow = getTrace(chunk.nodes[i], clone(flow))
     }
 
     return flow
@@ -753,6 +803,7 @@ export function getTracesFromAnimationNode(animation: AnimationNode): AnimationT
                 value: ws[0],
                 children: [[AnimationTraceOperator.CopyLiteral, { value: rs[0] }]],
             })
+            break
         case 'CreateLiteralAnimation':
             // Literal <-- Create
             traces.push({

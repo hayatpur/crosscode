@@ -25,7 +25,7 @@ export class LiteralRenderer extends DataRenderer {
             parseFloat(data.transform.styles.opacity?.toString() || '1') * sigmoid(-5 * (z - 2))
         }`
 
-        this.element.style.boxShadow = getCSSElevation(z)
+        // this.element.style.boxShadow = getCSSElevation(z)
 
         // Set value
         if (typeof data.value == 'boolean') {

@@ -1,10 +1,17 @@
 import { reflow } from '../utilities/dom'
 import { getRelativeLocation } from '../utilities/math'
+import { clone } from '../utilities/objects'
 import { getFlattenedChildren } from '../view/view'
 import { instanceOfLeafView, LeafViewState, RootViewState } from '../view/ViewState'
 import { createConcreteData } from './data/data'
 import { ConcreteDataState, DataType, instanceOfConcreteData, PrototypicalDataState, Transform } from './data/DataState'
-import { createConcreteIdentifier, flattenedConcreteEnvironmentMemory, resolvePath } from './environment'
+import { ConcretePath, createConcretePath } from './data/path/path'
+import {
+    createConcreteEnvironment,
+    createConcreteIdentifier,
+    flattenedConcreteEnvironmentMemory,
+    resolvePath,
+} from './environment'
 import {
     Accessor,
     ConcreteEnvironmentState,
@@ -128,7 +135,7 @@ export function updateLayout(concrete: { transform: Transform }, parent: HTMLDiv
             const item = flattenedMemory.find((item) => item.prototype.id == itemPrototype.id)
 
             const location = getRelativeLocation(item.transform.rendered, concrete.transform.rendered)
-            binding.transform.styles.top = `${location.y - 30}px`
+            binding.transform.styles.top = `${location.y - 25}px`
             binding.transform.styles.left = `${location.x}px`
             updateLayout(binding, el)
         }
@@ -140,7 +147,14 @@ export function propagateRoot(root: RootViewState) {
 
     // Assign environment prototype to each concrete view
     for (const child of children) {
-        child._environment.prototype = child.mapping.f(root.environment)
+        if (!child.isActive) continue
+
+        if (child._environment == null) {
+            child._environment = createConcreteEnvironment(root.environment)
+        } else {
+            child._environment.prototype = clone(root.environment)
+        }
+
         propagateEnvironment(child._environment)
     }
 }
@@ -151,6 +165,48 @@ export function propagateEnvironment(environment: ConcreteEnvironmentState) {
     propagateEnvironmentMemory(environment)
 
     // 2. Synchronize the environment scope with the prototype scope
+    propagateEnvironmentScopes(environment)
+
+    // 3. Synchronize the environment paths with the prototype paths
+    propagateEnvironmentPaths(environment)
+}
+
+export function propagateEnvironmentPaths(environment: ConcreteEnvironmentState) {
+    // Hit test
+    const hits = new Set()
+
+    for (const id of Object.keys(environment.prototype.paths)) {
+        const prototype = environment.prototype.paths[id]
+        let concrete = environment.paths[id]
+
+        if (concrete == null) {
+            // Need to create a path in the concrete environment
+            concrete = createConcretePath(prototype)
+            environment.paths[id] = concrete
+        }
+
+        hits.add(id)
+
+        concrete.prototype = clone(prototype) // Kind of redundant but easier for refactoring
+        propagatePath(concrete, environment)
+    }
+
+    // Remove paths that are no longer in the view
+    for (const id in Object.keys(environment.paths)) {
+        if (!hits.has(id)) {
+            delete environment.paths[id]
+        }
+    }
+}
+
+export function propagatePath(path: ConcretePath, environment: ConcreteEnvironmentState) {
+    // const { onBegin, onSeek, onEnd } = getPathFromEnvironmentRepresentation(path.prototype, environment.representation)
+    // path.onBegin = onBegin
+    // path.onSeek = onSeek
+    // path.onEnd = onEnd
+}
+
+export function propagateEnvironmentScopes(environment: ConcreteEnvironmentState) {
     while (environment.scope.length < environment.prototype.scope.length) {
         environment.scope.push({})
     }
@@ -179,12 +235,13 @@ export function propagateEnvironmentMemory(environment: ConcreteEnvironmentState
 
         if (item == null) {
             // Need to create an item in the concrete environment
-            item = createConcreteData()
+            item = createConcreteData(prototype)
+            environment.memory.push(item)
         }
 
         hits.add(prototype.id)
 
-        item.prototype = prototype
+        item.prototype = clone(prototype)
         propagateData(item)
     }
 
@@ -202,14 +259,16 @@ export function propagateEnvironmentScope(scope: ConcreteScope, prototype: Proto
     // Hit test
     const hits = new Set()
 
-    for (const prototypeName in Object.keys(prototype)) {
+    for (const prototypeName of Object.keys(prototype)) {
         let item = scope[prototypeName]
+
         if (item == null) {
             // Need to create an identifier in the concrete environment
-            item = createConcreteIdentifier()
+            item = createConcreteIdentifier(prototype[prototypeName])
+            scope[prototypeName] = item
         }
 
-        item.prototype = prototype[prototypeName]
+        item.prototype = clone(prototype[prototypeName])
         hits.add(prototypeName)
     }
 
@@ -225,10 +284,20 @@ export function propagateData(data: ConcreteDataState) {
     // Synchronize the data value with the prototype value
     if (data.prototype.type == DataType.Array) {
         const prototypeItems = data.prototype.value as PrototypicalDataState[]
+
+        if (data.prototype.value == null) {
+            data.value = null
+            return
+        }
+
+        if (data.value == null) {
+            data.value = []
+        }
+
         const items = data.value as ConcreteDataState[]
 
         while (items.length < prototypeItems.length) {
-            items.push(createConcreteData())
+            items.push(createConcreteData(prototypeItems[items.length]))
         }
 
         while (items.length > prototypeItems.length) {
@@ -237,7 +306,7 @@ export function propagateData(data: ConcreteDataState) {
 
         for (let i = 0; i < prototypeItems.length; i++) {
             const item = items[i]
-            item.prototype = prototypeItems[i]
+            item.prototype = clone(prototypeItems[i])
             propagateData(item)
         }
     } else {

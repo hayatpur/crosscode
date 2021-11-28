@@ -1,3 +1,15 @@
+import {
+    addPrototypicalPath,
+    beginPrototypicalPath,
+    endPrototypicalPath,
+    lookupPrototypicalPathById,
+    removePrototypicalPath,
+    seekPrototypicalPath,
+} from '../../../../environment/data/path/path'
+import {
+    createPrototypicalCreatePath,
+    PrototypicalCreatePath,
+} from '../../../../environment/data/path/primitives/PrototypicalCreatePath'
 import { resolvePath } from '../../../../environment/environment'
 import { AccessorType } from '../../../../environment/EnvironmentState'
 import { RootViewState } from '../../../../view/ViewState'
@@ -8,27 +20,37 @@ import { AnimationOptions, createAnimationNode } from '../../AnimationNode'
 
 export interface TransitionCreateArray extends TransitionAnimationNode {}
 
-function onBegin(animation: TransitionCreateArray, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onBegin(animation: TransitionCreateArray, view: RootViewState, options: AnimationRuntimeOptions) {
+    const environment = view.environment
+    const create = createPrototypicalCreatePath(
+        [{ type: AccessorType.ID, value: animation.output.id }],
+        [{ type: AccessorType.ID, value: animation.output.id }],
+        `CreateArray${animation.id}`
+    )
+    addPrototypicalPath(environment, create)
+    beginPrototypicalPath(create, environment)
+}
 
 function onSeek(animation: TransitionCreateArray, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
     let t = animation.ease(time / duration(animation))
-
     const environment = view.environment
-    const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
-    data.transform.renderOnlyStyles.transform = `scale(${t})`
+
+    const create = lookupPrototypicalPathById(environment, `CreateArray${animation.id}`) as PrototypicalCreatePath
+    seekPrototypicalPath(create, environment, t)
 }
 
 function onEnd(animation: TransitionCreateArray, view: RootViewState, options: AnimationRuntimeOptions) {
     const environment = view.environment
     const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
-    data.transform.renderOnlyStyles.transform = 'scale(1)'
-    delete data.transform.renderOnlyStyles.transform
+
+    const create = lookupPrototypicalPathById(environment, `CreateArray${animation.id}`) as PrototypicalCreatePath
+    endPrototypicalPath(create, environment)
+    removePrototypicalPath(environment, `CreateArray${animation.id}`)
 }
 
 function applyInvariant(animation: TransitionCreateArray, view: RootViewState) {
     const environment = view.environment
     const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
-    data.transform.renderOnlyStyles.transform = 'scale(0)'
 }
 
 export function transitionCreateArray(

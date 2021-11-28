@@ -9,7 +9,7 @@
     padding: 6px 8px;
     border-radius: 6px;
     overflow: hidden;
-    transition: all 0.2s ease;
+    transition: all 0.2s var(--transition-type);
 }
 
 .cbx:not(:last-child) {
@@ -33,7 +33,7 @@
     border-radius: 4px;
     transform: scale(1);
     border: 1px solid #cccfdb;
-    transition: all 0.2s ease;
+    transition: all 0.2s var(--transition-type);
     box-shadow: 0 1px 1px rgba(56, 56, 56, 0.05);
 }
 
@@ -48,7 +48,7 @@
     stroke-linejoin: round;
     stroke-dasharray: 16px;
     stroke-dashoffset: 16px;
-    transition: all 0.3s ease;
+    transition: all 0.3s var(--transition-type);
     transition-delay: 0.1s;
     transform: translate3d(0, 0, 0);
 }

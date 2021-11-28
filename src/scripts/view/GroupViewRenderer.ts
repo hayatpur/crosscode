@@ -63,7 +63,7 @@ export class GroupViewRenderer {
         }
 
         // Remove environments that are no longer in the view
-        for (const id in this.childRenderers) {
+        for (const id of Object.keys(this.childRenderers)) {
             if (!hits.has(id)) {
                 const renderer = this.childRenderers[id]
                 renderer.destroy()
@@ -81,7 +81,7 @@ export class GroupViewRenderer {
     }
 
     destroy() {
-        for (const id in this.childRenderers) {
+        for (const id of Object.keys(this.childRenderers)) {
             const renderer = this.childRenderers[id]
             renderer.destroy()
             renderer.element.remove()

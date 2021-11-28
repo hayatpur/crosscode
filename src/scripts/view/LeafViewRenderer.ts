@@ -8,24 +8,19 @@ export class LeafViewRenderer {
     // Label
     labelElement: HTMLDivElement
     labelTextElement: HTMLDivElement
-    labelEdgeElement: HTMLDivElement
 
     // Environment Renderer
     environmentRenderer: EnvironmentRenderer
 
     constructor() {
         this.element = document.createElement('div')
-        this.element.classList.add('view')
+        this.element.classList.add('leaf-view')
 
         this.labelElement = document.createElement('div')
-        this.labelElement.classList.add('view-label')
-
-        this.labelEdgeElement = document.createElement('div')
-        this.labelEdgeElement.classList.add('view-label-edge')
-        this.labelElement.append(this.labelEdgeElement)
+        this.labelElement.classList.add('leaf-view-label')
 
         this.labelTextElement = document.createElement('div')
-        this.labelTextElement.classList.add('view-label-text')
+        this.labelTextElement.classList.add('leaf-view-label-text')
         this.labelElement.append(this.labelTextElement)
 
         this.element.append(this.labelElement)

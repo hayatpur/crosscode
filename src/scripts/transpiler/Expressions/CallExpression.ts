@@ -6,7 +6,7 @@ import { addVertex } from '../../animation/graph/graph'
 import { AnimationContext, ControlOutput, ControlOutputData } from '../../animation/primitive/AnimationNode'
 import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
-import { DataState } from '../../environment/data/DataState'
+import { PrototypicalDataState } from '../../environment/data/DataState'
 import { resolvePath } from '../../environment/environment'
 import { Accessor, AccessorType } from '../../environment/EnvironmentState'
 import { RootViewState } from '../../view/ViewState'
@@ -37,7 +37,11 @@ export function CallExpression(ast: ESTree.CallExpression, view: RootViewState, 
     if (ast.callee.type === 'Identifier') {
         const funcLocation = [{ type: AccessorType.Symbol, value: ast.callee.name }]
         const environment = view.environment
-        const funcData = resolvePath(environment, funcLocation, `${graph.id}_CallExpressionFunc`) as DataState
+        const funcData = resolvePath(
+            environment,
+            funcLocation,
+            `${graph.id}_CallExpressionFunc`
+        ) as PrototypicalDataState
         const funcAST: ESTree.FunctionDeclaration = JSON.parse(funcData.value as string)
 
         const body = FunctionCall(funcAST, view, {

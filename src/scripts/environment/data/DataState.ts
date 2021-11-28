@@ -1,6 +1,6 @@
 import * as CSS from 'csstype'
 import { Accessor } from '../EnvironmentState'
-import { PrototypicalPath } from './path'
+import { PrototypicalPath } from './path/path'
 
 export enum DataType {
     Literal = 'Literal',

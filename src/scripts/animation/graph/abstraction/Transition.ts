@@ -1,28 +1,23 @@
-import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { clone } from '../../../utilities/objects'
 import { RootViewState } from '../../../view/ViewState'
-import { AnimationNode, instanceOfAnimationNode } from '../../primitive/AnimationNode'
-import { GroupStartAnimation } from '../../primitive/Group/GroupStartAnimation'
-import { beginTransitionAnimation } from '../../primitive/Transition/BeginTransitionAnimation'
+import { currentAbstraction } from '../../animation'
+import { AnimationNode } from '../../primitive/AnimationNode'
+import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
 import { transitionCreateArray } from '../../primitive/Transition/Operations/CreateArrayTransitionAnimation'
 import { transitionCreate } from '../../primitive/Transition/Operations/CreateTransitionAnimation'
 import { transitionMove } from '../../primitive/Transition/Operations/MoveTransitionAnimation'
-import {
-    AnimationData,
-    AnimationGraph,
-    AnimationGraphVariant,
-    createAbstraction,
-    createAnimationGraph,
-} from '../AnimationGraph'
+import { AnimationData, AnimationGraph, createAbstraction, createAnimationGraph } from '../AnimationGraph'
 import {
     addVertex,
+    addVertexAt,
     AnimationTraceChain,
     AnimationTraceOperator,
-    getTrace,
+    getChunkTrace,
     getUnionOfLocations,
+    removeVertexAt,
     traceChainsToString,
 } from '../graph'
-import { AbstractionSpec } from './Abstractor'
+import { AbstractOptions, AnimationChunk } from './Abstractor'
 
 // export interface Trace {
 //     operation: TraceOperation;
@@ -36,42 +31,35 @@ import { AbstractionSpec } from './Abstractor'
 //     NoChangeMove = 'NoChangeMove',
 // }
 
-export function applyTransition(animation: AnimationGraph | AnimationNode, config: AbstractionSpec) {
-    if (instanceOfAnimationNode(animation)) {
+export function applyTransition(chunk: AnimationChunk, config: AbstractOptions) {
+    if (chunk.nodes.length == 0) {
         return
     }
 
-    const trace = getTrace(animation)
-
+    const trace = getChunkTrace(chunk)
     traceChainsToString(trace)
 
-    // Concatenate the trace to start & end transition (if no trace => creation)
-    const [transitionPrecondition, transitions] = getTransitionsFromTrace(animation, trace)
+    // Get the animations
+    const transitions = getTransitionsFromTrace(trace)
 
-    // Create new level of abstraction
-    const transitionAbstraction: AnimationGraphVariant = createAbstraction()
+    // Create new level of abstraction in the parent that's the same as existing one
+    const transitionAbstraction = createAbstraction()
     transitionAbstraction.spec = config
-    animation.abstractions.push(transitionAbstraction)
-    animation.currentAbstractionIndex = animation.abstractions.length - 1
-
-    // Locate the group start animation from default spec
-    const groupStart = clone(animation.abstractions[0].vertices[0] as GroupStartAnimation)
-    groupStart.leaveEmpty = true
-
-    // Add the group start animation to the abstraction
-    addVertex(animation, groupStart, { nodeData: groupStart.nodeData })
+    chunk.parent.abstractions.push(clone(currentAbstraction(chunk.parent)))
+    chunk.parent.currentAbstractionIndex = chunk.parent.abstractions.length - 1
 
     // Begin transition graph
     const nodeData = {
-        location: getUnionOfLocations(animation.abstractions[0].vertices.map((v) => v.nodeData.location)),
-        type: 'Transition',
+        location: getUnionOfLocations(chunk.nodes.map((v) => v.nodeData.location)),
+        type: 'Chunk',
     }
     const graph: AnimationGraph = createAnimationGraph(nodeData)
 
     // Instantiates all entities
-    const beginTransition = beginTransitionAnimation(transitionPrecondition)
-    addVertex(graph, beginTransition, { nodeData })
-    addVertex(animation, graph, { nodeData })
+    const initializeTransition = initializeTransitionAnimation(
+        clone(chunk.nodes[chunk.nodes.length - 1].postcondition.environment)
+    )
+    addVertex(graph, initializeTransition, { nodeData })
 
     // All transitions
     for (const transition of transitions) {
@@ -82,8 +70,20 @@ export function applyTransition(animation: AnimationGraph | AnimationNode, confi
     graph.abstractions[graph.currentAbstractionIndex].isParallel = true
     graph.abstractions[graph.currentAbstractionIndex].parallelStarts = [
         0,
-        ...[...Array(transitions.length).keys()].map((_) => 10),
+        ...[...Array(transitions.length).keys()].map((_) => 25),
     ]
+
+    // Remove all nodes in chunk from parent
+    const vertices = currentAbstraction(chunk.parent).vertices
+    const location = vertices.findIndex((node) => node.id == chunk.nodes[0].id)
+    for (let i = vertices.length - 1; i >= 0; i--) {
+        if (i >= location && i < location + chunk.nodes.length) {
+            removeVertexAt(chunk.parent, i)
+        }
+    }
+
+    // Add transition graph to parent
+    addVertexAt(chunk.parent, location, graph, { nodeData })
 }
 
 export interface TransitionAnimationNode extends AnimationNode {
@@ -92,12 +92,7 @@ export interface TransitionAnimationNode extends AnimationNode {
     origins: AnimationData[]
 }
 
-function getTransitionsFromTrace(
-    animation: AnimationGraph,
-    trace: AnimationTraceChain[]
-): [EnvironmentState, TransitionAnimationNode[]] {
-    const view = clone(animation.postcondition)
-    const environment = view.environment
+function getTransitionsFromTrace(trace: AnimationTraceChain[]): TransitionAnimationNode[] {
     const transitions: TransitionAnimationNode[] = []
 
     for (const chain of trace) {
@@ -105,23 +100,22 @@ function getTransitionsFromTrace(
 
         if (operations.length == 0) {
             // No operations, meaning just preserve the data from previous
-            operations.push(AnimationTraceOperator.MoveAndPlace)
-            leaves.push({ value: chain.value })
+            // operations.push(AnimationTraceOperator.MoveAndPlace)
+            // leaves.push({ value: chain.value })
+            continue
         }
 
-        // Based on the last operator, create a new animation node
+        // Create a new animations from the chain
         const transition = createTransitionAnimation(
             chain.value,
             operations,
             leaves.map((leaf) => leaf.value)
         )
 
-        transition.applyInvariant(transition, view)
-
         transitions.push(transition)
     }
 
-    return [environment, transitions]
+    return transitions
 }
 
 function createTransitionAnimation(

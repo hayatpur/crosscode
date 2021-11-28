@@ -1,10 +1,26 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType, instanceOfData } from '../../../environment/data/DataState'
-import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString, instanceOfEnvironment } from '../../../environment/EnvironmentState'
+import { replacePrototypicalDataWith } from '../../../environment/data/data'
+import { instanceOfPrototypicalData, PrototypicalDataState } from '../../../environment/data/DataState'
+import {
+    addPrototypicalPath,
+    beginPrototypicalPath,
+    endPrototypicalPath,
+    lookupPrototypicalPathById,
+    PrototypicalPath,
+    removePrototypicalPath,
+    seekPrototypicalPath,
+} from '../../../environment/data/path/path'
+import {
+    createPrototypicalMovementPath,
+    PrototypicalMovementPath,
+} from '../../../environment/data/path/primitives/PrototypicalMovementPath'
+import {
+    createPrototypicalPlacementPath,
+    PrototypicalPlacementPath,
+} from '../../../environment/data/path/primitives/PrototypicalPlacementPath'
+import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
+import { Accessor, accessorsToString, instanceOfPrototypicalEnvironment } from '../../../environment/EnvironmentState'
 import { updateRootViewLayout } from '../../../environment/layout'
-import { DataMovementLocation, DataMovementPath } from '../../../utilities/DataMovementPath'
-import { getRelativeLocation, remap } from '../../../utilities/math'
+import { remap } from '../../../utilities/math'
 import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
@@ -19,9 +35,9 @@ export interface MoveAndPlaceAnimation extends AnimationNode {
 function onBegin(animation: MoveAndPlaceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
     const environment = view.environment
 
-    const move = resolvePath(environment, animation.inputSpecifier, null, null, {
+    const from = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
-    }) as DataState
+    }) as PrototypicalDataState
 
     const to = resolvePath(
         environment,
@@ -29,67 +45,40 @@ function onBegin(animation: MoveAndPlaceAnimation, view: RootViewState, options:
         `${animation.id}_To(${accessorsToString(animation.outputSpecifier)})`
     )
 
-    updateRootViewLayout(view)
+    // Create movement path
+    const movement: PrototypicalPath = createPrototypicalMovementPath(
+        animation.inputSpecifier,
+        animation.outputSpecifier,
+        `Movement${animation.id}`
+    )
+    addPrototypicalPath(environment, movement)
 
-    // Start position
-    const startTransform = getRelativeLocation(
-        move.transform.rendered,
-        environment.transform.rendered
-    ) as DataMovementLocation
+    // Create placement path
+    const placement: PrototypicalPath = createPrototypicalPlacementPath(
+        animation.inputSpecifier,
+        animation.outputSpecifier,
+        `Placement${animation.id}`
+    )
+    addPrototypicalPath(environment, placement)
 
-    let endTransform: DataMovementLocation
-
-    if (animation.outputSpecifier.length == 0) {
-        // Then it doesn't have a place yet
-        // Find an empty space and put it there
-        const placeholder = createData(DataType.Literal, '', `${animation.id}_Placeholder`)
-        placeholder.transform.styles.position = 'relative'
-
-        const placeholderLocation = addDataAt(environment, placeholder, [], `${animation.id}_Placeholder`)
-        updateRootViewLayout(view)
-
-        endTransform = getRelativeLocation(
-            placeholder.transform.rendered,
-            environment.transform.rendered
-        ) as DataMovementLocation
-
-        removeAt(environment, placeholderLocation)
-    } else {
-        const toTransform = (to as DataState).transform
-        endTransform = getRelativeLocation(toTransform.rendered, environment.transform.rendered) as DataMovementLocation
-    }
-
-    // if (startTransform.x == endTransform.x && startTransform.y == endTransform.y) {
-    //     animation.noMove = true;
-    // }
-
-    // Create a movement path to translate the floating container along
-    const path = new DataMovementPath(startTransform, endTransform)
-    path.seek(0)
-
-    environment._temps[`MovePath${animation.id}`] = path
+    // Begin movement
+    beginPrototypicalPath(movement, view.environment)
 }
 
 function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
+    let t = animation.ease(time / duration(animation))
+
     const environment = view.environment
-
-    let move = resolvePath(environment, animation.inputSpecifier, null, null, {
-        noResolvingReference: true,
-    }) as DataState
-
     const tn = time / duration(animation)
 
     // Move
     if (tn <= 0.7 && !animation.noMove) {
         let t = animation.ease(remap(tn, 0, 0.7, 0, 1))
 
-        const path = environment._temps[`MovePath${animation.id}`] as DataMovementPath
-        path.seek(t)
-
-        const position = path.getPosition(t)
-        move.transform.styles.left = `${position.x}px`
-        move.transform.styles.top = `${position.y}px`
+        const movement = lookupPrototypicalPathById(environment, `Movement${animation.id}`) as PrototypicalMovementPath
+        seekPrototypicalPath(movement, environment, t)
     }
+    // TODO BEGIN PLACE AND END MOVEMENT
     // Place
     else if (tn >= 0.8 || animation.noMove) {
         let t: number
@@ -100,7 +89,11 @@ function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: num
             t = animation.ease(remap(tn, 0.8, 1, 0, 1))
         }
 
-        move.transform.styles.elevation = 1 - t
+        const placement = lookupPrototypicalPathById(
+            environment,
+            `Placement${animation.id}`
+        ) as PrototypicalPlacementPath
+        seekPrototypicalPath(placement, environment, t)
     }
 
     updateRootViewLayout(view)
@@ -108,15 +101,24 @@ function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: num
 
 function onEnd(animation: MoveAndPlaceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
     const environment = view.environment
-    environment._temps[`MovePath${this.id}`]?.destroy()
-    delete environment._temps[`MovePath${this.id}`]
+
+    // Paths
+    const movement = lookupPrototypicalPathById(environment, `Movement${animation.id}`) as PrototypicalMovementPath
+    const placement = lookupPrototypicalPathById(environment, `Placement${animation.id}`) as PrototypicalPlacementPath
+
+    // End placement
+    endPrototypicalPath(placement, environment)
+
+    // Remove paths from environment
+    removePrototypicalPath(environment, `Movement${animation.id}`)
+    removePrototypicalPath(environment, `Placement${animation.id}`)
 
     const input = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
-    }) as DataState
-    const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_EndTo`) as DataState
+    }) as PrototypicalDataState
+    const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_EndTo`)
 
-    if (instanceOfEnvironment(to)) {
+    if (instanceOfPrototypicalEnvironment(to)) {
         if (options.baking) {
             computeReadAndWrites(
                 animation,
@@ -141,20 +143,10 @@ function onEnd(animation: MoveAndPlaceAnimation, view: RootViewState, options: A
 
         removeAt(environment, getMemoryLocation(environment, input).foundLocation)
 
-        if (instanceOfData(to)) {
-            replaceDataWith(to, input, { frame: true, id: true })
+        if (instanceOfPrototypicalData(to)) {
+            replacePrototypicalDataWith(to, input, { frame: true, id: true })
         }
     }
-
-    input.transform.styles.elevation = 0
-    input.transform.styles.position = 'relative'
-    input.transform.styles.left = 0
-    input.transform.styles.top = 0
-
-    to.transform.styles.elevation = 0
-    to.transform.styles.position = 'relative'
-    to.transform.styles.left = 0
-    to.transform.styles.top = 0
 
     updateRootViewLayout(view)
 }

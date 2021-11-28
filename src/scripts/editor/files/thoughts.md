@@ -237,224 +237,6 @@ pushn(left, 5, y);
 
 
 
-
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 1 2
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 0 1
-AG(68) 0 1
-AG(69) 1 2
-AG(69) 0 1
-AG(60) 1 2
-AG(62) 1 2
-AG(62) 0 1
-AG(66) 1 2
-AG(68) 2 3
-AG(72) 2 3
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 1 2
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 0 1
-AG(68) 1 2
-AG(69) 1 2
-AG(69) 0 1
-AG(72) 2 3
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 1 2
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 0 1
-AG(68) 0 1
-AG(69) 1 2
-AG(69) 0 1
-AG(66) 0 1
-AG(68) 2 3
-AG(72) 2 3
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 1 2
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 0 1
-AG(68) 1 2
-AG(69) 1 2
-AG(69) 0 1
-AG(72) 2 3
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 1 2
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 0 1
-AG(68) 0 1
-AG(69) 1 2
-AG(69) 0 1
-AG(60) 0 1
-AG(62) 1 2
-AG(62) 0 1
-AG(59) 1 2
-AG(60) 2 3
-AG(66) 1 2
-AG(68) 2 3
-AG(72) 2 3
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 1 2
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 0 1
-AG(68) 1 2
-AG(69) 1 2
-AG(69) 0 1
-AG(72) 2 3
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(72) 1 2
-AG(73) 1 2
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-AG(73) 0 1
-AG(74) 0 1
-AG(75) 1 2
-AG(75) 0 1
-AG(78) 1 2
-AG(78) 0 1
-
-
 // // Bubble-sort:
 // // Maybe it's hard to move from low-level to high-level.
 // // Easier to see the high-level first, and then move to the low-level.
@@ -474,3 +256,35 @@ TODO:
 4. The problem is, you probably want separate animations, because these ones are not in dependency order.
     UNLESS YOU SET TO THE END STATE FIRST (SO THE DEPENDENCY ORDER DOES NOT MATTER, and THEN YOU CAN JUST PLAY A EASE-IN ANIMATION )
 
+function ack(m, n) {
+    if (m === 0) {
+        return n + 1
+    }
+
+    if (n === 0) {
+        return ack((m - 1), 1);
+    }
+
+    if (m !== 0 && n !== 0) {
+        return ack((m - 1), ack(m, (n - 1)))
+    }
+}
+
+const y = ack(3, 4);
+
+
+
+
+[X] For chunking, get the start and the end 
+
+[ ] Transitions should not start from the post-condition and 
+    then work backwards, they should describe the change.
+
+[ ] Transitions should not contain items that do not change,
+    representation will handle that.
+
+[ ] Visualize scopes
+[ ] Create hard scopes, not just block scopes. Might need to define a global scope.
+
+Notes:
+  - Do abstractions before granularity 

@@ -1,6 +1,6 @@
 //@ts-check
 
-import { duration } from '../../animation/animation'
+import { currentAbstraction, duration } from '../../animation/animation'
 import { AnimationGraph, instanceOfAnimationGraph } from '../../animation/graph/AnimationGraph'
 import { AnimationNode } from '../../animation/primitive/AnimationNode'
 import { remap } from '../../utilities/math'
@@ -107,9 +107,9 @@ export default class Timeline {
     }
 
     updateAnimationGraph(animation: AnimationGraph, start: number, total_duration: number) {
-        const { vertices } = animation.abstractions[animation.currentAbstractionIndex]
+        const { vertices } = currentAbstraction(animation)
 
-        const { isParallel, parallelStarts } = animation.abstractions[animation.currentAbstractionIndex]
+        const { isParallel, parallelStarts } = currentAbstraction(animation)
 
         for (let i = 0; i < vertices.length; i++) {
             let child = vertices[i]
@@ -132,6 +132,10 @@ export default class Timeline {
                     start = this.updateAnimationNode(child, start, total_duration)
                 }
             }
+        }
+
+        if (isParallel) {
+            start += duration(animation)
         }
 
         return start

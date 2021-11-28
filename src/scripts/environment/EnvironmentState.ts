@@ -1,4 +1,5 @@
 import { ConcreteDataState, PrototypicalDataState, Transform } from './data/DataState'
+import { ConcretePath, PrototypicalPath } from './data/path/path'
 
 export enum AccessorType {
     ID = 'ID',
@@ -54,6 +55,9 @@ export interface PrototypicalEnvironmentState {
     // Variable name bindings
     scope: PrototypicalScope[]
 
+    // Paths
+    paths: { [id: string]: PrototypicalPath }
+
     // Storage data
     memory: (PrototypicalDataState | null)[]
 
@@ -72,6 +76,9 @@ export interface ConcreteEnvironmentState {
 
     // Variable name bindings
     scope: ConcreteScope[]
+
+    // Concrete paths
+    paths: { [id: string]: ConcretePath }
 
     // Storage data
     memory: (ConcreteDataState | null)[]

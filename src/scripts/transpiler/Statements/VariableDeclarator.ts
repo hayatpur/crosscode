@@ -6,7 +6,6 @@ import { AnimationContext } from '../../animation/primitive/AnimationNode'
 import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation'
 import { moveAndPlaceAnimation } from '../../animation/primitive/Data/MoveAndPlaceAnimation'
 import { AccessorType } from '../../environment/EnvironmentState'
-import { clone } from '../../utilities/objects'
 import { RootViewState } from '../../view/ViewState'
 import { Compiler, getNodeData } from '../Compiler'
 
@@ -32,8 +31,6 @@ export function VariableDeclarator(ast: ESTree.VariableDeclarator, view: RootVie
         addVertex(graph, place, { nodeData: getNodeData(ast) })
         apply(place, view)
     }
-
-    console.log(clone(view), register)
 
     // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier
     const bind = bindAnimation((ast.id as ESTree.Identifier).name, register)

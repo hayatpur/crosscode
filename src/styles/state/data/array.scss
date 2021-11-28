@@ -1,11 +1,13 @@
 /** Array style used for computing layout **/
 .data-array-i {
     display: flex;
-    min-height: 50px;
+    min-height: 40px;
 }
 
-.data-array-i>*:not(last-child) {
-    margin-right: 2px;
+.data-array-i>*:not(last-child) {}
+
+.data-array-i>* {
+    margin-left: -1px;
 }
 
 .data-array-brace {
@@ -25,6 +27,10 @@
     border-left: none;
 }
 
+.data.array-item {
+    margin-left: -1px;
+}
+
 .data.first-array-item {
     border-radius: 7px 0px 0px 7px;
 }
@@ -38,7 +44,7 @@
     background: none;
     position: absolute;
     font-size: 12px;
-    opacity: 0.2;
+    opacity: 0.5;
     margin-left: 8px;
     margin-top: 6px;
 }

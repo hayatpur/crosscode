@@ -20,8 +20,8 @@ export function ReturnStatement(ast: ESTree.ReturnStatement, view: RootViewState
     // Make sure the memory this register is pointing at doesn't get destroyed
     // when popping scopes
     const ret = returnStatementAnimation(context.returnData)
-    apply(ret, view)
     addVertex(graph, ret, { nodeData: getNodeData(ast) })
+    apply(ret, view)
 
     // TODO: Does this need a move and place?
     // const place = moveAndPlaceAnimation(register, context.returnData.register);

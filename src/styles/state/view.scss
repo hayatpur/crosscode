@@ -10,10 +10,22 @@
     padding-left: 15px;
     border-width: 1px;
     border-style: solid;
-    border-image: linear-gradient(to bottom, #3f3f3f, rgba(0, 0, 0, 0)) 1 100%;
+    border-image: linear-gradient(to bottom, var(--color-2), rgba(0, 0, 0, 0)) 1 100%;
     margin-bottom: 15px;
     margin-top: 15px;
     border-right: none;
+}
+
+.leaf-view-i,
+.leaf-view {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    transform: scale(1);
+    transform-origin: top left;
+    margin-bottom: 15px;
+    margin-top: 15px;
+    padding-top: 20px;
 }
 
 .view.is-root {
@@ -26,7 +38,8 @@
     left: 650px;
 }
 
-.view {
+.view,
+.leaf-view {
     position: absolute;
 }
 
@@ -51,11 +64,30 @@
 .view-label-edge {
     width: 5px;
     height: 1px;
-    background: #494949;
+    background: var(--color-2);
 }
 
 .view-label-text {
-    font-size: 12px;
+    font-size: 14px;
     margin-left: 5px;
-    color: #737373;
+    color: var(--color-4);
+}
+
+.leaf-view-label {
+    position: absolute;
+    top: -8px;
+    left: 0px;
+    display: flex;
+    align-items: center;
+    height: 14px;
+    background: var(--color-0);
+    z-index: 1;
+    padding: 5px;
+    margin-left: 5px;
+    margin-top: 4px;
+}
+
+.leaf-view-label-text {
+    font-size: 14px;
+    color: var(--color-3);
 }

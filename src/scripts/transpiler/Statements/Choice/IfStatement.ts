@@ -4,7 +4,7 @@ import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/A
 import { addVertex } from '../../../animation/graph/graph'
 import { AnimationContext, ControlOutput, ControlOutputData } from '../../../animation/primitive/AnimationNode'
 import { consumeDataAnimation } from '../../../animation/primitive/Data/ConsumeDataAnimation'
-import { DataState } from '../../../environment/data/DataState'
+import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
 import { AccessorType } from '../../../environment/EnvironmentState'
 import { RootViewState } from '../../../view/ViewState'
@@ -20,7 +20,7 @@ export function IfStatement(ast: ESTree.IfStatement, view: RootViewState, contex
     addVertex(graph, test, { nodeData: getNodeData(ast.test) })
 
     // @TODO: Add a probe test animation
-    const testData = resolvePath(view.environment, testRegister, null) as DataState
+    const testData = resolvePath(view.environment, testRegister, null) as PrototypicalDataState
     const testValue = testData.value as boolean
 
     // Consume testData

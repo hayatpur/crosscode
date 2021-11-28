@@ -6,7 +6,7 @@ import { AnimationContext } from '../animation/primitive/AnimationNode'
 import { copyDataAnimation } from '../animation/primitive/Data/CopyDataAnimation'
 import { copyReferenceAnimation } from '../animation/primitive/Data/CopyReferenceAnimation'
 import { findVariableAnimation } from '../animation/primitive/Data/FindVariableAnimation'
-import { DataState, DataType } from '../environment/data/DataState'
+import { DataType, PrototypicalDataState } from '../environment/data/DataState'
 import { resolvePath } from '../environment/environment'
 import { AccessorType } from '../environment/EnvironmentState'
 import { RootViewState } from '../view/ViewState'
@@ -21,7 +21,11 @@ export function Identifier(ast: ESTree.Identifier, view: RootViewState, context:
         addVertex(graph, reference, { nodeData: getNodeData(ast) })
         apply(reference, view)
     } else {
-        const data = resolvePath(view.environment, [{ type: AccessorType.Symbol, value: ast.name }], null) as DataState
+        const data = resolvePath(
+            view.environment,
+            [{ type: AccessorType.Symbol, value: ast.name }],
+            null
+        ) as PrototypicalDataState
 
         if (data.type == DataType.Array) {
             // Create a reference to it

@@ -4,8 +4,6 @@ import { AnimationGraph, createAnimationGraph } from '../../animation/graph/Anim
 import { addVertex } from '../../animation/graph/graph'
 import { AnimationContext } from '../../animation/primitive/AnimationNode'
 import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation'
-import { groupEndAnimation } from '../../animation/primitive/Group/GroupEndAnimation'
-import { groupStartAnimation } from '../../animation/primitive/Group/GroupStartAnimation'
 import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
 import { RootViewState } from '../../view/ViewState'
@@ -13,10 +11,6 @@ import { Compiler, getNodeData } from '../Compiler'
 
 export function FunctionCall(ast: ESTree.FunctionDeclaration, view: RootViewState, context: AnimationContext) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
-
-    const startGroup = groupStartAnimation(getNodeData(ast), graph.id)
-    addVertex(graph, startGroup, { nodeData: getNodeData(ast) })
-    apply(startGroup, view)
 
     // Create a scope @TODO: HARD SCOPE
     const createScope = createScopeAnimation()
@@ -41,10 +35,6 @@ export function FunctionCall(ast: ESTree.FunctionDeclaration, view: RootViewStat
     const popScope = popScopeAnimation()
     addVertex(graph, popScope, { nodeData: getNodeData(ast) })
     apply(popScope, view)
-
-    const endGroup = groupEndAnimation(graph.id)
-    addVertex(graph, endGroup, { nodeData: getNodeData(ast) })
-    apply(endGroup, view)
 
     return graph
 }

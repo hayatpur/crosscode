@@ -1,29 +1,29 @@
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor'
 
 export class Editor {
     // Singleton
-    static instance: Editor;
+    static instance: Editor
 
-    monaco: monaco.editor.IStandaloneCodeEditor;
-    onSelectionUpdate: Set<() => void>;
-    onChangeContent: Set<() => void>;
-    spacings: WeakMap<object, any>;
-    parent: HTMLElement;
-    dragSelections: HTMLDivElement[] = [];
-    lenses: { [id: string]: monaco.IDisposable } = {};
+    monaco: monaco.editor.IStandaloneCodeEditor
+    onSelectionUpdate: Set<() => void>
+    onChangeContent: Set<() => void>
+    spacings: WeakMap<object, any>
+    parent: HTMLElement
+    dragSelections: HTMLDivElement[] = []
+    lenses: { [id: string]: monaco.IDisposable } = {}
 
     constructor() {
         // Singleton
-        Editor.instance = this;
+        Editor.instance = this
 
         // @ts-ignore
-        monaco.editor.defineTheme('atom', getDarkTheme());
+        monaco.editor.defineTheme('atom', getDarkTheme())
         // @ts-ignore
-        monaco.editor.defineTheme('github', getLightTheme());
+        monaco.editor.defineTheme('github', getLightTheme())
 
-        Editor.instance = this;
+        Editor.instance = this
 
-        this.parent = document.getElementById(`editor`);
+        this.parent = document.getElementById(`editor`)
 
         this.monaco = monaco.editor.create(this.parent, {
             value: '',
@@ -37,16 +37,16 @@ export class Editor {
                 vertical: 'hidden',
             },
             overviewRulerBorder: false,
-            fontSize: 20,
+            fontSize: 18,
             contextmenu: false,
             mouseWheelScrollSensitivity: 0,
-            lineHeight: 38,
+            lineHeight: 30,
             selectOnLineNumbers: false,
             letterSpacing: -0.5,
             codeLens: true,
             dragAndDrop: false,
-            theme: 'atom',
-            // fontFamily: 'Noto Sans Mono',
+            theme: 'github',
+            fontFamily: 'Noto Sans Mono',
             quickSuggestions: {
                 other: false,
                 comments: false,
@@ -59,40 +59,40 @@ export class Editor {
             suggestOnTriggerCharacters: false,
             acceptSuggestionOnEnter: 'off',
             tabCompletion: 'off',
-        });
+        })
 
-        const editor = this;
+        const editor = this
 
         // Callbacks
-        this.onSelectionUpdate = new Set();
-        this.onChangeContent = new Set();
+        this.onSelectionUpdate = new Set()
+        this.onChangeContent = new Set()
 
         // Editor spacings
-        this.spacings = new WeakMap();
+        this.spacings = new WeakMap()
 
         // document.fonts.ready.then(() => monaco.editor.remeasureFonts());
 
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
-                monaco.editor.remeasureFonts();
-            }, 2000);
-        });
+                monaco.editor.remeasureFonts()
+            }, 2000)
+        })
 
         // Fetch default text
         fetch(`./src/scripts/editor/files/default.js`)
             .then((response) => response.text())
             .then((data) => {
-                editor.monaco.getModel().setValue(data);
+                editor.monaco.getModel().setValue(data)
 
                 editor.monaco.getModel().onDidChangeContent((event) => {
-                    editor.onChangeContent.forEach((callback) => callback());
-                    editor.monaco.updateOptions({ codeLens: false });
-                    editor.monaco.updateOptions({ codeLens: true });
-                });
+                    editor.onChangeContent.forEach((callback) => callback())
+                    editor.monaco.updateOptions({ codeLens: false })
+                    editor.monaco.updateOptions({ codeLens: true })
+                })
 
-                editor.onChangeContent.forEach((callback) => callback());
-                monaco.editor.remeasureFonts();
-            });
+                editor.onChangeContent.forEach((callback) => callback())
+                monaco.editor.remeasureFonts()
+            })
     }
 
     error(errors: { message: string; line: number }[]) {
@@ -110,94 +110,94 @@ export class Editor {
                     message: error.message,
                     severity: monaco.MarkerSeverity.Error,
                 },
-            ]);
+            ])
         }
     }
 
     getValue() {
-        return this.monaco.getValue();
+        return this.monaco.getValue()
     }
 
     getSelection() {
-        return this.monaco.getSelection();
+        return this.monaco.getSelection()
     }
 
     getSelectedText() {
-        return this.monaco.getModel().getValueInRange(this.monaco.getSelection());
+        return this.monaco.getModel().getValueInRange(this.monaco.getSelection())
     }
 
     getSelectedTextBoundingBox() {
-        const selection = document.getElementsByClassName('cslr selected-text');
-        return selection.length > 0 ? selection[0].getBoundingClientRect() : null;
+        const selection = document.getElementsByClassName('cslr selected-text')
+        return selection.length > 0 ? selection[0].getBoundingClientRect() : null
     }
 
     computeBoundingBoxForSection() {
-        const selection = document.getElementsByClassName('cslr selected-text');
-        return selection.length > 0 ? selection[0].getBoundingClientRect() : null;
+        const selection = document.getElementsByClassName('cslr selected-text')
+        return selection.length > 0 ? selection[0].getBoundingClientRect() : null
     }
 
     computeBoundingBox(ln: number) {
-        const lines = document.body.getElementsByClassName('view-lines')[0];
-        const line = lines.children[ln - 1];
+        const lines = document.body.getElementsByClassName('view-lines')[0]
+        const line = lines.children[ln - 1]
 
-        return line?.children[0].getBoundingClientRect();
+        return line?.children[0].getBoundingClientRect()
     }
 
     computeCharWidth(ln = 1) {
-        const lines = document.body.getElementsByClassName('view-lines')[0];
-        const line = lines.children[ln - 1]?.children[0] as HTMLElement;
+        const lines = document.body.getElementsByClassName('view-lines')[0]
+        const line = lines.children[ln - 1]?.children[0] as HTMLElement
 
         if (line == null) {
-            return 0;
+            return 0
         }
 
-        return line.getBoundingClientRect().width / line.innerText.length;
+        return line.getBoundingClientRect().width / line.innerText.length
     }
 
     updateDragSelection(selection: { x: number; y: number; x2: number; y2: number }) {
-        this.dragSelections.forEach((sel) => sel.remove());
-        this.dragSelections = [];
+        this.dragSelections.forEach((sel) => sel.remove())
+        this.dragSelections = []
 
-        const lines = document.body.getElementsByClassName('view-lines')[0].children;
+        const lines = document.body.getElementsByClassName('view-lines')[0].children
 
-        const min_y = Math.min(selection.y, selection.y2);
-        const max_y = Math.max(selection.y, selection.y2);
+        const min_y = Math.min(selection.y, selection.y2)
+        const max_y = Math.max(selection.y, selection.y2)
 
         for (let i = 0; i < lines.length; i++) {
-            const bbox = lines[i].children[0].getBoundingClientRect();
-            if (bbox.width < 5 && bbox.height < 5) continue;
+            const bbox = lines[i].children[0].getBoundingClientRect()
+            if (bbox.width < 5 && bbox.height < 5) continue
 
             if (bbox.y > min_y && bbox.y + bbox.height < max_y) {
-                const sel = document.createElement('div');
-                sel.classList.add('editor-selection');
-                document.body.append(sel);
+                const sel = document.createElement('div')
+                sel.classList.add('editor-selection')
+                document.body.append(sel)
 
-                sel.style.left = `${bbox.x - 5}px`;
-                sel.style.top = `${bbox.y - 5}px`;
-                sel.style.width = `${bbox.width + 10}px`;
-                sel.style.height = `${bbox.height + 10}px`;
+                sel.style.left = `${bbox.x - 5}px`
+                sel.style.top = `${bbox.y - 5}px`
+                sel.style.width = `${bbox.width + 10}px`
+                sel.style.height = `${bbox.height + 10}px`
 
-                sel.setAttribute('_index', i.toString());
+                sel.setAttribute('_index', i.toString())
 
-                this.dragSelections.push(sel);
+                this.dragSelections.push(sel)
             }
         }
     }
 
     setSpacingAtLine(line: number, spacing: number, origin: object) {
         if (!this.spacings.has(origin)) {
-            this.spacings.set(origin, {});
+            this.spacings.set(origin, {})
         }
 
         if (this.spacings.get(origin)[line] != null && this.spacings.get(origin)[line].spacing == spacing) {
-            return;
+            return
         }
 
-        const editor = this;
+        const editor = this
 
         this.monaco.changeViewZones(function (changeAccessor) {
-            const domElement = document.createElement('div');
-            domElement.classList.add('section-spacing');
+            const domElement = document.createElement('div')
+            domElement.classList.add('section-spacing')
 
             // let space = 0;
 
@@ -208,7 +208,7 @@ export class Editor {
             // }
 
             if (editor.spacings.get(origin)[line] != null) {
-                changeAccessor.removeZone(editor.spacings.get(origin)[line].id);
+                changeAccessor.removeZone(editor.spacings.get(origin)[line].id)
             }
 
             const id = changeAccessor.addZone({
@@ -216,28 +216,28 @@ export class Editor {
                 heightInPx: spacing,
                 domNode: domElement,
                 suppressMouseDown: true,
-            });
+            })
 
-            editor.spacings.get(origin)[line] = { id, spacing };
-        });
+            editor.spacings.get(origin)[line] = { id, spacing }
+        })
     }
 
     getLineDom(ln: number) {
-        const lines = document.body.getElementsByClassName('view-lines')[0];
-        return lines.children[ln - 1];
+        const lines = document.body.getElementsByClassName('view-lines')[0]
+        return lines.children[ln - 1]
     }
 
     clearLens(id: string) {
-        this.lenses[id]?.dispose();
+        this.lenses[id]?.dispose()
     }
 
     clearLenses() {
-        Object.values(this.lenses).forEach((lens) => lens.dispose());
-        this.lenses = {};
+        Object.values(this.lenses).forEach((lens) => lens.dispose())
+        this.lenses = {}
     }
 
     createLens(label: string, line: number, id: string) {
-        this.lenses[id]?.dispose();
+        this.lenses[id]?.dispose()
 
         // return;
         const disposable = monaco.languages.registerCodeLensProvider('javascript', {
@@ -259,41 +259,41 @@ export class Editor {
                         },
                     ],
                     dispose: () => {},
-                };
+                }
             },
 
             resolveCodeLens: function (model, codeLens, token) {
-                return codeLens;
+                return codeLens
             },
-        });
+        })
 
-        this.lenses[id] = disposable;
+        this.lenses[id] = disposable
     }
 
     static dispose() {
-        const editor = Editor.instance;
+        const editor = Editor.instance
 
         for (const { id } of Object.values(editor.spacings)) {
             editor.monaco.changeViewZones(function (changeAccessor) {
-                changeAccessor.removeZone(id);
-            });
+                changeAccessor.removeZone(id)
+            })
         }
     }
 
     getMaxWidth() {
-        let maxWidth = 0;
+        let maxWidth = 0
         for (const lineEl of document.querySelectorAll('.view-line')) {
-            const tokens = lineEl.children[0].children;
+            const tokens = lineEl.children[0].children
             if (tokens.length > 0) {
-                const last = tokens[tokens.length - 1];
-                const bbox = last.getBoundingClientRect();
-                maxWidth = Math.max(maxWidth, bbox.right);
+                const last = tokens[tokens.length - 1]
+                const bbox = last.getBoundingClientRect()
+                maxWidth = Math.max(maxWidth, bbox.right)
             } else {
-                const bbox = lineEl.getBoundingClientRect();
-                maxWidth = Math.max(maxWidth, bbox.left);
+                const bbox = lineEl.getBoundingClientRect()
+                maxWidth = Math.max(maxWidth, bbox.left)
             }
         }
-        return maxWidth;
+        return maxWidth
     }
 }
 
@@ -376,7 +376,7 @@ function getLightTheme() {
             'editorCursor.foreground': '#000000',
             'editorWhitespace.foreground': '#BFBFBF',
         },
-    };
+    }
 }
 
 function getDarkTheme() {
@@ -747,5 +747,5 @@ function getDarkTheme() {
             'editorIndentGuide.activeBackground': '#464c55',
             'editor.selectionHighlightBorder': '#bbccf51b',
         },
-    };
+    }
 }

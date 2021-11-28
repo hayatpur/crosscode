@@ -1,8 +1,7 @@
 import { Editor } from './scripts/editor/Editor'
 import { Executor } from './scripts/executor/Executor'
-import './styles/dark.scss'
-
-// import './styles/main.scss';
+// import './styles/dark.scss'
+import './styles/main.scss'
 
 // @ts-ignore
 self.MonacoEnvironment = {
