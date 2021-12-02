@@ -1,6 +1,6 @@
 import { queryAnimationGraph } from '../animation/graph/graph'
 import { DataRenderer } from '../environment/data/DataRenderer'
-import { AbstractionIndicator } from './AbstractionIndicator'
+import { AbstractionIndicator } from './abstraction/AbstractionIndicator'
 import { GroupViewRenderer } from './GroupViewRenderer'
 import { RootViewState } from './ViewState'
 
