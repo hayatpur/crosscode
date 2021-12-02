@@ -1,5 +1,8 @@
 import { replacePrototypicalDataWith } from '../../../environment/data/data'
 import { instanceOfPrototypicalData, PrototypicalDataState } from '../../../environment/data/DataState'
+import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
+import { Accessor, accessorsToString, instanceOfPrototypicalEnvironment } from '../../../environment/EnvironmentState'
+import { updateRootViewLayout } from '../../../environment/layout'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -8,18 +11,15 @@ import {
     PrototypicalPath,
     removePrototypicalPath,
     seekPrototypicalPath,
-} from '../../../environment/data/path/path'
+} from '../../../path/path'
 import {
     createPrototypicalMovementPath,
     PrototypicalMovementPath,
-} from '../../../environment/data/path/primitives/PrototypicalMovementPath'
+} from '../../../path/prototypical/PrototypicalMovementPath'
 import {
     createPrototypicalPlacementPath,
     PrototypicalPlacementPath,
-} from '../../../environment/data/path/primitives/PrototypicalPlacementPath'
-import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString, instanceOfPrototypicalEnvironment } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
+} from '../../../path/prototypical/PrototypicalPlacementPath'
 import { remap } from '../../../utilities/math'
 import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
@@ -56,7 +56,6 @@ function onBegin(animation: MoveAndPlaceAnimation, view: RootViewState, options:
     // Create placement path
     const placement: PrototypicalPath = createPrototypicalPlacementPath(
         animation.inputSpecifier,
-        animation.outputSpecifier,
         `Placement${animation.id}`
     )
     addPrototypicalPath(environment, placement)
@@ -78,7 +77,6 @@ function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: num
         const movement = lookupPrototypicalPathById(environment, `Movement${animation.id}`) as PrototypicalMovementPath
         seekPrototypicalPath(movement, environment, t)
     }
-    // TODO BEGIN PLACE AND END MOVEMENT
     // Place
     else if (tn >= 0.8 || animation.noMove) {
         let t: number
@@ -93,6 +91,17 @@ function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: num
             environment,
             `Placement${animation.id}`
         ) as PrototypicalPlacementPath
+
+        if (!placement.meta.isPlaying) {
+            beginPrototypicalPath(placement, environment)
+
+            const movement = lookupPrototypicalPathById(
+                environment,
+                `Movement${animation.id}`
+            ) as PrototypicalMovementPath
+            endPrototypicalPath(movement, environment)
+        }
+
         seekPrototypicalPath(placement, environment, t)
     }
 

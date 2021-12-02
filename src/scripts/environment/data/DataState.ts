@@ -1,6 +1,6 @@
 import * as CSS from 'csstype'
+import { PrototypicalPath } from '../../path/path'
 import { Accessor } from '../EnvironmentState'
-import { PrototypicalPath } from './path/path'
 
 export enum DataType {
     Literal = 'Literal',
@@ -13,6 +13,8 @@ export enum DataType {
 
 export interface TransformStyles extends CSS.Properties {
     elevation?: number
+    xoffset?: number
+    yoffset?: number
 }
 
 export interface Transform {

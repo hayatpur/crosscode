@@ -22,6 +22,7 @@ export function createGroupView(): GroupViewState {
         lastActive: 0,
         children: [],
         label: '',
+        representation: { granularity: null },
     }
 }
 
@@ -41,6 +42,7 @@ export function createLeafViewState(): LeafViewState {
             f: (env: PrototypicalEnvironmentState) => clone(env),
         },
         label: '',
+        representation: { granularity: null },
     }
 }
 
@@ -50,6 +52,7 @@ export function createRootView(): RootViewState {
         _type: 'RootViewState',
         environment: createPrototypicalEnvironment(),
         cursor: createCursorState(),
+        animation: null,
     }
 
     // Create a new view

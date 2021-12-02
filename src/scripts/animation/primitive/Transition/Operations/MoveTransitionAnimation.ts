@@ -1,3 +1,5 @@
+import { resolvePath } from '../../../../environment/environment'
+import { AccessorType } from '../../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     endPrototypicalPath,
@@ -5,10 +7,8 @@ import {
     PrototypicalPath,
     removePrototypicalPath,
     seekPrototypicalPath,
-} from '../../../../environment/data/path/path'
-import { createPrototypicalGlobalMovementPath } from '../../../../environment/data/path/primitives/PrototypicalGobalMovementPath'
-import { resolvePath } from '../../../../environment/environment'
-import { AccessorType } from '../../../../environment/EnvironmentState'
+} from '../../../../path/path'
+import { createPrototypicalGlobalMovementPath } from '../../../../path/prototypical/PrototypicalGobalMovementPath'
 import { getCurrentLeafView, getLastActiveLeafView } from '../../../../view/view'
 import { RootViewState } from '../../../../view/ViewState'
 import { duration } from '../../../animation'

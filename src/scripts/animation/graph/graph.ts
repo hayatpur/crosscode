@@ -680,6 +680,25 @@ export interface AnimationTraceChain {
     children?: [operator: AnimationTraceOperator, child: AnimationTraceChain][]
 }
 
+export function queryAnimationGraph(
+    animation: AnimationGraph | AnimationNode,
+    query: (animation: AnimationGraph | AnimationNode) => boolean
+): (AnimationGraph | AnimationNode)[] {
+    if (instanceOfAnimationNode(animation) && query(animation)) {
+        return [animation]
+    }
+
+    if (instanceOfAnimationGraph(animation)) {
+        const acc = []
+        for (const vertex of currentAbstraction(animation).vertices) {
+            acc.push(...queryAnimationGraph(vertex, query))
+        }
+        return acc
+    }
+
+    return []
+}
+
 export function getTrace(
     animation: AnimationGraph | AnimationNode,
     flow: AnimationTraceChain[] = null

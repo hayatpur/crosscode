@@ -1,5 +1,6 @@
 import acorn = require('acorn')
 import { bake, duration, reset, seek } from '../animation/animation'
+import { abstract } from '../animation/graph/abstraction/Abstractor'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
 import { animationToString, computeAllGraphEdges } from '../animation/graph/graph'
 import { Editor } from '../editor/Editor'
@@ -98,10 +99,11 @@ export class Executor {
         computeAllGraphEdges(this.animation)
 
         // Switch to transition level of abstraction
-        // abstract(this.animation)
+        abstract(this.animation)
 
         // Initialize a view of animation
         this.rootView = createRootView()
+        this.rootView.animation = this.animation
 
         // Initialize a renderer
         this.rootViewRenderer = new RootViewRenderer()
@@ -148,6 +150,7 @@ export class Executor {
         seek(this.animation, this.rootView, this.time)
 
         // Render
+        this.rootView.animation = this.animation
         this.rootViewRenderer.setState(this.rootView)
     }
 }

@@ -1,5 +1,8 @@
 import { clonePrototypicalData, createData, replacePrototypicalDataWith } from '../../../environment/data/data'
 import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
+import { Accessor } from '../../../environment/EnvironmentState'
+import { updateRootViewLayout } from '../../../environment/layout'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -7,15 +10,10 @@ import {
     lookupPrototypicalPathById,
     removePrototypicalPath,
     seekPrototypicalPath,
-} from '../../../environment/data/path/path'
-import {
-    createPrototypicalElevationPath,
-    PrototypicalElevationPath,
-} from '../../../environment/data/path/primitives/PrototypicalElevationPath'
-import { createPrototypicalInstantMovementPath } from '../../../environment/data/path/primitives/PrototypicalInstantMovementPath'
-import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
-import { Accessor } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
+} from '../../../path/path'
+import { createPrototypicalCreatePath } from '../../../path/prototypical/PrototypicalCreatePath'
+import { PrototypicalElevationPath } from '../../../path/prototypical/PrototypicalElevationPath'
+import { createPrototypicalInstantMovementPath } from '../../../path/prototypical/PrototypicalInstantMovementPath'
 import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
@@ -102,7 +100,11 @@ function onBegin(animation: GetMember, view: RootViewState, options: AnimationRu
     replacePrototypicalDataWith(outputRegister, createData(DataType.ID, copy.id, `${animation.id}_OutputRegister`))
 
     // Create elevation path
-    const elevation = createPrototypicalElevationPath(location, 1, `Elevation${animation.id}`)
+    const elevation = createPrototypicalCreatePath(
+        location,
+        getMemoryLocation(environment, original).foundLocation,
+        `Elevation${animation.id}`
+    )
     addPrototypicalPath(environment, elevation)
     beginPrototypicalPath(elevation, environment)
 }
@@ -118,6 +120,8 @@ function onSeek(animation: GetMember, view: RootViewState, time: number, options
     ) as PrototypicalDataState
     const elevation = lookupPrototypicalPathById(environment, `Elevation${animation.id}`) as PrototypicalElevationPath
     seekPrototypicalPath(elevation, environment, t)
+
+    updateRootViewLayout(view)
 }
 
 function onEnd(animation: GetMember, view: RootViewState, options: AnimationRuntimeOptions) {

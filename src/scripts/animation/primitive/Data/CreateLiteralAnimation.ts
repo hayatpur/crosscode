@@ -1,5 +1,8 @@
 import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
 import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { addDataAt, resolvePath } from '../../../environment/environment'
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
+import { updateRootViewLayout } from '../../../environment/layout'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -7,14 +10,8 @@ import {
     lookupPrototypicalPathById,
     removePrototypicalPath,
     seekPrototypicalPath,
-} from '../../../environment/data/path/path'
-import {
-    createPrototypicalCreatePath,
-    PrototypicalCreatePath,
-} from '../../../environment/data/path/primitives/PrototypicalCreatePath'
-import { addDataAt, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
+} from '../../../path/path'
+import { createPrototypicalCreatePath, PrototypicalCreatePath } from '../../../path/prototypical/PrototypicalCreatePath'
 import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationDataFlags, AnimationRuntimeOptions } from '../../graph/AnimationGraph'

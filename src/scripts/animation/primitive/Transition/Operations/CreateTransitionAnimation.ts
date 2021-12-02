@@ -1,3 +1,5 @@
+import { resolvePath } from '../../../../environment/environment'
+import { AccessorType } from '../../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -5,13 +7,11 @@ import {
     lookupPrototypicalPathById,
     removePrototypicalPath,
     seekPrototypicalPath,
-} from '../../../../environment/data/path/path'
+} from '../../../../path/path'
 import {
     createPrototypicalCreatePath,
     PrototypicalCreatePath,
-} from '../../../../environment/data/path/primitives/PrototypicalCreatePath'
-import { resolvePath } from '../../../../environment/environment'
-import { AccessorType } from '../../../../environment/EnvironmentState'
+} from '../../../../path/prototypical/PrototypicalCreatePath'
 import { RootViewState } from '../../../../view/ViewState'
 import { duration } from '../../../animation'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'

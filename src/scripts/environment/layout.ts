@@ -1,3 +1,5 @@
+import { beginConcretePath, ConcretePath, createConcretePath, endConcretePath, seekConcretePath } from '../path/path'
+import { getPathFromEnvironmentRepresentation } from '../representation/representation'
 import { reflow } from '../utilities/dom'
 import { getRelativeLocation } from '../utilities/math'
 import { clone } from '../utilities/objects'
@@ -5,7 +7,6 @@ import { getFlattenedChildren } from '../view/view'
 import { instanceOfLeafView, LeafViewState, RootViewState } from '../view/ViewState'
 import { createConcreteData } from './data/data'
 import { ConcreteDataState, DataType, instanceOfConcreteData, PrototypicalDataState, Transform } from './data/DataState'
-import { ConcretePath, createConcretePath } from './data/path/path'
 import {
     createConcreteEnvironment,
     createConcreteIdentifier,
@@ -200,10 +201,20 @@ export function propagateEnvironmentPaths(environment: ConcreteEnvironmentState)
 }
 
 export function propagatePath(path: ConcretePath, environment: ConcreteEnvironmentState) {
-    // const { onBegin, onSeek, onEnd } = getPathFromEnvironmentRepresentation(path.prototype, environment.representation)
-    // path.onBegin = onBegin
-    // path.onSeek = onSeek
-    // path.onEnd = onEnd
+    Object.assign(path, getPathFromEnvironmentRepresentation(environment.representation, path.prototype))
+
+    // Sync the timings of prototype path and concrete path
+    if (!path.meta.isPlaying && path.prototype.meta.isPlaying) {
+        beginConcretePath(path, environment)
+    }
+
+    if (!path.meta.hasPlayed && path.prototype.meta.hasPlayed) {
+        endConcretePath(path, environment)
+    }
+
+    if (path.prototype.meta.isPlaying) {
+        seekConcretePath(path, environment, path.prototype.meta.t)
+    }
 }
 
 export function propagateEnvironmentScopes(environment: ConcreteEnvironmentState) {

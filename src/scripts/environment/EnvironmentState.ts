@@ -1,5 +1,6 @@
+import { ConcretePath, PrototypicalPath } from '../path/path'
+import { EnvironmentRepresentation } from '../representation/EnvironmentRepresentation'
 import { ConcreteDataState, PrototypicalDataState, Transform } from './data/DataState'
-import { ConcretePath, PrototypicalPath } from './data/path/path'
 
 export enum AccessorType {
     ID = 'ID',
@@ -83,6 +84,9 @@ export interface ConcreteEnvironmentState {
     // Storage data
     memory: (ConcreteDataState | null)[]
     transform: EnvironmentTransform
+
+    // Representation
+    representation: EnvironmentRepresentation
 }
 
 export interface EnvironmentPositionModifier {

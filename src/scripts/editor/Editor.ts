@@ -1,3 +1,4 @@
+import * as ESTree from 'estree'
 import * as monaco from 'monaco-editor'
 
 export class Editor {
@@ -141,6 +142,34 @@ export class Editor {
         const line = lines.children[ln - 1]
 
         return line?.children[0].getBoundingClientRect()
+    }
+
+    computeBoundingBoxForLoc(location: ESTree.SourceLocation) {
+        const start = Editor.instance.computeBoundingBox(location.start.line)
+        const end = Editor.instance.computeBoundingBox(location.end.line)
+
+        if (start == null || end == null)
+            return {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+            }
+
+        const charWidth = Editor.instance.computeCharWidth(location.start.line)
+
+        let y = start.y
+        let x = start.x + location.start.column * charWidth
+
+        let height = end.y + end.height - start.y
+        let width = (location.end.column - location.start.column) * charWidth
+
+        for (let line = location.start.line; line < location.end.line; line++) {
+            const lineBbox = Editor.instance.computeBoundingBox(line)
+            width = Math.max(width, lineBbox.width)
+        }
+
+        return { x: x - 5, y: y - 2.5, width: width + 10, height: height + 5 }
     }
 
     computeCharWidth(ln = 1) {

@@ -91,3 +91,9 @@
     font-size: 14px;
     color: var(--color-3);
 }
+
+.abstraction-indicator {
+    position: absolute;
+    border: 1.5px dashed var(--s-color-1);
+    border-radius: 5px;
+}

@@ -1,4 +1,6 @@
 import { PrototypicalDataState } from '../../../environment/data/DataState'
+import { getMemoryLocation, resolvePath } from '../../../environment/environment'
+import { Accessor } from '../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -6,13 +8,11 @@ import {
     lookupPrototypicalPathById,
     removePrototypicalPath,
     seekPrototypicalPath,
-} from '../../../environment/data/path/path'
+} from '../../../path/path'
 import {
     createPrototypicalElevationPath,
     PrototypicalElevationPath,
-} from '../../../environment/data/path/primitives/PrototypicalElevationPath'
-import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { Accessor } from '../../../environment/EnvironmentState'
+} from '../../../path/prototypical/PrototypicalElevationPath'
 import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'

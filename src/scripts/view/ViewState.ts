@@ -1,6 +1,8 @@
 import { CursorState } from '../animation/Cursor'
+import { AnimationGraph } from '../animation/graph/AnimationGraph'
 import { Transform } from '../environment/data/DataState'
 import { ConcreteEnvironmentState, PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { ViewRepresentation } from '../representation/ViewRepresentation'
 
 export interface EnvironmentViewMapping {
     f: (env: PrototypicalEnvironmentState) => PrototypicalEnvironmentState
@@ -19,6 +21,8 @@ export interface LeafViewState {
 
     transform: Transform
     mapping: EnvironmentViewMapping
+
+    representation: ViewRepresentation
 }
 
 // A group view is a collection of leaf views
@@ -33,6 +37,8 @@ export interface GroupViewState {
 
     transform: GroupViewTransform
     children: (GroupViewState | LeafViewState)[]
+
+    representation: ViewRepresentation
 }
 
 // The root view contains all views as well as the true environment
@@ -40,6 +46,7 @@ export interface RootViewState extends Omit<GroupViewState, '_type'> {
     _type: 'RootViewState'
     environment: PrototypicalEnvironmentState // The true program state / environment
     cursor: CursorState
+    animation: AnimationGraph
 }
 
 export interface GroupViewTransform extends Transform {

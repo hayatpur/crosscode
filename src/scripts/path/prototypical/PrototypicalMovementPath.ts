@@ -1,7 +1,7 @@
-import { Accessor, PrototypicalEnvironmentState } from '../../../EnvironmentState'
+import { Accessor, PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
 import { createPrototypicalPath, PrototypicalPath } from '../path'
 
-export interface PrototypicalPlacementPath extends PrototypicalPath {
+export interface PrototypicalMovementPath extends PrototypicalPath {
     from: Accessor[]
     to: Accessor[]
     id: string
@@ -21,14 +21,10 @@ function onEnd(path: PrototypicalPath, environment: PrototypicalEnvironmentState
  * @param to if is an environment state, then moves data to the next free spot
  * @param id
  */
-export function createPrototypicalPlacementPath(
-    from: Accessor[],
-    to: Accessor[],
-    id: string
-): PrototypicalPlacementPath {
+export function createPrototypicalMovementPath(from: Accessor[], to: Accessor[], id: string): PrototypicalMovementPath {
     return {
         ...createPrototypicalPath(id),
-        type: 'PrototypicalPlacementPath',
+        type: 'PrototypicalMovementPath',
         from,
         to,
         id,

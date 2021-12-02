@@ -39,6 +39,7 @@ export function createConcreteEnvironment(prototype: PrototypicalEnvironmentStat
             positionModifiers: [],
             classList: ['environment-i'],
         },
+        representation: {},
     }
 }
 
@@ -340,17 +341,6 @@ export function resolvePath(
     let resolution = resolve(root, path[0], srcId, parent, options)
     let ret = resolvePath(root, path.slice(1), srcId, resolution, options)
 
-    // if (instanceOfData(ret) && ret.type == DataType.ID && !options.noResolvingId) {
-    //     ret = resolve(
-    //         root,
-    //         {
-    //             type: AccessorType.ID,
-    //             value: ret.value as string,
-    //         },
-    //         srcId
-    //     ) as DataState;
-    // }
-
     return ret
 }
 
@@ -460,6 +450,10 @@ export function getTrueId(environment: PrototypicalEnvironmentState, id: string)
     if (register.type == DataType.ID) {
         return getTrueId(environment, register.value as string)
     }
+}
+
+export function lookupDataByIdInConcreteEnvironment(environment: ConcreteEnvironmentState, id: string) {
+    return flattenedConcreteEnvironmentMemory(environment).find((data) => data.prototype.id == id)
 }
 
 // export function getEmptyPosition(view: RootViewState, id: string) {

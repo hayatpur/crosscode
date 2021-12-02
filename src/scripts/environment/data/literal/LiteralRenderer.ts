@@ -1,4 +1,4 @@
-import { getNumericalValueOfStyle, lerp, sigmoid } from '../../../utilities/math'
+import { getNumericalValueOfStyle, lerp } from '../../../utilities/math'
 import { clone } from '../../../utilities/objects'
 import { DataRenderer } from '../DataRenderer'
 import { ConcreteDataState, TransformStyles } from '../DataState'
@@ -15,17 +15,23 @@ export class LiteralRenderer extends DataRenderer {
         this.element.style.width = `${data.transform.rendered.width}px`
         this.element.style.height = `${data.transform.rendered.height}px`
 
-        const top = data.transform.rendered.y - 5 * z
-        const left = data.transform.rendered.x - 5 * z
+        const top = data.transform.rendered.y - 5 * z + (data.transform.styles.yoffset ?? 0)
+        const left = data.transform.rendered.x + 5 * z + (data.transform.styles.xoffset ?? 0)
 
         this.element.style.top = `${lerp(getNumericalValueOfStyle(this.element.style.top, top), top, 1)}px`
         this.element.style.left = `${lerp(getNumericalValueOfStyle(this.element.style.left, left), left, 1)}px`
 
-        this.element.style.opacity = `${
-            parseFloat(data.transform.styles.opacity?.toString() || '1') * sigmoid(-5 * (z - 2))
-        }`
+        this.element.style.opacity = `${parseFloat(data.transform.styles.opacity?.toString() || '1')}`
 
-        // this.element.style.boxShadow = getCSSElevation(z)
+        // Offset
+        // this.element.style.transform = `translate(${data.transform.styles.xoffset ?? 0}px, ${
+        //     data.transform.styles.yoffset ?? 0
+        // }px)`
+
+        this.element.style.boxShadow = `-0.5px 1px 0px 0.5px ${
+            z > 0.5 ? '#a8bec8' : 'var(--color-2)'
+        }, ${getCSSElevation(z)}`
+        this.element.style.background = z > 0.5 ? `var(--s-color-0)` : `var(--color-1)`
 
         // Set value
         if (typeof data.value == 'boolean') {
@@ -66,34 +72,34 @@ export class LiteralRenderer extends DataRenderer {
 }
 
 export function getCSSElevation(depth: number, floating = false) {
-    const color = floating ? '--floating-shadow-color' : '--shadow-color'
+    const color = floating ? '--floating-shadow-color' : '--color-shadow'
     const opacityMultiplier = floating ? 1 : 1
     const ELEVATIONS = {
         extraSmall: `
-          0.4px 0.8px 0.8px hsl(var(${color}) / ${0 * opacityMultiplier})
+          -0.4px 0.8px 0.8px hsl(var(${color}) / ${0 * opacityMultiplier})
         `,
         small: `
-          0.5px 1px 1px hsl(var(${color}) / ${0.7 * opacityMultiplier})
+          -0.5px 1px 1px hsl(var(${color}) / ${0.7 * opacityMultiplier})
         `,
         medium: `
-          1px 2px 2px hsl(var(${color}) / ${0.333 * opacityMultiplier}),
-          2px 4px 4px hsl(var(${color}) / ${0.333 * opacityMultiplier}),
-          3px 6px 6px hsl(var(${color}) / ${0.333 * opacityMultiplier})
+          -1px 2px 2px hsl(var(${color}) / ${0.333 * opacityMultiplier}),
+          -2px 4px 4px hsl(var(${color}) / ${0.333 * opacityMultiplier}),
+          -3px 6px 6px hsl(var(${color}) / ${0.333 * opacityMultiplier})
         `,
         large: `
-          1px 2px 2px hsl(var(${color}) / ${0.2 * opacityMultiplier}),
-          2px 4px 4px hsl(var(${color}) / ${0.2 * opacityMultiplier}),
-          4px 8px 8px hsl(var(${color}) / ${0.2 * opacityMultiplier}),
-          8px 16px 16px hsl(var(${color}) / ${0.2 * opacityMultiplier}),
-          16px 32px 32px hsl(var(${color}) / ${0.2 * opacityMultiplier})
+          -1px 2px 2px hsl(var(${color}) / ${0.2 * opacityMultiplier}),
+          -2px 4px 4px hsl(var(${color}) / ${0.2 * opacityMultiplier}),
+          -4px 8px 8px hsl(var(${color}) / ${0.2 * opacityMultiplier}),
+          -8px 16px 16px hsl(var(${color}) / ${0.2 * opacityMultiplier}),
+          -16px 32px 32px hsl(var(${color}) / ${0.2 * opacityMultiplier})
         `,
     }
 
-    if (depth < 0.2) {
+    if (depth < 0.1) {
         return ELEVATIONS.extraSmall
-    } else if (depth < 0.5) {
+    } else if (depth < 0.2) {
         return ELEVATIONS.small
-    } else if (depth < 1.2) {
+    } else if (depth < 0.6) {
         return ELEVATIONS.medium
     } else {
         return ELEVATIONS.large

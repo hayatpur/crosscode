@@ -288,3 +288,5 @@ const y = ack(3, 4);
 
 Notes:
   - Do abstractions before granularity 
+
+[ ] ALL animations should be post-effects, i.e. the state has already changed, the animation is just an offset

@@ -70,7 +70,7 @@ export function applyTransition(chunk: AnimationChunk, config: AbstractOptions) 
     graph.abstractions[graph.currentAbstractionIndex].isParallel = true
     graph.abstractions[graph.currentAbstractionIndex].parallelStarts = [
         0,
-        ...[...Array(transitions.length).keys()].map((_) => 25),
+        ...[...Array(transitions.length).keys()].map((_) => 4),
     ]
 
     // Remove all nodes in chunk from parent

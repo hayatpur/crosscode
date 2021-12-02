@@ -1,5 +1,8 @@
 import { clonePrototypicalData, createData, replacePrototypicalDataWith } from '../../../environment/data/data'
 import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
+import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
+import { updateRootViewLayout } from '../../../environment/layout'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -7,15 +10,12 @@ import {
     lookupPrototypicalPathById,
     removePrototypicalPath,
     seekPrototypicalPath,
-} from '../../../environment/data/path/path'
+} from '../../../path/path'
 import {
     createPrototypicalElevationPath,
     PrototypicalElevationPath,
-} from '../../../environment/data/path/primitives/PrototypicalElevationPath'
-import { createPrototypicalInstantMovementPath } from '../../../environment/data/path/primitives/PrototypicalInstantMovementPath'
-import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
+} from '../../../path/prototypical/PrototypicalElevationPath'
+import { createPrototypicalInstantMovementPath } from '../../../path/prototypical/PrototypicalInstantMovementPath'
 import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
