@@ -183,7 +183,6 @@ export function seek(
 
             if (instanceOfAnimationNode(vertex)) {
                 console.log(`[${~~time}ms] ${vertex.name}`)
-                console.log(clone(view))
             }
 
             vertex.hasPlayed = true

@@ -3,9 +3,9 @@ export class Ticker {
     static instance: Ticker;
 
     // List of tick callbacks
-    private callbacks: ((dt?: number) => void)[] = [];
-    private namedCallbacks: { [id: string]: (dt?: number) => void } = {};
+    private callbacks: { [id: string]: (dt?: number) => void } = {};
     private time = 0;
+    private currId = 0;
 
     static _initialize() {
         if (Ticker.instance) return;
@@ -14,10 +14,10 @@ export class Ticker {
 
     constructor() {
         const timer = this;
+
         function tick(time: number) {
             const dt = time - timer.time;
-            timer.callbacks.forEach((callback) => callback(dt));
-            Object.values(timer.namedCallbacks).forEach((callback) => callback(dt));
+            Object.values(timer.callbacks).forEach((callback) => callback(dt));
             timer.time = time;
             requestAnimationFrame(tick);
         }
@@ -26,15 +26,17 @@ export class Ticker {
     }
 
     registerTick(callback: (dt?: number) => void) {
-        this.callbacks.push(callback);
+        this.currId++;
+        return this.registerTickFrom(callback, `Ticker_${this.currId}`)
     }
 
     registerTickFrom(callback: (dt?: number) => void, from: string) {
-        this.namedCallbacks[from] = callback;
+        this.callbacks[from] = callback;
+        return from;
     }
 
     removeTickFrom(from: string) {
-        delete this.namedCallbacks[from];
+        delete this.callbacks[from];
     }
 }
 

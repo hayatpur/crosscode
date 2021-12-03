@@ -1,5 +1,6 @@
 import { AnimationGraph } from '../../animation/graph/AnimationGraph'
 import { AnimationNode } from '../../animation/primitive/AnimationNode'
+import { Ticker } from '../../utilities/Ticker'
 import { AbstractionIndicator } from './AbstractionIndicator'
 
 export class AbstractionControls {
@@ -10,6 +11,8 @@ export class AbstractionControls {
     decreaseAbstraction: HTMLDivElement
 
     indicator: AbstractionIndicator
+
+    tickerId: string
 
     constructor(indicator: AbstractionIndicator) {
         this.indicator = indicator
@@ -28,9 +31,18 @@ export class AbstractionControls {
 
         this.element.appendChild(this.increaseAbstraction)
         this.element.appendChild(this.decreaseAbstraction)
+
+        this.tickerId = Ticker.instance.registerTick(() => {
+            // Position it next to the indicator
+            // const bbox = indicator.element.getBoundingClientRect();
+            // this.element.style.left = `${bbox.x}px`
+            // this.element.style.top = `${bbox.y + bbox.height}px`
+        })
     }
 
-    setState(chunk: AnimationGraph | AnimationNode) {}
+    setState(chunk: AnimationGraph | AnimationNode) {
+
+    }
 
     hide() {
         this.element.classList.add('hidden')
@@ -42,5 +54,6 @@ export class AbstractionControls {
 
     destroy() {
         this.element.remove()
+        Ticker.instance.removeTickFrom(this.tickerId)
     }
 }

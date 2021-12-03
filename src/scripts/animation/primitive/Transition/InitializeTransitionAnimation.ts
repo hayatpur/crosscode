@@ -13,7 +13,6 @@ export interface InitializeTransitionAnimation extends AnimationNode {
 function onBegin(animation: InitializeTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
     replaceEnvironmentWith(view.environment, animation.transitionCondition)
 
-    console.log(clone(view))
 
     updateRootViewLayout(view)
 }

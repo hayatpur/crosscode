@@ -13,10 +13,13 @@ export class AbstractionIndicator {
 
         document.body.appendChild(this.element)
 
-        this.element.addEventListener('mouseover', this.mouseover)
-        this.element.addEventListener('mouseout', this.mouseout)
+        this.element.addEventListener('mouseover', this.mouseover.bind(this))
+        this.element.addEventListener('mouseout', this.mouseout.bind(this))
 
+        // console.log("Creating controls...")
         this.controls = new AbstractionControls(this)
+        this.element.appendChild(this.controls.element)
+        // console.log(this.controls);
     }
 
     setState(chunk: AnimationGraph | AnimationNode) {
@@ -35,11 +38,15 @@ export class AbstractionIndicator {
         this.controls.show()
     }
 
-    mouseout() {}
+    mouseout() {
+        this.controls.hide();
+    }
 
     destroy() {
         this.element.remove()
         this.controls.destroy()
         this.controls = null
+
+        console.log("Destroying controls...")
     }
 }

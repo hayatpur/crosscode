@@ -1,0 +1,18 @@
+.abstraction-indicator {
+    position: absolute;
+    border: 1.5px dashed var(--s-color-1);
+    border-radius: 5px;
+    display: flex;
+}
+
+.abstraction-controls {
+    display: flex;
+}
+
+.abstraction-controls.hidden {
+    display: none;
+}
+
+.abstraction-controls .button {
+    margin: 0 5px;
+}
