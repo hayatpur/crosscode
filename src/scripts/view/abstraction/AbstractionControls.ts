@@ -1,5 +1,6 @@
 import { AnimationGraph } from '../../animation/graph/AnimationGraph'
 import { AnimationNode } from '../../animation/primitive/AnimationNode'
+import { Executor } from '../../executor/Executor'
 import { Ticker } from '../../utilities/Ticker'
 import { AbstractionIndicator } from './AbstractionIndicator'
 
@@ -14,6 +15,8 @@ export class AbstractionControls {
 
     tickerId: string
 
+    chunkId: string
+
     constructor(indicator: AbstractionIndicator) {
         this.indicator = indicator
 
@@ -22,26 +25,27 @@ export class AbstractionControls {
         this.element.classList.add('hidden')
 
         this.increaseAbstraction = document.createElement('div')
-        this.increaseAbstraction.classList.add('button')
-        this.increaseAbstraction.innerHTML = 'UP'
+        this.increaseAbstraction.classList.add('abstraction-button')
+        this.increaseAbstraction.innerHTML = '<ion-icon name="arrow-up"></ion-icon>'
 
         this.decreaseAbstraction = document.createElement('div')
-        this.decreaseAbstraction.classList.add('button')
-        this.decreaseAbstraction.innerHTML = 'DN'
+        this.decreaseAbstraction.classList.add('abstraction-button')
+        this.decreaseAbstraction.innerHTML = '<ion-icon name="arrow-down"></ion-icon>'
 
         this.element.appendChild(this.increaseAbstraction)
         this.element.appendChild(this.decreaseAbstraction)
 
-        this.tickerId = Ticker.instance.registerTick(() => {
-            // Position it next to the indicator
-            // const bbox = indicator.element.getBoundingClientRect();
-            // this.element.style.left = `${bbox.x}px`
-            // this.element.style.top = `${bbox.y + bbox.height}px`
+        this.increaseAbstraction.addEventListener('click', () => {
+            Executor.instance.increaseAbstraction(this.chunkId)
+        })
+
+        this.decreaseAbstraction.addEventListener('click', () => {
+            Executor.instance.decreaseAbstraction(this.chunkId)
         })
     }
 
     setState(chunk: AnimationGraph | AnimationNode) {
-
+        this.chunkId = chunk.id
     }
 
     hide() {

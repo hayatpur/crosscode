@@ -1,23 +1,13 @@
 import { clone } from '../../../utilities/objects'
 import { RootViewState } from '../../../view/ViewState'
-import { currentAbstraction } from '../../animation'
-import { AnimationNode } from '../../primitive/AnimationNode'
+import { AnimationNode, ChunkNodeData, instanceOfAnimationNode } from '../../primitive/AnimationNode'
 import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
 import { transitionCreateArray } from '../../primitive/Transition/Operations/CreateArrayTransitionAnimation'
 import { transitionCreate } from '../../primitive/Transition/Operations/CreateTransitionAnimation'
 import { transitionMove } from '../../primitive/Transition/Operations/MoveTransitionAnimation'
 import { AnimationData, AnimationGraph, createAbstraction, createAnimationGraph } from '../AnimationGraph'
-import {
-    addVertex,
-    addVertexAt,
-    AnimationTraceChain,
-    AnimationTraceOperator,
-    getChunkTrace,
-    getUnionOfLocations,
-    removeVertexAt,
-    traceChainsToString,
-} from '../graph'
-import { AbstractOptions, AnimationChunk } from './Abstractor'
+import { addVertex, AnimationTraceChain, AnimationTraceOperator, getUnionOfLocations } from '../graph'
+import { AbstractionSelection, instanceOfAbstractionSelectionSingular } from './Abstractor'
 
 // export interface Trace {
 //     operation: TraceOperation;
@@ -31,59 +21,65 @@ import { AbstractOptions, AnimationChunk } from './Abstractor'
 //     NoChangeMove = 'NoChangeMove',
 // }
 
-export function applyTransition(chunk: AnimationChunk, config: AbstractOptions) {
-    if (chunk.nodes.length == 0) {
+/**
+ *
+ * @param chunk
+ * @returns
+ */
+export function applyTransition(parent: AnimationGraph | AnimationNode, selection: AbstractionSelection) {
+    if (instanceOfAnimationNode(parent)) {
         return
     }
-
-    const trace = getChunkTrace(chunk)
-    traceChainsToString(trace)
+    // const trace = getChunkTrace(chunk)
 
     // Get the animations
-    const transitions = getTransitionsFromTrace(trace)
+    // const transitions = getTransitionsFromTrace(trace)
 
-    // Create new level of abstraction in the parent that's the same as existing one
-    const transitionAbstraction = createAbstraction()
-    transitionAbstraction.spec = config
-    chunk.parent.abstractions.push(clone(currentAbstraction(chunk.parent)))
-    chunk.parent.currentAbstractionIndex = chunk.parent.abstractions.length - 1
-
-    // Begin transition graph
-    const nodeData = {
-        location: getUnionOfLocations(chunk.nodes.map((v) => v.nodeData.location)),
-        type: 'Chunk',
-    }
-    const graph: AnimationGraph = createAnimationGraph(nodeData)
+    // Create new level of abstraction
+    const abstraction = createAbstraction()
+    const originalVertices = parent.abstractions[0].vertices
+    const vertices = []
 
     // Instantiates all entities
-    const initializeTransition = initializeTransitionAnimation(
-        clone(chunk.nodes[chunk.nodes.length - 1].postcondition.environment)
-    )
-    addVertex(graph, initializeTransition, { nodeData })
+    for (let i = 0; i < selection.length; i++) {
+        const current = selection[i]
 
-    // All transitions
-    for (const transition of transitions) {
-        addVertex(graph, transition, { nodeData: { ...nodeData, type: transition._name } })
-    }
+        if (instanceOfAbstractionSelectionSingular(current)) {
+            const node = originalVertices.find((vertex) => vertex.id === current.id)
+            vertices.push(node)
 
-    // Make it parallel
-    graph.abstractions[graph.currentAbstractionIndex].isParallel = true
-    graph.abstractions[graph.currentAbstractionIndex].parallelStarts = [
-        0,
-        ...[...Array(transitions.length).keys()].map((_) => 4),
-    ]
+            if (current.selection != null) {
+                applyTransition(node, current.selection)
+            }
+        } else {
+            // Chunk
+            const nodes = originalVertices.filter((vertex) => current.indexOf(vertex.id) != -1)
 
-    // Remove all nodes in chunk from parent
-    const vertices = currentAbstraction(chunk.parent).vertices
-    const location = vertices.findIndex((node) => node.id == chunk.nodes[0].id)
-    for (let i = vertices.length - 1; i >= 0; i--) {
-        if (i >= location && i < location + chunk.nodes.length) {
-            removeVertexAt(chunk.parent, i)
+            if (nodes.length == 1 && instanceOfAnimationNode(nodes[0])) {
+                vertices.push(nodes[0])
+            } else {
+                // Begin transition graph
+                const nodeData: ChunkNodeData = {
+                    location: getUnionOfLocations(nodes.map((v) => v.nodeData.location)),
+                    type: 'Chunk',
+                    selection: current,
+                }
+                const graph: AnimationGraph = createAnimationGraph(nodeData)
+
+                const init = initializeTransitionAnimation(clone(nodes[nodes.length - 1].postcondition.environment))
+                addVertex(graph, init, { nodeData: { ...nodeData, type: 'ChunkApply' } })
+
+                vertices.push(graph)
+            }
         }
     }
 
-    // Add transition graph to parent
-    addVertexAt(chunk.parent, location, graph, { nodeData })
+    abstraction.vertices = vertices
+    abstraction.about.selection = selection
+
+    // Add it to parent
+    parent.abstractions.push(abstraction)
+    parent.currentAbstractionIndex = parent.abstractions.length - 1
 }
 
 export interface TransitionAnimationNode extends AnimationNode {

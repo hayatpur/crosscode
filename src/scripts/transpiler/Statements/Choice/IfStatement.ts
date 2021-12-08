@@ -25,7 +25,7 @@ export function IfStatement(ast: ESTree.IfStatement, view: RootViewState, contex
 
     // Consume testData
     const consume = consumeDataAnimation(testRegister)
-    addVertex(graph, consume, { nodeData: getNodeData(ast.test) })
+    addVertex(test, consume, { nodeData: getNodeData(ast.test) })
     apply(consume, view)
 
     const controlOutput: ControlOutputData = { output: ControlOutput.None }

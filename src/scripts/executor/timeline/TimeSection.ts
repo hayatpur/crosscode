@@ -28,7 +28,7 @@ export default class TimeSection {
         const multiplier = bbox.width / total
 
         let n_start = start * multiplier
-        let n_duration = (duration + delay) * multiplier
+        let n_duration = duration * multiplier
 
         const domElement = document.createElement('div')
         domElement.classList.add('time-section')

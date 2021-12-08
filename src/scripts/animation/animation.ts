@@ -88,13 +88,13 @@ export function begin(
     view: RootViewState,
     options: AnimationRuntimeOptions = {}
 ) {
-    view.cursor.location = animation.nodeData.location
-
     if (options.baking) {
         animation.precondition = clone(view)
     }
 
     if (instanceOfAnimationNode(animation)) {
+        view.cursor.location = animation.nodeData.location
+        view.cursor.label = animation.name
         animation.onBegin(animation, view, options)
     }
 }

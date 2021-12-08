@@ -97,12 +97,14 @@ export default class Timeline {
         this.sections = []
     }
 
-    updateSections() {
+    destroySections() {
         document.querySelectorAll('.time-section').forEach((section) => section.remove())
         this.sections = []
+    }
 
+    updateSections() {
+        this.destroySections()
         const total_duration = duration(this.executor.animation)
-
         this.updateAnimationGraph(this.executor.animation, 0, total_duration)
     }
 
@@ -149,7 +151,7 @@ export default class Timeline {
             animation.name,
             start,
             duration(animation),
-            0,
+            animation.delay,
             total_duration,
             yOffset
         )

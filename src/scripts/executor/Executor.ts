@@ -1,8 +1,10 @@
 import acorn = require('acorn')
-import { bake, duration, reset, seek } from '../animation/animation'
-import { abstract } from '../animation/graph/abstraction/Abstractor'
-import { AnimationGraph } from '../animation/graph/AnimationGraph'
-import { animationToString, computeAllGraphEdges } from '../animation/graph/graph'
+import { bake, currentAbstraction, duration, reset, seek } from '../animation/animation'
+import { AbstractionSelection, generateCurrentSelection } from '../animation/graph/abstraction/Abstractor'
+import { applyTransition } from '../animation/graph/abstraction/Transition'
+import { AnimationGraph, instanceOfAnimationGraph } from '../animation/graph/AnimationGraph'
+import { animationToString, computeAllGraphEdges, queryAnimationGraph } from '../animation/graph/graph'
+import { ChunkNodeData } from '../animation/primitive/AnimationNode'
 import { Editor } from '../editor/Editor'
 import { Compiler } from '../transpiler/Compiler'
 import { clone } from '../utilities/objects'
@@ -23,7 +25,7 @@ export class Executor {
     paused = true
 
     // Global speed of the animation (higher is faster)
-    speed = 1 / 64
+    speed = 1 / 128
 
     // Animation
     animation: AnimationGraph
@@ -61,6 +63,8 @@ export class Executor {
                 this.time = 0
             }
         })
+
+        window['_executor'] = this
     }
 
     reset() {
@@ -99,7 +103,7 @@ export class Executor {
         computeAllGraphEdges(this.animation)
 
         // Switch to transition level of abstraction
-        abstract(this.animation)
+        applyTransition(this.animation, [[...this.animation.abstractions[0].vertices.map((v) => v.id)]])
 
         // Initialize a view of animation
         this.rootView = createRootView()
@@ -115,14 +119,15 @@ export class Executor {
         console.log('[Executor] Finished compiling...')
         console.log('\tAnimation', this.animation)
 
-        const [animationString, animationUrl] = animationToString(this.animation, 0, { first: false }, true)
         document.getElementById('nomnoml-button').onclick = () => {
+            const [animationString, animationUrl] = animationToString(this.animation, 0, { first: false }, true)
+            console.log(animationString)
             window.open(animationUrl, '_blank')
         }
     }
 
     tick(dt: number = 10) {
-        if (this.animation == null || (dt > 0 && this.paused)) return
+        if (this.animation == null || this.paused) return
 
         if (this.time > duration(this.animation)) {
             // Loop
@@ -136,7 +141,7 @@ export class Executor {
             return
         }
 
-        this.time += dt * this.speed
+        if (!this.paused) this.time += dt * this.speed
         this.timeline.seek(this.time)
 
         this.render()
@@ -152,5 +157,109 @@ export class Executor {
         // Render
         this.rootView.animation = this.animation
         this.rootViewRenderer.setState(this.rootView)
+    }
+
+    increaseAbstraction(chunkId: string) {
+        if (this.animation == null) return
+
+        // Increase abstraction
+        // abstract(this.animation, { heuristic: 'A', selection: null, spec: null })
+
+        this.time = 0
+        this.rootViewRenderer.destroy()
+        replaceRootViewWith(this.rootView, createRootView())
+        this.rootViewRenderer = new RootViewRenderer()
+        this.timeline.updateSections()
+    }
+
+    abstract(selection: AbstractionSelection) {
+        if (this.animation == null) return
+
+        // Reset
+        this.time = 0
+        this.rootViewRenderer.destroy()
+        replaceRootViewWith(this.rootView, createRootView())
+        this.rootViewRenderer = new RootViewRenderer()
+        this.timeline.destroySections()
+
+        // Apply abstraction
+        applyTransition(this.animation, selection)
+
+        this.timeline.updateSections()
+    }
+
+    decreaseAbstraction(chunkId: string) {
+        if (this.animation == null) return
+
+        const chunk = queryAnimationGraph(this.animation, (v) => v.id == chunkId) // Get chunk
+        const parent = queryAnimationGraph(
+            this.animation,
+            (v) => instanceOfAnimationGraph(v) && currentAbstraction(v).vertices.some((c) => c.id == chunkId)
+        ) // Get chunk parent
+
+        const parentSelection = generateCurrentSelection(parent)
+        const chunkSelection = (chunk.nodeData as ChunkNodeData).selection
+
+        const newSelection: AbstractionSelection = []
+
+        for (const part of parentSelection) {
+            if (JSON.stringify(part) == JSON.stringify(chunkSelection)) {
+                // Break up chunk
+                if (chunkSelection.length == 1) {
+                    const nodeId = chunkSelection[0]
+                    const node = (parent as AnimationGraph).abstractions[0].vertices.find((v) => v.id == nodeId)
+
+                    // No longer chunk the node
+                    if (instanceOfAnimationGraph(node)) {
+                        console.log([node.abstractions[0].vertices.map((v) => v.id)])
+
+                        newSelection.push({
+                            id: nodeId,
+                            selection: node.abstractions[0].vertices.map((v) => [v.id]),
+                        })
+                    } else {
+                        newSelection.push({
+                            id: nodeId,
+                            selection: null,
+                        })
+                    }
+                } else {
+                    chunkSelection.forEach((c) => newSelection.push([c]))
+                }
+            } else {
+                newSelection.push(part)
+            }
+        }
+
+        // Reset
+        this.time = 0
+        this.rootViewRenderer.destroy()
+        replaceRootViewWith(this.rootView, createRootView())
+        this.rootViewRenderer = new RootViewRenderer()
+        this.timeline.destroySections()
+
+        console.log(newSelection)
+
+        applyTransition(parent, newSelection)
+
+        this.timeline.updateSections()
+
+        // this.paused = false
+        this.render()
+
+        // console.log(parent, selection, chunk)
+        // const decreased = decreaseAbstraction(selection, parent);
+
+        // console.log('Chunk', chunk)
+        // console.log('Parent', parent)
+
+        // Decrease abstraction
+        // abstract(this.animation, { heuristic: 'B', selection: null, spec: null })
+
+        // this.time = 0
+        // this.rootViewRenderer.destroy()
+        // replaceRootViewWith(this.rootView, createRootView())
+        // this.rootViewRenderer = new RootViewRenderer()
+        // this.timeline.updateSections()
     }
 }

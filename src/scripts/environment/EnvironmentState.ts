@@ -1,5 +1,6 @@
 import { ConcretePath, PrototypicalPath } from '../path/path'
 import { EnvironmentRepresentation } from '../representation/EnvironmentRepresentation'
+import { stringHashCode } from '../utilities/string'
 import { ConcreteDataState, PrototypicalDataState, Transform } from './data/DataState'
 
 export enum AccessorType {
@@ -15,11 +16,11 @@ export interface Accessor {
 }
 
 export function accessorToString(accessor: Accessor): string {
-    // if (accessor.type === AccessorType.Register) {
-    //     return `${accessor.type}(0x${stringHashCode(accessor.value as string)
-    //         .toString()
-    //         .substring(0, 6)})`;
-    // }
+    if (accessor.type === AccessorType.Register) {
+        return `${accessor.type}(0x${stringHashCode(accessor.value as string)
+            .toString()
+            .substring(0, 4)})`
+    }
     return `${accessor.type}(${accessor.value})`
 }
 

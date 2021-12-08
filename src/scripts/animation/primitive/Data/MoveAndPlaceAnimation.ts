@@ -62,6 +62,35 @@ function onBegin(animation: MoveAndPlaceAnimation, view: RootViewState, options:
 
     // Begin movement
     beginPrototypicalPath(movement, view.environment)
+
+    if (instanceOfPrototypicalEnvironment(to)) {
+        if (options.baking) {
+            computeReadAndWrites(
+                animation,
+                {
+                    location: getMemoryLocation(environment, from).foundLocation,
+                    id: from.id,
+                },
+                null
+            )
+        }
+    } else {
+        if (options.baking) {
+            computeReadAndWrites(
+                animation,
+                {
+                    location: getMemoryLocation(environment, from).foundLocation,
+                    id: from.id,
+                },
+                { location: getMemoryLocation(environment, to).foundLocation, id: to.id }
+            )
+        }
+    }
+
+    if (instanceOfPrototypicalData(to)) {
+        removeAt(environment, getMemoryLocation(environment, from).foundLocation)
+        replacePrototypicalDataWith(to, from, { frame: true, id: true })
+    }
 }
 
 function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
@@ -127,36 +156,6 @@ function onEnd(animation: MoveAndPlaceAnimation, view: RootViewState, options: A
     }) as PrototypicalDataState
     const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_EndTo`)
 
-    if (instanceOfPrototypicalEnvironment(to)) {
-        if (options.baking) {
-            computeReadAndWrites(
-                animation,
-                {
-                    location: getMemoryLocation(environment, input).foundLocation,
-                    id: input.id,
-                },
-                null
-            )
-        }
-    } else {
-        if (options.baking) {
-            computeReadAndWrites(
-                animation,
-                {
-                    location: getMemoryLocation(environment, input).foundLocation,
-                    id: input.id,
-                },
-                { location: getMemoryLocation(environment, to).foundLocation, id: to.id }
-            )
-        }
-
-        removeAt(environment, getMemoryLocation(environment, input).foundLocation)
-
-        if (instanceOfPrototypicalData(to)) {
-            replacePrototypicalDataWith(to, input, { frame: true, id: true })
-        }
-    }
-
     updateRootViewLayout(view)
 }
 
@@ -172,7 +171,7 @@ export function moveAndPlaceAnimation(
     options: AnimationOptions = {}
 ): MoveAndPlaceAnimation {
     return {
-        ...createAnimationNode(null, { ...options, duration: noMove ? 30 : 60 }),
+        ...createAnimationNode(null, { ...options, duration: noMove ? 10 : 20 }),
         _name: 'MoveAndPlaceAnimation',
 
         name: `Move data at ${accessorsToString(inputSpecifier)} onto ${accessorsToString(outputSpecifier)}`,

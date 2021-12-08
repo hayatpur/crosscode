@@ -158,8 +158,14 @@ export class Editor {
 
         const charWidth = Editor.instance.computeCharWidth(location.start.line)
 
-        let y = start.y
-        let x = start.x + location.start.column * charWidth
+        const min_y = Math.min(start.y, end.y)
+        const max_y = Math.max(start.y + start.height, end.y + end.height)
+
+        const min_x = Math.min(start.x, end.x)
+        const max_x = Math.max(start.x + start.width, end.x + end.width)
+
+        let y = min_y
+        let x = min_x + Math.min(location.start.column, location.end.column - 1) * charWidth
 
         let height = end.y + end.height - start.y
         let width = (location.end.column - location.start.column) * charWidth
@@ -169,7 +175,7 @@ export class Editor {
             width = Math.max(width, lineBbox.width)
         }
 
-        return { x: x - 5, y: y - 2.5, width: width + 10, height: height + 5 }
+        return { x: x, y: y, width: width, height: height }
     }
 
     computeCharWidth(ln = 1) {

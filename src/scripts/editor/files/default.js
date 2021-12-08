@@ -1,6 +1,7 @@
-let list = [1, 2, 3];
+let l = [1, 2, 3, 4];
 
-// swap!
-let temp = list[0];
-list[0] = list[2];
-list[2] = temp;
+if (true) {
+    let temp = l[0];
+    l[0] = l[3];
+    l[3] = temp;
+}

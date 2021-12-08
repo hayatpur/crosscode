@@ -13,7 +13,7 @@ export interface InitializeTransitionAnimation extends AnimationNode {
 function onBegin(animation: InitializeTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
     replaceEnvironmentWith(view.environment, animation.transitionCondition)
 
-
+    console.log(clone(view))
     updateRootViewLayout(view)
 }
 
@@ -22,7 +22,9 @@ function onSeek(
     view: RootViewState,
     time: number,
     options: AnimationRuntimeOptions
-) {}
+) {
+    updateRootViewLayout(view)
+}
 
 function onEnd(animation: InitializeTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
 
@@ -31,10 +33,10 @@ export function initializeTransitionAnimation(
     options: AnimationOptions = {}
 ): InitializeTransitionAnimation {
     return {
-        ...createAnimationNode(null, { ...options, duration: 2 }),
+        ...createAnimationNode(null, { ...options, duration: 20 }),
         _name: 'InitializeTransitionAnimation',
 
-        name: 'InitializeTransitionAnimation',
+        name: 'Transition',
 
         transitionCondition,
 

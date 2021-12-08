@@ -2,11 +2,16 @@ import { Easing } from 'eaz'
 import * as ESTree from 'estree'
 import { Accessor } from '../../environment/EnvironmentState'
 import { RootViewState } from '../../view/ViewState'
+import { AbstractionSelectionChunk } from '../graph/abstraction/Abstractor'
 import { AnimationData, AnimationRuntimeOptions } from '../graph/AnimationGraph'
 
 export interface NodeData {
     location: ESTree.SourceLocation
     type: string
+}
+
+export interface ChunkNodeData extends NodeData {
+    selection: AbstractionSelectionChunk
 }
 
 export enum AnimationPlayback {

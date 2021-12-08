@@ -1,5 +1,5 @@
 import { AnimationGraph } from '../../animation/graph/AnimationGraph'
-import { AnimationNode } from '../../animation/primitive/AnimationNode'
+import { AnimationNode, instanceOfAnimationNode } from '../../animation/primitive/AnimationNode'
 import { Editor } from '../../editor/Editor'
 import { AbstractionControls } from './AbstractionControls'
 
@@ -26,6 +26,12 @@ export class AbstractionIndicator {
         const loc = chunk.nodeData.location
         const bbox = Editor.instance.computeBoundingBoxForLoc(loc)
 
+        if (instanceOfAnimationNode(chunk)) {
+            this.element.classList.add('animation-node')
+        } else {
+            this.element.classList.remove('animation-node')
+        }
+
         this.element.style.left = `${bbox.x}px`
         this.element.style.top = `${bbox.y}px`
         this.element.style.width = `${bbox.width}px`
@@ -39,7 +45,7 @@ export class AbstractionIndicator {
     }
 
     mouseout() {
-        this.controls.hide();
+        this.controls.hide()
     }
 
     destroy() {
@@ -47,6 +53,6 @@ export class AbstractionIndicator {
         this.controls.destroy()
         this.controls = null
 
-        console.log("Destroying controls...")
+        console.log('Destroying controls...')
     }
 }

@@ -76,7 +76,7 @@ export function bindAnimation(
         ...createAnimationNode(null, options),
         _name: 'BindAnimation',
 
-        baseDuration: 5,
+        baseDuration: 20,
         name: `Bind Variable (${identifier}), with data at ${accessorsToString(existingMemorySpecifier ?? [])}`,
 
         // Attributes

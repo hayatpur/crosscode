@@ -1,7 +1,8 @@
+import { Editor } from '../editor/Editor'
 import { beginConcretePath, ConcretePath, createConcretePath, endConcretePath, seekConcretePath } from '../path/path'
 import { getPathFromEnvironmentRepresentation } from '../representation/representation'
 import { reflow } from '../utilities/dom'
-import { getRelativeLocation } from '../utilities/math'
+import { getRelativeLocation, lerp } from '../utilities/math'
 import { clone } from '../utilities/objects'
 import { getFlattenedChildren } from '../view/view'
 import { instanceOfLeafView, LeafViewState, RootViewState } from '../view/ViewState'
@@ -55,6 +56,10 @@ export function updateRootViewLayout(root: RootViewState) {
     // Propagate environment, now all the concrete entities have the correct prototype
     propagateRoot(root)
 
+    // Get old coordinates
+    let oldCoords = document.querySelector('.root-view-container')?.getBoundingClientRect()
+    // console.log(oldCoords)
+
     // Clear current temporary layout
     document.getElementById('temporary-layout').innerHTML = ''
 
@@ -62,6 +67,21 @@ export function updateRootViewLayout(root: RootViewState) {
     const rootViewContainer = document.createElement('div')
     rootViewContainer.classList.add('root-view-container')
     document.getElementById('temporary-layout').append(rootViewContainer)
+
+    const bbox = Editor.instance.computeBoundingBoxForLoc(root.cursor.location)
+
+    if (bbox.x != 0 && bbox.y != 0) {
+        if (oldCoords != null) {
+            // const x = lerp(oldCoords.x, bbox.x + bbox.width, 0.1)
+            const y = lerp(oldCoords.y, bbox.y, 0.1)
+
+            // rootViewContainer.style.left = `${x}px`
+            rootViewContainer.style.top = `${y}px`
+        } else {
+            // rootViewContainer.style.left = `${bbox.x + bbox.width}px`
+            rootViewContainer.style.top = `${bbox.y}px`
+        }
+    }
 
     // Update the view's layout
     updateLayout(root, rootViewContainer)

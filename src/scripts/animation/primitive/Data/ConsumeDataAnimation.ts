@@ -1,6 +1,7 @@
 import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
 import { Accessor } from '../../../environment/EnvironmentState'
+import { clone } from '../../../utilities/objects'
 import { RootViewState } from '../../../view/ViewState'
 import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
@@ -14,7 +15,9 @@ function onBegin(animation: ConsumeDataAnimation, view: RootViewState, options: 
 
     // Get data
     const data = resolvePath(environment, animation.register, `${animation.id}_Property`) as PrototypicalDataState
+
     const dataLocation = getMemoryLocation(environment, data).foundLocation
+    console.log(clone(environment), data, dataLocation)
 
     // Consume data
     removeAt(environment, getMemoryLocation(environment, data).foundLocation)

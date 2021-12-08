@@ -1,11 +1,14 @@
-import { queryAnimationGraph } from '../animation/graph/graph'
+import { queryAllAnimationGraph } from '../animation/graph/graph'
+import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
 import { DataRenderer } from '../environment/data/DataRenderer'
 import { AbstractionIndicator } from './abstraction/AbstractionIndicator'
 import { GroupViewRenderer } from './GroupViewRenderer'
+import { ViewCursorRenderer } from './ViewCursorRenderer'
 import { RootViewState } from './ViewState'
 
 export class RootViewRenderer extends GroupViewRenderer {
-    abstractionIndicators: { [id: string]: AbstractionIndicator } = {}
+    indicators: { [id: string]: AbstractionIndicator } = {}
+    cursor: ViewCursorRenderer
 
     constructor() {
         super()
@@ -13,35 +16,56 @@ export class RootViewRenderer extends GroupViewRenderer {
         DataRenderer.getStage().append(this.element)
         this.element.classList.add('is-root', 'root')
         this.labelElement.classList.add('is-root')
+
+        this.cursor = new ViewCursorRenderer()
     }
 
     setState(state: RootViewState) {
         super.setState(state)
 
-        const chunks = queryAnimationGraph(state.animation, (animation) => animation.nodeData.type == 'Chunk')
+        const chunks = queryAllAnimationGraph(state.animation, (animation) => animation.nodeData.type == 'Chunk')
+        const nodes = queryAllAnimationGraph(
+            state.animation,
+            (animation) => instanceOfAnimationNode(animation) && !animation.nodeData.type.startsWith('Chunk')
+        )
 
         // Hit test
         const hits = new Set()
 
         // Render chunks
-        for (const chunk of chunks) {
-            if (!(chunk.id in this.abstractionIndicators)) {
+        for (const chunk of [...chunks, ...nodes]) {
+            if (!(chunk.id in this.indicators)) {
                 const renderer = new AbstractionIndicator()
-                this.abstractionIndicators[chunk.id] = renderer
+                this.indicators[chunk.id] = renderer
             }
 
             hits.add(chunk.id)
-            this.abstractionIndicators[chunk.id].setState(chunk)
+            this.indicators[chunk.id].setState(chunk)
         }
 
-        // Remove chunks that are no longer in the view
-        for (const id of Object.keys(this.abstractionIndicators)) {
+        // Remove indicators that are no longer in the view
+        for (const id of Object.keys(this.indicators)) {
             if (!hits.has(id)) {
-                const renderer = this.abstractionIndicators[id]
+                const renderer = this.indicators[id]
                 renderer.destroy()
                 renderer.element.remove()
-                delete this.abstractionIndicators[id]
+                delete this.indicators[id]
             }
         }
+
+        // Render cursor
+        this.cursor.setState(state.cursor)
+    }
+
+    destroy() {
+        super.destroy()
+
+        for (const id of Object.keys(this.indicators)) {
+            const renderer = this.indicators[id]
+            renderer.destroy()
+            renderer.element.remove()
+        }
+
+        this.cursor.destroy()
     }
 }

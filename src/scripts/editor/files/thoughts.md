@@ -290,3 +290,24 @@ Notes:
   - Do abstractions before granularity 
 
 [ ] ALL animations should be post-effects, i.e. the state has already changed, the animation is just an offset
+
+
+Abstraction: [G_1, <G_2, G_3>]
+
+Lowest Abstraction:  [AG2, AG8, AG13, AG20]
+Highest Abstraction: [[AG2, AG8, AG13, AG20]]
+
+Default Abstraction: [[AG2], [AG8, AG13, AG20]]
+
+Down([[AG2], [AG8, AG13, AG20]], [AG8, AG13, AG20]): [[AG2], [AG8], [AG13], [AG20]]
+Down([[AG2], [AG8, AG13, AG20]], [AG2]): [AG2*, [AG8, AG13, AG20]] *AG2 should be at its highest level of abstraction
+
+[<AG(2)>]
+
+[<AG(2)>, <AG(8), AG(13), AG(20)>]
+
+Down([<AG(2)>, <AG(8), AG(13), AG(20)>], 2) => [<AG(2)>, <AG(8)>, <AG(13)>, <AG(20)>]
+Up([<AG(2)>, <AG(8), AG(13), AG(20)>], <1, 2>) => [<AG(2), AG(8), AG(13), AG(20)>]
+
+
+abstract([['AG(2)', 'AG(5)'], ['AG(8)']])

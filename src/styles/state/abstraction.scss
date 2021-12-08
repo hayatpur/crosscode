@@ -1,18 +1,33 @@
 .abstraction-indicator {
     position: absolute;
-    border: 1.5px dashed var(--s-color-1);
+    border: 1.5px solid var(--s-color-1);
     border-radius: 5px;
     display: flex;
 }
 
+.abstraction-indicator.animation-node {
+    border: 1.5px solid var(--color-1);
+}
+
 .abstraction-controls {
-    display: flex;
+    margin-left: -18px;
+    margin-top: -5px;
 }
 
 .abstraction-controls.hidden {
     display: none;
 }
 
-.abstraction-controls .button {
-    margin: 0 5px;
+.abstraction-button {
+    font-size: 14px;
+    color: var(--s-color-1);
+    padding-right: 10px;
+    cursor: pointer;
+    transform: scale(1);
+    transition: 0.2s var(--transition-type);
+}
+
+.abstraction-button:hover {
+    color: var(--s-color-2);
+    transform: scale(1.15);
 }

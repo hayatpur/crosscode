@@ -683,20 +683,40 @@ export interface AnimationTraceChain {
 export function queryAnimationGraph(
     animation: AnimationGraph | AnimationNode,
     query: (animation: AnimationGraph | AnimationNode) => boolean
-): (AnimationGraph | AnimationNode)[] {
-    if (instanceOfAnimationNode(animation) && query(animation)) {
-        return [animation]
+): AnimationGraph | AnimationNode {
+    if (query(animation)) {
+        return animation
     }
 
     if (instanceOfAnimationGraph(animation)) {
-        const acc = []
         for (const vertex of currentAbstraction(animation).vertices) {
-            acc.push(...queryAnimationGraph(vertex, query))
+            const ret = queryAnimationGraph(vertex, query)
+            if (ret != null) {
+                return ret
+            }
         }
-        return acc
     }
 
-    return []
+    return null
+}
+
+export function queryAllAnimationGraph(
+    animation: AnimationGraph | AnimationNode,
+    query: (animation: AnimationGraph | AnimationNode) => boolean
+): (AnimationGraph | AnimationNode)[] {
+    const acc = []
+
+    if (query(animation)) {
+        acc.push(animation)
+    }
+
+    if (instanceOfAnimationGraph(animation)) {
+        for (const vertex of currentAbstraction(animation).vertices) {
+            acc.push(...queryAllAnimationGraph(vertex, query))
+        }
+    }
+
+    return acc
 }
 
 export function getTrace(

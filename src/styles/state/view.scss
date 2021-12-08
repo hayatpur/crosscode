@@ -5,14 +5,14 @@
     width: fit-content;
     transform: scale(1);
     transform-origin: top left;
-    padding-top: 36px;
+    // padding-top: 36px;
     padding-bottom: 20px;
     padding-left: 15px;
     border-width: 1px;
     border-style: solid;
     border-image: linear-gradient(to bottom, var(--color-2), rgba(0, 0, 0, 0)) 1 100%;
     margin-bottom: 15px;
-    margin-top: 15px;
+    // margin-top: 15px;
     border-right: none;
 }
 
@@ -24,8 +24,8 @@
     transform: scale(1);
     transform-origin: top left;
     margin-bottom: 15px;
-    margin-top: 15px;
-    padding-top: 20px;
+    // margin-top: 15px;
+    // padding-top: 20px;
 }
 
 .view.is-root {
@@ -34,8 +34,8 @@
 
 .root-view-container {
     position: absolute;
-    top: 100px;
-    left: 650px;
+    top: 170px;
+    left: 550px;
 }
 
 .view,
@@ -91,4 +91,3 @@
     font-size: 14px;
     color: var(--color-3);
 }
-

@@ -1,7 +1,7 @@
 import { Accessor } from '../../environment/EnvironmentState'
 import { RootViewState } from '../../view/ViewState'
 import { AnimationNode, NodeData, PlayableAnimation } from '../primitive/AnimationNode'
-import { AbstractionSelectionType, AbstractionType, AbstractOptions } from './abstraction/Abstractor'
+import { AbstractOptions } from './abstraction/Abstractor'
 import { Edge } from './edges/Edge'
 import { getEmptyNodeData } from './graph'
 
@@ -55,7 +55,7 @@ export interface AnimationGraph extends PlayableAnimation {
 
 export interface AnimationGraphVariant {
     // Info about the abstraction
-    spec: AbstractOptions
+    about: AbstractOptions
 
     // Variant to abstraction info
     vertices: (AnimationGraph | AnimationNode)[]
@@ -96,9 +96,8 @@ export function createAnimationGraph(nodeData: NodeData, options: { isGroup?: bo
 
 export function createAbstraction(): AnimationGraphVariant {
     return {
-        spec: {
-            spec: { type: AbstractionType.Unknown, value: null },
-            selection: { type: AbstractionSelectionType.Unknown, value: null },
+        about: {
+            selection: [],
         },
         vertices: [],
         edges: [],
