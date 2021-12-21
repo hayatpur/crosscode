@@ -1,13 +1,32 @@
 import { clone } from '../../../utilities/objects'
 import { RootViewState } from '../../../view/ViewState'
-import { AnimationNode, ChunkNodeData, instanceOfAnimationNode } from '../../primitive/AnimationNode'
+import {
+    AnimationNode,
+    ChunkNodeData,
+    instanceOfAnimationNode,
+} from '../../primitive/AnimationNode'
 import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
 import { transitionCreateArray } from '../../primitive/Transition/Operations/CreateArrayTransitionAnimation'
 import { transitionCreate } from '../../primitive/Transition/Operations/CreateTransitionAnimation'
 import { transitionMove } from '../../primitive/Transition/Operations/MoveTransitionAnimation'
-import { AnimationData, AnimationGraph, createAbstraction, createAnimationGraph } from '../AnimationGraph'
-import { addVertex, AnimationTraceChain, AnimationTraceOperator, getUnionOfLocations } from '../graph'
-import { AbstractionSelection, instanceOfAbstractionSelectionSingular } from './Abstractor'
+import {
+    AnimationData,
+    AnimationGraph,
+    createAbstraction,
+    createAnimationGraph,
+} from '../AnimationGraph'
+import {
+    addVertex,
+    AnimationTraceChain,
+    AnimationTraceOperator,
+    getChunkTrace,
+    getUnionOfLocations,
+    traceChainsToString,
+} from '../graph'
+import {
+    AbstractionSelection,
+    instanceOfAbstractionSelectionSingular,
+} from './Abstractor'
 
 // export interface Trace {
 //     operation: TraceOperation;
@@ -23,14 +42,17 @@ import { AbstractionSelection, instanceOfAbstractionSelectionSingular } from './
 
 /**
  *
- * @param chunk
+ * @param parent
+ * @param selection
  * @returns
  */
-export function applyTransition(parent: AnimationGraph | AnimationNode, selection: AbstractionSelection) {
+export function applyTransition(
+    parent: AnimationGraph | AnimationNode,
+    selection: AbstractionSelection
+) {
     if (instanceOfAnimationNode(parent)) {
         return
     }
-    // const trace = getChunkTrace(chunk)
 
     // Get the animations
     // const transitions = getTransitionsFromTrace(trace)
@@ -45,29 +67,43 @@ export function applyTransition(parent: AnimationGraph | AnimationNode, selectio
         const current = selection[i]
 
         if (instanceOfAbstractionSelectionSingular(current)) {
-            const node = originalVertices.find((vertex) => vertex.id === current.id)
+            const node = originalVertices.find(
+                (vertex) => vertex.id === current.id
+            )
             vertices.push(node)
 
             if (current.selection != null) {
                 applyTransition(node, current.selection)
             }
         } else {
+            const trace = getChunkTrace(parent, current)
+            const transitions = getTransitionsFromTrace(trace)
+
             // Chunk
-            const nodes = originalVertices.filter((vertex) => current.indexOf(vertex.id) != -1)
+            const nodes = originalVertices.filter(
+                (vertex) => current.indexOf(vertex.id) != -1
+            )
 
             if (nodes.length == 1 && instanceOfAnimationNode(nodes[0])) {
                 vertices.push(nodes[0])
             } else {
                 // Begin transition graph
                 const nodeData: ChunkNodeData = {
-                    location: getUnionOfLocations(nodes.map((v) => v.nodeData.location)),
-                    type: 'Chunk',
+                    location: getUnionOfLocations(
+                        nodes.map((v) => v.nodeData.location)
+                    ),
+                    type: nodes.map((v) => v.nodeData.type).join(', '),
                     selection: current,
                 }
                 const graph: AnimationGraph = createAnimationGraph(nodeData)
+                graph.isChunk = true
 
-                const init = initializeTransitionAnimation(clone(nodes[nodes.length - 1].postcondition.environment))
-                addVertex(graph, init, { nodeData: { ...nodeData, type: 'ChunkApply' } })
+                const init = initializeTransitionAnimation(
+                    clone(nodes[nodes.length - 1].postcondition.environment)
+                )
+                addVertex(graph, init, {
+                    nodeData: { ...nodeData, type: 'Transition Animation' },
+                })
 
                 vertices.push(graph)
             }
@@ -83,12 +119,17 @@ export function applyTransition(parent: AnimationGraph | AnimationNode, selectio
 }
 
 export interface TransitionAnimationNode extends AnimationNode {
-    applyInvariant: (animation: TransitionAnimationNode, view: RootViewState) => void
+    applyInvariant: (
+        animation: TransitionAnimationNode,
+        view: RootViewState
+    ) => void
     output: AnimationData
     origins: AnimationData[]
 }
 
-function getTransitionsFromTrace(trace: AnimationTraceChain[]): TransitionAnimationNode[] {
+function getTransitionsFromTrace(
+    trace: AnimationTraceChain[]
+): TransitionAnimationNode[] {
     const transitions: TransitionAnimationNode[] = []
 
     for (const chain of trace) {
@@ -128,15 +169,24 @@ function createTransitionAnimation(
 
     // Transition animation is dominated by the last (lease recent) operator
     const lastOperator = operations[operations.length - 1]
-    console.assert(lastOperator in mapping, 'Last operator not in mapping', operations)
+    console.assert(
+        lastOperator in mapping,
+        'Last operator not in mapping',
+        operations
+    )
 
     // Create the transition animation
-    const transition: TransitionAnimationNode = mapping[lastOperator](output, origins)
+    const transition: TransitionAnimationNode = mapping[lastOperator](
+        output,
+        origins
+    )
 
     return transition
 }
 
-function getAllOperationsAndLeaves(chain: AnimationTraceChain): [AnimationTraceOperator[], AnimationTraceChain[]] {
+function getAllOperationsAndLeaves(
+    chain: AnimationTraceChain
+): [AnimationTraceOperator[], AnimationTraceChain[]] {
     if (chain.children == null) return [[], []]
 
     const operations: AnimationTraceOperator[] = []

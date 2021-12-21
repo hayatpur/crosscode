@@ -1,8 +1,14 @@
 //@ts-check
 
 import { currentAbstraction, duration } from '../../animation/animation'
-import { AnimationGraph, instanceOfAnimationGraph } from '../../animation/graph/AnimationGraph'
-import { AnimationNode } from '../../animation/primitive/AnimationNode'
+import {
+    AnimationGraph,
+    instanceOfAnimationGraph,
+} from '../../animation/graph/AnimationGraph'
+import {
+    AnimationNode,
+    instanceOfAnimationNode,
+} from '../../animation/primitive/AnimationNode'
 import { remap } from '../../utilities/math'
 import { Executor } from '../Executor'
 import TimeSection from './TimeSection'
@@ -15,11 +21,15 @@ export default class Timeline {
     sectionsDomElement: HTMLDivElement
     sections: any[]
 
+    startTimes: { [key: string]: number } = {}
+
     constructor(executor: Executor) {
         this.executor = executor
 
         // Scrubber
-        this.scrubber = document.getElementById('time-scrubber') as HTMLDivElement
+        this.scrubber = document.getElementById(
+            'time-scrubber'
+        ) as HTMLDivElement
         this.scrubberParent = this.scrubber.parentElement as HTMLDivElement
 
         this.held = false
@@ -61,7 +71,13 @@ export default class Timeline {
 
             this.scrubber.style.left = `${x}px`
 
-            executor.time = remap(x, 0, bbox.width, 0, duration(executor.animation))
+            executor.time = remap(
+                x,
+                0,
+                bbox.width,
+                0,
+                duration(executor.animation)
+            )
             executor.timeline.seek(executor.time)
 
             executor.render()
@@ -75,18 +91,26 @@ export default class Timeline {
         })
 
         // Pause binding
-        document.getElementById('pause-button').addEventListener('click', (e) => {
-            executor.paused = true
-            document.getElementById('pause-button').classList.add('active')
-            document.getElementById('play-button').classList.remove('active')
-        })
+        document
+            .getElementById('pause-button')
+            .addEventListener('click', (e) => {
+                executor.paused = true
+                document.getElementById('pause-button').classList.add('active')
+                document
+                    .getElementById('play-button')
+                    .classList.remove('active')
+            })
 
         // Play binding
-        document.getElementById('play-button').addEventListener('click', (e) => {
-            executor.paused = false
-            document.getElementById('play-button').classList.add('active')
-            document.getElementById('pause-button').classList.remove('active')
-        })
+        document
+            .getElementById('play-button')
+            .addEventListener('click', (e) => {
+                executor.paused = false
+                document.getElementById('play-button').classList.add('active')
+                document
+                    .getElementById('pause-button')
+                    .classList.remove('active')
+            })
 
         // Sections
         this.sectionsDomElement = document.createElement('div')
@@ -98,7 +122,9 @@ export default class Timeline {
     }
 
     destroySections() {
-        document.querySelectorAll('.time-section').forEach((section) => section.remove())
+        document
+            .querySelectorAll('.time-section')
+            .forEach((section) => section.remove())
         this.sections = []
     }
 
@@ -108,7 +134,17 @@ export default class Timeline {
         this.updateAnimationGraph(this.executor.animation, 0, total_duration)
     }
 
-    updateAnimationGraph(animation: AnimationGraph, start: number, total_duration: number) {
+    updateAnimationGraph(
+        animation: AnimationGraph,
+        start: number,
+        total_duration: number
+    ) {
+        this.startTimes[animation.id] = start
+
+        if (animation.isChunk) {
+            return this.updateAnimationNode(animation, start, total_duration)
+        }
+
         const { vertices } = currentAbstraction(animation)
 
         const { isParallel, parallelStarts } = currentAbstraction(animation)
@@ -118,9 +154,17 @@ export default class Timeline {
 
             if (instanceOfAnimationGraph(child)) {
                 if (isParallel) {
-                    this.updateAnimationGraph(child, start + parallelStarts[i], total_duration)
+                    this.updateAnimationGraph(
+                        child,
+                        start + parallelStarts[i],
+                        total_duration
+                    )
                 } else {
-                    start = this.updateAnimationGraph(child, start, total_duration)
+                    start = this.updateAnimationGraph(
+                        child,
+                        start,
+                        total_duration
+                    )
                 }
             } else {
                 if (isParallel) {
@@ -131,7 +175,11 @@ export default class Timeline {
                         i / (vertices.length - 1)
                     )
                 } else {
-                    start = this.updateAnimationNode(child, start, total_duration)
+                    start = this.updateAnimationNode(
+                        child,
+                        start,
+                        total_duration
+                    )
                 }
             }
         }
@@ -143,12 +191,20 @@ export default class Timeline {
         return start
     }
 
-    updateAnimationNode(animation: AnimationNode, start: number, total_duration: number, yOffset = 0.5): number {
+    updateAnimationNode(
+        animation: AnimationNode | AnimationGraph,
+        start: number,
+        total_duration: number,
+        yOffset = 0.5
+    ): number {
         start += animation.delay
+        this.startTimes[animation.id] = start
 
         const section = new TimeSection(
             this.scrubberParent,
-            animation.name,
+            instanceOfAnimationNode(animation)
+                ? animation.name
+                : animation.nodeData.type,
             start,
             duration(animation),
             animation.delay,
@@ -166,7 +222,13 @@ export default class Timeline {
         const bbox = this.scrubberParent.getBoundingClientRect()
 
         // Move scrubber over
-        this.scrubber.style.left = `${remap(t, 0, duration(this.executor.animation), 0, bbox.width)}px`
+        this.scrubber.style.left = `${remap(
+            t,
+            0,
+            duration(this.executor.animation),
+            0,
+            bbox.width
+        )}px`
 
         for (const section of this.sections) {
             if (t >= section.start && t <= section.start + section.duration) {

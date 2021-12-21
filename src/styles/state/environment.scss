@@ -6,10 +6,10 @@
     padding-left: 10px;
     padding-right: 10px;
     padding-top: 50px;
-    padding-bottom: 25px;
+    padding-bottom: 10px;
 }
 
-.environment-i-container>*:not(.floating-i) {
+.environment-i-container > *:not(.floating-i) {
     margin-right: 10px;
     margin-left: 10px;
 }
@@ -21,13 +21,11 @@
 .environment-border {
     position: absolute;
     transition: 0.3s var(--transition-type);
-    border-radius: 7px;
     user-select: none;
     pointer-events: none;
     z-index: -1;
     left: 0px;
     top: 0px;
-    box-shadow: 0px 0px 0px 1px var(--color-1) inset;
 }
 
 .environment-i-container {

@@ -7,7 +7,6 @@ export class LeafViewRenderer {
 
     // Label
     labelElement: HTMLDivElement
-    labelTextElement: HTMLDivElement
 
     // Environment Renderer
     environmentRenderer: EnvironmentRenderer
@@ -18,10 +17,6 @@ export class LeafViewRenderer {
 
         this.labelElement = document.createElement('div')
         this.labelElement.classList.add('leaf-view-label')
-
-        this.labelTextElement = document.createElement('div')
-        this.labelTextElement.classList.add('leaf-view-label-text')
-        this.labelElement.append(this.labelTextElement)
 
         this.element.append(this.labelElement)
 
@@ -35,14 +30,18 @@ export class LeafViewRenderer {
         this.element.style.left = `${state.transform.rendered.x}px`
 
         // Render environment
-        this.environmentRenderer.setState(state._environment)
+        if (state._environment != null) {
+            this.environmentRenderer.setState(state._environment)
+        }
 
         // Set width and height
         this.element.style.width = `${state.transform.rendered.width}px`
         this.element.style.height = `${state.transform.rendered.height}px`
 
         // Set label
-        this.labelTextElement.innerText = state.label
+        this.labelElement.innerText = state.label
+            .replace(/([A-Z])/g, ' $1')
+            .trim()
     }
 
     destroy() {

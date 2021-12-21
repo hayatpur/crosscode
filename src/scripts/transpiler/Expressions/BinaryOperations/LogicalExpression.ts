@@ -10,16 +10,32 @@ import { AccessorType } from '../../../environment/EnvironmentState'
 import { RootViewState } from '../../../view/ViewState'
 import { Compiler, getNodeData } from '../../Compiler'
 
-export function LogicalExpression(ast: ESTree.LogicalExpression, view: RootViewState, context: AnimationContext) {
+export function LogicalExpression(
+    ast: ESTree.LogicalExpression,
+    view: RootViewState,
+    context: AnimationContext
+) {
     const graph = createAnimationGraph(getNodeData(ast))
 
-    const leftRegister = [{ type: AccessorType.Register, value: `${graph.id}_BinaryExpressionLeft` }]
+    const leftRegister = [
+        {
+            type: AccessorType.Register,
+            value: `${graph.id}_BinaryExpressionLeft`,
+        },
+    ]
 
-    const left = Compiler.compile(ast.left, view, { ...context, outputRegister: leftRegister })
+    const left = Compiler.compile(ast.left, view, {
+        ...context,
+        outputRegister: leftRegister,
+    })
     addVertex(graph, left, { nodeData: getNodeData(ast) })
 
     const environment = view.environment
-    const leftValue = resolvePath(environment, leftRegister, null) as PrototypicalDataState
+    const leftValue = resolvePath(
+        environment,
+        leftRegister,
+        null
+    ) as PrototypicalDataState
 
     let shortCircuit = false
 
@@ -30,7 +46,12 @@ export function LogicalExpression(ast: ESTree.LogicalExpression, view: RootViewS
         shortCircuit = true
     }
 
-    const rightRegister = [{ type: AccessorType.Register, value: `${graph.id}_BinaryExpressionRight` }]
+    const rightRegister = [
+        {
+            type: AccessorType.Register,
+            value: `${graph.id}_BinaryExpressionRight`,
+        },
+    ]
 
     if (!shortCircuit) {
         const right = Compiler.compile(ast.right, view, {
@@ -47,7 +68,8 @@ export function LogicalExpression(ast: ESTree.LogicalExpression, view: RootViewS
         ast.operator,
         context.outputRegister
     )
-    addVertex(graph, evaluate, this)
+
+    addVertex(graph, evaluate, { nodeData: getNodeData(ast) })
     apply(evaluate, view)
 
     return graph

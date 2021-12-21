@@ -3,10 +3,17 @@
     border: 1.5px solid var(--s-color-1);
     border-radius: 5px;
     display: flex;
+    transition-duration: 0.1s;
 }
 
 .abstraction-indicator.animation-node {
     border: 1.5px solid var(--color-1);
+    user-select: none;
+    z-index: -1;
+}
+
+.abstraction-indicator.animation-node .abstraction-controls {
+    display: none;
 }
 
 .abstraction-controls {
@@ -30,4 +37,53 @@
 .abstraction-button:hover {
     color: var(--s-color-2);
     transform: scale(1.15);
+}
+
+.abstraction-cursor {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--s-color-2);
+    transform: scale(0.5);
+    opacity: 0;
+    transition-duration: 0.1s;
+    border-radius: 50%;
+    pointer-events: none;
+    user-select: none;
+}
+
+.abstraction-cursor.active {
+    transform: scale(1);
+    opacity: 0.5;
+    pointer-events: initial;
+    user-select: inherit;
+    z-index: 5;
+    cursor: pointer;
+}
+
+.abstraction-selection {
+    position: absolute;
+
+    background: var(--s-color-2);
+    opacity: 0;
+    user-select: none;
+    transition: 0.1s;
+}
+
+.abstraction-selection.active {
+    opacity: 0.5;
+}
+
+.abstraction-cursor.pressed {
+    transform: scale(0.7);
+    opacity: 0.8;
+}
+
+.abstraction-indicator.selected {
+    border: 2px solid var(--s-color-2);
+    z-index: 2;
+}
+
+.abstraction-indicator.hidden {
+    border: 1.5px solid rgba(0, 0, 0, 0);
 }

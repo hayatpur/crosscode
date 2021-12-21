@@ -1,12 +1,25 @@
 import * as ESTree from 'estree'
 import { apply } from '../../animation/animation'
-import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph'
+import {
+    AnimationGraph,
+    createAnimationGraph,
+} from '../../animation/graph/AnimationGraph'
 import { addVertex } from '../../animation/graph/graph'
-import { AnimationContext, ControlOutput, ControlOutputData } from '../../animation/primitive/AnimationNode'
+import {
+    AnimationContext,
+    ControlOutput,
+    ControlOutputData,
+} from '../../animation/primitive/AnimationNode'
 import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
 import { RootViewState } from '../../view/ViewState'
 import { Compiler, getNodeData } from '../Compiler'
+
+export enum ScopeType {
+    None = 'None',
+    Default = 'Default',
+    Hard = 'Hard',
+}
 
 /**
  * A block contains a sequence of one or more statements.
@@ -18,22 +31,28 @@ import { Compiler, getNodeData } from '../Compiler'
 export function BlockStatement(
     ast: ESTree.BlockStatement,
     view: RootViewState,
-    context: AnimationContext
+    context: AnimationContext,
+    scopeType: ScopeType = ScopeType.Default
 ): AnimationGraph {
     const graph = createAnimationGraph(getNodeData(ast))
 
     context.locationHint = []
 
     // Create a scope
-    const createScope = createScopeAnimation()
-    addVertex(graph, createScope, { nodeData: getNodeData(ast) })
-    apply(createScope, view)
+    if (scopeType == ScopeType.Default) {
+        const createScope = createScopeAnimation()
+        addVertex(graph, createScope, { nodeData: getNodeData(ast) })
+        apply(createScope, view)
+    }
 
     // Add statements
     for (const statement of ast.body) {
         const controlOutput: ControlOutputData = { output: ControlOutput.None }
 
-        const animation = Compiler.compile(statement, view, { ...context, controlOutput })
+        const animation = Compiler.compile(statement, view, {
+            ...context,
+            controlOutput,
+        })
         addVertex(graph, animation, { nodeData: getNodeData(statement) })
 
         if (controlOutput.output == ControlOutput.Break) {
@@ -52,9 +71,11 @@ export function BlockStatement(
     }
 
     // Pop scope
-    const popScope = popScopeAnimation()
-    addVertex(graph, popScope, { nodeData: getNodeData(ast) })
-    apply(popScope, view)
+    if (scopeType == ScopeType.Default) {
+        const popScope = popScopeAnimation()
+        addVertex(graph, popScope, { nodeData: getNodeData(ast) })
+        apply(popScope, view)
+    }
 
     return graph
 }

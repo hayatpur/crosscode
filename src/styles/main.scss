@@ -63,7 +63,7 @@ body {
     height: 100%;
     font-family: Source Sans Pro;
     overflow: hidden;
-    font-size: 24px;
+
     color: var(--color-5);
 }
 
@@ -73,6 +73,7 @@ body {
     top: 0px;
     width: 100%;
     height: 100%;
+    transition: 0.2s;
 }
 
 .mtk18 {
@@ -89,11 +90,25 @@ body {
     // Coffee pallette
     --color-0: #f7f4f3;
     --color-1: #eae2de;
-    --color-2: #D2C8C6;
+    --color-2: #d2c8c6;
     --color-3: #ae9a98;
     --color-4: #482528;
     --color-5: #2f2625;
     --color-6: #171212;
+
+    --s-color-0: #cfe2ea;
+    --s-color-1: #bdc3c5;
+    --s-color-2: #a0c4d0;
+}
+
+:root {
+    --color-0: #ffffff;
+    --color-1: #ebebeb;
+    --color-2: #d4d4d4;
+    --color-3: #afafaf;
+    --color-4: #474747;
+    --color-5: #272727;
+    --color-6: #1a1a1a;
 
     --s-color-0: #cfe2ea;
     --s-color-1: #bdc3c5;

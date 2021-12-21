@@ -3,7 +3,7 @@
 // Data describes all program variables and literals
 interface Data: {
     name: string; // Name of variable, i.e. `arr[i]`
-    type: DataType; 
+    type: DataType;
     reference?: Reference; // Reference in memory (does not exist for non-mutable objects)
     symbolic_reference: SymbolicReference; // Location of variable w.r.t others, i.e. `arr[0]`
     value: Data[] | Primitive;
@@ -14,7 +14,7 @@ interface Data: {
 
 // Memory that describes state of declared variables with their scope
 interface Scope: {
-  /* e.g: [Program_0: {x: Data(...)}, 
+  /* e.g: [Program_0: {x: Data(...)},
           ForStatement_0: {i: Data(...)}] */
   static stack: Scope[];
   state: WeakMap<Reference, Data>;
@@ -34,7 +34,7 @@ interface View {
   range: [...],
 }
 
-// An animation is a set of rules / animations that are applied to a view to go from state A to state B 
+// An animation is a set of rules / animations that are applied to a view to go from state A to state B
 interface Animation {
   animations: (Animation | AnimationPrimitive)[];
 
@@ -81,7 +81,7 @@ class Environment {
   constructor() {}
 
   constructor(enclosing) {
-    
+
   }
 }
 
@@ -99,7 +99,7 @@ let temp = y[0]; // reads: [y_0], writes: [temp]
 Access into memory
 (1) id (i.e. 0x42313)
 (2) index (i.e. 0)
-(3) symbol (i.e. 'y', '_ArrayExpression')
+(3) symbol (i.e. 'y', '\_ArrayExpression')
 
 Access into data
 (1) index (i.e. 0)
@@ -107,74 +107,64 @@ Access into data
 ```javascript
 // Examples
 
-let left = [1, 4, 5];
-let right = [1, 2, 3];
-let arr = [];
+let left = [1, 4, 5]
+let right = [1, 2, 3]
+let arr = []
 
 // Break out of loop if any one of the array gets empty
 while (left.length && right.length) {
     // Pick the smaller among the smallest element of left and right sub arrays
     if (left[0] < right[0]) {
-        arr.push(left.shift());
+        arr.push(left.shift())
     } else {
-        arr.push(right.shift());
+        arr.push(right.shift())
     }
 }
 
 // Concatenating the leftover elements
 // (in case we didn't go through the entire left or right array)
-let z = [...arr, ...left, ...right];
-
-
+let z = [...arr, ...left, ...right]
 ```
+
 ---
+
 ```javascript
-
 function push(O, item) {
-    let len = O.length;
-    O[len] = item;
+    let len = O.length
+    O[len] = item
 }
 
-let left = [1, 4, 5];
+let left = [1, 4, 5]
 {
-  O = left;
-  item = 5;
+    O = left
+    item = 5
 
-  let len = O.length;
-  O[len] = item;
+    let len = O.length
+    O[len] = item
 }
-
-
 ```
 
-```javascript 
+```javascript
 function push(O, item) {
-    let len = O.length;
-    O[len] = item;
+    let len = O.length
+    O[len] = item
 }
 
 function pushn(O, n, item) {
     for (let i = 0; i < n; i++) {
-        push(O, item);
+        push(O, item)
     }
 }
 
-let left = [1, 4, 5];
-let y = 5;
-pushn(left, 5, y);
+let left = [1, 4, 5]
+let y = 5
+pushn(left, 5, y)
 ```
 
-
 > diff([1, 7, 2, 4]);
-6
+> 6
 > diff([]);
-0
-
-
-
-
-
-
+> 0
 
     // Find all writes
     for (const vertex of animation.vertices) {
@@ -216,9 +206,6 @@ pushn(left, 5, y);
         }
     }
 
-
-
-
 //@TODO
 
 0. Fix animationToString of recursive functions
@@ -230,12 +217,6 @@ pushn(left, 5, y);
 3. Complete view renderer
 
 4. Record reads & writes
-
-
-
-
-
-
 
 // // Bubble-sort:
 // // Maybe it's hard to move from low-level to high-level.
@@ -254,47 +235,48 @@ TODO:
 2. Write a createDiffAnimation(diff) - SHOULD BE RECURSIVE - IE FOR RECURSIVE MEMORY function, which, for each diff, converts it to an animation
 3. Construct an in-parallel graph of animations, and then animate them all at once
 4. The problem is, you probably want separate animations, because these ones are not in dependency order.
-    UNLESS YOU SET TO THE END STATE FIRST (SO THE DEPENDENCY ORDER DOES NOT MATTER, and THEN YOU CAN JUST PLAY A EASE-IN ANIMATION )
+   UNLESS YOU SET TO THE END STATE FIRST (SO THE DEPENDENCY ORDER DOES NOT MATTER, and THEN YOU CAN JUST PLAY A EASE-IN ANIMATION )
 
+```javascript
 function ack(m, n) {
     if (m === 0) {
         return n + 1
     }
 
     if (n === 0) {
-        return ack((m - 1), 1);
+        return ack(m - 1, 1)
     }
 
     if (m !== 0 && n !== 0) {
-        return ack((m - 1), ack(m, (n - 1)))
+        return ack(m - 1, ack(m, n - 1))
     }
 }
 
+ack(2, 3)
+```
+
 const y = ack(3, 4);
 
+[X] For chunking, get the start and the end
 
-
-
-[X] For chunking, get the start and the end 
-
-[ ] Transitions should not start from the post-condition and 
-    then work backwards, they should describe the change.
+[ ] Transitions should not start from the post-condition and
+then work backwards, they should describe the change.
 
 [ ] Transitions should not contain items that do not change,
-    representation will handle that.
+representation will handle that.
 
 [ ] Visualize scopes
 [ ] Create hard scopes, not just block scopes. Might need to define a global scope.
 
 Notes:
-  - Do abstractions before granularity 
+
+-   Do abstractions before granularity
 
 [ ] ALL animations should be post-effects, i.e. the state has already changed, the animation is just an offset
 
-
 Abstraction: [G_1, <G_2, G_3>]
 
-Lowest Abstraction:  [AG2, AG8, AG13, AG20]
+Lowest Abstraction: [AG2, AG8, AG13, AG20]
 Highest Abstraction: [[AG2, AG8, AG13, AG20]]
 
 Default Abstraction: [[AG2], [AG8, AG13, AG20]]
@@ -309,5 +291,29 @@ Down([[AG2], [AG8, AG13, AG20]], [AG2]): [AG2*, [AG8, AG13, AG20]] *AG2 should b
 Down([<AG(2)>, <AG(8), AG(13), AG(20)>], 2) => [<AG(2)>, <AG(8)>, <AG(13)>, <AG(20)>]
 Up([<AG(2)>, <AG(8), AG(13), AG(20)>], <1, 2>) => [<AG(2), AG(8), AG(13), AG(20)>]
 
-
 abstract([['AG(2)', 'AG(5)'], ['AG(8)']])
+
+```javascript
+let list = [1, 2, 3, 4]
+let n = 4
+
+for (let i = 0; i < n; i++) {
+    let temp = list[i]
+    list[i] = list[n - 1 - i]
+    list[n - 1 - i] = temp
+}
+```
+
+```javascript
+function f(x) {
+    if (x == 1) {
+        return x
+    } else {
+        return x * f(x - 1)
+    }
+}
+
+let y = f(5)
+```
+
+A view is independent of the animation. It is initially derived from the animation. They are inherently different data structures.

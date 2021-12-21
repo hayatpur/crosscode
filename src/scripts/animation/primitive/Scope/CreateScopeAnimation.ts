@@ -1,14 +1,25 @@
 import { createScope } from '../../../environment/environment'
 import { updateRootViewLayout } from '../../../environment/layout'
+import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
 import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
-export interface CreateScopeAnimation extends AnimationNode {}
+export interface CreateScopeAnimation extends AnimationNode {
+    type: ScopeType
+}
 
-function onBegin(animation: CreateScopeAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+function onBegin(
+    animation: CreateScopeAnimation,
+    view: RootViewState,
+    options: AnimationRuntimeOptions
+) {
     const environment = view.environment
-    createScope(environment)
+    createScope(environment, animation.type)
 
     if (options.baking) {
         computeReadAndWrites(animation)
@@ -17,21 +28,35 @@ function onBegin(animation: CreateScopeAnimation, view: RootViewState, options: 
     updateRootViewLayout(view)
 }
 
-function onSeek(animation: CreateScopeAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: CreateScopeAnimation,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: CreateScopeAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: CreateScopeAnimation,
+    view: RootViewState,
+    options: AnimationRuntimeOptions
+) {}
 
 function computeReadAndWrites(animation: CreateScopeAnimation) {
     animation._reads = []
     animation._writes = []
 }
 
-export function createScopeAnimation(options: AnimationOptions = {}): CreateScopeAnimation {
+export function createScopeAnimation(
+    type: ScopeType = ScopeType.Default,
+    options: AnimationOptions = {}
+): CreateScopeAnimation {
     return {
         ...createAnimationNode(null, options),
         _name: 'CreateScopeAnimation',
 
         name: 'CreateScopeAnimation',
+
+        type,
 
         // Callbacks
         onBegin,

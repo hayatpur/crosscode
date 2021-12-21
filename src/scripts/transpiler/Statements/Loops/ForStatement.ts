@@ -1,17 +1,30 @@
 import * as ESTree from 'estree'
 import { apply } from '../../../animation/animation'
-import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph'
+import {
+    AnimationGraph,
+    createAnimationGraph,
+} from '../../../animation/graph/AnimationGraph'
 import { addVertex } from '../../../animation/graph/graph'
-import { AnimationContext, ControlOutput, ControlOutputData } from '../../../animation/primitive/AnimationNode'
+import {
+    AnimationContext,
+    ControlOutput,
+    ControlOutputData,
+} from '../../../animation/primitive/AnimationNode'
+import { consumeDataAnimation } from '../../../animation/primitive/Data/ConsumeDataAnimation'
 import { createScopeAnimation } from '../../../animation/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../../animation/primitive/Scope/PopScopeAnimation'
 import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
 import { AccessorType } from '../../../environment/EnvironmentState'
+import { clone } from '../../../utilities/objects'
 import { RootViewState } from '../../../view/ViewState'
 import { Compiler, getNodeData } from '../../Compiler'
 
-export function ForStatement(ast: ESTree.ForStatement, view: RootViewState, context: AnimationContext) {
+export function ForStatement(
+    ast: ESTree.ForStatement,
+    view: RootViewState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Create a scope
@@ -29,16 +42,33 @@ export function ForStatement(ast: ESTree.ForStatement, view: RootViewState, cont
     // Loop
     while (true) {
         // Test
-        const testRegister = [{ type: AccessorType.Register, value: `${graph.id}_TestIf${_i}` }]
-        const test = Compiler.compile(ast.test, view, { ...context, outputRegister: testRegister })
+        const testRegister = [
+            { type: AccessorType.Register, value: `${graph.id}_TestIf${_i}` },
+        ]
+        const test = Compiler.compile(ast.test, view, {
+            ...context,
+            outputRegister: testRegister,
+        })
         addVertex(graph, test, { nodeData: getNodeData(ast.test) })
-        const testData = resolvePath(view.environment, testRegister, null) as PrototypicalDataState // @TODO: Add a probe test animation
+        const testData = resolvePath(
+            view.environment,
+            testRegister,
+            null
+        ) as PrototypicalDataState // @TODO: Add a probe test animation
         const testValue = testData.value as boolean
+        // Consume testData
+        const consume = consumeDataAnimation(testRegister)
+        addVertex(test, consume, { nodeData: getNodeData(ast.test) })
+        apply(consume, view)
         if (!testValue) break
 
         // Body
         const controlOutput: ControlOutputData = { output: ControlOutput.None }
-        const body = Compiler.compile(ast.body, view, { ...context, controlOutput: controlOutput })
+        const body = Compiler.compile(ast.body, view, {
+            ...context,
+            controlOutput: controlOutput,
+        })
+
         addVertex(graph, body, { nodeData: getNodeData(ast.body) })
 
         if (controlOutput.output == ControlOutput.Break) {

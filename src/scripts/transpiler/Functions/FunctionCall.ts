@@ -1,6 +1,9 @@
 import * as ESTree from 'estree'
 import { apply } from '../../animation/animation'
-import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph'
+import {
+    AnimationGraph,
+    createAnimationGraph,
+} from '../../animation/graph/AnimationGraph'
 import { addVertex } from '../../animation/graph/graph'
 import { AnimationContext } from '../../animation/primitive/AnimationNode'
 import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation'
@@ -8,12 +11,19 @@ import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScop
 import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
 import { RootViewState } from '../../view/ViewState'
 import { Compiler, getNodeData } from '../Compiler'
+import { BlockStatement, ScopeType } from '../Statements/BlockStatement'
 
-export function FunctionCall(ast: ESTree.FunctionDeclaration, view: RootViewState, context: AnimationContext) {
+export function FunctionCall(
+    ast: ESTree.FunctionDeclaration,
+    view: RootViewState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
+    console.log(view)
+
     // Create a scope @TODO: HARD SCOPE
-    const createScope = createScopeAnimation()
+    const createScope = createScopeAnimation(ScopeType.Hard)
     addVertex(graph, createScope, { nodeData: getNodeData(ast) })
     apply(createScope, view)
 
@@ -28,7 +38,12 @@ export function FunctionCall(ast: ESTree.FunctionDeclaration, view: RootViewStat
     }
 
     // Call function
-    const body = Compiler.compile(ast.body, view, { ...context, args: null })
+    const body = BlockStatement(
+        ast.body,
+        view,
+        { ...context, args: null },
+        ScopeType.None
+    )
     addVertex(graph, body, { nodeData: getNodeData(ast) })
 
     // Pop scope

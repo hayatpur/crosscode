@@ -1,7 +1,12 @@
 import { ConcretePath, PrototypicalPath } from '../path/path'
 import { EnvironmentRepresentation } from '../representation/EnvironmentRepresentation'
+import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { stringHashCode } from '../utilities/string'
-import { ConcreteDataState, PrototypicalDataState, Transform } from './data/DataState'
+import {
+    ConcreteDataState,
+    PrototypicalDataState,
+    Transform,
+} from './data/DataState'
 
 export enum AccessorType {
     ID = 'ID',
@@ -39,11 +44,13 @@ export interface ConcreteIdentifierState {
 }
 
 export interface PrototypicalScope {
-    [name: string]: PrototypicalIdentifierState
+    bindings: { [name: string]: PrototypicalIdentifierState }
+    type: ScopeType
 }
 
 export interface ConcreteScope {
-    [name: string]: ConcreteIdentifierState
+    bindings: { [name: string]: ConcreteIdentifierState }
+    type: ScopeType
 }
 
 export interface EnvironmentTransform extends Transform {
@@ -101,10 +108,14 @@ export enum EnvironmentPositionModifierType {
     BelowView = 'BelowView',
 }
 
-export function instanceOfPrototypicalEnvironment(environment: any): environment is PrototypicalEnvironmentState {
+export function instanceOfPrototypicalEnvironment(
+    environment: any
+): environment is PrototypicalEnvironmentState {
     return environment['_type'] === 'PrototypicalEnvironmentState'
 }
 
-export function instanceOfConcreteEnvironment(environment: any): environment is ConcreteEnvironmentState {
+export function instanceOfConcreteEnvironment(
+    environment: any
+): environment is ConcreteEnvironmentState {
     return environment['_type'] === 'ConcreteEnvironmentState'
 }

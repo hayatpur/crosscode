@@ -4,16 +4,23 @@ import { updateRootViewLayout } from '../../../environment/layout'
 import { clone } from '../../../utilities/objects'
 import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface InitializeTransitionAnimation extends AnimationNode {
     transitionCondition: PrototypicalEnvironmentState
 }
 
-function onBegin(animation: InitializeTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+function onBegin(
+    animation: InitializeTransitionAnimation,
+    view: RootViewState,
+    options: AnimationRuntimeOptions
+) {
     replaceEnvironmentWith(view.environment, animation.transitionCondition)
 
-    console.log(clone(view))
     updateRootViewLayout(view)
 }
 
@@ -26,14 +33,18 @@ function onSeek(
     updateRootViewLayout(view)
 }
 
-function onEnd(animation: InitializeTransitionAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: InitializeTransitionAnimation,
+    view: RootViewState,
+    options: AnimationRuntimeOptions
+) {}
 
 export function initializeTransitionAnimation(
     transitionCondition: PrototypicalEnvironmentState,
     options: AnimationOptions = {}
 ): InitializeTransitionAnimation {
     return {
-        ...createAnimationNode(null, { ...options, duration: 20 }),
+        ...createAnimationNode(null, { ...options, duration: 20, delay: 0 }),
         _name: 'InitializeTransitionAnimation',
 
         name: 'Transition',

@@ -2,15 +2,18 @@ import * as ESTree from 'estree'
 import { Editor } from '../editor/Editor'
 import { DataRenderer } from '../environment/data/DataRenderer'
 import { LeafViewRenderer } from './LeafViewRenderer'
-import { GroupViewPositionModifierType, GroupViewState, instanceOfLeafView, RootViewState } from './ViewState'
+import {
+    GroupViewPositionModifierType,
+    GroupViewState,
+    instanceOfLeafView,
+    RootViewState,
+} from './ViewState'
 
 export class GroupViewRenderer {
     element: HTMLDivElement
 
     // Label
     labelElement: HTMLDivElement
-    labelTextElement: HTMLDivElement
-    labelEdgeElement: HTMLDivElement
 
     childRenderers: { [id: string]: LeafViewRenderer | GroupViewRenderer } = {}
 
@@ -20,14 +23,6 @@ export class GroupViewRenderer {
 
         this.labelElement = document.createElement('div')
         this.labelElement.classList.add('view-label')
-
-        this.labelEdgeElement = document.createElement('div')
-        this.labelEdgeElement.classList.add('view-label-edge')
-        this.labelElement.append(this.labelEdgeElement)
-
-        this.labelTextElement = document.createElement('div')
-        this.labelTextElement.classList.add('view-label-text')
-        this.labelElement.append(this.labelTextElement)
 
         this.element.append(this.labelElement)
     }
@@ -43,7 +38,9 @@ export class GroupViewRenderer {
         // Render environments
         for (const child of state.children) {
             if (!(child.id in this.childRenderers)) {
-                const renderer = instanceOfLeafView(child) ? new LeafViewRenderer() : new GroupViewRenderer()
+                const renderer = instanceOfLeafView(child)
+                    ? new LeafViewRenderer()
+                    : new GroupViewRenderer()
 
                 this.childRenderers[child.id] = renderer
                 DataRenderer.getStage().append(renderer.element)
@@ -77,7 +74,9 @@ export class GroupViewRenderer {
         this.element.style.height = `${state.transform.rendered.height}px`
 
         // Set label
-        this.labelTextElement.innerText = state.label
+        this.labelElement.innerText = state.label
+            .replace(/([A-Z])/g, ' $1')
+            .trim()
     }
 
     destroy() {
@@ -91,7 +90,10 @@ export class GroupViewRenderer {
     }
 }
 
-function applyPositionModifiers(element: HTMLDivElement, state: GroupViewState | RootViewState) {
+function applyPositionModifiers(
+    element: HTMLDivElement,
+    state: GroupViewState | RootViewState
+) {
     const modifiers = state.transform.positionModifiers
 
     const fitted = {

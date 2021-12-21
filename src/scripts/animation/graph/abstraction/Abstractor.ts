@@ -8,8 +8,12 @@
 // import { applyTransition } from './Transition';
 
 import { currentAbstraction } from '../../animation'
-import { AnimationNode, ChunkNodeData, instanceOfAnimationNode } from '../../primitive/AnimationNode'
-import { AnimationGraph } from '../AnimationGraph'
+import {
+    AnimationNode,
+    ChunkNodeData,
+    instanceOfAnimationNode,
+} from '../../primitive/AnimationNode'
+import { AnimationGraph, instanceOfAnimationGraph } from '../AnimationGraph'
 
 export type AbstractionSelectionChunk = string[]
 
@@ -18,11 +22,16 @@ export interface AbstractionSelectionSingular {
     selection: AbstractionSelection
 }
 
-export function instanceOfAbstractionSelectionSingular(selection: any): selection is AbstractionSelectionSingular {
+export function instanceOfAbstractionSelectionSingular(
+    selection: any
+): selection is AbstractionSelectionSingular {
     return 'id' in selection && 'selection' in selection
 }
 
-export type AbstractionSelection = (AbstractionSelectionSingular | AbstractionSelectionChunk)[]
+export type AbstractionSelection = (
+    | AbstractionSelectionSingular
+    | AbstractionSelectionChunk
+)[]
 
 export interface AbstractOptions {
     selection: AbstractionSelection
@@ -40,7 +49,10 @@ export interface AnimationChunk {
  * @param selection
  * @returns
  */
-export function getAnimationChunks(parent: AnimationGraph, selection: AbstractOptions): AnimationChunk[] {
+export function getAnimationChunks(
+    parent: AnimationGraph,
+    selection: AbstractOptions
+): AnimationChunk[] {
     const vertices = parent.abstractions[0].vertices
     const chunks: AnimationChunk[] = [{ nodes: [], parent }]
 
@@ -76,7 +88,9 @@ export function getAnimationChunks(parent: AnimationGraph, selection: AbstractOp
     return chunks
 }
 
-export function generateCurrentSelection(parent: AnimationGraph | AnimationNode): AbstractionSelection {
+export function generateCurrentSelection(
+    parent: AnimationGraph | AnimationNode
+): AbstractionSelection {
     if (instanceOfAnimationNode(parent)) {
         return null
     }
@@ -85,11 +99,14 @@ export function generateCurrentSelection(parent: AnimationGraph | AnimationNode)
     const vertices = currentAbstraction(parent).vertices
 
     for (let i = 0; i < vertices.length; i++) {
-        if (vertices[i].nodeData.type == 'Chunk') {
+        if (vertices[i].isChunk) {
             const nodeData = vertices[i].nodeData as ChunkNodeData
             selection.push(nodeData.selection)
         } else {
-            selection.push({ id: vertices[i].id, selection: generateCurrentSelection(vertices[i]) })
+            selection.push({
+                id: vertices[i].id,
+                selection: generateCurrentSelection(vertices[i]),
+            })
         }
     }
 

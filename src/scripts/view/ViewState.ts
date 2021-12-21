@@ -1,7 +1,10 @@
 import { CursorState } from '../animation/Cursor'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
 import { Transform } from '../environment/data/DataState'
-import { ConcreteEnvironmentState, PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import {
+    ConcreteEnvironmentState,
+    PrototypicalEnvironmentState,
+} from '../environment/EnvironmentState'
 import { ViewRepresentation } from '../representation/ViewRepresentation'
 
 export interface EnvironmentViewMapping {
@@ -19,6 +22,8 @@ export interface LeafViewState {
     id: string
     label: string
 
+    activeIds: string[]
+
     transform: Transform
     mapping: EnvironmentViewMapping
 
@@ -35,6 +40,8 @@ export interface GroupViewState {
     isActive: boolean
     lastActive: number
 
+    activeIds: string[]
+
     transform: GroupViewTransform
     children: (GroupViewState | LeafViewState)[]
 
@@ -47,6 +54,7 @@ export interface RootViewState extends Omit<GroupViewState, '_type'> {
     environment: PrototypicalEnvironmentState // The true program state / environment
     cursor: CursorState
     animation: AnimationGraph
+    chunkIds: string[]
 }
 
 export interface GroupViewTransform extends Transform {
@@ -65,7 +73,9 @@ export enum GroupViewPositionModifierType {
     BelowView = 'BelowView',
 }
 
-export function instanceOfGroupView(groupView: any): groupView is GroupViewState {
+export function instanceOfGroupView(
+    groupView: any
+): groupView is GroupViewState {
     return groupView['_type'] == 'GroupViewState'
 }
 

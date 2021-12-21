@@ -1,17 +1,41 @@
 import acorn = require('acorn')
-import { bake, currentAbstraction, duration, reset, seek } from '../animation/animation'
-import { AbstractionSelection, generateCurrentSelection } from '../animation/graph/abstraction/Abstractor'
+import {
+    bake,
+    currentAbstraction,
+    duration,
+    reset,
+    seek,
+} from '../animation/animation'
+import {
+    AbstractionSelection,
+    generateCurrentSelection,
+} from '../animation/graph/abstraction/Abstractor'
 import { applyTransition } from '../animation/graph/abstraction/Transition'
-import { AnimationGraph, instanceOfAnimationGraph } from '../animation/graph/AnimationGraph'
-import { animationToString, computeAllGraphEdges, queryAnimationGraph } from '../animation/graph/graph'
+import {
+    AnimationGraph,
+    instanceOfAnimationGraph,
+} from '../animation/graph/AnimationGraph'
+import {
+    animationToString,
+    computeAllGraphEdges,
+    queryAnimationGraph,
+} from '../animation/graph/graph'
 import { ChunkNodeData } from '../animation/primitive/AnimationNode'
 import { Editor } from '../editor/Editor'
+import { propagateRoot } from '../environment/layout'
 import { Compiler } from '../transpiler/Compiler'
+import { Keyboard } from '../utilities/Keyboard'
+import { getNumericalValueOfStyle } from '../utilities/math'
 import { clone } from '../utilities/objects'
 import { Ticker } from '../utilities/Ticker'
 import { RootViewRenderer } from '../view/RootViewRenderer'
-import { createRootView, replaceRootViewWith } from '../view/view'
+import {
+    createRootView,
+    replaceRootViewWith,
+    generateViews,
+} from '../view/view'
 import { RootViewState } from '../view/ViewState'
+import { AbstractionCreator } from './AbstractionCreator'
 import Timeline from './timeline/Timeline'
 
 export class Executor {
@@ -37,6 +61,8 @@ export class Executor {
     // Timeline
     timeline: Timeline
 
+    abstractionCreator: AbstractionCreator
+
     constructor(editor: Editor) {
         // Singleton
         Executor.instance = this
@@ -54,7 +80,10 @@ export class Executor {
         })
 
         // Bind update
-        setTimeout(() => Ticker.instance.registerTick(this.tick.bind(this)), 1000)
+        setTimeout(
+            () => Ticker.instance.registerTick(this.tick.bind(this)),
+            1000
+        )
 
         // Play
         document.addEventListener('keypress', (e) => {
@@ -65,6 +94,9 @@ export class Executor {
         })
 
         window['_executor'] = this
+
+        // Create abstraction creator
+        this.abstractionCreator = new AbstractionCreator()
     }
 
     reset() {
@@ -86,14 +118,20 @@ export class Executor {
         let ast = null
 
         try {
-            ast = acorn.parse(this.editor.getValue(), { locations: true, ecmaVersion: 2017 })
+            ast = acorn.parse(this.editor.getValue(), {
+                locations: true,
+                ecmaVersion: 2017,
+            })
         } catch (e) {
             console.error(e)
             return
         }
 
         // Create animation from user code
-        this.animation = Compiler.compile(ast, createRootView(), { outputRegister: [], locationHint: [] })
+        this.animation = Compiler.compile(ast, createRootView(), {
+            outputRegister: [],
+            locationHint: [],
+        })
         reset(this.animation)
 
         // Bake the animation
@@ -103,11 +141,14 @@ export class Executor {
         computeAllGraphEdges(this.animation)
 
         // Switch to transition level of abstraction
-        applyTransition(this.animation, [[...this.animation.abstractions[0].vertices.map((v) => v.id)]])
+        // applyTransition(this.animation, [
+        //     ...this.animation.abstractions[0].vertices.map((v) => [v.id]),
+        // ])
 
         // Initialize a view of animation
         this.rootView = createRootView()
         this.rootView.animation = this.animation
+        generateViews(this.rootView)
 
         // Initialize a renderer
         this.rootViewRenderer = new RootViewRenderer()
@@ -120,39 +161,26 @@ export class Executor {
         console.log('\tAnimation', this.animation)
 
         document.getElementById('nomnoml-button').onclick = () => {
-            const [animationString, animationUrl] = animationToString(this.animation, 0, { first: false }, true)
+            const [animationString, animationUrl] = animationToString(
+                this.animation,
+                0,
+                { first: false },
+                true
+            )
             console.log(animationString)
             window.open(animationUrl, '_blank')
         }
     }
 
     tick(dt: number = 10) {
-        if (this.animation == null || this.paused) return
-
-        if (this.time > duration(this.animation)) {
-            // Loop
-            this.time = 0
-            this.rootViewRenderer.destroy()
-            replaceRootViewWith(this.rootView, createRootView())
-            this.rootViewRenderer = new RootViewRenderer()
-
-            console.log('Re-running animation')
-            console.log(clone(this.rootView).children.length)
-            return
-        }
-
-        if (!this.paused) this.time += dt * this.speed
-        this.timeline.seek(this.time)
+        if (this.animation == null) return
 
         this.render()
-
-        // Update renderer
-        // this.viewRenderer.setState(this.view);
     }
 
     render() {
         // Apply animation
-        seek(this.animation, this.rootView, this.time)
+        // seek(this.animation, this.rootView, this.time)
 
         // Render
         this.rootView.animation = this.animation
@@ -161,40 +189,22 @@ export class Executor {
 
     increaseAbstraction(chunkId: string) {
         if (this.animation == null) return
-
-        // Increase abstraction
-        // abstract(this.animation, { heuristic: 'A', selection: null, spec: null })
-
-        this.time = 0
-        this.rootViewRenderer.destroy()
-        replaceRootViewWith(this.rootView, createRootView())
-        this.rootViewRenderer = new RootViewRenderer()
-        this.timeline.updateSections()
-    }
-
-    abstract(selection: AbstractionSelection) {
-        if (this.animation == null) return
-
-        // Reset
-        this.time = 0
-        this.rootViewRenderer.destroy()
-        replaceRootViewWith(this.rootView, createRootView())
-        this.rootViewRenderer = new RootViewRenderer()
-        this.timeline.destroySections()
-
-        // Apply abstraction
-        applyTransition(this.animation, selection)
-
-        this.timeline.updateSections()
     }
 
     decreaseAbstraction(chunkId: string) {
         if (this.animation == null) return
 
-        const chunk = queryAnimationGraph(this.animation, (v) => v.id == chunkId) // Get chunk
+        console.log(chunkId)
+
+        const chunk = queryAnimationGraph(
+            this.animation,
+            (v) => v.id == chunkId
+        ) // Get chunk
         const parent = queryAnimationGraph(
             this.animation,
-            (v) => instanceOfAnimationGraph(v) && currentAbstraction(v).vertices.some((c) => c.id == chunkId)
+            (v) =>
+                instanceOfAnimationGraph(v) &&
+                currentAbstraction(v).vertices.some((c) => c.id == chunkId)
         ) // Get chunk parent
 
         const parentSelection = generateCurrentSelection(parent)
@@ -202,20 +212,28 @@ export class Executor {
 
         const newSelection: AbstractionSelection = []
 
+        // console.log(newSelection, chunkSelection, parentSelection)
+
         for (const part of parentSelection) {
             if (JSON.stringify(part) == JSON.stringify(chunkSelection)) {
                 // Break up chunk
                 if (chunkSelection.length == 1) {
                     const nodeId = chunkSelection[0]
-                    const node = (parent as AnimationGraph).abstractions[0].vertices.find((v) => v.id == nodeId)
+                    const node = (
+                        parent as AnimationGraph
+                    ).abstractions[0].vertices.find((v) => v.id == nodeId)
 
                     // No longer chunk the node
                     if (instanceOfAnimationGraph(node)) {
-                        console.log([node.abstractions[0].vertices.map((v) => v.id)])
+                        console.log([
+                            node.abstractions[0].vertices.map((v) => v.id),
+                        ])
 
                         newSelection.push({
                             id: nodeId,
-                            selection: node.abstractions[0].vertices.map((v) => [v.id]),
+                            selection: node.abstractions[0].vertices.map(
+                                (v) => [v.id]
+                            ),
                         })
                     } else {
                         newSelection.push({
@@ -231,6 +249,8 @@ export class Executor {
             }
         }
 
+        console.log(newSelection)
+
         // Reset
         this.time = 0
         this.rootViewRenderer.destroy()
@@ -238,28 +258,25 @@ export class Executor {
         this.rootViewRenderer = new RootViewRenderer()
         this.timeline.destroySections()
 
-        console.log(newSelection)
-
         applyTransition(parent, newSelection)
+
+        generateViews(this.rootView)
 
         this.timeline.updateSections()
 
-        // this.paused = false
         this.render()
+    }
 
-        // console.log(parent, selection, chunk)
-        // const decreased = decreaseAbstraction(selection, parent);
-
-        // console.log('Chunk', chunk)
-        // console.log('Parent', parent)
-
-        // Decrease abstraction
-        // abstract(this.animation, { heuristic: 'B', selection: null, spec: null })
-
-        // this.time = 0
-        // this.rootViewRenderer.destroy()
-        // replaceRootViewWith(this.rootView, createRootView())
-        // this.rootViewRenderer = new RootViewRenderer()
-        // this.timeline.updateSections()
+    createAbstraction(chunkId: string) {
+        this.rootView.chunkIds.push(chunkId)
     }
 }
+
+const is_key_down = (() => {
+    const state = {}
+
+    window.addEventListener('keyup', (e) => (state[e.key] = false))
+    window.addEventListener('keydown', (e) => (state[e.key] = true))
+
+    return (key) => (state.hasOwnProperty(key) && state[key]) || false
+})()

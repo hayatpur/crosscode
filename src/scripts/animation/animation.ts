@@ -8,7 +8,10 @@ import {
     instanceOfAnimationGraph,
 } from './graph/AnimationGraph'
 import { Edge } from './graph/edges/Edge'
-import { AnimationNode, instanceOfAnimationNode } from './primitive/AnimationNode'
+import {
+    AnimationNode,
+    instanceOfAnimationNode,
+} from './primitive/AnimationNode'
 
 /**
  * Computes and returns the duration of an animation.
@@ -29,7 +32,10 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
     // If a parallel animation, return the end point of the longest animation vertex
     if (abstraction.isParallel && abstraction.parallelStarts[0] != undefined) {
         const ends = abstraction.parallelStarts.map(
-            (start, i) => start + duration(abstraction.vertices[i]) + abstraction.vertices[i].delay
+            (start, i) =>
+                start +
+                duration(abstraction.vertices[i]) +
+                abstraction.vertices[i].delay
         )
         return Math.max(...ends)
     }
@@ -69,7 +75,11 @@ export function addEdge(graph: AnimationGraph, edge: Edge) {
     const currentAbstraction = graph.abstractions[graph.currentAbstractionIndex]
 
     for (const other of currentAbstraction.edges) {
-        if (other.from == edge.from && other.to == edge.to && other.constructor.name == edge.constructor.name) {
+        if (
+            other.from == edge.from &&
+            other.to == edge.to &&
+            other.constructor.name == edge.constructor.name
+        ) {
             return
         }
     }
@@ -93,9 +103,12 @@ export function begin(
     }
 
     if (instanceOfAnimationNode(animation)) {
-        view.cursor.location = animation.nodeData.location
-        view.cursor.label = animation.name
         animation.onBegin(animation, view, options)
+    }
+
+    if (animation.isChunk) {
+        view.cursor.location = animation.nodeData.location
+        view.cursor.label = animation.nodeData.type
     }
 }
 
@@ -196,7 +209,11 @@ export function seek(
         }
 
         // Skip over this animation
-        if (time >= start + duration(vertex) && !vertex.isPlaying && !vertex.hasPlayed) {
+        if (
+            time >= start + duration(vertex) &&
+            !vertex.isPlaying &&
+            !vertex.hasPlayed
+        ) {
             begin(vertex, view, options)
             seek(vertex, view, duration(vertex), options)
             end(vertex, view, options)
@@ -213,7 +230,10 @@ export function seek(
     }
 }
 
-export function restoreInitialState(vertex: AnimationGraph | AnimationNode, view: RootViewState) {
+export function restoreInitialState(
+    vertex: AnimationGraph | AnimationNode,
+    view: RootViewState
+) {
     // console.log('Restoring initial layout for', vertex)
 
     if (vertex.precondition != null) {
@@ -226,11 +246,16 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     animation.hasPlayed = false
 
     if (instanceOfAnimationGraph(animation)) {
-        currentAbstraction(animation).vertices.forEach((vertex) => reset(vertex))
+        currentAbstraction(animation).vertices.forEach((vertex) =>
+            reset(vertex)
+        )
     }
 }
 
-export function bake(animation: AnimationGraph | AnimationNode, view: RootViewState = null) {
+export function bake(
+    animation: AnimationGraph | AnimationNode,
+    view: RootViewState = null
+) {
     if (view == null) {
         view = createRootView()
     }
@@ -245,7 +270,10 @@ export function bake(animation: AnimationGraph | AnimationNode, view: RootViewSt
     reset(animation)
 }
 
-export function apply(animation: AnimationGraph | AnimationNode, view: RootViewState) {
+export function apply(
+    animation: AnimationGraph | AnimationNode,
+    view: RootViewState
+) {
     begin(animation, view)
     seek(animation, view, duration(animation))
     end(animation, view)
@@ -257,7 +285,9 @@ export function apply(animation: AnimationGraph | AnimationNode, view: RootViewS
  * @param animation
  * @returns
  */
-export function reads(animation: AnimationGraph | AnimationNode): AnimationData[] {
+export function reads(
+    animation: AnimationGraph | AnimationNode
+): AnimationData[] {
     if (instanceOfAnimationNode(animation)) {
         if (animation._reads == null) {
             console.error('Animation reads not set for', animation)
@@ -281,7 +311,9 @@ export function reads(animation: AnimationGraph | AnimationNode): AnimationData[
  * @param animation
  * @returns
  */
-export function writes(animation: AnimationGraph | AnimationNode): AnimationData[] {
+export function writes(
+    animation: AnimationGraph | AnimationNode
+): AnimationData[] {
     if (instanceOfAnimationNode(animation)) {
         return animation._writes
     }

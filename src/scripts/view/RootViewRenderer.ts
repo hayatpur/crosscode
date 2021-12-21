@@ -21,12 +21,17 @@ export class RootViewRenderer extends GroupViewRenderer {
     }
 
     setState(state: RootViewState) {
-        super.setState(state)
+        // super.setState(state)
 
-        const chunks = queryAllAnimationGraph(state.animation, (animation) => animation.nodeData.type == 'Chunk')
+        const chunks = queryAllAnimationGraph(
+            state.animation,
+            (node) => state.chunkIds.indexOf(node.id) != -1
+        )
+
         const nodes = queryAllAnimationGraph(
             state.animation,
-            (animation) => instanceOfAnimationNode(animation) && !animation.nodeData.type.startsWith('Chunk')
+            (animation) =>
+                instanceOfAnimationNode(animation) && !animation.isChunk
         )
 
         // Hit test
@@ -35,7 +40,9 @@ export class RootViewRenderer extends GroupViewRenderer {
         // Render chunks
         for (const chunk of [...chunks, ...nodes]) {
             if (!(chunk.id in this.indicators)) {
-                const renderer = new AbstractionIndicator()
+                const renderer = new AbstractionIndicator(
+                    chunks.indexOf(chunk) != -1
+                )
                 this.indicators[chunk.id] = renderer
             }
 

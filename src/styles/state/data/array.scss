@@ -4,9 +4,10 @@
     min-height: 40px;
 }
 
-.data-array-i>*:not(last-child) {}
+.data-array-i > *:not(last-child) {
+}
 
-.data-array-i>* {
+.data-array-i > * {
     margin-left: -1px;
 }
 
@@ -23,7 +24,7 @@
 }
 
 .data.array-item:not(.first-array-item):not(.last-array-item) {
-    border-radius: 0px;
+    // border-radius: 0px;
     border-left: none;
 }
 
@@ -32,11 +33,11 @@
 }
 
 .data.first-array-item {
-    border-radius: 7px 0px 0px 7px;
+    // border-radius: 7px 0px 0px 7px;
 }
 
 .data.last-array-item {
-    border-radius: 0px 7px 7px 0px;
+    // border-radius: 0px 7px 7px 0px;
     border-left: none;
 }
 

@@ -4,7 +4,10 @@ import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
 import { ConcreteDataState, DataType } from './data/DataState'
 import { LiteralRenderer } from './data/literal/LiteralRenderer'
-import { ConcreteEnvironmentState, EnvironmentPositionModifierType } from './EnvironmentState'
+import {
+    ConcreteEnvironmentState,
+    EnvironmentPositionModifierType,
+} from './EnvironmentState'
 import { IdentifierRenderer } from './identifier/IdentifierRenderer'
 
 export function createDataRenderer(data: ConcreteDataState) {
@@ -63,7 +66,11 @@ export class EnvironmentRenderer {
         // Only render literals and arrays
         const memory = state.memory
             .filter((m) => m != null)
-            .filter((data) => data.prototype.type == DataType.Literal || data.prototype.type == DataType.Array)
+            .filter(
+                (data) =>
+                    data.prototype.type == DataType.Literal ||
+                    data.prototype.type == DataType.Array
+            )
 
         // Render data
         for (const data of memory) {
@@ -95,7 +102,7 @@ export class EnvironmentRenderer {
         const hits = new Set()
 
         for (const scope of state.scope) {
-            for (const name of Object.keys(scope)) {
+            for (const name of Object.keys(scope.bindings)) {
                 if (!(name in this.identifierRenderers)) {
                     const renderer = new IdentifierRenderer()
                     this.identifierRenderers[name] = renderer
@@ -104,7 +111,7 @@ export class EnvironmentRenderer {
                 }
 
                 hits.add(name)
-                this.identifierRenderers[name].setState(scope[name])
+                this.identifierRenderers[name].setState(scope.bindings[name])
             }
         }
 
@@ -137,7 +144,10 @@ export class EnvironmentRenderer {
     }
 }
 
-function applyPositionModifiers(element: HTMLDivElement, state: ConcreteEnvironmentState) {
+function applyPositionModifiers(
+    element: HTMLDivElement,
+    state: ConcreteEnvironmentState
+) {
     const modifiers = state.transform.positionModifiers
 
     const fitted = {

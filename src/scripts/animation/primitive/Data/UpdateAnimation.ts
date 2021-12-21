@@ -1,19 +1,37 @@
 import * as ESTree from 'estree'
 import { PrototypicalDataState } from '../../../environment/data/DataState'
-import { resolvePath } from '../../../environment/environment'
+import {
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
 import { Accessor } from '../../../environment/EnvironmentState'
 import { RootViewState } from '../../../view/ViewState'
-import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface UpdateAnimation extends AnimationNode {
     dataSpecifier: Accessor[]
     operator: ESTree.UpdateOperator
 }
 
-function onBegin(animation: UpdateAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
+function onBegin(
+    animation: UpdateAnimation,
+    view: RootViewState,
+    options: AnimationRuntimeOptions
+) {
     const environment = view.environment
-    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as PrototypicalDataState
+    const data = resolvePath(
+        environment,
+        animation.dataSpecifier,
+        `${animation.id}_Data`
+    ) as PrototypicalDataState
 
     switch (animation.operator) {
         case '++':
@@ -25,11 +43,32 @@ function onBegin(animation: UpdateAnimation, view: RootViewState, options: Anima
         default:
             console.warn('Unrecognized update operator', animation.operator)
     }
+
+    if (options.baking) {
+        computeReadAndWrites(animation, {
+            id: data.id,
+            location: getMemoryLocation(environment, data).foundLocation,
+        })
+    }
 }
 
-function onSeek(animation: UpdateAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: UpdateAnimation,
+    view: RootViewState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: UpdateAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: UpdateAnimation,
+    view: RootViewState,
+    options: AnimationRuntimeOptions
+) {}
+
+function computeReadAndWrites(animation: UpdateAnimation, data: AnimationData) {
+    animation._reads = [data]
+    animation._writes = [data]
+}
 
 export function updateAnimation(
     dataSpecifier: Accessor[],

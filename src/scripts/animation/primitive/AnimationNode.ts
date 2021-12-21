@@ -74,6 +74,8 @@ export interface AnimationNode extends PlayableAnimation {
     _name: string // Name of the node
     name: string // Name of operation
 
+    isChunk: boolean
+
     id: string
 
     precondition: RootViewState
@@ -84,12 +86,27 @@ export interface AnimationNode extends PlayableAnimation {
 
     baseDuration: number
 
-    onBegin: (animation: AnimationNode, view: RootViewState, options: AnimationRuntimeOptions) => void
-    onSeek: (animation: AnimationNode, view: RootViewState, time: number, options: AnimationRuntimeOptions) => void
-    onEnd: (animation: AnimationNode, view: RootViewState, options: AnimationRuntimeOptions) => void
+    onBegin: (
+        animation: AnimationNode,
+        view: RootViewState,
+        options: AnimationRuntimeOptions
+    ) => void
+    onSeek: (
+        animation: AnimationNode,
+        view: RootViewState,
+        time: number,
+        options: AnimationRuntimeOptions
+    ) => void
+    onEnd: (
+        animation: AnimationNode,
+        view: RootViewState,
+        options: AnimationRuntimeOptions
+    ) => void
 }
 
-export function instanceOfAnimationNode(animation: any): animation is AnimationNode {
+export function instanceOfAnimationNode(
+    animation: any
+): animation is AnimationNode {
     return animation._type == 'AnimationNode'
 }
 
@@ -118,16 +135,21 @@ export function createAnimationNode(
         nodeData,
 
         baseDuration: options.duration ?? 20,
-        delay: 10,
+        delay: options.delay ?? 10,
 
         isPlaying: false,
         hasPlayed: false,
         speed: 1,
         ease: (t) => ParametricBlend(t),
 
-        onBegin: () => console.warn('[AnimationNode] Non-implemented on begin callback'),
-        onSeek: () => console.warn('[AnimationNode] Non-implemented on seek callback'),
-        onEnd: () => console.warn('[AnimationNode] Non-implemented on end callback'),
+        isChunk: false,
+
+        onBegin: () =>
+            console.warn('[AnimationNode] Non-implemented on begin callback'),
+        onSeek: () =>
+            console.warn('[AnimationNode] Non-implemented on seek callback'),
+        onEnd: () =>
+            console.warn('[AnimationNode] Non-implemented on end callback'),
     }
 }
 

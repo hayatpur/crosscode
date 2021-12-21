@@ -1,13 +1,18 @@
 import { AnimationGraph } from '../../animation/graph/AnimationGraph'
-import { AnimationNode, instanceOfAnimationNode } from '../../animation/primitive/AnimationNode'
+import {
+    AnimationNode,
+    instanceOfAnimationNode,
+} from '../../animation/primitive/AnimationNode'
 import { Editor } from '../../editor/Editor'
 import { AbstractionControls } from './AbstractionControls'
 
 export class AbstractionIndicator {
     element: HTMLDivElement
     controls: AbstractionControls
+    isChunk: boolean
 
-    constructor() {
+    constructor(isChunk: boolean) {
+        this.isChunk = isChunk
         this.element = document.createElement('div')
         this.element.classList.add('abstraction-indicator')
 
@@ -32,9 +37,9 @@ export class AbstractionIndicator {
             this.element.classList.remove('animation-node')
         }
 
-        this.element.style.left = `${bbox.x}px`
+        this.element.style.left = `${bbox.x - 2}px`
         this.element.style.top = `${bbox.y}px`
-        this.element.style.width = `${bbox.width}px`
+        this.element.style.width = `${bbox.width + 4}px`
         this.element.style.height = `${bbox.height}px`
 
         this.controls.setState(chunk)
@@ -52,7 +57,5 @@ export class AbstractionIndicator {
         this.element.remove()
         this.controls.destroy()
         this.controls = null
-
-        console.log('Destroying controls...')
     }
 }
