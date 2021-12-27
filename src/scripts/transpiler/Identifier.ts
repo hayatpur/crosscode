@@ -8,21 +8,30 @@ import { copyReferenceAnimation } from '../animation/primitive/Data/CopyReferenc
 import { findVariableAnimation } from '../animation/primitive/Data/FindVariableAnimation'
 import { DataType, PrototypicalDataState } from '../environment/data/DataState'
 import { resolvePath } from '../environment/environment'
-import { AccessorType } from '../environment/EnvironmentState'
-import { RootViewState } from '../view/ViewState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../environment/EnvironmentState'
 import { getNodeData } from './Compiler'
 
-export function Identifier(ast: ESTree.Identifier, view: RootViewState, context: AnimationContext) {
+export function Identifier(
+    ast: ESTree.Identifier,
+    view: PrototypicalEnvironmentState,
+    context: AnimationContext
+) {
     const graph = createAnimationGraph(getNodeData(ast))
 
     if (context.feed) {
         // Feeding
-        const reference = findVariableAnimation(ast.name, context.outputRegister)
+        const reference = findVariableAnimation(
+            ast.name,
+            context.outputRegister
+        )
         addVertex(graph, reference, { nodeData: getNodeData(ast) })
         apply(reference, view)
     } else {
         const data = resolvePath(
-            view.environment,
+            view,
             [{ type: AccessorType.Symbol, value: ast.name }],
             null
         ) as PrototypicalDataState
@@ -37,7 +46,10 @@ export function Identifier(ast: ESTree.Identifier, view: RootViewState, context:
             apply(copyReference, view)
         } else if (data.type == DataType.Literal) {
             // Create a copy of it
-            const copy = copyDataAnimation([{ type: AccessorType.Symbol, value: ast.name }], context.outputRegister)
+            const copy = copyDataAnimation(
+                [{ type: AccessorType.Symbol, value: ast.name }],
+                context.outputRegister
+            )
             addVertex(graph, copy, { nodeData: getNodeData(ast) })
             apply(copy, view)
         }

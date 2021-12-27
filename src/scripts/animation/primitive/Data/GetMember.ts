@@ -1,8 +1,22 @@
-import { clonePrototypicalData, createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
-import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
-import { Accessor } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
+import {
+    clonePrototypicalData,
+    createData,
+    replacePrototypicalDataWith,
+} from '../../../environment/data/data'
+import {
+    DataType,
+    PrototypicalDataState,
+} from '../../../environment/data/DataState'
+import {
+    addDataAt,
+    getMemoryLocation,
+    removeAt,
+    resolvePath,
+} from '../../../environment/environment'
+import {
+    Accessor,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -14,10 +28,16 @@ import {
 import { createPrototypicalCreatePath } from '../../../path/prototypical/PrototypicalCreatePath'
 import { PrototypicalElevationPath } from '../../../path/prototypical/PrototypicalElevationPath'
 import { createPrototypicalInstantMovementPath } from '../../../path/prototypical/PrototypicalInstantMovementPath'
-import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface GetMember extends AnimationNode {
     objectRegister: Accessor[]
@@ -25,12 +45,23 @@ export interface GetMember extends AnimationNode {
     outputRegister: Accessor[]
 }
 
-function onBegin(animation: GetMember, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: GetMember,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
     // Get object
-    const object = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`) as PrototypicalDataState
-    console.assert(object.type === DataType.Array, `${animation.id}_Object is not an object`)
+    const object = resolvePath(
+        environment,
+        animation.objectRegister,
+        `${animation.id}_Object`
+    ) as PrototypicalDataState
+    console.assert(
+        object.type === DataType.Array,
+        `${animation.id}_Object is not an object`
+    )
 
     // Get property
     const property = resolvePath(
@@ -38,10 +69,15 @@ function onBegin(animation: GetMember, view: RootViewState, options: AnimationRu
         animation.propertyRegister,
         `${animation.id}_Property`
     ) as PrototypicalDataState
-    const propertyLocation = getMemoryLocation(environment, property).foundLocation
+    const propertyLocation = getMemoryLocation(
+        environment,
+        property
+    ).foundLocation
 
     // Index into it
-    const original = (object.value as PrototypicalDataState[])[property.value as number] as PrototypicalDataState
+    const original = (object.value as PrototypicalDataState[])[
+        property.value as number
+    ] as PrototypicalDataState
 
     // Create a copy of data
     const copy = clonePrototypicalData(original, false, `${animation.id}_Copy`)
@@ -60,20 +96,34 @@ function onBegin(animation: GetMember, view: RootViewState, options: AnimationRu
     endPrototypicalPath(instantaneousMovement, environment)
     removePrototypicalPath(environment, `InstantMovement${animation.id}`)
 
-    updateRootViewLayout(view)
-
     // Consume property
-    removeAt(environment, getMemoryLocation(environment, property).foundLocation)
+    removeAt(
+        environment,
+        getMemoryLocation(environment, property).foundLocation
+    )
 
     // Remove object (reference)
-    const objectReference = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`, null, {
-        noResolvingReference: true,
-    }) as PrototypicalDataState
-    const objectLocation = getMemoryLocation(environment, objectReference).foundLocation
+    const objectReference = resolvePath(
+        environment,
+        animation.objectRegister,
+        `${animation.id}_Object`,
+        null,
+        {
+            noResolvingReference: true,
+        }
+    ) as PrototypicalDataState
+    const objectLocation = getMemoryLocation(
+        environment,
+        objectReference
+    ).foundLocation
 
-    removeAt(environment, getMemoryLocation(environment, objectReference).foundLocation, {
-        noResolvingReference: true,
-    })
+    removeAt(
+        environment,
+        getMemoryLocation(environment, objectReference).foundLocation,
+        {
+            noResolvingReference: true,
+        }
+    )
 
     if (options.baking) {
         computeReadAndWrites(
@@ -87,7 +137,11 @@ function onBegin(animation: GetMember, view: RootViewState, options: AnimationRu
                 id: property.id,
             },
             { location, id: copy.id },
-            { location: getMemoryLocation(environment, original).foundLocation, id: original.id }
+            {
+                location: getMemoryLocation(environment, original)
+                    .foundLocation,
+                id: original.id,
+            }
         )
     }
 
@@ -97,7 +151,10 @@ function onBegin(animation: GetMember, view: RootViewState, options: AnimationRu
         animation.outputRegister,
         `${animation.id}_Floating`
     ) as PrototypicalDataState
-    replacePrototypicalDataWith(outputRegister, createData(DataType.ID, copy.id, `${animation.id}_OutputRegister`))
+    replacePrototypicalDataWith(
+        outputRegister,
+        createData(DataType.ID, copy.id, `${animation.id}_OutputRegister`)
+    )
 
     // Create elevation path
     const elevation = createPrototypicalCreatePath(
@@ -109,24 +166,37 @@ function onBegin(animation: GetMember, view: RootViewState, options: AnimationRu
     beginPrototypicalPath(elevation, environment)
 }
 
-function onSeek(animation: GetMember, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: GetMember,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 
-    const environment = view.environment
+    const environment = view
     const copy = resolvePath(
         environment,
         environment._temps[`CopyMemberAnimation${animation.id}`],
         null
     ) as PrototypicalDataState
-    const elevation = lookupPrototypicalPathById(environment, `Elevation${animation.id}`) as PrototypicalElevationPath
+    const elevation = lookupPrototypicalPathById(
+        environment,
+        `Elevation${animation.id}`
+    ) as PrototypicalElevationPath
     seekPrototypicalPath(elevation, environment, t)
-
-    updateRootViewLayout(view)
 }
 
-function onEnd(animation: GetMember, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
-    const elevation = lookupPrototypicalPathById(environment, `Elevation${animation.id}`) as PrototypicalElevationPath
+function onEnd(
+    animation: GetMember,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
+    const elevation = lookupPrototypicalPathById(
+        environment,
+        `Elevation${animation.id}`
+    ) as PrototypicalElevationPath
     endPrototypicalPath(elevation, environment)
 
     removePrototypicalPath(environment, `Elevation${animation.id}`)

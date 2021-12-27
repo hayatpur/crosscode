@@ -25,24 +25,10 @@
     display: none;
 }
 
-.abstraction-button {
-    font-size: 14px;
-    color: var(--s-color-1);
-    padding-right: 10px;
-    cursor: pointer;
-    transform: scale(1);
-    transition: 0.2s var(--transition-type);
-}
-
-.abstraction-button:hover {
-    color: var(--s-color-2);
-    transform: scale(1.15);
-}
-
 .abstraction-cursor {
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 10px;
+    height: 10px;
     background: var(--s-color-2);
     transform: scale(0.5);
     opacity: 0;
@@ -63,11 +49,13 @@
 
 .abstraction-selection {
     position: absolute;
-
-    background: var(--s-color-2);
-    opacity: 0;
+    /* background: var(--s-color-2); */
     user-select: none;
-    transition: 0.1s;
+    pointer-events: none;
+    background: #111111;
+    mix-blend-mode: screen;
+    border-radius: 5px;
+    opacity: 0;
 }
 
 .abstraction-selection.active {

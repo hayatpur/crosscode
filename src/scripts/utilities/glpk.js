@@ -1,6 +1,8 @@
 /*! glpk.js - v4.49.0
  * https://github.com/hgourvest/glpk.js
  * Copyright (c) 2013 Henri Gourvest; Licensed GPLv2 */
+
+/*
 window['__GLP'] = {};
 var t = Number.MAX_VALUE,
     fa = Number.MIN_VALUE;
@@ -16264,3 +16266,4 @@ function Sb(a, b) {
         0 < ca && ca--;
     }
 }
+*/

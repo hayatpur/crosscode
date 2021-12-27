@@ -1,8 +1,5 @@
 import { replaceEnvironmentWith } from '../../../environment/environment'
 import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
-import { clone } from '../../../utilities/objects'
-import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import {
     AnimationNode,
@@ -16,26 +13,22 @@ export interface InitializeTransitionAnimation extends AnimationNode {
 
 function onBegin(
     animation: InitializeTransitionAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
-    replaceEnvironmentWith(view.environment, animation.transitionCondition)
-
-    updateRootViewLayout(view)
+    replaceEnvironmentWith(view, animation.transitionCondition)
 }
 
 function onSeek(
     animation: InitializeTransitionAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
-) {
-    updateRootViewLayout(view)
-}
+) {}
 
 function onEnd(
     animation: InitializeTransitionAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {}
 

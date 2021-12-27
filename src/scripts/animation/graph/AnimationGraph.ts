@@ -1,11 +1,12 @@
-import { Accessor } from '../../environment/EnvironmentState'
-import { RootViewState } from '../../view/ViewState'
+import {
+    Accessor,
+    PrototypicalEnvironmentState,
+} from '../../environment/EnvironmentState'
 import {
     AnimationNode,
     NodeData,
     PlayableAnimation,
 } from '../primitive/AnimationNode'
-import { AbstractOptions } from './abstraction/Abstractor'
 import { Edge } from './edges/Edge'
 import { getEmptyNodeData } from './graph'
 
@@ -47,8 +48,8 @@ export interface AnimationGraph extends PlayableAnimation {
     isChunk: boolean
 
     // Invariant to abstraction info
-    precondition: RootViewState
-    postcondition: RootViewState
+    precondition: PrototypicalEnvironmentState
+    postcondition: PrototypicalEnvironmentState
     isGroup: boolean
 
     // Variant to abstraction info
@@ -59,9 +60,6 @@ export interface AnimationGraph extends PlayableAnimation {
 }
 
 export interface AnimationGraphVariant {
-    // Info about the abstraction
-    about: AbstractOptions
-
     // Variant to abstraction info
     vertices: (AnimationGraph | AnimationNode)[]
     edges: Edge[]
@@ -108,9 +106,6 @@ export function createAnimationGraph(
 
 export function createAbstraction(): AnimationGraphVariant {
     return {
-        about: {
-            selection: [],
-        },
         vertices: [],
         edges: [],
         isParallel: false,

@@ -6,7 +6,7 @@ import {
     queryAllAnimationGraph,
     queryAnimationGraph,
 } from '../animation/graph/graph'
-import { AnimationNode } from '../animation/primitive/AnimationNode'
+import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
 import { Mouse } from '../utilities/Mouse'
 import { Ticker } from '../utilities/Ticker'
 import { Executor } from './Executor'
@@ -37,7 +37,7 @@ export class AbstractionCreator {
 
         this.state = AbstractionCreatorState.Inactive
 
-        const tickId = Ticker.instance.registerTick(this.tick.bind(this))
+        Ticker.instance.registerTick(this.tick.bind(this))
 
         document.addEventListener('keydown', (e) => {
             if (e.key != 'Control') return
@@ -93,8 +93,8 @@ export class AbstractionCreator {
     }
 
     tick(dt: number) {
-        this.cursor.style.left = `${Mouse.instance.position.x - 10}px`
-        this.cursor.style.top = `${Mouse.instance.position.y - 10}px`
+        this.cursor.style.left = `${Mouse.instance.position.x - 5}px`
+        this.cursor.style.top = `${Mouse.instance.position.y - 5}px`
 
         if (this.state == AbstractionCreatorState.Active) {
             this.cursor.classList.add('active')
@@ -117,38 +117,41 @@ export class AbstractionCreator {
             this.cursor.classList.remove('pressed')
         }
 
-        if (Executor.instance.rootViewRenderer != null) {
-            const indicators = Executor.instance.rootViewRenderer.indicators
-            for (const [id, indicator] of Object.entries(indicators)) {
+        const animation = Executor.instance.animation
+        const editor = Executor.instance.editor
+
+        if (animation != null) {
+            const indicators = queryAllAnimationGraph(
+                Executor.instance.animation,
+                (animation) => instanceOfAnimationNode(animation)
+            )
+
+            for (const indicator of indicators) {
                 if (indicator.isChunk) continue
 
-                const element = indicator.element
+                const location = indicator.nodeData.location
+                const bbox = editor.computeBoundingBoxForLoc(location)
+
                 const contains =
                     this.state == AbstractionCreatorState.Pressed &&
                     bboxContains(
                         this.selectionIndicator.getBoundingClientRect(),
-                        element.getBoundingClientRect()
+                        bbox
                     )
-                if (contains && !this.selectionChunks.has(id)) {
-                    this.selectionChunks.add(id)
-                    element.classList.add('selected')
-                } else if (!contains && this.selectionChunks.has(id)) {
-                    this.selectionChunks.delete(id)
-                    element.classList.remove('selected')
-                }
 
-                if (this.state == AbstractionCreatorState.Inactive) {
-                    element.classList.add('hidden')
-                } else {
-                    element.classList.remove('hidden')
+                if (contains && !this.selectionChunks.has(indicator.id)) {
+                    this.selectionChunks.add(indicator.id)
+                } else if (
+                    !contains &&
+                    this.selectionChunks.has(indicator.id)
+                ) {
+                    this.selectionChunks.delete(indicator.id)
                 }
             }
         }
     }
 
     createAbstraction() {
-        console.log('Creating abstraction', this.selectionChunks)
-
         const availableChunks: AnimationGraph[] = [Executor.instance.animation]
 
         let deepestChunk: AnimationGraph = null
@@ -173,7 +176,7 @@ export class AbstractionCreator {
             }
         }
 
-        Executor.instance.createAbstraction(deepestChunk.id)
+        Executor.instance.createAbstraction(deepestChunk)
     }
 }
 

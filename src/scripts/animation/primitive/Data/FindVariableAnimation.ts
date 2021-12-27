@@ -1,19 +1,36 @@
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import {
+    createData,
+    replacePrototypicalDataWith,
+} from '../../../environment/data/data'
+import {
+    DataType,
+    PrototypicalDataState,
+} from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
-import { Accessor, AccessorType } from '../../../environment/EnvironmentState'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    Accessor,
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { duration } from '../../animation'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface FindVariableAnimation extends AnimationNode {
     identifier: string
     outputRegister: Accessor[]
 }
 
-function onBegin(animation: FindVariableAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: FindVariableAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
     const reference = resolvePath(
         environment,
@@ -30,18 +47,30 @@ function onBegin(animation: FindVariableAnimation, view: RootViewState, options:
         `${animation.id}_FloatingRegister`
     ) as PrototypicalDataState
 
-    replacePrototypicalDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
+    replacePrototypicalDataWith(
+        register,
+        createData(DataType.ID, reference.id, `${animation.id}_Floating`)
+    )
 
     if (options.baking) {
         computeReadAndWrites(animation)
     }
 }
 
-function onSeek(animation: FindVariableAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: FindVariableAnimation,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 }
 
-function onEnd(animation: FindVariableAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: FindVariableAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {}
 
 /**
  * TODO

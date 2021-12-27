@@ -1,8 +1,7 @@
+import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
 import { clone } from '../../../utilities/objects'
-import { RootViewState } from '../../../view/ViewState'
 import {
     AnimationNode,
-    ChunkNodeData,
     instanceOfAnimationNode,
 } from '../../primitive/AnimationNode'
 import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
@@ -12,7 +11,6 @@ import { transitionMove } from '../../primitive/Transition/Operations/MoveTransi
 import {
     AnimationData,
     AnimationGraph,
-    createAbstraction,
     createAnimationGraph,
 } from '../AnimationGraph'
 import {
@@ -20,111 +18,54 @@ import {
     AnimationTraceChain,
     AnimationTraceOperator,
     getChunkTrace,
-    getUnionOfLocations,
-    traceChainsToString,
 } from '../graph'
-import {
-    AbstractionSelection,
-    instanceOfAbstractionSelectionSingular,
-} from './Abstractor'
-
-// export interface Trace {
-//     operation: TraceOperation;
-//     value: any;
-//     location: any;
-// }
-
-// export enum TraceOperation {
-//     Move = 'Move',
-//     Combine = 'Add',
-//     NoChangeMove = 'NoChangeMove',
-// }
-
-/**
- *
- * @param parent
- * @param selection
- * @returns
- */
-export function applyTransition(
-    parent: AnimationGraph | AnimationNode,
-    selection: AbstractionSelection
-) {
-    if (instanceOfAnimationNode(parent)) {
-        return
-    }
-
-    // Get the animations
-    // const transitions = getTransitionsFromTrace(trace)
-
-    // Create new level of abstraction
-    const abstraction = createAbstraction()
-    const originalVertices = parent.abstractions[0].vertices
-    const vertices = []
-
-    // Instantiates all entities
-    for (let i = 0; i < selection.length; i++) {
-        const current = selection[i]
-
-        if (instanceOfAbstractionSelectionSingular(current)) {
-            const node = originalVertices.find(
-                (vertex) => vertex.id === current.id
-            )
-            vertices.push(node)
-
-            if (current.selection != null) {
-                applyTransition(node, current.selection)
-            }
-        } else {
-            const trace = getChunkTrace(parent, current)
-            const transitions = getTransitionsFromTrace(trace)
-
-            // Chunk
-            const nodes = originalVertices.filter(
-                (vertex) => current.indexOf(vertex.id) != -1
-            )
-
-            if (nodes.length == 1 && instanceOfAnimationNode(nodes[0])) {
-                vertices.push(nodes[0])
-            } else {
-                // Begin transition graph
-                const nodeData: ChunkNodeData = {
-                    location: getUnionOfLocations(
-                        nodes.map((v) => v.nodeData.location)
-                    ),
-                    type: nodes.map((v) => v.nodeData.type).join(', '),
-                    selection: current,
-                }
-                const graph: AnimationGraph = createAnimationGraph(nodeData)
-                graph.isChunk = true
-
-                const init = initializeTransitionAnimation(
-                    clone(nodes[nodes.length - 1].postcondition.environment)
-                )
-                addVertex(graph, init, {
-                    nodeData: { ...nodeData, type: 'Transition Animation' },
-                })
-
-                vertices.push(graph)
-            }
-        }
-    }
-
-    abstraction.vertices = vertices
-    abstraction.about.selection = selection
-
-    // Add it to parent
-    parent.abstractions.push(abstraction)
-    parent.currentAbstractionIndex = parent.abstractions.length - 1
-}
 
 export interface TransitionAnimationNode extends AnimationNode {
     applyInvariant: (
         animation: TransitionAnimationNode,
-        view: RootViewState
+        view: PrototypicalEnvironmentState
     ) => void
     output: AnimationData
     origins: AnimationData[]
+}
+
+/**
+ * Creates an animation from a graph
+ * @param node
+ * @returns
+ */
+export function createTransition(node: AnimationNode | AnimationGraph) {
+    if (instanceOfAnimationNode(node)) {
+        return clone(node)
+    }
+
+    const nodeData = { ...clone(node.nodeData), type: 'Transition' }
+    const transition = createAnimationGraph(nodeData)
+
+    const trace = getChunkTrace(node)
+    const transitions = getTransitionsFromTrace(trace)
+
+    // Chunk
+    const nodes = node.abstractions[0].vertices
+
+    // Initialize to the post condition
+    const init = initializeTransitionAnimation(
+        clone(nodes[nodes.length - 1].postcondition)
+    )
+
+    addVertex(transition, init, {
+        nodeData: { ...nodeData, type: 'Transition Animation' },
+    })
+
+    // Add all the transitions
+    for (const t of transitions) {
+        addVertex(transition, t, { nodeData: t.nodeData })
+    }
+
+    transition.precondition = node.precondition
+    transition.postcondition = node.postcondition
+
+    return transition
 }
 
 function getTransitionsFromTrace(
@@ -155,6 +96,33 @@ function getTransitionsFromTrace(
     return transitions
 }
 
+function getAllOperationsAndLeaves(
+    chain: AnimationTraceChain
+): [AnimationTraceOperator[], AnimationTraceChain[]] {
+    if (chain.children == null) return [[], []]
+
+    const operations: AnimationTraceOperator[] = []
+    const leaves: AnimationTraceChain[] = []
+
+    // TODO: Unique branches
+    for (const child of chain.children) {
+        const operator = child[0]
+        const value = child[1]
+
+        operations.push(operator)
+
+        if (value.children == null) {
+            leaves.push(value)
+        }
+
+        const [childOperations, childLeaves] = getAllOperationsAndLeaves(value)
+        operations.push(...childOperations)
+        leaves.push(...childLeaves)
+    }
+
+    return [operations, leaves]
+}
+
 function createTransitionAnimation(
     output: AnimationData,
     operations: AnimationTraceOperator[],
@@ -182,31 +150,4 @@ function createTransitionAnimation(
     )
 
     return transition
-}
-
-function getAllOperationsAndLeaves(
-    chain: AnimationTraceChain
-): [AnimationTraceOperator[], AnimationTraceChain[]] {
-    if (chain.children == null) return [[], []]
-
-    const operations: AnimationTraceOperator[] = []
-    const leaves: AnimationTraceChain[] = []
-
-    // TODO: Unique branches
-    for (const child of chain.children) {
-        const operator = child[0]
-        const value = child[1]
-
-        operations.push(operator)
-
-        if (value.children == null) {
-            leaves.push(value)
-        }
-
-        const [childOperations, childLeaves] = getAllOperationsAndLeaves(value)
-        operations.push(...childOperations)
-        leaves.push(...childLeaves)
-    }
-
-    return [operations, leaves]
 }

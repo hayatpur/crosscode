@@ -1,13 +1,18 @@
 import * as ESTree from 'estree'
 import { apply } from '../../../animation/animation'
-import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph'
+import {
+    AnimationGraph,
+    createAnimationGraph,
+} from '../../../animation/graph/AnimationGraph'
 import { addVertex } from '../../../animation/graph/graph'
 import { AnimationContext } from '../../../animation/primitive/AnimationNode'
 import { findMember } from '../../../animation/primitive/Data/FindMember'
 import { getMember } from '../../../animation/primitive/Data/GetMember'
 import { convertIdentifierToLiteral } from '../../../environment/data/data'
-import { AccessorType } from '../../../environment/EnvironmentState'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../../Compiler'
 
 /**
@@ -17,11 +22,17 @@ import { Compiler, getNodeData } from '../../Compiler'
  * @param context
  * @returns
  */
-export function MemberExpression(ast: ESTree.MemberExpression, view: RootViewState, context: AnimationContext) {
+export function MemberExpression(
+    ast: ESTree.MemberExpression,
+    view: PrototypicalEnvironmentState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Create a register which'll *point* to the location of object
-    const objectRegister = [{ type: AccessorType.Register, value: `${graph.id}_Object` }]
+    const objectRegister = [
+        { type: AccessorType.Register, value: `${graph.id}_Object` },
+    ]
     const object = Compiler.compile(ast.object, view, {
         ...context,
         feed: false,
@@ -30,11 +41,15 @@ export function MemberExpression(ast: ESTree.MemberExpression, view: RootViewSta
     addVertex(graph, object, { nodeData: getNodeData(ast.object) })
 
     // Create a register that'll point to the location of computed property
-    const propertyRegister = [{ type: AccessorType.Register, value: `${graph.id}_Property` }]
+    const propertyRegister = [
+        { type: AccessorType.Register, value: `${graph.id}_Property` },
+    ]
 
     // Something like obj[i], or obj['x']
     const property = Compiler.compile(
-        ast.computed ? ast.property : convertIdentifierToLiteral(ast.property as ESTree.Identifier),
+        ast.computed
+            ? ast.property
+            : convertIdentifierToLiteral(ast.property as ESTree.Identifier),
         view,
         {
             ...context,
@@ -46,11 +61,19 @@ export function MemberExpression(ast: ESTree.MemberExpression, view: RootViewSta
 
     // Compute the result
     if (context.feed) {
-        const find = findMember(objectRegister, propertyRegister, context.outputRegister)
+        const find = findMember(
+            objectRegister,
+            propertyRegister,
+            context.outputRegister
+        )
         addVertex(graph, find, { nodeData: getNodeData(ast) })
         apply(find, view)
     } else {
-        const member = getMember(objectRegister, propertyRegister, context.outputRegister)
+        const member = getMember(
+            objectRegister,
+            propertyRegister,
+            context.outputRegister
+        )
         addVertex(graph, member, { nodeData: getNodeData(ast) })
         apply(member, view)
     }

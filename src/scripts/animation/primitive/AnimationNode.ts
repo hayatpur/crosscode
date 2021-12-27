@@ -1,8 +1,9 @@
 import { Easing } from 'eaz'
 import * as ESTree from 'estree'
-import { Accessor } from '../../environment/EnvironmentState'
-import { RootViewState } from '../../view/ViewState'
-import { AbstractionSelectionChunk } from '../graph/abstraction/Abstractor'
+import {
+    Accessor,
+    PrototypicalEnvironmentState,
+} from '../../environment/EnvironmentState'
 import { AnimationData, AnimationRuntimeOptions } from '../graph/AnimationGraph'
 
 export interface NodeData {
@@ -10,9 +11,7 @@ export interface NodeData {
     type: string
 }
 
-export interface ChunkNodeData extends NodeData {
-    selection: AbstractionSelectionChunk
-}
+export interface ChunkNodeData extends NodeData {}
 
 export enum AnimationPlayback {
     Normal = 'Normal',
@@ -78,8 +77,8 @@ export interface AnimationNode extends PlayableAnimation {
 
     id: string
 
-    precondition: RootViewState
-    postcondition: RootViewState
+    precondition: PrototypicalEnvironmentState
+    postcondition: PrototypicalEnvironmentState
 
     _reads: AnimationData[]
     _writes: AnimationData[]
@@ -88,18 +87,18 @@ export interface AnimationNode extends PlayableAnimation {
 
     onBegin: (
         animation: AnimationNode,
-        view: RootViewState,
+        view: PrototypicalEnvironmentState,
         options: AnimationRuntimeOptions
     ) => void
     onSeek: (
         animation: AnimationNode,
-        view: RootViewState,
+        view: PrototypicalEnvironmentState,
         time: number,
         options: AnimationRuntimeOptions
     ) => void
     onEnd: (
         animation: AnimationNode,
-        view: RootViewState,
+        view: PrototypicalEnvironmentState,
         options: AnimationRuntimeOptions
     ) => void
 }

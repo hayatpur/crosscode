@@ -1,7 +1,6 @@
 import { createScope } from '../../../environment/environment'
-import { updateRootViewLayout } from '../../../environment/layout'
+import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
 import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
-import { RootViewState } from '../../../view/ViewState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
 import {
     AnimationNode,
@@ -15,29 +14,27 @@ export interface CreateScopeAnimation extends AnimationNode {
 
 function onBegin(
     animation: CreateScopeAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
-    const environment = view.environment
+    const environment = view
     createScope(environment, animation.type)
 
     if (options.baking) {
         computeReadAndWrites(animation)
     }
-
-    updateRootViewLayout(view)
 }
 
 function onSeek(
     animation: CreateScopeAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
 ) {}
 
 function onEnd(
     animation: CreateScopeAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {}
 

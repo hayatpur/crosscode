@@ -6,13 +6,15 @@ import { AnimationContext } from '../../../animation/primitive/AnimationNode'
 import { logicalExpressionEvaluate } from '../../../animation/primitive/Binary/LogicalExpressionEvaluate'
 import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
-import { AccessorType } from '../../../environment/EnvironmentState'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../../Compiler'
 
 export function LogicalExpression(
     ast: ESTree.LogicalExpression,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     context: AnimationContext
 ) {
     const graph = createAnimationGraph(getNodeData(ast))
@@ -30,7 +32,7 @@ export function LogicalExpression(
     })
     addVertex(graph, left, { nodeData: getNodeData(ast) })
 
-    const environment = view.environment
+    const environment = view
     const leftValue = resolvePath(
         environment,
         leftRegister,

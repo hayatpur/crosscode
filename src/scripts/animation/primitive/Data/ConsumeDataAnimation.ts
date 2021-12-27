@@ -4,10 +4,10 @@ import {
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor } from '../../../environment/EnvironmentState'
-import { updateLayout, updateRootViewLayout } from '../../../environment/layout'
-import { clone } from '../../../utilities/objects'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    Accessor,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import {
     AnimationData,
     AnimationRuntimeOptions,
@@ -24,10 +24,10 @@ export interface ConsumeDataAnimation extends AnimationNode {
 
 function onBegin(
     animation: ConsumeDataAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
-    const environment = view.environment
+    const environment = view
 
     // Get data
     const data = resolvePath(
@@ -49,20 +49,18 @@ function onBegin(
             id: data.id,
         })
     }
-
-    updateRootViewLayout(view)
 }
 
 function onSeek(
     animation: ConsumeDataAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
 ) {}
 
 function onEnd(
     animation: ConsumeDataAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {}
 

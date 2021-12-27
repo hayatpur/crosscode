@@ -1,8 +1,22 @@
-import { clonePrototypicalData, createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
-import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
+import {
+    clonePrototypicalData,
+    createData,
+    replacePrototypicalDataWith,
+} from '../../../environment/data/data'
+import {
+    DataType,
+    PrototypicalDataState,
+} from '../../../environment/data/DataState'
+import {
+    addDataAt,
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
+import {
+    Accessor,
+    accessorsToString,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -16,10 +30,16 @@ import {
     PrototypicalElevationPath,
 } from '../../../path/prototypical/PrototypicalElevationPath'
 import { createPrototypicalInstantMovementPath } from '../../../path/prototypical/PrototypicalInstantMovementPath'
-import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface CopyDataAnimation extends AnimationNode {
     dataSpecifier: Accessor[]
@@ -27,9 +47,17 @@ export interface CopyDataAnimation extends AnimationNode {
     hardCopy: boolean
 }
 
-function onBegin(animation: CopyDataAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
-    const data = resolvePath(environment, animation.dataSpecifier, `${animation.id}_Data`) as PrototypicalDataState
+function onBegin(
+    animation: CopyDataAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
+    const data = resolvePath(
+        environment,
+        animation.dataSpecifier,
+        `${animation.id}_Data`
+    ) as PrototypicalDataState
     const copy = clonePrototypicalData(data, false, `${animation.id}_Copy`)
     const location = addDataAt(environment, copy, [], null)
     environment._temps[`CopyDataAnimation${animation.id}`] = location
@@ -46,15 +74,16 @@ function onBegin(animation: CopyDataAnimation, view: RootViewState, options: Ani
     endPrototypicalPath(instantaneousMovement, environment)
     removePrototypicalPath(environment, `InstantMovement${animation.id}`)
 
-    updateRootViewLayout(view)
-
     // Put it in the floating stack
     const register = resolvePath(
         environment,
         animation.outputRegister,
         `${animation.id}_Floating`
     ) as PrototypicalDataState
-    replacePrototypicalDataWith(register, createData(DataType.ID, copy.id, `${animation.id}_Floating`))
+    replacePrototypicalDataWith(
+        register,
+        createData(DataType.ID, copy.id, `${animation.id}_Floating`)
+    )
 
     if (animation.hardCopy) {
         data.value = undefined
@@ -72,28 +101,51 @@ function onBegin(animation: CopyDataAnimation, view: RootViewState, options: Ani
     }
 
     // Create elevation path
-    const elevation = createPrototypicalElevationPath(location, 1, `Elevation${animation.id}`)
+    const elevation = createPrototypicalElevationPath(
+        location,
+        1,
+        `Elevation${animation.id}`
+    )
     addPrototypicalPath(environment, elevation)
     beginPrototypicalPath(elevation, environment)
 }
 
-function onSeek(animation: CopyDataAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: CopyDataAnimation,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 
-    const environment = view.environment
-    const elevation = lookupPrototypicalPathById(environment, `Elevation${animation.id}`) as PrototypicalElevationPath
+    const environment = view
+    const elevation = lookupPrototypicalPathById(
+        environment,
+        `Elevation${animation.id}`
+    ) as PrototypicalElevationPath
     seekPrototypicalPath(elevation, environment, t)
 }
 
-function onEnd(animation: CopyDataAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
-    const elevation = lookupPrototypicalPathById(environment, `Elevation${animation.id}`) as PrototypicalElevationPath
+function onEnd(
+    animation: CopyDataAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
+    const elevation = lookupPrototypicalPathById(
+        environment,
+        `Elevation${animation.id}`
+    ) as PrototypicalElevationPath
     endPrototypicalPath(elevation, environment)
 
     removePrototypicalPath(environment, `Elevation${animation.id}`)
 }
 
-function computeReadAndWrites(animation: CopyDataAnimation, original: AnimationData, copy: AnimationData) {
+function computeReadAndWrites(
+    animation: CopyDataAnimation,
+    original: AnimationData,
+    copy: AnimationData
+) {
     animation._reads = [original]
     animation._writes = [copy]
 }
@@ -108,7 +160,9 @@ export function copyDataAnimation(
         ...createAnimationNode(null, options),
         _name: 'CopyDataAnimation',
 
-        name: `Copy ${accessorsToString(dataSpecifier)} to ${accessorsToString(outputRegister)}`,
+        name: `Copy ${accessorsToString(dataSpecifier)} to ${accessorsToString(
+            outputRegister
+        )}`,
 
         // Attributes
         dataSpecifier,

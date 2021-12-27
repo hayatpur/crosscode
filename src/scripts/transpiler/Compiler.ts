@@ -2,8 +2,11 @@
 
 import * as ESTree from 'estree'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
-import { AnimationContext, NodeData } from '../animation/primitive/AnimationNode'
-import { RootViewState } from '../view/ViewState'
+import {
+    AnimationContext,
+    NodeData,
+} from '../animation/primitive/AnimationNode'
+import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
 import { ArrayExpression } from './Expressions/Array/ArrayExpression'
 import { AssignmentExpression } from './Expressions/BinaryOperations/AssigmentExpression'
 import { BinaryExpression } from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression'
@@ -30,7 +33,11 @@ export function getNodeData(node: ESTree.Node): NodeData {
 }
 
 export class Compiler {
-    static compile(ast: ESTree.Node, view: RootViewState, context: AnimationContext): AnimationGraph {
+    static compile(
+        ast: ESTree.Node,
+        view: PrototypicalEnvironmentState,
+        context: AnimationContext
+    ): AnimationGraph {
         const mapping = {
             VariableDeclarator,
 

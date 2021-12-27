@@ -1,60 +1,79 @@
-import { resolvePath } from '../../../../environment/environment'
-import { AccessorType } from '../../../../environment/EnvironmentState'
+import { PrototypicalEnvironmentState } from '../../../../environment/EnvironmentState'
 import {
-    addPrototypicalPath,
     endPrototypicalPath,
     lookupPrototypicalPathById,
-    PrototypicalPath,
     removePrototypicalPath,
     seekPrototypicalPath,
 } from '../../../../path/path'
-import { createPrototypicalGlobalMovementPath } from '../../../../path/prototypical/PrototypicalGobalMovementPath'
-import { getCurrentLeafView, getLastActiveLeafView } from '../../../../view/view'
-import { RootViewState } from '../../../../view/ViewState'
 import { duration } from '../../../animation'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
-import { AnimationData, AnimationRuntimeOptions } from '../../../graph/AnimationGraph'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../../graph/AnimationGraph'
 import { AnimationOptions, createAnimationNode } from '../../AnimationNode'
 
 export interface TransitionMove extends TransitionAnimationNode {}
 
-function onBegin(animation: TransitionMove, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
-    const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
+function onBegin(
+    animation: TransitionMove,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    // const environment = view
+    // const data = resolvePath(
+    //     environment,
+    //     [{ type: AccessorType.ID, value: animation.output.id }],
+    //     null
+    // )
+    // const prevLeaf = getLastActiveLeafView(view)
+    // const currLeaf = getCurrentLeafView(view)
+    // // Create movement path
+    // const movement: PrototypicalPath = createPrototypicalGlobalMovementPath(
+    //     [{ type: AccessorType.ID, value: animation.output.id }],
+    //     [{ type: AccessorType.ID, value: animation.origins[0].id }],
+    //     currLeaf.id,
+    //     prevLeaf.id,
+    //     `Movement${animation.id}`
+    // )
+    // addPrototypicalPath(environment, movement)
+}
 
-    const prevLeaf = getLastActiveLeafView(view)
-    const currLeaf = getCurrentLeafView(view)
+function onSeek(
+    animation: TransitionMove,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
+    let t = animation.ease(time / duration(animation))
+    const environment = view
 
-    // Create movement path
-    const movement: PrototypicalPath = createPrototypicalGlobalMovementPath(
-        [{ type: AccessorType.ID, value: animation.output.id }],
-        [{ type: AccessorType.ID, value: animation.origins[0].id }],
-        currLeaf.id,
-        prevLeaf.id,
+    const movement = lookupPrototypicalPathById(
+        environment,
         `Movement${animation.id}`
     )
-    addPrototypicalPath(environment, movement)
-}
-
-function onSeek(animation: TransitionMove, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
-    let t = animation.ease(time / duration(animation))
-    const environment = view.environment
-
-    const movement = lookupPrototypicalPathById(environment, `Movement${animation.id}`)
     seekPrototypicalPath(movement, environment, t)
-
-    console.log('Moving...')
 }
 
-function onEnd(animation: TransitionMove, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onEnd(
+    animation: TransitionMove,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
-    const movement = lookupPrototypicalPathById(environment, `Movement${animation.id}`)
+    const movement = lookupPrototypicalPathById(
+        environment,
+        `Movement${animation.id}`
+    )
     endPrototypicalPath(movement, environment)
     removePrototypicalPath(environment, `Movement${animation.id}`)
 }
 
-function applyInvariant(animation: TransitionMove, view: RootViewState) {}
+function applyInvariant(
+    animation: TransitionMove,
+    view: PrototypicalEnvironmentState
+) {}
 
 export function transitionMove(
     output: AnimationData,

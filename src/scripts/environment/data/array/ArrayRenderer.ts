@@ -1,69 +1,73 @@
 import { createDataRenderer } from '../../EnvironmentRenderer'
 import { DataRenderer } from '../DataRenderer'
-import { ConcreteDataState } from '../DataState'
+import { PrototypicalDataState } from '../DataState'
 import { IndexRenderer } from './IndexRenderer'
 
 export class ArrayRenderer extends DataRenderer {
-    dataRenderers: { [id: string]: { renderer: DataRenderer; index: IndexRenderer } } = {}
+    dataRenderers: {
+        [id: string]: { renderer: DataRenderer; index: IndexRenderer }
+    } = {}
+    closingBrace: HTMLDivElement
+    openingBrace: HTMLDivElement
 
     constructor() {
         super()
 
-        // Opening brace
-        // const openingBrace = document.createElement('div');
-        // openingBrace.classList.add('data-array-brace', 'data-array-opening-brace');
-        // openingBrace.innerText = '[';
-
-        // // Closing brace
-        // const closingBrace = document.createElement('div');
-        // closingBrace.classList.add('data-array-brace', 'data-array-closing-brace');
-        // closingBrace.innerText = ']';
-
-        // this.element.append(openingBrace, closingBrace);
-    }
-
-    setState(data: ConcreteDataState) {
         this.element.classList.add('data-array')
 
-        // Apply transform
-        this.element.style.top = `${data.transform.rendered.y - 5 * (data.transform.styles.elevation ?? 0)}px`
-        this.element.style.left = `${data.transform.rendered.x + 5 * (data.transform.styles.elevation ?? 0)}px`
+        // Opening brace
+        this.openingBrace = document.createElement('div')
+        this.openingBrace.classList.add(
+            'data-array-brace',
+            'data-array-opening-brace'
+        )
+        this.openingBrace.innerText = '['
 
-        this.element.style.width = `${data.transform.rendered.width}px`
-        this.element.style.height = `${data.transform.rendered.height}px`
+        // Closing brace
+        this.closingBrace = document.createElement('div')
+        this.closingBrace.classList.add(
+            'data-array-brace',
+            'data-array-closing-brace'
+        )
+        this.closingBrace.innerText = ']'
 
-        if (data.transform.styles.position == 'absolute') {
-            this.element.classList.add('floating')
-        } else {
-            this.element.classList.remove('floating')
-        }
+        // this.element.append(this.openingBrace, this.closingBrace)
+    }
+
+    setState(data: PrototypicalDataState) {
+        const items = data.value as PrototypicalDataState[]
+
+        this.element.append(this.openingBrace)
 
         // Hit test
         const hits = new Set()
-
-        const items = data.value as ConcreteDataState[]
 
         // Render data
         for (let i = 0; i < items.length; i++) {
             const item = items[i]
 
             // Create renderer if not there
-            if (!(item.prototype.id in this.dataRenderers)) {
+            if (!(item.id in this.dataRenderers)) {
                 const renderer = createDataRenderer(item)
                 const index = new IndexRenderer()
-
-                this.dataRenderers[item.prototype.id] = { renderer, index }
-
-                DataRenderer.getStage().append(renderer.element)
-                DataRenderer.getStage().append(index.element)
+                this.dataRenderers[item.id] = { renderer, index }
+                this.element.append(renderer.element)
+                // DataRenderer.getStage().append(index.element)
             }
 
-            hits.add(item.prototype.id)
+            hits.add(item.id)
+            this.element.append(this.dataRenderers[item.id].renderer.element)
+            this.dataRenderers[item.id].renderer.setState(item)
 
-            this.dataRenderers[item.prototype.id].renderer.setState(item)
-            this.dataRenderers[item.prototype.id].index.setState(i, item.transform.rendered)
-
-            updateIndexClasses(this.dataRenderers[item.prototype.id].renderer.element, i, items.length)
+            // this.dataRenderers[item.id].index.setState(
+            //     i,
+            //     item.transform.rendered
+            // )
+            updateIndexClasses(
+                this.dataRenderers[item.id].renderer.element,
+                i,
+                items.length
+            )
         }
 
         // Remove data that are no longer in the view
@@ -76,19 +80,19 @@ export class ArrayRenderer extends DataRenderer {
                 delete this.dataRenderers[id]
             }
         }
+
+        this.element.append(this.closingBrace)
     }
 
     destroy(): void {
-        super.destroy()
-
-        for (const id of Object.keys(this.dataRenderers)) {
-            const renderer = this.dataRenderers[id]
-            renderer.renderer.destroy()
-            renderer.index.element.remove()
-            renderer.renderer.element.remove()
-        }
-
-        this.dataRenderers = {}
+        // super.destroy()
+        // for (const id of Object.keys(this.dataRenderers)) {
+        //     const renderer = this.dataRenderers[id]
+        //     renderer.renderer.destroy()
+        //     renderer.index.element.remove()
+        //     renderer.renderer.element.remove()
+        // }
+        // this.dataRenderers = {}
     }
 }
 

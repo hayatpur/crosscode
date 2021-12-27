@@ -1,13 +1,20 @@
 import * as ESTree from 'estree'
 import { apply } from '../../animation/animation'
-import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph'
+import {
+    AnimationGraph,
+    createAnimationGraph,
+} from '../../animation/graph/AnimationGraph'
 import { addVertex } from '../../animation/graph/graph'
 import { AnimationContext } from '../../animation/primitive/AnimationNode'
 import { bindFunctionAnimation } from '../../animation/primitive/Binding/BindFunctionAnimation'
-import { RootViewState } from '../../view/ViewState'
+import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
 import { getNodeData } from '../Compiler'
 
-export function FunctionDeclaration(ast: ESTree.FunctionDeclaration, view: RootViewState, context: AnimationContext) {
+export function FunctionDeclaration(
+    ast: ESTree.FunctionDeclaration,
+    view: PrototypicalEnvironmentState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier
@@ -15,12 +22,12 @@ export function FunctionDeclaration(ast: ESTree.FunctionDeclaration, view: RootV
     addVertex(graph, bind, { nodeData: getNodeData(ast.id) })
     apply(bind, view)
 
-    // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, view: RootViewState, context: AnimationContext) => {
+    // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, view: PrototypicalEnvironmentState, context: AnimationContext) => {
     //     const subScope = createScopeAnimation();
 
     //     for (let i = 0; i < params.length; i++) {
     //         const param = params[i] as ESTree.Identifier;
-    //         const environment = view.environment
+    //         const environment = view
     //         const bind = bindAnimation(param.name, context.args[i], subScope);
     //     }
     // };

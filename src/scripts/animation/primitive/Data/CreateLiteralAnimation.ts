@@ -1,8 +1,17 @@
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import {
+    createData,
+    replacePrototypicalDataWith,
+} from '../../../environment/data/data'
+import {
+    DataType,
+    PrototypicalDataState,
+} from '../../../environment/data/DataState'
 import { addDataAt, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
+import {
+    Accessor,
+    accessorsToString,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -11,11 +20,21 @@ import {
     removePrototypicalPath,
     seekPrototypicalPath,
 } from '../../../path/path'
-import { createPrototypicalCreatePath, PrototypicalCreatePath } from '../../../path/prototypical/PrototypicalCreatePath'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    createPrototypicalCreatePath,
+    PrototypicalCreatePath,
+} from '../../../path/prototypical/PrototypicalCreatePath'
 import { duration } from '../../animation'
-import { AnimationData, AnimationDataFlags, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationData,
+    AnimationDataFlags,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface CreateLiteralAnimation extends AnimationNode {
     value: string | number | bigint | boolean | RegExp
@@ -29,12 +48,18 @@ export interface CreateLiteralAnimation extends AnimationNode {
  * @param view
  * @param options
  */
-function onBegin(animation: CreateLiteralAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: CreateLiteralAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
-    updateRootViewLayout(view)
-
-    const data = createData(DataType.Literal, animation.value as number | string | boolean, `${animation.id}_Create`)
+    const data = createData(
+        DataType.Literal,
+        animation.value as number | string | boolean,
+        `${animation.id}_Create`
+    )
 
     const reference = resolvePath(
         environment,
@@ -46,11 +71,13 @@ function onBegin(animation: CreateLiteralAnimation, view: RootViewState, options
     const loc = addDataAt(environment, data, [], null)
     environment._temps[`CreateLiteralAnimation${animation.id}`] = loc
 
-    const create = createPrototypicalCreatePath(loc, animation.locationHint, `Create${animation.id}`)
+    const create = createPrototypicalCreatePath(
+        loc,
+        animation.locationHint,
+        `Create${animation.id}`
+    )
     addPrototypicalPath(environment, create)
     beginPrototypicalPath(create, environment)
-
-    updateRootViewLayout(view)
 
     if (options.baking) {
         computeReadAndWrites(animation, {
@@ -72,36 +99,49 @@ function onBegin(animation: CreateLiteralAnimation, view: RootViewState, options
         animation.outputRegister,
         `${animation.id}_Floating`
     ) as PrototypicalDataState
-    replacePrototypicalDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`))
-
-    updateRootViewLayout(view)
+    replacePrototypicalDataWith(
+        outputRegister,
+        createData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
+    )
 }
 
 function onSeek(
     animation: CreateLiteralAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
 ) {
     let t = animation.ease(time / duration(animation))
-    const environment = view.environment
+    const environment = view
 
-    const create = lookupPrototypicalPathById(environment, `Create${animation.id}`) as PrototypicalCreatePath
+    const create = lookupPrototypicalPathById(
+        environment,
+        `Create${animation.id}`
+    ) as PrototypicalCreatePath
     seekPrototypicalPath(create, environment, t)
-    updateRootViewLayout(view)
 }
 
-function onEnd(animation: CreateLiteralAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onEnd(
+    animation: CreateLiteralAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
     delete environment._temps[`CreateLiteralAnimation${animation.id}`]
 
-    const create = lookupPrototypicalPathById(environment, `Create${animation.id}`) as PrototypicalCreatePath
+    const create = lookupPrototypicalPathById(
+        environment,
+        `Create${animation.id}`
+    ) as PrototypicalCreatePath
     endPrototypicalPath(create, environment)
 
     removePrototypicalPath(environment, `Create${animation.id}`)
 }
 
-function computeReadAndWrites(animation: CreateLiteralAnimation, data: AnimationData) {
+function computeReadAndWrites(
+    animation: CreateLiteralAnimation,
+    data: AnimationData
+) {
     if (data.flags == null) data.flags = new Set()
     data.flags.add(AnimationDataFlags.Create)
 

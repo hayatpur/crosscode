@@ -1,32 +1,48 @@
 import { popScope } from '../../../environment/environment'
-import { updateRootViewLayout } from '../../../environment/layout'
-import { RootViewState } from '../../../view/ViewState'
+import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
 import { AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface PopScopeAnimation extends AnimationNode {}
 
-function onBegin(animation: PopScopeAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: PopScopeAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
     popScope(environment)
 
     if (options.baking) {
         computeReadAndWrites(animation)
     }
-
-    updateRootViewLayout(view)
 }
 
-function onSeek(animation: PopScopeAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: PopScopeAnimation,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: PopScopeAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: PopScopeAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {}
 
 function computeReadAndWrites(animation: PopScopeAnimation) {
     animation._reads = []
     animation._writes = []
 }
 
-export function popScopeAnimation(options: AnimationOptions = {}): PopScopeAnimation {
+export function popScopeAnimation(
+    options: AnimationOptions = {}
+): PopScopeAnimation {
     return {
         ...createAnimationNode(null, options),
         _name: 'PopScopeAnimation',

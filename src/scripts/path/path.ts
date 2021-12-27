@@ -1,4 +1,5 @@
-import { ConcreteEnvironmentState, PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { EnvironmentRenderer } from '../environment/EnvironmentRenderer'
+import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
 
 // export enum PrototypicalPathType {
 //     None = 'None',
@@ -29,9 +30,19 @@ export interface PrototypicalPath {
         t?: number
     }
 
-    onBegin: (path: PrototypicalPath, environment: PrototypicalEnvironmentState) => void
-    onSeek: (path: PrototypicalPath, environment: PrototypicalEnvironmentState, t: number) => void
-    onEnd: (path: PrototypicalPath, environment: PrototypicalEnvironmentState) => void
+    onBegin: (
+        path: PrototypicalPath,
+        environment: PrototypicalEnvironmentState
+    ) => void
+    onSeek: (
+        path: PrototypicalPath,
+        environment: PrototypicalEnvironmentState,
+        t: number
+    ) => void
+    onEnd: (
+        path: PrototypicalPath,
+        environment: PrototypicalEnvironmentState
+    ) => void
 }
 
 export interface ConcretePath {
@@ -43,9 +54,22 @@ export interface ConcretePath {
         t?: number
     }
 
-    onBegin: (path: ConcretePath, environment: ConcreteEnvironmentState) => void
-    onSeek: (path: ConcretePath, environment: ConcreteEnvironmentState, t: number) => void
-    onEnd: (path: ConcretePath, environment: ConcreteEnvironmentState) => void
+    onBegin: (
+        path: ConcretePath,
+        environment: PrototypicalEnvironmentState,
+        renderer: EnvironmentRenderer
+    ) => void
+    onSeek: (
+        path: ConcretePath,
+        environment: PrototypicalEnvironmentState,
+        renderer: EnvironmentRenderer,
+        t: number
+    ) => void
+    onEnd: (
+        path: ConcretePath,
+        environment: PrototypicalEnvironmentState,
+        renderer: EnvironmentRenderer
+    ) => void
 }
 
 export function createPrototypicalPath(id: string): PrototypicalPath {
@@ -71,44 +95,76 @@ export function createConcretePath(prototype: PrototypicalPath): ConcretePath {
     }
 }
 
-export function beginPrototypicalPath(path: PrototypicalPath, environment: PrototypicalEnvironmentState) {
+export function beginPrototypicalPath(
+    path: PrototypicalPath,
+    environment: PrototypicalEnvironmentState
+) {
     path.onBegin(path, environment)
     path.meta.isPlaying = true
 }
 
-export function seekPrototypicalPath(path: PrototypicalPath, environment: PrototypicalEnvironmentState, t: number) {
+export function seekPrototypicalPath(
+    path: PrototypicalPath,
+    environment: PrototypicalEnvironmentState,
+    t: number
+) {
     path.onSeek(path, environment, t)
 }
 
-export function endPrototypicalPath(path: PrototypicalPath, environment: PrototypicalEnvironmentState) {
+export function endPrototypicalPath(
+    path: PrototypicalPath,
+    environment: PrototypicalEnvironmentState
+) {
     path.onEnd(path, environment)
     path.meta.isPlaying = false
     path.meta.hasPlayed = false
 }
 
-export function addPrototypicalPath(environment: PrototypicalEnvironmentState, path: PrototypicalPath) {
+export function addPrototypicalPath(
+    environment: PrototypicalEnvironmentState,
+    path: PrototypicalPath
+) {
     environment.paths[path.id] = path
 }
 
-export function removePrototypicalPath(environment: PrototypicalEnvironmentState, id: string) {
+export function removePrototypicalPath(
+    environment: PrototypicalEnvironmentState,
+    id: string
+) {
     delete environment.paths[id]
 }
 
-export function lookupPrototypicalPathById(environment: PrototypicalEnvironmentState, id: string) {
+export function lookupPrototypicalPathById(
+    environment: PrototypicalEnvironmentState,
+    id: string
+) {
     return environment.paths[id]
 }
 
-export function beginConcretePath(path: ConcretePath, environment: ConcreteEnvironmentState) {
-    path.onBegin(path, environment)
+export function beginConcretePath(
+    path: ConcretePath,
+    environment: PrototypicalEnvironmentState,
+    renderer: EnvironmentRenderer
+) {
+    path.onBegin(path, environment, renderer)
     path.meta.isPlaying = true
 }
 
-export function seekConcretePath(path: ConcretePath, environment: ConcreteEnvironmentState, t: number) {
-    path.onSeek(path, environment, t)
+export function seekConcretePath(
+    path: ConcretePath,
+    environment: PrototypicalEnvironmentState,
+    renderer: EnvironmentRenderer,
+    t: number
+) {
+    path.onSeek(path, environment, renderer, t)
 }
 
-export function endConcretePath(path: ConcretePath, environment: ConcreteEnvironmentState) {
-    path.onEnd(path, environment)
+export function endConcretePath(
+    path: ConcretePath,
+    environment: PrototypicalEnvironmentState,
+    renderer: EnvironmentRenderer
+) {
+    path.onEnd(path, environment, renderer)
     path.meta.isPlaying = false
     path.meta.hasPlayed = false
 }

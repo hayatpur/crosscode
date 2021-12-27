@@ -1,4 +1,3 @@
-.identifier-i,
 .identifier {
     position: absolute;
     font-size: 14px;
@@ -9,9 +8,6 @@
     justify-content: center;
     align-items: center;
     padding-bottom: 2px;
-}
-
-.identifier {
-    padding: 0px;
-    margin: 0px;
+    font-family: Fira Code;
+    font-weight: 500;
 }

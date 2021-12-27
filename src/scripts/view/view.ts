@@ -1,240 +1,237 @@
-import { currentAbstraction } from '../animation/animation'
-import { createCursorState } from '../animation/Cursor'
+import { getBoxToBoxArrow } from 'perfect-arrows'
+import { createTransition } from '../animation/graph/abstraction/Transition'
 import {
     AnimationGraph,
     instanceOfAnimationGraph,
 } from '../animation/graph/AnimationGraph'
-import {
-    AnimationNode,
-    instanceOfAnimationNode,
-} from '../animation/primitive/AnimationNode'
-import { createTransform } from '../environment/data/data'
-import { createPrototypicalEnvironment } from '../environment/environment'
-import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
-import { updateRootViewLayout } from '../environment/layout'
+import { queryAnimationGraph } from '../animation/graph/graph'
+import { AnimationNode } from '../animation/primitive/AnimationNode'
+import { Editor } from '../editor/Editor'
+import { AnimationRenderer } from '../environment/AnimationRenderer'
+import { Executor } from '../executor/Executor'
+import { getNumericalValueOfStyle, lerp } from '../utilities/math'
 import { clone } from '../utilities/objects'
-import {
-    GroupViewState,
-    instanceOfLeafView,
-    LeafViewState,
-    RootViewState,
-} from './ViewState'
+import { ViewConnection } from './ViewConnection'
 
-let CUR_VIEW_ID = 0
-
-export function createGroupView(): GroupViewState {
-    return {
-        _type: 'GroupViewState',
-        id: `View(${++CUR_VIEW_ID})`,
-        transform: {
-            ...createTransform(),
-            styles: {},
-            positionModifiers: [],
-            classList: ['view-i'],
-        },
-        isActive: false,
-        lastActive: 0,
-        children: [],
-        label: '',
-        representation: { granularity: null },
-        activeIds: [],
+export interface ViewTransform {
+    dragging: boolean
+    position: {
+        x: number
+        y: number
     }
 }
 
-export function createLeafViewState(): LeafViewState {
-    return {
-        _type: 'LeafViewState',
-        id: `View(${++CUR_VIEW_ID})`,
-        transform: {
-            ...createTransform(),
-            styles: {},
-            classList: ['leaf-view-i'],
-        },
-        isActive: false,
-        lastActive: 0,
-        _environment: null,
-        mapping: {
-            f: (env: PrototypicalEnvironmentState) => clone(env),
-        },
-        label: '',
-        representation: { granularity: null },
-        activeIds: [],
+// A group view is a collection of leaf views
+export interface ViewState {
+    _type: 'ViewState'
+    animationId: string // TODO: Extend to multiple animations
+
+    transform: ViewTransform
+}
+
+export class View {
+    // State
+    state: ViewState
+
+    // Renderer
+    indicator: HTMLDivElement // Indicator on the code
+    element: HTMLDivElement // View element
+    label: HTMLDivElement
+    interactable: HTMLDivElement
+
+    // Outgoing connections
+    connections: ViewConnection[] = []
+    connectionsContainer: HTMLDivElement
+
+    // Misc
+    private pMouse: { x: number; y: number }
+    private compiledAnimation: AnimationGraph | AnimationNode = null
+    private animationRenderer: AnimationRenderer = null
+
+    connection: SVGPathElement
+
+    constructor(animationId: string) {
+        // Initial state
+        this.state = {
+            _type: 'ViewState',
+            animationId: animationId,
+            transform: { dragging: false, position: { x: 0, y: 0 } },
+        }
+
+        // Renderer
+        this.element = document.createElement('div')
+        this.element.classList.add('view')
+        document.body.appendChild(this.element)
+
+        this.label = document.createElement('div')
+        this.label.classList.add('view-label')
+        this.element.appendChild(this.label)
+
+        this.indicator = document.createElement('div')
+        this.indicator.classList.add('view-indicator')
+        document.body.appendChild(this.indicator)
+
+        // Initial position
+        const animation = queryAnimationGraph(
+            Executor.instance.animation,
+            (node) => node.id == this.state.animationId
+        )
+
+        if (animation == null) return
+
+        const location = animation.nodeData.location
+        const bbox = Editor.instance.computeBoundingBoxForLoc(location)
+
+        this.state.transform.position.x = bbox.x + bbox.width + 100
+        this.state.transform.position.y = bbox.y - 30
+        this.element.style.left = `${this.state.transform.position.x}px`
+        this.element.style.top = `${this.state.transform.position.y}px`
+
+        // Bind mouse events
+        this.bindMouseEvents()
+
+        // The connection path
+        this.connection = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'path'
+        )
+        this.connection.classList.add('connection-path')
+
+        // Add them to global svg canvas
+        const svg = document.getElementById('svg-canvas')
+        svg.append(this.connection)
+
+        this.label.innerHTML = animation.nodeData.type
+            .replace(/([A-Z])/g, ' $1')
+            .trim()
+
+        // Setup the connections
+        this.connectionsContainer = document.createElement('div')
+        this.connectionsContainer.classList.add('view-connections')
+        this.element.appendChild(this.connectionsContainer)
+
+        if (instanceOfAnimationGraph(animation)) {
+            // console.log(animationToString(animation))
+
+            for (const child of animation.abstractions[0].vertices) {
+                const connection = new ViewConnection(child.id)
+                this.connections.push(connection)
+                this.connectionsContainer.appendChild(connection.origin)
+            }
+        }
+
+        // Setup the animation
+        this.compiledAnimation = createTransition(clone(animation))
+        this.animationRenderer = new AnimationRenderer(this.compiledAnimation)
+
+        this.element.appendChild(this.animationRenderer.element)
     }
-}
 
-export function createRootView(): RootViewState {
-    const root: RootViewState = {
-        ...createGroupView(),
-        _type: 'RootViewState',
-        environment: createPrototypicalEnvironment(),
-        cursor: createCursorState(),
-        animation: null,
-        chunkIds: [],
+    tick(dt: number) {
+        // Update position
+        this.element.style.left = `${lerp(
+            getNumericalValueOfStyle(this.element.style.left),
+            this.state.transform.position.x,
+            0.2
+        )}px`
+        this.element.style.top = `${lerp(
+            getNumericalValueOfStyle(this.element.style.top),
+            this.state.transform.position.y,
+            0.2
+        )}px`
+
+        // Indicator
+        const animation = queryAnimationGraph(
+            Executor.instance.animation,
+            (node) => node.id == this.state.animationId
+        )
+
+        if (animation == null) return
+
+        const location = animation.nodeData.location
+        const indicatorBbox = Editor.instance.computeBoundingBoxForLoc(location)
+
+        this.indicator.style.top = `${indicatorBbox.y}px`
+        this.indicator.style.left = `${indicatorBbox.x}px`
+        this.indicator.style.width = `${indicatorBbox.width}px`
+        this.indicator.style.height = `${indicatorBbox.height}px`
+
+        const elementBbox = this.element.getBoundingClientRect()
+
+        // Arrow
+        const arrow = getBoxToBoxArrow(
+            indicatorBbox.x,
+            indicatorBbox.y,
+            indicatorBbox.width,
+            indicatorBbox.height,
+            elementBbox.x,
+            elementBbox.y,
+            elementBbox.width,
+            elementBbox.height,
+            { padEnd: 0 }
+        )
+
+        const [sx, sy, cx, cy, ex, ey, ae, as, sc] = arrow
+
+        this.connection.setAttribute(
+            'd',
+            `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`
+        )
+
+        // Update animation
+        // TODO: Make this part of an animation layer
+
+        this.animationRenderer.tick(dt)
     }
 
-    // Create a new view
-    const newView = createLeafViewState()
-    newView.label = 'Program'
+    bindMouseEvents() {
+        // Bind mouse events
+        const node = this.label
 
-    // Add the new view to the current view state
-    root.children.push(newView)
-    newView.isActive = true
-    newView.lastActive = performance.now()
+        node.addEventListener('mousedown', this.mousedown.bind(this))
+        node.addEventListener('mouseover', this.mouseover.bind(this))
+        node.addEventListener('mouseout', this.mouseout.bind(this))
 
-    updateRootViewLayout(root)
-
-    return root
-}
-
-export function cloneGroupView(
-    view: GroupViewState,
-    assignNewId: boolean = false
-): GroupViewState {
-    return {
-        ...clone(view),
-        id: assignNewId ? `View(${++CUR_VIEW_ID})` : clone(view.id),
+        document.body.addEventListener('mouseup', this.mouseup.bind(this))
+        document.body.addEventListener('mousemove', this.mousemove.bind(this))
     }
-}
 
-export function cloneRootView(
-    view: RootViewState,
-    assignNewId: boolean = false
-): RootViewState {
-    return {
-        ...clone(view),
-        id: assignNewId ? `View(${++CUR_VIEW_ID})` : clone(view.id),
+    mousedown(e: MouseEvent) {
+        this.state.transform.dragging = true
+        this.element.classList.add('dragging')
+
+        this.pMouse = {
+            x: e.x,
+            y: e.y,
+        }
+
+        console.log('Mouse down')
     }
-}
 
-export function replaceGroupViewWith(
-    current: GroupViewState,
-    newView: GroupViewState
-) {
-    const clone = cloneGroupView(newView)
-    current.id = clone.id
-    current.label = clone.label
-    current.transform = clone.transform
-    current.children = clone.children
-}
+    mouseup(e: MouseEvent) {
+        if (this.state.transform.dragging) {
+            this.state.transform.dragging = false
+            this.element.classList.remove('dragging')
+        }
 
-export function replaceRootViewWith(
-    current: RootViewState,
-    newView: RootViewState
-) {
-    const clone = cloneRootView(newView)
-    current.id = clone.id
-    current.label = clone.label
-    current.transform = clone.transform
-    current.children = clone.children
-    current.environment = clone.environment
-    current.cursor = clone.cursor
-}
+        console.log('Mouse up')
+    }
 
-export function getFlattenedChildren(
-    view: RootViewState | GroupViewState
-): (GroupViewState | LeafViewState)[] {
-    const children = []
+    mousemove(e: MouseEvent) {
+        const mouse = { x: e.x, y: e.y }
 
-    for (const child of view.children) {
-        children.push(child)
+        if (this.state.transform.dragging) {
+            this.state.transform.position.x += mouse.x - this.pMouse.x
+            this.state.transform.position.y += mouse.y - this.pMouse.y
+        }
 
-        if (!instanceOfLeafView(child)) {
-            children.push(...getFlattenedChildren(child))
+        this.pMouse = {
+            x: e.x,
+            y: e.y,
         }
     }
 
-    return children
-}
+    mouseover(e: MouseEvent) {}
 
-export function getCurrentLeafView(
-    view: GroupViewState | RootViewState
-): LeafViewState {
-    const children = getFlattenedChildren(view)
-    for (const child of children) {
-        if (instanceOfLeafView(child) && child.isActive) {
-            return child
-        }
-    }
-}
-
-export function getLastActiveLeafView(
-    view: GroupViewState | RootViewState
-): LeafViewState {
-    let children = getFlattenedChildren(view)
-    children = children.filter(
-        (child) => instanceOfLeafView(child) && !child.isActive
-    )
-
-    // Return child with the largest lastActive
-    if (children.length == 0) {
-        console.warn('No last active view, returning current view')
-        return getCurrentLeafView(view)
-    }
-
-    return children.reduce((candidate, other) =>
-        candidate.lastActive > other.lastActive ? candidate : other
-    ) as LeafViewState
-}
-
-export function findViewById(
-    view: GroupViewState | RootViewState,
-    id: string
-): GroupViewState | LeafViewState {
-    const children = getFlattenedChildren(view)
-    for (const child of children) {
-        if (child.id === id) {
-            return child
-        }
-    }
-}
-
-export function findLeafViewById(
-    view: GroupViewState | RootViewState,
-    id: string
-): LeafViewState {
-    const children = getFlattenedChildren(view)
-    for (const child of children) {
-        if (instanceOfLeafView(child) && child.id === id) {
-            return child
-        }
-    }
-}
-
-export function generateViewsForAnimation(
-    animation: AnimationGraph | AnimationNode
-) {
-    const views: (GroupViewState | LeafViewState)[] = []
-
-    if (instanceOfAnimationNode(animation) || animation.isChunk) {
-        const view = createLeafViewState()
-        view.label = instanceOfAnimationNode(animation)
-            ? animation.name
-            : animation.nodeData.type
-
-        view.activeIds.push(animation.id)
-        views.push(view)
-    } else {
-        let view: GroupViewState | LeafViewState = createGroupView()
-        view.label = animation.nodeData.type
-
-        for (const node of currentAbstraction(animation).vertices) {
-            view.children.push(...generateViewsForAnimation(node))
-        }
-
-        view.activeIds.push(animation.id)
-
-        views.push(view)
-    }
-
-    return views
-}
-
-export function generateViews(view: RootViewState) {
-    console.log(view.animation, generateViewsForAnimation(view.animation))
-
-    view.children = (
-        generateViewsForAnimation(view.animation)[0] as GroupViewState
-    ).children
-
-    view.label = 'Program'
+    mouseout(e: MouseEvent) {}
 }

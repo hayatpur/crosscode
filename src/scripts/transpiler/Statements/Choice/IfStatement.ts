@@ -13,13 +13,15 @@ import {
 import { consumeDataAnimation } from '../../../animation/primitive/Data/ConsumeDataAnimation'
 import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
-import { AccessorType } from '../../../environment/EnvironmentState'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../../Compiler'
 
 export function IfStatement(
     ast: ESTree.IfStatement,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     context: AnimationContext
 ) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
@@ -37,7 +39,7 @@ export function IfStatement(
 
     // @TODO: Add a probe test animation
     const testData = resolvePath(
-        view.environment,
+        view,
         testRegister,
         null
     ) as PrototypicalDataState

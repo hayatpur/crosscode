@@ -2,7 +2,6 @@ import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { clone } from '../utilities/objects'
 import { createData, createTransform } from './data/data'
 import {
-    ConcreteDataState,
     DataType,
     instanceOfPrototypicalData,
     PrototypicalDataState,
@@ -10,7 +9,6 @@ import {
 import {
     Accessor,
     AccessorType,
-    ConcreteEnvironmentState,
     ConcreteIdentifierState,
     instanceOfPrototypicalEnvironment,
     PrototypicalEnvironmentState,
@@ -29,25 +27,6 @@ export function createPrototypicalEnvironment(): PrototypicalEnvironmentState {
         _temps: {},
         paths: {},
         id: `Env(${++CUR_ENV_ID})`,
-    }
-}
-
-export function createConcreteEnvironment(
-    prototype: PrototypicalEnvironmentState
-): ConcreteEnvironmentState {
-    return {
-        _type: 'ConcreteEnvironmentState',
-        prototype: prototype,
-        memory: [],
-        paths: {},
-        scope: [{ bindings: {}, type: ScopeType.Default }],
-        transform: {
-            ...createTransform(),
-            styles: {},
-            positionModifiers: [],
-            classList: ['environment-i'],
-        },
-        representation: {},
     }
 }
 
@@ -225,29 +204,6 @@ export function flattenedEnvironmentMemory(
 
         if (data.type == DataType.Array)
             search.push(...(data.value as PrototypicalDataState[]))
-    }
-
-    return flattened
-}
-
-/**
- * Returns flattened array of all data in the environment.
- * @param environment
- * @returns
- */
-export function flattenedConcreteEnvironmentMemory(
-    environment: ConcreteEnvironmentState
-): ConcreteDataState[] {
-    const search = [...environment.memory]
-    const flattened: ConcreteDataState[] = []
-
-    while (search.length > 0) {
-        const data = search.shift()
-        if (data == null) continue
-        flattened.push(data)
-
-        if (data.prototype.type == DataType.Array)
-            search.push(...(data.value as ConcreteDataState[]))
     }
 
     return flattened
@@ -524,22 +480,13 @@ export function getTrueId(
     }
 }
 
-export function lookupDataByIdInConcreteEnvironment(
-    environment: ConcreteEnvironmentState,
-    id: string
-) {
-    return flattenedConcreteEnvironmentMemory(environment).find(
-        (data) => data.prototype.id == id
-    )
-}
-
-// export function getEmptyPosition(view: RootViewState, id: string) {
+// export function getEmptyPosition(view: PrototypicalEnvironmentState, id: string) {
 //     // Then it doesn't have a place yet
 //     // Find an empty space and put it there
 //     const placeholder = createData(DataType.Literal, '', `${id}_Placeholder`)
 
-//     const placeholderLocation = addDataAt(view.environment, placeholder, [], `${id}_Placeholder`)
-//     updateRootViewLayout(view)
+//     const placeholderLocation = addDataAt(view, placeholder, [], `${id}_Placeholder`)
+//
 
 //     const transform = getRelativeLocation(
 //         placeholder.transform.rendered,

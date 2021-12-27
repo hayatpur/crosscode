@@ -1,13 +1,34 @@
 import * as ESTree from 'estree'
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { PrototypicalDataState, DataType } from '../../../environment/data/DataState'
-import { resolvePath, addDataAt, getMemoryLocation, removeAt } from '../../../environment/environment'
-import { Accessor, accessorsToString, AccessorType } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    createData,
+    replacePrototypicalDataWith,
+} from '../../../environment/data/data'
+import {
+    DataType,
+    PrototypicalDataState,
+} from '../../../environment/data/DataState'
+import {
+    addDataAt,
+    getMemoryLocation,
+    removeAt,
+    resolvePath,
+} from '../../../environment/environment'
+import {
+    Accessor,
+    accessorsToString,
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { duration } from '../../animation'
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface BinaryExpressionEvaluate extends AnimationNode {
     leftSpecifier: Accessor[]
@@ -16,65 +37,110 @@ export interface BinaryExpressionEvaluate extends AnimationNode {
     outputRegister: Accessor[]
 }
 
-function onBegin(animation: BinaryExpressionEvaluate, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
-    
+function onBegin(
+    animation: BinaryExpressionEvaluate,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
+
     // Find left data
-    let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as PrototypicalDataState
+    let left = resolvePath(
+        environment,
+        animation.leftSpecifier,
+        `${animation.id}_Left`
+    ) as PrototypicalDataState
 
     // Find right data
-    let right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as PrototypicalDataState
+    let right = resolvePath(
+        environment,
+        animation.rightSpecifier,
+        `${animation.id}_Right`
+    ) as PrototypicalDataState
 
     const data = createData(
         DataType.Literal,
-        eval(`${left.value}${animation.operator}${right.value}`),
+        computeBinaryExpression(left.value, right.value, animation.operator),
         `${animation.id}_EvaluatedData`
     )
 
     addDataAt(environment, data, [], null)
-    updateRootViewLayout(view)
 }
 
 function onSeek(
     animation: BinaryExpressionEvaluate,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
 ) {
     let t = animation.ease(time / duration(animation))
-    const environment = view.environment
+    const environment = view
 }
 
-function onEnd(animation: BinaryExpressionEvaluate, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onEnd(
+    animation: BinaryExpressionEvaluate,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
-    let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as PrototypicalDataState
-    let right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as PrototypicalDataState
+    let left = resolvePath(
+        environment,
+        animation.leftSpecifier,
+        `${animation.id}_Left`
+    ) as PrototypicalDataState
+    let right = resolvePath(
+        environment,
+        animation.rightSpecifier,
+        `${animation.id}_Right`
+    ) as PrototypicalDataState
 
-    const evaluated = resolvePath(environment, [{type: AccessorType.ID, value: `${animation.id}_EvaluatedData`}], null) as PrototypicalDataState
-    
+    const evaluated = resolvePath(
+        environment,
+        [{ type: AccessorType.ID, value: `${animation.id}_EvaluatedData` }],
+        null
+    ) as PrototypicalDataState
+
     if (options.baking) {
         computeReadAndWrites(
             animation,
-            { location: getMemoryLocation(environment, left).foundLocation, id: left.id },
-            { location: getMemoryLocation(environment, right).foundLocation, id: right.id },
-            { location: getMemoryLocation(environment, evaluated).foundLocation, id: evaluated.id }
+            {
+                location: getMemoryLocation(environment, left).foundLocation,
+                id: left.id,
+            },
+            {
+                location: getMemoryLocation(environment, right).foundLocation,
+                id: right.id,
+            },
+            {
+                location: getMemoryLocation(environment, evaluated)
+                    .foundLocation,
+                id: evaluated.id,
+            }
         )
     }
 
     // Add evaluated to environment
     // Put it in the output register (if any)
     if (animation.outputRegister.length > 0) {
-        const output = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as PrototypicalDataState
-        replacePrototypicalDataWith(output, createData(DataType.ID, evaluated.id, `${animation.id}_Placed`))
+        const output = resolvePath(
+            environment,
+            animation.outputRegister,
+            `${animation.id}_Floating`
+        ) as PrototypicalDataState
+        replacePrototypicalDataWith(
+            output,
+            createData(DataType.ID, evaluated.id, `${animation.id}_Placed`)
+        )
     } else {
-        removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
+        removeAt(
+            environment,
+            getMemoryLocation(environment, evaluated).foundLocation
+        )
     }
 
     removeAt(environment, getMemoryLocation(environment, left).foundLocation)
     removeAt(environment, getMemoryLocation(environment, right).foundLocation)
-
-    updateRootViewLayout(view)
 }
 
 function computeReadAndWrites(
@@ -100,7 +166,9 @@ export function binaryExpressionEvaluate(
 
         baseDuration: 30,
 
-        name: `Binary Evaluate ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(
+        name: `Binary Evaluate ${accessorsToString(
+            leftSpecifier
+        )} ${operator} ${accessorsToString(
             rightSpecifier
         )} onto ${accessorsToString(outputRegister)}`,
 
@@ -114,6 +182,61 @@ export function binaryExpressionEvaluate(
         onBegin,
         onSeek,
         onEnd,
+    }
+}
+
+function computeBinaryExpression(
+    left: any,
+    right: any,
+    operator: ESTree.BinaryOperator
+) {
+    switch (operator) {
+        case '+':
+            return left + right
+        case '-':
+            return left - right
+        case '*':
+            return left * right
+        case '/':
+            return left / right
+        case '%':
+            return left % right
+        case '**':
+            return Math.pow(left, right)
+        case '<<':
+            return left << right
+        case '>>':
+            return left >> right
+        case '>>>':
+            return left >>> right
+        case '&':
+            return left & right
+        case '|':
+            return left | right
+        case '^':
+            return left ^ right
+        case '==':
+            return left == right
+        case '!=':
+            return left != right
+        case '===':
+            return left === right
+        case '!==':
+            return left !== right
+        case '<':
+            return left < right
+        case '>':
+            return left > right
+        case '<=':
+            return left <= right
+        case '>=':
+            return left >= right
+        case 'instanceof':
+            return left instanceof right
+        case 'in':
+            return left in right
+        default:
+            throw new Error(`Unsupported operator ${operator}`)
     }
 }
 

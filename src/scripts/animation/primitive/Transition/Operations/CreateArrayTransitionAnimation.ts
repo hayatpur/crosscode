@@ -1,5 +1,8 @@
 import { resolvePath } from '../../../../environment/environment'
-import { AccessorType } from '../../../../environment/EnvironmentState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -12,16 +15,22 @@ import {
     createPrototypicalCreatePath,
     PrototypicalCreatePath,
 } from '../../../../path/prototypical/PrototypicalCreatePath'
-import { RootViewState } from '../../../../view/ViewState'
 import { duration } from '../../../animation'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
-import { AnimationData, AnimationRuntimeOptions } from '../../../graph/AnimationGraph'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../../graph/AnimationGraph'
 import { AnimationOptions, createAnimationNode } from '../../AnimationNode'
 
 export interface TransitionCreateArray extends TransitionAnimationNode {}
 
-function onBegin(animation: TransitionCreateArray, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: TransitionCreateArray,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
     const create = createPrototypicalCreatePath(
         [{ type: AccessorType.ID, value: animation.output.id }],
         [{ type: AccessorType.ID, value: animation.output.id }],
@@ -31,26 +40,52 @@ function onBegin(animation: TransitionCreateArray, view: RootViewState, options:
     beginPrototypicalPath(create, environment)
 }
 
-function onSeek(animation: TransitionCreateArray, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: TransitionCreateArray,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
-    const environment = view.environment
+    const environment = view
 
-    const create = lookupPrototypicalPathById(environment, `CreateArray${animation.id}`) as PrototypicalCreatePath
+    const create = lookupPrototypicalPathById(
+        environment,
+        `CreateArray${animation.id}`
+    ) as PrototypicalCreatePath
     seekPrototypicalPath(create, environment, t)
 }
 
-function onEnd(animation: TransitionCreateArray, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
-    const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
+function onEnd(
+    animation: TransitionCreateArray,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
+    const data = resolvePath(
+        environment,
+        [{ type: AccessorType.ID, value: animation.output.id }],
+        null
+    )
 
-    const create = lookupPrototypicalPathById(environment, `CreateArray${animation.id}`) as PrototypicalCreatePath
+    const create = lookupPrototypicalPathById(
+        environment,
+        `CreateArray${animation.id}`
+    ) as PrototypicalCreatePath
     endPrototypicalPath(create, environment)
     removePrototypicalPath(environment, `CreateArray${animation.id}`)
 }
 
-function applyInvariant(animation: TransitionCreateArray, view: RootViewState) {
-    const environment = view.environment
-    const data = resolvePath(environment, [{ type: AccessorType.ID, value: animation.output.id }], null)
+function applyInvariant(
+    animation: TransitionCreateArray,
+    view: PrototypicalEnvironmentState
+) {
+    const environment = view
+    const data = resolvePath(
+        environment,
+        [{ type: AccessorType.ID, value: animation.output.id }],
+        null
+    )
 }
 
 export function transitionCreateArray(

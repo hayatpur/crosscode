@@ -1,6 +1,6 @@
+import { createPrototypicalEnvironment } from '../environment/environment'
+import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
 import { clone } from '../utilities/objects'
-import { createRootView, replaceRootViewWith } from '../view/view'
-import { RootViewState } from '../view/ViewState'
 import {
     AnimationData,
     AnimationGraph,
@@ -95,7 +95,7 @@ export function addEdge(graph: AnimationGraph, edge: Edge) {
  */
 export function begin(
     animation: AnimationGraph | AnimationNode,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions = {}
 ) {
     if (options.baking) {
@@ -106,10 +106,10 @@ export function begin(
         animation.onBegin(animation, view, options)
     }
 
-    if (animation.isChunk) {
-        view.cursor.location = animation.nodeData.location
-        view.cursor.label = animation.nodeData.type
-    }
+    // if (animation.isChunk) {
+    //     view.cursor.location = animation.nodeData.location
+    //     view.cursor.label = animation.nodeData.type
+    // }
 }
 
 /**
@@ -120,7 +120,7 @@ export function begin(
  */
 export function end(
     animation: AnimationGraph | AnimationNode,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions = {}
 ) {
     if (options.baking) {
@@ -141,7 +141,7 @@ export function end(
  */
 export function seek(
     animation: AnimationGraph | AnimationNode,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions = {}
 ) {
@@ -174,8 +174,8 @@ export function seek(
         // Reverse this animation
         // if (time < start + duration(vertex) && vertex.hasPlayed) {
         //     restoreInitialState(vertex, view)
-        //     updateRootViewLayout(view)
-        //     updateRootViewLayout(view)
+        //
+        //
 
         //     vertex.hasPlayed = false
 
@@ -230,17 +230,6 @@ export function seek(
     }
 }
 
-export function restoreInitialState(
-    vertex: AnimationGraph | AnimationNode,
-    view: RootViewState
-) {
-    // console.log('Restoring initial layout for', vertex)
-
-    if (vertex.precondition != null) {
-        replaceRootViewWith(view, vertex.precondition)
-    }
-}
-
 export function reset(animation: AnimationGraph | AnimationNode) {
     animation.isPlaying = false
     animation.hasPlayed = false
@@ -254,10 +243,10 @@ export function reset(animation: AnimationGraph | AnimationNode) {
 
 export function bake(
     animation: AnimationGraph | AnimationNode,
-    view: RootViewState = null
+    view: PrototypicalEnvironmentState = null
 ) {
     if (view == null) {
-        view = createRootView()
+        view = createPrototypicalEnvironment()
     }
 
     begin(animation, view, { baking: true })
@@ -272,7 +261,7 @@ export function bake(
 
 export function apply(
     animation: AnimationGraph | AnimationNode,
-    view: RootViewState
+    view: PrototypicalEnvironmentState
 ) {
     begin(animation, view)
     seek(animation, view, duration(animation))

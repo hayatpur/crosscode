@@ -1,0 +1,10 @@
+.data {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: fit-content;
+}
+
+.environment > .data:not(last-child) {
+    margin-right: 15px;
+}

@@ -41,7 +41,7 @@
 
 .monaco-editor .line-numbers {
     color: var(--highlight-color) !important;
-    opacity: 0.2;
+    opacity: 0.7;
     font-size: 12px !important;
     margin-top: 2px !important;
     transition: 0.4s var(--transition-type);
@@ -85,10 +85,10 @@
 }
 
 .monaco-editor .cursors-layer .cursor {
-    background-color: var(--color-6) !important;
+    // background-color: var(--color-6) !important;
     transition-property: top, left;
     transition: 0.1s;
-    opacity: 0.5;
+    // opacity: 0.5;
     height: 20px !important;
     margin-top: 6px !important;
     margin-left: 0px !important;
@@ -121,7 +121,6 @@
     transition: 0.2s var(--transition-type);
 }
 
-
 .editor-selection {
     position: absolute;
     background: #9edbffa4;
@@ -151,7 +150,22 @@
     opacity: 1;
 }
 
-.monaco-editor .codelens-decoration>span,
-.monaco-editor .codelens-decoration>a {
+.monaco-editor .codelens-decoration > span,
+.monaco-editor .codelens-decoration > a {
     font-size: 14px;
+}
+
+.mtk18 {
+    color: var(--color-4) !important;
+    font-weight: bolder;
+}
+
+.mtk7,
+.mtk1 {
+    color: var(--color-5) !important;
+}
+
+.monaco-editor .editor-widget {
+    display: none !important;
+    visibility: hidden !important;
 }

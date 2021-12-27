@@ -1,13 +1,19 @@
-import { ConcreteEnvironmentState } from '../../environment/EnvironmentState'
+import { EnvironmentRenderer } from '../../environment/EnvironmentRenderer'
+import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
 import { ConcretePath, createConcretePath } from '../path'
 import { PrototypicalMovementPath } from '../prototypical/PrototypicalMovementPath'
+import { ConcretePlacementPath } from './ConcretePlacementPath'
 
 export interface ConcreteMovementPath extends ConcretePath {
     start: { x: number; y: number }
     end: { x: number; y: number }
 }
 
-function onBegin(path: ConcreteMovementPath, environment: ConcreteEnvironmentState) {
+function onBegin(
+    path: ConcretePlacementPath,
+    environment: PrototypicalEnvironmentState,
+    renderer: EnvironmentRenderer
+) {
     // const pathPrototype = path.prototype as PrototypicalMovementPath
     // const fromPrototype = resolvePath(environment.prototype, pathPrototype.from, null)
     // const from = lookupDataByIdInConcreteEnvironment(environment, fromPrototype.id)
@@ -23,7 +29,12 @@ function onBegin(path: ConcreteMovementPath, environment: ConcreteEnvironmentSta
     //           }
 }
 
-function onSeek(path: ConcreteMovementPath, environment: ConcreteEnvironmentState, t: number) {
+function onSeek(
+    path: ConcreteMovementPath,
+    environment: PrototypicalEnvironmentState,
+    renderer: EnvironmentRenderer,
+    t: number
+) {
     // const pathPrototype = path.prototype as PrototypicalMovementPath
     // const fromPrototype = resolvePath(environment.prototype, pathPrototype.from, null)
     // const from = lookupDataByIdInConcreteEnvironment(environment, fromPrototype.id)
@@ -31,7 +42,11 @@ function onSeek(path: ConcreteMovementPath, environment: ConcreteEnvironmentStat
     // from.transform.styles.yoffset = lerp(path.start.y, path.end.y, t)
 }
 
-function onEnd(path: ConcreteMovementPath, environment: ConcreteEnvironmentState) {}
+function onEnd(
+    path: ConcreteMovementPath,
+    environment: PrototypicalEnvironmentState,
+    renderer: EnvironmentRenderer
+) {}
 
 /**
  *
@@ -39,7 +54,9 @@ function onEnd(path: ConcreteMovementPath, environment: ConcreteEnvironmentState
  * @param to if is an environment state, then moves data to the next free spot
  * @param id
  */
-export function createConcreteMovementPath(prototype: PrototypicalMovementPath): ConcreteMovementPath {
+export function createConcreteMovementPath(
+    prototype: PrototypicalMovementPath
+): ConcreteMovementPath {
     return {
         ...createConcretePath(prototype),
 

@@ -4,8 +4,10 @@ import {
     getMemoryLocation,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor } from '../../../environment/EnvironmentState'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    Accessor,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import {
     AnimationData,
     AnimationRuntimeOptions,
@@ -23,10 +25,10 @@ export interface UpdateAnimation extends AnimationNode {
 
 function onBegin(
     animation: UpdateAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
-    const environment = view.environment
+    const environment = view
     const data = resolvePath(
         environment,
         animation.dataSpecifier,
@@ -54,14 +56,14 @@ function onBegin(
 
 function onSeek(
     animation: UpdateAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
 ) {}
 
 function onEnd(
     animation: UpdateAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {}
 

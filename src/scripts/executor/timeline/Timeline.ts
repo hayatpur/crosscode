@@ -57,60 +57,60 @@ export default class Timeline {
             this.scrubber.classList.add('active')
         }
 
-        document.body.addEventListener('mousemove', (e) => {
-            if (!this.held) return
+        // document.body.addEventListener('mousemove', (e) => {
+        //     if (!this.held) return
 
-            const bbox = this.scrubberParent.getBoundingClientRect()
+        //     const bbox = this.scrubberParent.getBoundingClientRect()
 
-            // Move scrubber over
-            let x = m * (e.x - bbox.x)
+        //     // Move scrubber over
+        //     let x = m * (e.x - bbox.x)
 
-            // Clamp
-            x = Math.max(0, x)
-            x = Math.min(x, m * bbox.width)
+        //     // Clamp
+        //     x = Math.max(0, x)
+        //     x = Math.min(x, m * bbox.width)
 
-            this.scrubber.style.left = `${x}px`
+        //     this.scrubber.style.left = `${x}px`
 
-            executor.time = remap(
-                x,
-                0,
-                bbox.width,
-                0,
-                duration(executor.animation)
-            )
-            executor.timeline.seek(executor.time)
+        //     executor.time = remap(
+        //         x,
+        //         0,
+        //         bbox.width,
+        //         0,
+        //         duration(executor.animation)
+        //     )
+        //     executor.timeline.seek(executor.time)
 
-            executor.render()
-        })
+        //     executor.render()
+        // })
 
-        document.body.addEventListener('mouseup', () => {
-            if (!this.held) return
+        // document.body.addEventListener('mouseup', () => {
+        //     if (!this.held) return
 
-            this.held = false
-            this.scrubber.classList.remove('active')
-        })
+        //     this.held = false
+        //     this.scrubber.classList.remove('active')
+        // })
 
-        // Pause binding
-        document
-            .getElementById('pause-button')
-            .addEventListener('click', (e) => {
-                executor.paused = true
-                document.getElementById('pause-button').classList.add('active')
-                document
-                    .getElementById('play-button')
-                    .classList.remove('active')
-            })
+        // // Pause binding
+        // document
+        //     .getElementById('pause-button')
+        //     .addEventListener('click', (e) => {
+        //         executor.paused = true
+        //         document.getElementById('pause-button').classList.add('active')
+        //         document
+        //             .getElementById('play-button')
+        //             .classList.remove('active')
+        //     })
 
-        // Play binding
-        document
-            .getElementById('play-button')
-            .addEventListener('click', (e) => {
-                executor.paused = false
-                document.getElementById('play-button').classList.add('active')
-                document
-                    .getElementById('pause-button')
-                    .classList.remove('active')
-            })
+        // // Play binding
+        // document
+        //     .getElementById('play-button')
+        //     .addEventListener('click', (e) => {
+        //         executor.paused = false
+        //         document.getElementById('play-button').classList.add('active')
+        //         document
+        //             .getElementById('pause-button')
+        //             .classList.remove('active')
+        //     })
 
         // Sections
         this.sectionsDomElement = document.createElement('div')

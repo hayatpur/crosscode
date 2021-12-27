@@ -1,15 +1,30 @@
 import { PrototypicalDataState } from '../../../environment/data/DataState'
-import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { RootViewState } from '../../../view/ViewState'
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode, ReturnData } from '../AnimationNode'
+import {
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
+import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+    ReturnData,
+} from '../AnimationNode'
 
 export interface ReturnStatementAnimation extends AnimationNode {
     returnData: ReturnData
 }
 
-function onBegin(animation: ReturnStatementAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: ReturnStatementAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
     const data = resolvePath(
         environment,
@@ -28,14 +43,21 @@ function onBegin(animation: ReturnStatementAnimation, view: RootViewState, optio
 
 function onSeek(
     animation: ReturnStatementAnimation,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
 ) {}
 
-function onEnd(animation: ReturnStatementAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: ReturnStatementAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {}
 
-function computeReadAndWrites(animation: ReturnStatementAnimation, data: AnimationData) {
+function computeReadAndWrites(
+    animation: ReturnStatementAnimation,
+    data: AnimationData
+) {
     animation._reads = [data]
     animation._writes = []
 }

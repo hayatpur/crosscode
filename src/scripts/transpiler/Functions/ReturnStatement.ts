@@ -1,13 +1,23 @@
 import * as ESTree from 'estree'
 import { apply } from '../../animation/animation'
-import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph'
+import {
+    AnimationGraph,
+    createAnimationGraph,
+} from '../../animation/graph/AnimationGraph'
 import { addVertex } from '../../animation/graph/graph'
-import { AnimationContext, ControlOutput } from '../../animation/primitive/AnimationNode'
+import {
+    AnimationContext,
+    ControlOutput,
+} from '../../animation/primitive/AnimationNode'
 import { returnStatementAnimation } from '../../animation/primitive/Functions/ReturnStatementAnimation'
-import { RootViewState } from '../../view/ViewState'
+import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../Compiler'
 
-export function ReturnStatement(ast: ESTree.ReturnStatement, view: RootViewState, context: AnimationContext) {
+export function ReturnStatement(
+    ast: ESTree.ReturnStatement,
+    view: PrototypicalEnvironmentState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Evaluate the result of argument into register

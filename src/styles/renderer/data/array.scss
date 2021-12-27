@@ -1,35 +1,36 @@
 /** Array style used for computing layout **/
-.data-array-i {
+.data-array {
     display: flex;
     min-height: 40px;
 }
 
-.data-array-i > *:not(last-child) {
+.data-array > *:not(last-child) {
+    margin-right: 7px;
 }
 
-.data-array-i > * {
-    margin-left: -1px;
+.data-array > * {
+    // margin-left: -1px;
 }
 
 .data-array-brace {
     opacity: 0.7;
+    font-weight: 400;
+    font-family: Fira Code;
 }
 
 .data-array-opening-brace {
-    flex: 1;
 }
 
 .data-array-closing-brace {
-    flex: 0;
 }
 
 .data.array-item:not(.first-array-item):not(.last-array-item) {
     // border-radius: 0px;
-    border-left: none;
+    // border-left: none;
 }
 
 .data.array-item {
-    margin-left: -1px;
+    // margin-left: -1px;
 }
 
 .data.first-array-item {
@@ -38,7 +39,7 @@
 
 .data.last-array-item {
     // border-radius: 0px 7px 7px 0px;
-    border-left: none;
+    // border-left: none;
 }
 
 .data-array-index {

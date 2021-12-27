@@ -11,8 +11,10 @@ import {
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor } from '../../../environment/EnvironmentState'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    Accessor,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import {
     AnimationData,
     AnimationRuntimeOptions,
@@ -32,10 +34,10 @@ export interface FindMember extends AnimationNode {
 
 function onBegin(
     animation: FindMember,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
-    const environment = view.environment
+    const environment = view
 
     // Get object
     const object = resolvePath(
@@ -131,14 +133,14 @@ function onBegin(
 
 function onSeek(
     animation: FindMember,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
 ) {}
 
 function onEnd(
     animation: FindMember,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {}
 

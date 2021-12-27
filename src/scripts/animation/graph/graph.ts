@@ -12,10 +12,6 @@ import {
     NodeData,
 } from '../primitive/AnimationNode'
 import {
-    AbstractionSelectionChunk,
-    AnimationChunk,
-} from './abstraction/Abstractor'
-import {
     AnimationData,
     AnimationGraph,
     instanceOfAnimationGraph,
@@ -809,7 +805,7 @@ export function getTrace(
 ): AnimationTraceChain[] {
     // Set default flow to ids of literals and arrays in environment
     if (flow == null) {
-        const environment = clone(animation.postcondition.environment)
+        const environment = clone(animation.postcondition)
 
         flow = []
 
@@ -863,19 +859,16 @@ export function getTrace(
 
 export function getChunkTrace(
     parent: AnimationGraph,
-    selection: AbstractionSelectionChunk,
     flow: AnimationTraceChain[] = null
 ): AnimationTraceChain[] {
     // Chunk
-    const nodes = clone(parent.abstractions[0].vertices).filter(
-        (vertex) => selection.indexOf(vertex.id) != -1
-    )
+    const nodes = clone(parent.abstractions[0].vertices)
 
     const postcondition = nodes[nodes.length - 1].postcondition
 
     // Set default flow to ids of literals and arrays in environment
     if (flow == null) {
-        const environment = clone(postcondition.environment)
+        const environment = clone(postcondition)
 
         flow = []
 

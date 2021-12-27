@@ -12,7 +12,7 @@ import {
 } from '../../animation/primitive/AnimationNode'
 import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
-import { RootViewState } from '../../view/ViewState'
+import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../Compiler'
 
 export enum ScopeType {
@@ -30,7 +30,7 @@ export enum ScopeType {
  */
 export function BlockStatement(
     ast: ESTree.BlockStatement,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     context: AnimationContext,
     scopeType: ScopeType = ScopeType.Default
 ): AnimationGraph {

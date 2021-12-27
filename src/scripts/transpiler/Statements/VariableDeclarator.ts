@@ -1,19 +1,33 @@
 import * as ESTree from 'estree'
 import { apply } from '../../animation/animation'
-import { AnimationGraph, createAnimationGraph } from '../../animation/graph/AnimationGraph'
+import {
+    AnimationGraph,
+    createAnimationGraph,
+} from '../../animation/graph/AnimationGraph'
 import { addVertex } from '../../animation/graph/graph'
 import { AnimationContext } from '../../animation/primitive/AnimationNode'
 import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation'
 import { moveAndPlaceAnimation } from '../../animation/primitive/Data/MoveAndPlaceAnimation'
-import { AccessorType } from '../../environment/EnvironmentState'
-import { RootViewState } from '../../view/ViewState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../Compiler'
 
-export function VariableDeclarator(ast: ESTree.VariableDeclarator, view: RootViewState, context: AnimationContext) {
+export function VariableDeclarator(
+    ast: ESTree.VariableDeclarator,
+    view: PrototypicalEnvironmentState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
     // Create a register to allocate RHS in
-    const register = [{ type: AccessorType.Register, value: `${graph.id}__VariableDeclaration` }]
+    const register = [
+        {
+            type: AccessorType.Register,
+            value: `${graph.id}__VariableDeclaration`,
+        },
+    ]
 
     const doNotFloat = ast.init.type == 'ArrayExpression'
 
@@ -27,7 +41,11 @@ export function VariableDeclarator(ast: ESTree.VariableDeclarator, view: RootVie
 
     // Place down the RHS at a free spot
     if (!doNotFloat) {
-        const place = moveAndPlaceAnimation(register, [], ast.init.type == 'Literal')
+        const place = moveAndPlaceAnimation(
+            register,
+            [],
+            ast.init.type == 'Literal'
+        )
         addVertex(graph, place, { nodeData: getNodeData(ast) })
         apply(place, view)
     }

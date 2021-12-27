@@ -1,4 +1,5 @@
-import { ConcreteIdentifierState } from '../EnvironmentState'
+import { DataRenderer } from '../data/DataRenderer'
+import { PrototypicalIdentifierState } from '../EnvironmentState'
 
 export class IdentifierRenderer {
     element: HTMLElement
@@ -8,12 +9,18 @@ export class IdentifierRenderer {
         this.element.classList.add('identifier')
     }
 
-    setState(state: ConcreteIdentifierState) {
-        this.element.innerHTML = state.prototype.name
+    setState(
+        state: PrototypicalIdentifierState,
+        data: DataRenderer,
+        environmentElement: HTMLElement
+    ) {
+        this.element.innerHTML = `${state.name}`
 
-        // const bbox = data.element.getBoundingClientRect();
-        this.element.style.top = `${state.transform.rendered.y}px`
-        this.element.style.left = `${state.transform.rendered.x}px`
+        const dataBbox = data.element.getBoundingClientRect()
+        const environmentBbox = environmentElement.getBoundingClientRect()
+
+        this.element.style.top = `${dataBbox.y - 14 - environmentBbox.y}px`
+        this.element.style.left = `${dataBbox.x + 8 - environmentBbox.x}px`
     }
 
     destroy() {

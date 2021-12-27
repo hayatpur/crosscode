@@ -9,13 +9,13 @@ import { AnimationContext } from '../../animation/primitive/AnimationNode'
 import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation'
 import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
-import { RootViewState } from '../../view/ViewState'
-import { Compiler, getNodeData } from '../Compiler'
+import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { getNodeData } from '../Compiler'
 import { BlockStatement, ScopeType } from '../Statements/BlockStatement'
 
 export function FunctionCall(
     ast: ESTree.FunctionDeclaration,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     context: AnimationContext
 ) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))

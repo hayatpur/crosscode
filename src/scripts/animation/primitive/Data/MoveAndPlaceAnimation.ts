@@ -1,8 +1,19 @@
 import { replacePrototypicalDataWith } from '../../../environment/data/data'
-import { instanceOfPrototypicalData, PrototypicalDataState } from '../../../environment/data/DataState'
-import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString, instanceOfPrototypicalEnvironment } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
+import {
+    instanceOfPrototypicalData,
+    PrototypicalDataState,
+} from '../../../environment/data/DataState'
+import {
+    getMemoryLocation,
+    removeAt,
+    resolvePath,
+} from '../../../environment/environment'
+import {
+    Accessor,
+    accessorsToString,
+    instanceOfPrototypicalEnvironment,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -21,10 +32,16 @@ import {
     PrototypicalPlacementPath,
 } from '../../../path/prototypical/PrototypicalPlacementPath'
 import { remap } from '../../../utilities/math'
-import { RootViewState } from '../../../view/ViewState'
 import { duration } from '../../animation'
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface MoveAndPlaceAnimation extends AnimationNode {
     inputSpecifier: Accessor[]
@@ -32,12 +49,22 @@ export interface MoveAndPlaceAnimation extends AnimationNode {
     noMove: boolean
 }
 
-function onBegin(animation: MoveAndPlaceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: MoveAndPlaceAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
-    const from = resolvePath(environment, animation.inputSpecifier, null, null, {
-        noResolvingReference: true,
-    }) as PrototypicalDataState
+    const from = resolvePath(
+        environment,
+        animation.inputSpecifier,
+        null,
+        null,
+        {
+            noResolvingReference: true,
+        }
+    ) as PrototypicalDataState
 
     const to = resolvePath(
         environment,
@@ -61,14 +88,15 @@ function onBegin(animation: MoveAndPlaceAnimation, view: RootViewState, options:
     addPrototypicalPath(environment, placement)
 
     // Begin movement
-    beginPrototypicalPath(movement, view.environment)
+    beginPrototypicalPath(movement, view)
 
     if (instanceOfPrototypicalEnvironment(to)) {
         if (options.baking) {
             computeReadAndWrites(
                 animation,
                 {
-                    location: getMemoryLocation(environment, from).foundLocation,
+                    location: getMemoryLocation(environment, from)
+                        .foundLocation,
                     id: from.id,
                 },
                 null
@@ -79,31 +107,46 @@ function onBegin(animation: MoveAndPlaceAnimation, view: RootViewState, options:
             computeReadAndWrites(
                 animation,
                 {
-                    location: getMemoryLocation(environment, from).foundLocation,
+                    location: getMemoryLocation(environment, from)
+                        .foundLocation,
                     id: from.id,
                 },
-                { location: getMemoryLocation(environment, to).foundLocation, id: to.id }
+                {
+                    location: getMemoryLocation(environment, to).foundLocation,
+                    id: to.id,
+                }
             )
         }
     }
 
     if (instanceOfPrototypicalData(to)) {
-        removeAt(environment, getMemoryLocation(environment, from).foundLocation)
+        removeAt(
+            environment,
+            getMemoryLocation(environment, from).foundLocation
+        )
         replacePrototypicalDataWith(to, from, { frame: true, id: true })
     }
 }
 
-function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: MoveAndPlaceAnimation,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 
-    const environment = view.environment
+    const environment = view
     const tn = time / duration(animation)
 
     // Move
     if (tn <= 0.7 && !animation.noMove) {
         let t = animation.ease(remap(tn, 0, 0.7, 0, 1))
 
-        const movement = lookupPrototypicalPathById(environment, `Movement${animation.id}`) as PrototypicalMovementPath
+        const movement = lookupPrototypicalPathById(
+            environment,
+            `Movement${animation.id}`
+        ) as PrototypicalMovementPath
         seekPrototypicalPath(movement, environment, t)
     }
     // Place
@@ -133,16 +176,24 @@ function onSeek(animation: MoveAndPlaceAnimation, view: RootViewState, time: num
 
         seekPrototypicalPath(placement, environment, t)
     }
-
-    updateRootViewLayout(view)
 }
 
-function onEnd(animation: MoveAndPlaceAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onEnd(
+    animation: MoveAndPlaceAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
     // Paths
-    const movement = lookupPrototypicalPathById(environment, `Movement${animation.id}`) as PrototypicalMovementPath
-    const placement = lookupPrototypicalPathById(environment, `Placement${animation.id}`) as PrototypicalPlacementPath
+    const movement = lookupPrototypicalPathById(
+        environment,
+        `Movement${animation.id}`
+    ) as PrototypicalMovementPath
+    const placement = lookupPrototypicalPathById(
+        environment,
+        `Placement${animation.id}`
+    ) as PrototypicalPlacementPath
 
     // End placement
     endPrototypicalPath(placement, environment)
@@ -151,15 +202,27 @@ function onEnd(animation: MoveAndPlaceAnimation, view: RootViewState, options: A
     removePrototypicalPath(environment, `Movement${animation.id}`)
     removePrototypicalPath(environment, `Placement${animation.id}`)
 
-    const input = resolvePath(environment, animation.inputSpecifier, null, null, {
-        noResolvingReference: true,
-    }) as PrototypicalDataState
-    const to = resolvePath(environment, animation.outputSpecifier, `${animation.id}_EndTo`)
-
-    updateRootViewLayout(view)
+    const input = resolvePath(
+        environment,
+        animation.inputSpecifier,
+        null,
+        null,
+        {
+            noResolvingReference: true,
+        }
+    ) as PrototypicalDataState
+    const to = resolvePath(
+        environment,
+        animation.outputSpecifier,
+        `${animation.id}_EndTo`
+    )
 }
 
-function computeReadAndWrites(animation: MoveAndPlaceAnimation, inputData: AnimationData, outputData: AnimationData) {
+function computeReadAndWrites(
+    animation: MoveAndPlaceAnimation,
+    inputData: AnimationData,
+    outputData: AnimationData
+) {
     animation._reads = [inputData]
     animation._writes = outputData ? [outputData, inputData] : [inputData]
 }
@@ -171,10 +234,15 @@ export function moveAndPlaceAnimation(
     options: AnimationOptions = {}
 ): MoveAndPlaceAnimation {
     return {
-        ...createAnimationNode(null, { ...options, duration: noMove ? 10 : 20 }),
+        ...createAnimationNode(null, {
+            ...options,
+            duration: noMove ? 10 : 20,
+        }),
         _name: 'MoveAndPlaceAnimation',
 
-        name: `Move data at ${accessorsToString(inputSpecifier)} onto ${accessorsToString(outputSpecifier)}`,
+        name: `Move data at ${accessorsToString(
+            inputSpecifier
+        )} onto ${accessorsToString(outputSpecifier)}`,
 
         // Attributes
         inputSpecifier,

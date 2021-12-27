@@ -1,18 +1,31 @@
 import * as ESTree from 'estree'
 import { apply } from '../../../animation/animation'
-import { AnimationGraph, createAnimationGraph } from '../../../animation/graph/AnimationGraph'
+import {
+    AnimationGraph,
+    createAnimationGraph,
+} from '../../../animation/graph/AnimationGraph'
 import { addVertex } from '../../../animation/graph/graph'
 import { AnimationContext } from '../../../animation/primitive/AnimationNode'
 import { moveAndPlaceAnimation } from '../../../animation/primitive/Data/MoveAndPlaceAnimation'
-import { AccessorType } from '../../../environment/EnvironmentState'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../../Compiler'
 
-export function AssignmentExpression(ast: ESTree.AssignmentExpression, view: RootViewState, context: AnimationContext) {
+export function AssignmentExpression(
+    ast: ESTree.AssignmentExpression,
+    view: PrototypicalEnvironmentState,
+    context: AnimationContext
+) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
-    const leftRegister = [{ type: AccessorType.Register, value: `${graph.id}_Assignment_Left` }]
-    const rightRegister = [{ type: AccessorType.Register, value: `${graph.id}_Assignment_Right` }]
+    const leftRegister = [
+        { type: AccessorType.Register, value: `${graph.id}_Assignment_Left` },
+    ]
+    const rightRegister = [
+        { type: AccessorType.Register, value: `${graph.id}_Assignment_Right` },
+    ]
 
     // Put the *location* of the LHS in the left register
     const left = Compiler.compile(ast.left, view, {

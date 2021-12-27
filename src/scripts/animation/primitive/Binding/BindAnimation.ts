@@ -1,27 +1,51 @@
 import { createData } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
-import { addDataAt, declareVariable, getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
-import { RootViewState } from '../../../view/ViewState'
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    DataType,
+    PrototypicalDataState,
+} from '../../../environment/data/DataState'
+import {
+    addDataAt,
+    declareVariable,
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
+import {
+    Accessor,
+    accessorsToString,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface BindAnimation extends AnimationNode {
     identifier: string
     existingMemorySpecifier: Accessor[]
 }
 
-function onBegin(animation: BindAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: BindAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
     let data = null
     let location = null
 
     // Create a reference for variable
-    const reference = createData(DataType.Reference, [], `${animation.id}_Reference`)
+    const reference = createData(
+        DataType.Reference,
+        [],
+        `${animation.id}_Reference`
+    )
     const loc = addDataAt(environment, reference, [], `${animation.id}_Add`)
-    updateRootViewLayout(view)
 
     if (animation.existingMemorySpecifier != null) {
         data = resolvePath(
@@ -31,16 +55,17 @@ function onBegin(animation: BindAnimation, view: RootViewState, options: Animati
         ) as PrototypicalDataState
         location = getMemoryLocation(environment, data).foundLocation
     } else {
-        data = createData(DataType.Literal, undefined, `${animation.id}_BindNew`)
+        data = createData(
+            DataType.Literal,
+            undefined,
+            `${animation.id}_BindNew`
+        )
         location = addDataAt(environment, data, [], null)
-        updateRootViewLayout(view)
     }
 
     reference.value = location
 
     declareVariable(environment, animation.identifier, loc)
-
-    updateRootViewLayout(view)
 
     if (options.baking) {
         computeReadAndWrites(
@@ -52,9 +77,18 @@ function onBegin(animation: BindAnimation, view: RootViewState, options: Animati
     }
 }
 
-function onSeek(animation: BindAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {}
+function onSeek(
+    animation: BindAnimation,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {}
 
-function onEnd(animation: BindAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: BindAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {}
 
 // TODO also add variable identifier as read
 function computeReadAndWrites(
@@ -77,7 +111,9 @@ export function bindAnimation(
         _name: 'BindAnimation',
 
         baseDuration: 20,
-        name: `Bind Variable (${identifier}), with data at ${accessorsToString(existingMemorySpecifier ?? [])}`,
+        name: `Bind Variable (${identifier}), with data at ${accessorsToString(
+            existingMemorySpecifier ?? []
+        )}`,
 
         // Attributes
         identifier,

@@ -12,19 +12,20 @@ import {
     ControlOutputData,
 } from '../../animation/primitive/AnimationNode'
 import { consumeDataAnimation } from '../../animation/primitive/Data/ConsumeDataAnimation'
-import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation'
-import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
 import { PrototypicalDataState } from '../../environment/data/DataState'
 import { resolvePath } from '../../environment/environment'
-import { Accessor, AccessorType } from '../../environment/EnvironmentState'
+import {
+    Accessor,
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../environment/EnvironmentState'
 import { clone } from '../../utilities/objects'
-import { RootViewState } from '../../view/ViewState'
 import { Compiler, getNodeData } from '../Compiler'
 import { FunctionCall } from '../Functions/FunctionCall'
 
 export function CallExpression(
     ast: ESTree.CallExpression,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     context: AnimationContext
 ) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
@@ -51,7 +52,7 @@ export function CallExpression(
         const funcLocation = [
             { type: AccessorType.Symbol, value: ast.callee.name },
         ]
-        const environment = view.environment
+        const environment = view
         const funcData = resolvePath(
             environment,
             funcLocation,
@@ -76,7 +77,10 @@ export function CallExpression(
     }
 
     // Consumption
-    const consumption = createAnimationGraph(getNodeData(ast))
+    const consumption = createAnimationGraph({
+        ...getNodeData(ast),
+        type: 'Consume',
+    })
 
     // Consume arguments
     for (let i = 0; i < ast.arguments.length; i++) {
@@ -86,7 +90,12 @@ export function CallExpression(
         apply(consume, view)
     }
 
-    addVertex(graph, consumption, { nodeData: getNodeData(ast) })
+    addVertex(graph, consumption, {
+        nodeData: {
+            ...getNodeData(ast),
+            type: 'Consume',
+        },
+    })
 
     return graph
 }

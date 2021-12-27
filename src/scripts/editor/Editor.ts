@@ -38,16 +38,17 @@ export class Editor {
                 vertical: 'hidden',
             },
             overviewRulerBorder: false,
-            fontSize: 18,
+            fontSize: 22,
             contextmenu: false,
             mouseWheelScrollSensitivity: 0,
-            lineHeight: 30,
+            lineHeight: 34,
             selectOnLineNumbers: false,
             letterSpacing: -0.5,
             codeLens: true,
             dragAndDrop: false,
-            theme: 'github',
-            fontFamily: 'Noto Sans Mono',
+            theme: 'atom',
+            fontFamily: 'Fira Code',
+            fontLigatures: true,
             quickSuggestions: {
                 other: false,
                 comments: false,
@@ -101,17 +102,21 @@ export class Editor {
         // const editor = Editor.instance;
 
         for (const error of errors) {
-            monaco.editor.setModelMarkers(this.monaco.getModel(), 'javascript', [
-                {
-                    startLineNumber: error.line + 1,
-                    endLineNumber: error.line + 1,
-                    startColumn: 0,
-                    endColumn: 1,
+            monaco.editor.setModelMarkers(
+                this.monaco.getModel(),
+                'javascript',
+                [
+                    {
+                        startLineNumber: error.line + 1,
+                        endLineNumber: error.line + 1,
+                        startColumn: 0,
+                        endColumn: 1,
 
-                    message: error.message,
-                    severity: monaco.MarkerSeverity.Error,
-                },
-            ])
+                        message: error.message,
+                        severity: monaco.MarkerSeverity.Error,
+                    },
+                ]
+            )
         }
     }
 
@@ -124,17 +129,23 @@ export class Editor {
     }
 
     getSelectedText() {
-        return this.monaco.getModel().getValueInRange(this.monaco.getSelection())
+        return this.monaco
+            .getModel()
+            .getValueInRange(this.monaco.getSelection())
     }
 
     getSelectedTextBoundingBox() {
         const selection = document.getElementsByClassName('cslr selected-text')
-        return selection.length > 0 ? selection[0].getBoundingClientRect() : null
+        return selection.length > 0
+            ? selection[0].getBoundingClientRect()
+            : null
     }
 
     computeBoundingBoxForSection() {
         const selection = document.getElementsByClassName('cslr selected-text')
-        return selection.length > 0 ? selection[0].getBoundingClientRect() : null
+        return selection.length > 0
+            ? selection[0].getBoundingClientRect()
+            : null
     }
 
     computeBoundingBox(ln: number) {
@@ -165,7 +176,9 @@ export class Editor {
         const max_x = Math.max(start.x + start.width, end.x + end.width)
 
         let y = min_y
-        let x = min_x + Math.min(location.start.column, location.end.column - 1) * charWidth
+        let x =
+            min_x +
+            Math.min(location.start.column, location.end.column - 1) * charWidth
 
         let height = end.y + end.height - start.y
         let width = (location.end.column - location.start.column) * charWidth
@@ -189,11 +202,17 @@ export class Editor {
         return line.getBoundingClientRect().width / line.innerText.length
     }
 
-    updateDragSelection(selection: { x: number; y: number; x2: number; y2: number }) {
+    updateDragSelection(selection: {
+        x: number
+        y: number
+        x2: number
+        y2: number
+    }) {
         this.dragSelections.forEach((sel) => sel.remove())
         this.dragSelections = []
 
-        const lines = document.body.getElementsByClassName('view-lines')[0].children
+        const lines =
+            document.body.getElementsByClassName('view-lines')[0].children
 
         const min_y = Math.min(selection.y, selection.y2)
         const max_y = Math.max(selection.y, selection.y2)
@@ -224,7 +243,10 @@ export class Editor {
             this.spacings.set(origin, {})
         }
 
-        if (this.spacings.get(origin)[line] != null && this.spacings.get(origin)[line].spacing == spacing) {
+        if (
+            this.spacings.get(origin)[line] != null &&
+            this.spacings.get(origin)[line].spacing == spacing
+        ) {
             return
         }
 
@@ -275,32 +297,35 @@ export class Editor {
         this.lenses[id]?.dispose()
 
         // return;
-        const disposable = monaco.languages.registerCodeLensProvider('javascript', {
-            provideCodeLenses: function (model, token) {
-                return {
-                    lenses: [
-                        {
-                            range: {
-                                startLineNumber: line,
-                                startColumn: 1,
-                                endLineNumber: line + 1,
-                                endColumn: 1,
+        const disposable = monaco.languages.registerCodeLensProvider(
+            'javascript',
+            {
+                provideCodeLenses: function (model, token) {
+                    return {
+                        lenses: [
+                            {
+                                range: {
+                                    startLineNumber: line,
+                                    startColumn: 1,
+                                    endLineNumber: line + 1,
+                                    endColumn: 1,
+                                },
+                                id: 'First Line',
+                                command: {
+                                    id: null,
+                                    title: label,
+                                },
                             },
-                            id: 'First Line',
-                            command: {
-                                id: null,
-                                title: label,
-                            },
-                        },
-                    ],
-                    dispose: () => {},
-                }
-            },
+                        ],
+                        dispose: () => {},
+                    }
+                },
 
-            resolveCodeLens: function (model, codeLens, token) {
-                return codeLens
-            },
-        })
+                resolveCodeLens: function (model, codeLens, token) {
+                    return codeLens
+                },
+            }
+        )
 
         this.lenses[id] = disposable
     }

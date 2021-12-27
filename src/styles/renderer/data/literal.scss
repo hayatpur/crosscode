@@ -1,0 +1,31 @@
+/** Literal style used for computing layout **/
+
+.data-literal {
+    background: #1f1f22;
+    border-radius: 7px;
+    font-size: 16px;
+    font-family: Fira Code;
+    box-shadow: 0px 0px 0px 1px #ffffff23 inset;
+    color: #e879f9;
+    padding: 0px 8px;
+    min-width: 30px;
+    min-height: 30px;
+    font-weight: 400;
+}
+
+.data-function {
+    background: none;
+    border-radius: 7px;
+    font-size: 16px;
+
+    font-family: Fira Code;
+    color: #b5e7ff;
+    border: 1px dashed rgba(255, 255, 255, 0.116);
+    padding: 0px 10px;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.data-literal-string {
+    color: #6ee7b7 !important;
+}

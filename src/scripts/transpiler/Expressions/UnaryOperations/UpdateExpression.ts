@@ -7,13 +7,15 @@ import {
 import { addVertex } from '../../../animation/graph/graph'
 import { AnimationContext } from '../../../animation/primitive/AnimationNode'
 import { updateAnimation } from '../../../animation/primitive/Data/UpdateAnimation'
-import { AccessorType } from '../../../environment/EnvironmentState'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../../Compiler'
 
 export function UpdateExpression(
     ast: ESTree.UpdateExpression,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     context: AnimationContext
 ) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))

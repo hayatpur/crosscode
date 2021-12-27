@@ -15,14 +15,15 @@ import { createScopeAnimation } from '../../../animation/primitive/Scope/CreateS
 import { popScopeAnimation } from '../../../animation/primitive/Scope/PopScopeAnimation'
 import { PrototypicalDataState } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
-import { AccessorType } from '../../../environment/EnvironmentState'
-import { clone } from '../../../utilities/objects'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { Compiler, getNodeData } from '../../Compiler'
 
 export function ForStatement(
     ast: ESTree.ForStatement,
-    view: RootViewState,
+    view: PrototypicalEnvironmentState,
     context: AnimationContext
 ) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
@@ -51,7 +52,7 @@ export function ForStatement(
         })
         addVertex(graph, test, { nodeData: getNodeData(ast.test) })
         const testData = resolvePath(
-            view.environment,
+            view,
             testRegister,
             null
         ) as PrototypicalDataState // @TODO: Add a probe test animation

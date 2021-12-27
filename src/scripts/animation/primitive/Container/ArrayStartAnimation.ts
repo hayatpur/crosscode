@@ -1,26 +1,44 @@
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import {
+    createData,
+    replacePrototypicalDataWith,
+} from '../../../environment/data/data'
+import {
+    DataType,
+    PrototypicalDataState,
+} from '../../../environment/data/DataState'
 import { addDataAt, resolvePath } from '../../../environment/environment'
-import { Accessor, accessorsToString } from '../../../environment/EnvironmentState'
-import { updateRootViewLayout } from '../../../environment/layout'
-import { RootViewState } from '../../../view/ViewState'
+import {
+    Accessor,
+    accessorsToString,
+    PrototypicalEnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { duration } from '../../animation'
-import { AnimationData, AnimationRuntimeOptions } from '../../graph/AnimationGraph'
-import { AnimationNode, AnimationOptions, createAnimationNode } from '../AnimationNode'
+import {
+    AnimationData,
+    AnimationRuntimeOptions,
+} from '../../graph/AnimationGraph'
+import {
+    AnimationNode,
+    AnimationOptions,
+    createAnimationNode,
+} from '../AnimationNode'
 
 export interface ArrayStartAnimation extends AnimationNode {
     dataSpecifier: Accessor[]
     doNotFloat: boolean
 }
 
-function onBegin(animation: ArrayStartAnimation, view: RootViewState, options: AnimationRuntimeOptions) {
-    const environment = view.environment
+function onBegin(
+    animation: ArrayStartAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {
+    const environment = view
 
     // Create a new array somewhere in memory
     const data = createData(DataType.Array, [], `${animation.id}_CreateArray`)
 
     const loc = addDataAt(environment, data, [], null)
-    updateRootViewLayout(view)
 
     if (options.baking) {
         computeReadAndWrites(animation, {
@@ -35,16 +53,31 @@ function onBegin(animation: ArrayStartAnimation, view: RootViewState, options: A
         animation.dataSpecifier,
         `${animation.id}_Floating`
     ) as PrototypicalDataState
-    replacePrototypicalDataWith(outputRegister, createData(DataType.ID, data.id, `${animation.id}_OutputRegister`))
+    replacePrototypicalDataWith(
+        outputRegister,
+        createData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
+    )
 }
 
-function onSeek(animation: ArrayStartAnimation, view: RootViewState, time: number, options: AnimationRuntimeOptions) {
+function onSeek(
+    animation: ArrayStartAnimation,
+    view: PrototypicalEnvironmentState,
+    time: number,
+    options: AnimationRuntimeOptions
+) {
     let t = animation.ease(time / duration(animation))
 }
 
-function onEnd(animation: ArrayStartAnimation, view: RootViewState, options: AnimationRuntimeOptions) {}
+function onEnd(
+    animation: ArrayStartAnimation,
+    view: PrototypicalEnvironmentState,
+    options: AnimationRuntimeOptions
+) {}
 
-function computeReadAndWrites(animation: ArrayStartAnimation, data: AnimationData) {
+function computeReadAndWrites(
+    animation: ArrayStartAnimation,
+    data: AnimationData
+) {
     animation._reads = [data]
     animation._writes = [data]
 }
