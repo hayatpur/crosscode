@@ -20,8 +20,6 @@ export function FunctionCall(
 ) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
 
-    console.log(view)
-
     // Create a scope @TODO: HARD SCOPE
     const createScope = createScopeAnimation(ScopeType.Hard)
     addVertex(graph, createScope, { nodeData: getNodeData(ast) })

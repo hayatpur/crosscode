@@ -1,32 +1,39 @@
+import { DataRenderer } from '../../environment/data/DataRenderer'
+import { resolvePath } from '../../environment/environment'
 import { EnvironmentRenderer } from '../../environment/EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { remap } from '../../utilities/math'
 import { ConcretePath, createConcretePath } from '../path'
 import { PrototypicalMovementPath } from '../prototypical/PrototypicalMovementPath'
-import { ConcretePlacementPath } from './ConcretePlacementPath'
 
 export interface ConcreteMovementPath extends ConcretePath {
-    start: { x: number; y: number }
-    end: { x: number; y: number }
+    delta: { x: number; y: number }
 }
 
 function onBegin(
-    path: ConcretePlacementPath,
+    path: ConcreteMovementPath,
     environment: PrototypicalEnvironmentState,
     renderer: EnvironmentRenderer
 ) {
-    // const pathPrototype = path.prototype as PrototypicalMovementPath
-    // const fromPrototype = resolvePath(environment.prototype, pathPrototype.from, null)
-    // const from = lookupDataByIdInConcreteEnvironment(environment, fromPrototype.id)
-    // const toPrototype = resolvePath(environment.prototype, pathPrototype.to, null)
-    // const to = lookupDataByIdInConcreteEnvironment(environment, toPrototype.id)
-    // path.start = { x: 0, y: 0 }
-    // path.end =
-    //     to == null
-    //         ? { x: 0, y: 0 }
-    //         : {
-    //               x: to.transform.rendered.x - from.transform.rendered.x,
-    //               y: to.transform.rendered.y - from.transform.rendered.y,
-    //           }
+    const pathPrototype = path.prototype as PrototypicalMovementPath
+
+    const fromPrototype = resolvePath(environment, pathPrototype.from, null)
+    const toPrototype = resolvePath(environment, pathPrototype.to, null)
+
+    const from = renderer.getAllChildRenderers()[
+        fromPrototype.id
+    ] as DataRenderer
+    const to = renderer.getAllChildRenderers()[toPrototype.id] as DataRenderer
+
+    if (path.delta == null) {
+        const fromBbox = from.element.getBoundingClientRect()
+        const toBbox = to.element.getBoundingClientRect()
+
+        path.delta = {
+            x: fromBbox.x - toBbox.x,
+            y: fromBbox.y - toBbox.y,
+        }
+    }
 }
 
 function onSeek(
@@ -35,18 +42,32 @@ function onSeek(
     renderer: EnvironmentRenderer,
     t: number
 ) {
-    // const pathPrototype = path.prototype as PrototypicalMovementPath
-    // const fromPrototype = resolvePath(environment.prototype, pathPrototype.from, null)
-    // const from = lookupDataByIdInConcreteEnvironment(environment, fromPrototype.id)
-    // from.transform.styles.xoffset = lerp(path.start.x, path.end.x, t)
-    // from.transform.styles.yoffset = lerp(path.start.y, path.end.y, t)
+    const pathPrototype = path.prototype as PrototypicalMovementPath
+
+    const toPrototype = resolvePath(environment, pathPrototype.to, null)
+    const to = renderer.getAllChildRenderers()[toPrototype.id] as DataRenderer
+
+    to.element.style.transform = `translate(${remap(
+        t,
+        0,
+        1,
+        path.delta.x,
+        0
+    )}px, ${remap(t, 0, 1, path.delta.y, 0)}px)`
 }
 
 function onEnd(
     path: ConcreteMovementPath,
     environment: PrototypicalEnvironmentState,
     renderer: EnvironmentRenderer
-) {}
+) {
+    const pathPrototype = path.prototype as PrototypicalMovementPath
+
+    const toPrototype = resolvePath(environment, pathPrototype.from, null)
+    const to = renderer.getAllChildRenderers()[toPrototype.id] as DataRenderer
+
+    to.element.style.transform = `translate(0px, 0px)`
+}
 
 /**
  *
@@ -60,8 +81,7 @@ export function createConcreteMovementPath(
     return {
         ...createConcretePath(prototype),
 
-        start: null,
-        end: null,
+        delta: null,
 
         onBegin,
         onSeek,

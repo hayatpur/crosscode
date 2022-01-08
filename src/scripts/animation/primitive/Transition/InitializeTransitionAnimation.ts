@@ -37,7 +37,7 @@ export function initializeTransitionAnimation(
     options: AnimationOptions = {}
 ): InitializeTransitionAnimation {
     return {
-        ...createAnimationNode(null, { ...options, duration: 20, delay: 0 }),
+        ...createAnimationNode(null, { ...options, duration: 1, delay: 0 }),
         _name: 'InitializeTransitionAnimation',
 
         name: 'Transition',

@@ -15,23 +15,48 @@
 // } from '../../primitive/AnimationNode'
 // import { AnimationGraph, instanceOfAnimationGraph } from '../AnimationGraph'
 
-// export type AbstractionSelectionChunk = string[]
+export type AbstractionSelectionChunk = string[]
 
-// export interface AbstractionSelectionSingular {
-//     id: string
-//     selection: AbstractionSelection
-// }
+export interface AbstractionSelectionSingular {
+    id: string
+    selection: AbstractionSelection
+}
 
-// export function instanceOfAbstractionSelectionSingular(
-//     selection: any
-// ): selection is AbstractionSelectionSingular {
-//     return 'id' in selection && 'selection' in selection
-// }
+export function instanceOfAbstractionSelectionSingular(
+    selection: any
+): selection is AbstractionSelectionSingular {
+    return 'id' in selection && 'selection' in selection
+}
 
-// export type AbstractionSelection = (
-//     | AbstractionSelectionSingular
-//     | AbstractionSelectionChunk
-// )[]
+/**
+ * A nested list of animation IDs representing a selection of animation nodes
+ *
+ * Example:
+ *
+ * '''
+ * Program: AG1
+ *   - Variable Declaration: AG2
+ *      - Variable Declarator: AG3
+ *        - Literal: AG4
+ *        - Move: AG5
+ *        - Bind: AG6
+ *  - Variable Declaration: AG7
+ * '''
+ *
+ * is the same as
+ *
+ * {
+ *    id: 'Program',
+ *   selection: [
+ *    {
+ *     id: 'Variable Declaration',
+ *    selection: [}
+ *...
+ */
+export type AbstractionSelection = {
+    id: string
+    selection: AbstractionSelection[]
+}
 
 // export interface AbstractOptions {
 //     selection: AbstractionSelection
@@ -53,7 +78,7 @@
 //     parent: AnimationGraph,
 //     selection: AbstractOptions
 // ): AnimationChunk[] {
-//     const vertices = parent.abstractions[0].vertices
+//     const vertices = parent.vertices
 //     const chunks: AnimationChunk[] = [{ nodes: [], parent }]
 
 //     let line = null

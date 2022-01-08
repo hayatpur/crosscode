@@ -1,26 +1,27 @@
 import { resolvePath } from '../../environment/environment'
 import { EnvironmentRenderer } from '../../environment/EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { remap } from '../../utilities/math'
 import { ConcretePath, createConcretePath } from '../path'
 import { PrototypicalCreatePath } from '../prototypical/PrototypicalCreatePath'
-import { PrototypicalMovementPath } from '../prototypical/PrototypicalMovementPath'
-import { ConcretePlacementPath } from './ConcretePlacementPath'
 
 export interface ConcreteCreatePath extends ConcretePath {}
 
 function onBegin(
-    path: ConcretePlacementPath,
+    path: ConcreteCreatePath,
     environment: PrototypicalEnvironmentState,
     renderer: EnvironmentRenderer
 ) {
     const pathPrototype = path.prototype as PrototypicalCreatePath
     const dataPrototype = resolvePath(environment, pathPrototype.data, null)
 
-    renderer.dataRenderers[dataPrototype.id].element.style.opacity = `${0}`
+    const element = renderer.getAllChildRenderers()[dataPrototype.id].element
+    element.style.opacity = `${0}`
+    element.style.transform = `translate(5x, -5px)`
 }
 
 function onSeek(
-    path: ConcretePlacementPath,
+    path: ConcreteCreatePath,
     environment: PrototypicalEnvironmentState,
     renderer: EnvironmentRenderer,
     t: number
@@ -28,18 +29,32 @@ function onSeek(
     const pathPrototype = path.prototype as PrototypicalCreatePath
     const dataPrototype = resolvePath(environment, pathPrototype.data, null)
 
-    renderer.dataRenderers[dataPrototype.id].element.style.opacity = `${t}`
+    if (renderer.getAllChildRenderers()[dataPrototype.id] == null) {
+        return
+    }
+
+    const element = renderer.getAllChildRenderers()[dataPrototype.id].element
+    element.style.opacity = `${2 * t}`
+    element.style.transform = `translate(${remap(t, 0, 1, 5, 0)}px, ${remap(
+        t,
+        0,
+        1,
+        -5,
+        0
+    )}px)`
 }
 
 function onEnd(
-    path: ConcretePlacementPath,
+    path: ConcreteCreatePath,
     environment: PrototypicalEnvironmentState,
     renderer: EnvironmentRenderer
 ) {
     const pathPrototype = path.prototype as PrototypicalCreatePath
     const dataPrototype = resolvePath(environment, pathPrototype.data, null)
 
-    renderer.dataRenderers[dataPrototype.id].element.style.opacity = `1`
+    const element = renderer.getAllChildRenderers()[dataPrototype.id].element
+    element.style.opacity = `${1}`
+    element.style.transform = `translate(0px, 0px)`
 }
 
 /**
@@ -49,7 +64,7 @@ function onEnd(
  * @param id
  */
 export function createConcreteCreatePath(
-    prototype: PrototypicalMovementPath
+    prototype: PrototypicalCreatePath
 ): ConcreteCreatePath {
     return {
         ...createConcretePath(prototype),

@@ -72,6 +72,7 @@ function onBegin(
             animation,
             { location, id: data.id },
             { location: loc, id: reference.id },
+            { location: loc, id: animation.identifier },
             animation.existingMemorySpecifier == null
         )
     }
@@ -90,15 +91,18 @@ function onEnd(
     options: AnimationRuntimeOptions
 ) {}
 
-// TODO also add variable identifier as read
+// TODO also add variable identifier as write
 function computeReadAndWrites(
     animation: BindAnimation,
     data: AnimationData,
     reference: AnimationData,
+    variable: AnimationData,
     dataCreated: boolean
 ) {
     animation._reads = [data]
-    animation._writes = dataCreated ? [reference, data] : [reference]
+    animation._writes = dataCreated
+        ? [variable, reference, data]
+        : [variable, reference]
 }
 
 export function bindAnimation(

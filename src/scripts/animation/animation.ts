@@ -1,6 +1,8 @@
 import { createPrototypicalEnvironment } from '../environment/environment'
 import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
 import { clone } from '../utilities/objects'
+import { GlobalAnimationCallbacks } from './GlobalAnimationCallbacks'
+import { TransitionAnimationNode } from './graph/abstraction/Transition'
 import {
     AnimationData,
     AnimationGraph,
@@ -27,7 +29,7 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
         return animation.baseDuration * (1 / animation.speed)
     }
 
-    const abstraction = currentAbstraction(animation)
+    const abstraction = animation
 
     // If a parallel animation, return the end point of the longest animation vertex
     if (abstraction.isParallel && abstraction.parallelStarts[0] != undefined) {
@@ -56,14 +58,13 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
  * @param edge - Edge to remove
  */
 export function removeEdge(graph: AnimationGraph, edge: Edge) {
-    const currentAbstraction = graph.abstractions[graph.currentAbstractionIndex]
-    const index = currentAbstraction.edges.findIndex((e) => e.id == edge.id)
+    const index = graph.edges.findIndex((e) => e.id == edge.id)
     if (index == -1) {
         console.warn('Attempting to remove non-existent edge', edge)
         return
     }
 
-    currentAbstraction.edges.splice(index, 1)
+    graph.edges.splice(index, 1)
 }
 
 /**
@@ -72,9 +73,7 @@ export function removeEdge(graph: AnimationGraph, edge: Edge) {
  * @param edge - Edge to add
  */
 export function addEdge(graph: AnimationGraph, edge: Edge) {
-    const currentAbstraction = graph.abstractions[graph.currentAbstractionIndex]
-
-    for (const other of currentAbstraction.edges) {
+    for (const other of graph.edges) {
         if (
             other.from == edge.from &&
             other.to == edge.to &&
@@ -84,7 +83,7 @@ export function addEdge(graph: AnimationGraph, edge: Edge) {
         }
     }
 
-    currentAbstraction.edges.push(edge)
+    graph.edges.push(edge)
 }
 
 /**
@@ -106,6 +105,10 @@ export function begin(
         animation.onBegin(animation, view, options)
     }
 
+    if (!options.baking) {
+        GlobalAnimationCallbacks.instance.begin(animation)
+    }
+
     // if (animation.isChunk) {
     //     view.cursor.location = animation.nodeData.location
     //     view.cursor.label = animation.nodeData.type
@@ -123,12 +126,24 @@ export function end(
     view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions = {}
 ) {
-    if (options.baking) {
-        animation.postcondition = clone(view)
+    if (!options.baking) {
+        GlobalAnimationCallbacks.instance.end(animation)
     }
 
     if (instanceOfAnimationNode(animation)) {
         animation.onEnd(animation, view, options)
+        // animation.isPlaying = false
+    } else {
+        for (const vertex of animation.vertices) {
+            if (vertex.isPlaying) {
+                end(vertex, view, options)
+                vertex.isPlaying = false
+            }
+        }
+    }
+
+    if (options.baking) {
+        animation.postcondition = clone(view)
     }
 }
 
@@ -145,12 +160,16 @@ export function seek(
     time: number,
     options: AnimationRuntimeOptions = {}
 ) {
+    if (!options.baking) {
+        GlobalAnimationCallbacks.instance.seek(animation, time)
+    }
+
     if (instanceOfAnimationNode(animation)) {
         animation.onSeek(animation, view, time, options)
         return
     }
 
-    const abstraction = currentAbstraction(animation)
+    const abstraction = animation
 
     // Keep track of the start time (for sequential animations)
     let start = 0
@@ -202,10 +221,13 @@ export function seek(
             vertex.isPlaying = false
         }
 
+        let begunThisFrame = false
+
         // Begin animation
         if (!vertex.isPlaying && shouldBePlaying) {
             begin(vertex, view, options)
             vertex.isPlaying = true
+            begunThisFrame = true
         }
 
         // Skip over this animation
@@ -215,15 +237,25 @@ export function seek(
             !vertex.hasPlayed
         ) {
             begin(vertex, view, options)
+            vertex.isPlaying = true
+
             seek(vertex, view, duration(vertex), options)
+
             end(vertex, view, options)
+            vertex.isPlaying = false
 
             vertex.hasPlayed = true
         }
 
         // Seek into animation
-        if (vertex.isPlaying && shouldBePlaying) {
+        if (vertex.isPlaying && shouldBePlaying && !begunThisFrame) {
             seek(vertex, view, time - start, options)
+        }
+
+        // Apply invariant if any
+        if ('applyInvariant' in vertex) {
+            const transition = vertex as TransitionAnimationNode
+            transition.applyInvariant(transition, view)
         }
 
         start += duration(vertex)
@@ -235,9 +267,7 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     animation.hasPlayed = false
 
     if (instanceOfAnimationGraph(animation)) {
-        currentAbstraction(animation).vertices.forEach((vertex) =>
-            reset(vertex)
-        )
+        animation.vertices.forEach((vertex) => reset(vertex))
     }
 }
 
@@ -250,12 +280,18 @@ export function bake(
     }
 
     begin(animation, view, { baking: true })
+    animation.isPlaying = true
+
     seek(animation, view, duration(animation), {
         baking: true,
         indent: 0,
         globalTime: 0,
     })
+
     end(animation, view, { baking: true })
+    animation.isPlaying = false
+    animation.hasPlayed = true
+
     reset(animation)
 }
 
@@ -264,8 +300,13 @@ export function apply(
     view: PrototypicalEnvironmentState
 ) {
     begin(animation, view)
+    animation.isPlaying = true
+
     seek(animation, view, duration(animation))
+
     end(animation, view)
+    animation.isPlaying = false
+    animation.hasPlayed = true
 }
 
 /**
@@ -285,7 +326,7 @@ export function reads(
     }
 
     let result = []
-    const { vertices } = currentAbstraction(animation)
+    const { vertices } = animation
 
     for (const vertex of vertices) {
         result.push(...reads(vertex))
@@ -308,15 +349,11 @@ export function writes(
     }
 
     let result = []
-    const { vertices } = currentAbstraction(animation)
+    const { vertices } = animation
 
     for (const vertex of vertices) {
         result.push(...writes(vertex))
     }
 
     return result
-}
-
-export function currentAbstraction(animation: AnimationGraph) {
-    return animation.abstractions[animation.currentAbstractionIndex]
 }

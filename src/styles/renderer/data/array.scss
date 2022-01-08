@@ -1,7 +1,7 @@
 /** Array style used for computing layout **/
 .data-array {
     display: flex;
-    min-height: 40px;
+    min-height: 30px;
 }
 
 .data-array > *:not(last-child) {
@@ -16,6 +16,7 @@
     opacity: 0.7;
     font-weight: 400;
     font-family: Fira Code;
+    color: #8b8b93;
 }
 
 .data-array-opening-brace {

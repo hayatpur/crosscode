@@ -19,7 +19,6 @@ import {
     AccessorType,
     PrototypicalEnvironmentState,
 } from '../../environment/EnvironmentState'
-import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 import { FunctionCall } from '../Functions/FunctionCall'
 
@@ -29,6 +28,11 @@ export function CallExpression(
     context: AnimationContext
 ) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+
+    const argGraph = createAnimationGraph({
+        ...getNodeData(ast),
+        type: 'Arguments',
+    })
 
     // Compile the arguments
     const registers: Accessor[][] = []
@@ -43,8 +47,10 @@ export function CallExpression(
             ...context,
             outputRegister: registers[i],
         })
-        addVertex(graph, arg, { nodeData: getNodeData(ast.arguments[i]) })
+        addVertex(argGraph, arg, { nodeData: getNodeData(ast.arguments[i]) })
     }
+
+    addVertex(graph, argGraph, { nodeData: argGraph.nodeData })
 
     const controlOutput: ControlOutputData = { output: ControlOutput.None }
 
@@ -84,7 +90,6 @@ export function CallExpression(
 
     // Consume arguments
     for (let i = 0; i < ast.arguments.length; i++) {
-        console.log(clone(view), registers[i])
         const consume = consumeDataAnimation(registers[i])
         addVertex(consumption, consume, { nodeData: getNodeData(ast) })
         apply(consume, view)

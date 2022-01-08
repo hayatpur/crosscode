@@ -26,7 +26,7 @@ export function createTransform(): Transform {
 
 export function createData(
     type: DataType,
-    value: string | boolean | Number | PrototypicalDataState[] | Accessor[],
+    value: string | boolean | number | PrototypicalDataState[] | Accessor[],
     id: string,
     hints: PrototypicalDataTransform = null,
     frame: number = -1
@@ -46,7 +46,7 @@ export function createData(
 
 export function createConcreteData(
     prototype: PrototypicalDataState,
-    value: string | boolean | Number | ConcreteDataState[] | Accessor[] = null,
+    value: string | boolean | number | ConcreteDataState[] | Accessor[] = null,
     transform: ConcreteDataTransform = null
 ): ConcreteDataState {
     return {
@@ -55,7 +55,10 @@ export function createConcreteData(
         transform: transform ?? {
             ...createTransform(),
             styles: {},
-            classList: ['data-i', ...(prototype ? getDataClassNames(prototype.type) : [])],
+            classList: [
+                'data-i',
+                ...(prototype ? getDataClassNames(prototype.type) : []),
+            ],
         },
         value: value,
     }
@@ -105,11 +108,15 @@ export function replacePrototypicalDataWith(
     original.hints = copy.hints
 
     if (mask.frame && copy.type == DataType.Array) {
-        ;(original.value as PrototypicalDataState[]).forEach((el) => (el.frame = original.frame))
+        ;(original.value as PrototypicalDataState[]).forEach(
+            (el) => (el.frame = original.frame)
+        )
     }
 }
 
-export function convertIdentifierToLiteral(data: ESTree.Identifier): ESTree.Literal {
+export function convertIdentifierToLiteral(
+    data: ESTree.Identifier
+): ESTree.Literal {
     return {
         ...data,
         type: 'Literal',

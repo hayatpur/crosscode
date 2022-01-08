@@ -1,37 +1,71 @@
-#time-scrubber-container {
-    width: 600px;
-    /* background: grey; */
-    height: 25px;
-    border-radius: 5px;
-    box-shadow: 0px 0px 0px 1px var(--color-1) inset;
-
+.timeline {
+    padding: 9px;
+    position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
+    border-top: 1px solid #ffffff26;
+    transition: 0.2s var(--transition-type);
+}
+
+.timeline.disabled {
+    opacity: 0;
+    height: 0px;
+    padding: 0px;
+    pointer-events: none;
+}
+
+.timeline-bar {
+    height: 5px;
+    background: #2e2e30;
+    border-radius: 7px;
     position: relative;
-}
-
-#time-scrubber {
-    width: 1.5px;
-    background: var(--color-4);
-    height: 100%;
-    margin-left: 0px;
-    position: absolute;
-    z-index: 1;
-}
-
-#time-scrubber.active {
-    height: 70%;
-}
-
-.controls {
+    width: 80%;
+    transition: 0.3s;
+    margin-top: 2px;
+    margin-left: 5px;
     display: flex;
-    margin-top: 27px;
-    position: absolute;
-    margin-left: 188px;
-
-    display: none;
 }
 
-.controls > * {
-    margin-right: 10px;
+.timeline-scrubber {
+    height: 5px;
+    width: 5px;
+    position: absolute;
+    background: var(--color-4);
+    border-radius: 50%;
+    transform: scale(1);
+    transform-origin: center;
+    transition-property: background, transform;
+    transition-duration: 0.3s;
+}
+
+.timeline-bar:hover .timeline-scrubber {
+    background: var(--color-5);
+    transform: scale(1.7);
+}
+
+.timeline:hover {
+    cursor: pointer;
+}
+
+.timeline-button {
+    width: 10px;
+    height: 10px;
+    font-size: 12px;
+    background: #ffffff00;
+    margin: 3px;
+    opacity: 0.4;
+    transform: scale(1);
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.timeline-button:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.timeline-button:active,
+.timeline-button.active {
+    opacity: 1;
 }

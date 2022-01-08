@@ -160,7 +160,7 @@ export class AbstractionCreator {
             const chunk = availableChunks.shift()
             deepestChunk = chunk
 
-            for (const child of chunk.abstractions[0].vertices) {
+            for (const child of chunk.vertices) {
                 if (!instanceOfAnimationGraph(child)) continue
 
                 const contains = [...this.selectionChunks].every(

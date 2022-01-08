@@ -21,4 +21,10 @@ export class RootView {
     addView(view: View) {
         this.views.push(view)
     }
+
+    removeView(view: View) {
+        const index = this.views.indexOf(view)
+        if (index === -1) return
+        this.views.splice(index, 1)
+    }
 }

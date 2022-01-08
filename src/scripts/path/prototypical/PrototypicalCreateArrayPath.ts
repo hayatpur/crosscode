@@ -4,19 +4,19 @@ import {
 } from '../../environment/EnvironmentState'
 import { createPrototypicalPath, PrototypicalPath } from '../path'
 
-export interface PrototypicalMovementPath extends PrototypicalPath {
-    from: Accessor[]
-    to: Accessor[]
+export interface PrototypicalCreateArrayPath extends PrototypicalPath {
+    data: Accessor[]
+    at: Accessor[]
     id: string
 }
 
 function onBegin(
-    path: PrototypicalMovementPath,
+    path: PrototypicalPath,
     environment: PrototypicalEnvironmentState
 ) {}
 
 function onSeek(
-    path: PrototypicalMovementPath,
+    path: PrototypicalPath,
     environment: PrototypicalEnvironmentState,
     t: number
 ) {
@@ -24,7 +24,7 @@ function onSeek(
 }
 
 function onEnd(
-    path: PrototypicalMovementPath,
+    path: PrototypicalPath,
     environment: PrototypicalEnvironmentState
 ) {}
 
@@ -34,16 +34,16 @@ function onEnd(
  * @param to if is an environment state, then moves data to the next free spot
  * @param id
  */
-export function createPrototypicalMovementPath(
-    from: Accessor[],
-    to: Accessor[],
+export function createPrototypicalCreateArrayPath(
+    data: Accessor[],
+    at: Accessor[],
     id: string
-): PrototypicalMovementPath {
+): PrototypicalCreateArrayPath {
     return {
         ...createPrototypicalPath(id),
-        type: 'PrototypicalMovementPath',
-        from,
-        to,
+        type: 'PrototypicalCreateArrayPath',
+        data,
+        at,
         id,
 
         onBegin,

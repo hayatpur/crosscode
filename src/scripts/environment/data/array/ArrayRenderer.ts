@@ -94,6 +94,21 @@ export class ArrayRenderer extends DataRenderer {
         // }
         // this.dataRenderers = {}
     }
+
+    getAllChildRenderers() {
+        let renderers = {}
+
+        for (const [id, item] of Object.entries(this.dataRenderers)) {
+            renderers[id] = item.renderer
+
+            renderers = {
+                ...renderers,
+                ...item.renderer.getAllChildRenderers(),
+            }
+        }
+
+        return renderers
+    }
 }
 
 function updateIndexClasses(el: HTMLElement, index: number, len: number) {

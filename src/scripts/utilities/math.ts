@@ -1,96 +1,103 @@
-import './glpk';
+import './glpk'
 
 export interface Vector {
-    x: number;
-    y: number;
-    z?: number;
+    x: number
+    y: number
+    z?: number
 }
 
 export function lerp(a: number, b: number, t: number) {
-    return a * (1 - t) + t * b;
+    return a * (1 - t) + t * b
 }
 
 export function lerp2(a: Vector, b: Vector, t: number) {
     return {
         x: lerp(a.x, b.x, t),
         y: lerp(a.y, b.y, t),
-    };
+    }
 }
 
 export function sigmoid(x: number) {
-    return 1 / (1 + Math.exp(-x));
+    return 1 / (1 + Math.exp(-x))
 }
 
 export function getRelativeLocation(point: Vector, parent: Vector) {
     return {
         x: point.x - parent.x,
         y: point.y - parent.y,
-    };
+    }
 }
 
-export function getNumericalValueOfStyle(styleValue: string, fallback: number = 0): number {
-    let parsed = parseFloat(styleValue ?? fallback.toString());
+export function getNumericalValueOfStyle(
+    styleValue: string,
+    fallback: number = 0
+): number {
+    let parsed = parseFloat(styleValue ?? fallback.toString())
 
     if (isNaN(parsed)) {
-        return fallback;
+        return fallback
     } else {
-        return parsed;
+        return parsed
     }
 }
 
 /**
- * @param {Number} [x]
- * @param {Number} [a] input range start
- * @param {Number} [b] input range end
- * @param {Number} [c] output range start
- * @param {Number} [d] output range end
+ * @param {number} [x]
+ * @param {number} [a] input range start
+ * @param {number} [b] input range end
+ * @param {number} [c] output range start
+ * @param {number} [d] output range end
  */
 export function remap(x: number, a: number, b: number, c: number, d: number) {
-    return c + ((d - c) / (b - a)) * (x - a);
+    return c + ((d - c) / (b - a)) * (x - a)
 }
 
 export function solveLP(data, mip = true) {
-    const solver = window['__GLP'];
-    let logs = [];
+    const solver = window['__GLP']
+    let logs = []
 
     function log(value) {
-        logs.push({ action: 'log', message: value });
+        logs.push({ action: 'log', message: value })
     }
 
-    solver.glp_set_print_func(log);
+    solver.glp_set_print_func(log)
 
-    var lp;
+    var lp
 
     var result = {},
         objective,
-        i;
+        i
     try {
-        lp = solver.glp_create_prob();
-        solver.glp_read_lp_from_string(lp, null, data);
+        lp = solver.glp_create_prob()
+        solver.glp_read_lp_from_string(lp, null, data)
 
-        solver.glp_scale_prob(lp, solver.GLP_SF_AUTO);
+        solver.glp_scale_prob(lp, solver.GLP_SF_AUTO)
 
-        var smcp = new solver.SMCP({ presolve: solver.GLP_ON });
-        solver.glp_simplex(lp, smcp);
+        var smcp = new solver.SMCP({ presolve: solver.GLP_ON })
+        solver.glp_simplex(lp, smcp)
 
         if (mip) {
-            solver.glp_intopt(lp);
-            objective = solver.glp_mip_obj_val(lp);
+            solver.glp_intopt(lp)
+            objective = solver.glp_mip_obj_val(lp)
             for (i = 1; i <= solver.glp_get_num_cols(lp); i++) {
-                result[solver.glp_get_col_name(lp, i)] = solver.glp_mip_col_val(lp, i);
+                result[solver.glp_get_col_name(lp, i)] = solver.glp_mip_col_val(
+                    lp,
+                    i
+                )
             }
         } else {
-            objective = solver.glp_get_obj_val(lp);
+            objective = solver.glp_get_obj_val(lp)
             for (i = 1; i <= solver.glp_get_num_cols(lp); i++) {
-                result[solver.glp_get_col_name(lp, i)] = solver.glp_get_col_prim(lp, i);
+                result[solver.glp_get_col_name(lp, i)] =
+                    solver.glp_get_col_prim(lp, i)
             }
         }
-        lp = null;
+        lp = null
     } catch (err) {
-        log(err.message);
+        log(err.message)
     } finally {
-        console.log({ action: 'done', result: result, objective: objective });
+        console.log({ action: 'done', result: result, objective: objective })
     }
 
-    return { logs, result, objective };
+    return { logs, result, objective }
 }

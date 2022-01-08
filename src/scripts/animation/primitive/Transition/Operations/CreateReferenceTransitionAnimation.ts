@@ -1,7 +1,4 @@
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../../environment/EnvironmentState'
+import { PrototypicalEnvironmentState } from '../../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -10,11 +7,11 @@ import {
     removePrototypicalPath,
     seekPrototypicalPath,
 } from '../../../../path/path'
-import {
-    createPrototypicalCreateArrayPath,
-    PrototypicalCreateArrayPath,
-} from '../../../../path/prototypical/PrototypicalCreateArrayPath'
 import { PrototypicalCreatePath } from '../../../../path/prototypical/PrototypicalCreatePath'
+import {
+    createPrototypicalCreateReferencePath,
+    PrototypicalCreateReferencePath,
+} from '../../../../path/prototypical/PrototypicalCreateReferencePath'
 import { duration } from '../../../animation'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
 import {
@@ -23,10 +20,10 @@ import {
 } from '../../../graph/AnimationGraph'
 import { AnimationOptions, createAnimationNode } from '../../AnimationNode'
 
-export interface TransitionCreateArray extends TransitionAnimationNode {}
+export interface TransitionCreateReference extends TransitionAnimationNode {}
 
 function onBegin(
-    animation: TransitionCreateArray,
+    animation: TransitionCreateReference,
     view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
@@ -34,14 +31,13 @@ function onBegin(
 
     let create = lookupPrototypicalPathById(
         environment,
-        `CreateArray${animation.id}`
-    ) as PrototypicalCreateArrayPath
+        `CreateReference${animation.id}`
+    ) as PrototypicalCreateReferencePath
 
     if (create == null) {
-        create = createPrototypicalCreateArrayPath(
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            `CreateArray${animation.id}`
+        create = createPrototypicalCreateReferencePath(
+            animation.output.location,
+            `CreateReference${animation.id}`
         )
         addPrototypicalPath(environment, create)
         beginPrototypicalPath(create, environment)
@@ -49,7 +45,7 @@ function onBegin(
 }
 
 function onSeek(
-    animation: TransitionCreateArray,
+    animation: TransitionCreateReference,
     view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
@@ -59,56 +55,55 @@ function onSeek(
 
     const create = lookupPrototypicalPathById(
         environment,
-        `CreateArray${animation.id}`
+        `CreateReference${animation.id}`
     ) as PrototypicalCreatePath
     seekPrototypicalPath(create, environment, t)
 }
 
 function onEnd(
-    animation: TransitionCreateArray,
+    animation: TransitionCreateReference,
     view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
     const environment = view
     const create = lookupPrototypicalPathById(
         environment,
-        `CreateArray${animation.id}`
-    ) as PrototypicalCreateArrayPath
+        `CreateReference${animation.id}`
+    ) as PrototypicalCreateReferencePath
     endPrototypicalPath(create, environment)
-    removePrototypicalPath(environment, `Create${animation.id}`)
+    removePrototypicalPath(environment, `CreateReference${animation.id}`)
 }
 
 function applyInvariant(
-    animation: TransitionCreateArray,
+    animation: TransitionCreateReference,
     view: PrototypicalEnvironmentState
 ) {
     const environment = view
 
     let create = lookupPrototypicalPathById(
         environment,
-        `CreateArray${animation.id}`
-    ) as PrototypicalCreateArrayPath
+        `CreateReference${animation.id}`
+    ) as PrototypicalCreateReferencePath
 
     if (create == null) {
-        create = createPrototypicalCreateArrayPath(
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            `CreateArray${animation.id}`
+        create = createPrototypicalCreateReferencePath(
+            animation.output.location,
+            `CreateReference${animation.id}`
         )
         addPrototypicalPath(environment, create)
         beginPrototypicalPath(create, environment)
     }
 }
 
-export function transitionCreateArray(
+export function transitionCreateReference(
     output: AnimationData,
     origins: AnimationData[],
     options: AnimationOptions = {}
-): TransitionCreateArray {
+): TransitionCreateReference {
     return {
-        ...createAnimationNode(null, { ...options }),
+        ...createAnimationNode(null, { ...options, delay: 0 }),
 
-        name: 'TransitionCreateArray',
+        name: 'TransitionCreateReference',
 
         output,
         origins,

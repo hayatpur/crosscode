@@ -1,3 +1,4 @@
+import { AnimationRendererRepresentation } from './AnimationRenderer'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
 import { DataType, PrototypicalDataState } from './data/DataState'
@@ -34,15 +35,32 @@ export class EnvironmentRenderer {
         this.element.classList.add('environment')
     }
 
-    setState(state: PrototypicalEnvironmentState) {
+    setState(
+        state: PrototypicalEnvironmentState,
+        representation: AnimationRendererRepresentation = null
+    ) {
+        if (representation == null) {
+            representation = {
+                exclude: null,
+                include: null,
+            }
+        }
+
         // Memory
-        this.renderMemory(state)
+        this.renderMemory(state, representation)
+
+        const env = this
 
         // Render identifiers
-        this.renderIdentifiers(state)
+        env.renderIdentifiers(state, representation)
+        setTimeout(() => env.renderIdentifiers(state, representation))
     }
 
-    renderMemory(state: PrototypicalEnvironmentState) {
+    renderMemory(
+        state: PrototypicalEnvironmentState,
+        representation: AnimationRendererRepresentation
+    ) {
+        // Cached
         if (JSON.stringify(state) === this.memoryCache) {
             return
         }
@@ -52,8 +70,7 @@ export class EnvironmentRenderer {
         // Hit test
         const hits = new Set()
 
-        // Only render literals and arrays
-        const memory = state.memory
+        let memory = state.memory
             .filter((m) => m != null)
             .filter(
                 (data) =>
@@ -61,6 +78,17 @@ export class EnvironmentRenderer {
                     data.type == DataType.Array ||
                     data.type == DataType.Function
             )
+
+        // Filter
+        if (representation.include != null) {
+            memory = memory.filter((data) =>
+                representation.include.some((r) => includes(data, r))
+            )
+        } else if (representation.exclude != null) {
+        }
+
+        // Sort
+        // memory.sort()
 
         // Render data
         for (const data of memory) {
@@ -71,6 +99,7 @@ export class EnvironmentRenderer {
                 this.element.append(renderer.element)
             }
 
+            // this.element.append(this.dataRenderers[data.id].element)
             hits.add(data.id)
             this.dataRenderers[data.id].setState(data)
         }
@@ -86,24 +115,34 @@ export class EnvironmentRenderer {
         }
     }
 
-    renderIdentifiers(state: PrototypicalEnvironmentState) {
+    renderIdentifiers(
+        state: PrototypicalEnvironmentState,
+        representation: AnimationRendererRepresentation
+    ) {
         // Hit test
         const hits = new Set()
 
         for (const scope of state.scope) {
             for (const name of Object.keys(scope.bindings)) {
+                const location = scope.bindings[name].location
+                const data = resolvePath(state, location, null)
+                const dataRenderer = this.dataRenderers[data.id]
+
+                if (dataRenderer == null) continue
+
                 if (!(name in this.identifierRenderers)) {
                     const renderer = new IdentifierRenderer()
                     this.identifierRenderers[name] = renderer
                     this.element.appendChild(renderer.element)
                 }
 
+                // this.element.appendChild(this.identifierRenderers[name].element)
+
                 hits.add(name)
-                const location = scope.bindings[name].location
-                const data = resolvePath(state, location, null)
+
                 this.identifierRenderers[name].setState(
                     scope.bindings[name],
-                    this.dataRenderers[data.id],
+                    dataRenderer,
                     this.element
                 )
             }
@@ -132,5 +171,40 @@ export class EnvironmentRenderer {
         }
 
         this.element.remove()
+    }
+
+    getAllChildRenderers() {
+        let renderers = {}
+
+        for (const [id, renderer] of Object.entries(this.dataRenderers)) {
+            renderers[id] = renderer
+
+            renderers = {
+                ...renderers,
+                ...renderer.getAllChildRenderers(),
+            }
+        }
+
+        for (const [id, renderer] of Object.entries(this.identifierRenderers)) {
+            renderers[id] = renderer
+        }
+
+        return renderers
+    }
+}
+
+/**
+ * @returns true iff query is included in data or is data itself
+ */
+function includes(data: PrototypicalDataState, query: string) {
+    if (data.type != DataType.Array) {
+        return data.id == query
+    } else {
+        return (
+            data.id == query ||
+            (data.value as PrototypicalDataState[]).some((d) =>
+                includes(d, query)
+            )
+        )
     }
 }

@@ -10,7 +10,7 @@ export class LiteralRenderer extends DataRenderer {
     }
 
     setState(data: PrototypicalDataState) {
-        this.element.innerText = data.value.toString()
+        this.element.innerText = data.value?.toString() ?? 'null'
 
         if (typeof data.value == 'string') {
             this.element.classList.add('data-literal-string')

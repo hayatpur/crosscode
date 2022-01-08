@@ -11,9 +11,9 @@ import {
     seekPrototypicalPath,
 } from '../../../../path/path'
 import {
-    createPrototypicalCreatePath,
-    PrototypicalCreatePath,
-} from '../../../../path/prototypical/PrototypicalCreatePath'
+    createPrototypicalPlacePath,
+    PrototypicalPlacePath,
+} from '../../../../path/prototypical/PrototypicalPlacePath'
 import { duration } from '../../../animation'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
 import {
@@ -22,33 +22,32 @@ import {
 } from '../../../graph/AnimationGraph'
 import { AnimationOptions, createAnimationNode } from '../../AnimationNode'
 
-export interface TransitionCreate extends TransitionAnimationNode {}
+export interface TransitionPlace extends TransitionAnimationNode {}
 
 function onBegin(
-    animation: TransitionCreate,
+    animation: TransitionPlace,
     view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
     const environment = view
 
-    let create = lookupPrototypicalPathById(
+    let place = lookupPrototypicalPathById(
         environment,
-        `Create${animation.id}`
-    ) as PrototypicalCreatePath
+        `Place${animation.id}`
+    ) as PrototypicalPlacePath
 
-    if (create == null) {
-        create = createPrototypicalCreatePath(
+    if (place == null) {
+        place = createPrototypicalPlacePath(
             [{ type: AccessorType.ID, value: animation.output.id }],
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            `Create${animation.id}`
+            `Place${animation.id}`
         )
-        addPrototypicalPath(environment, create)
-        beginPrototypicalPath(create, environment)
+        addPrototypicalPath(environment, place)
+        beginPrototypicalPath(place, environment)
     }
 }
 
 function onSeek(
-    animation: TransitionCreate,
+    animation: TransitionPlace,
     view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
@@ -56,58 +55,57 @@ function onSeek(
     let t = animation.ease(time / duration(animation))
     const environment = view
 
-    const create = lookupPrototypicalPathById(
+    const place = lookupPrototypicalPathById(
         environment,
-        `Create${animation.id}`
-    ) as PrototypicalCreatePath
-    seekPrototypicalPath(create, environment, t)
+        `Place${animation.id}`
+    ) as PrototypicalPlacePath
+    seekPrototypicalPath(place, environment, t)
 }
 
 function onEnd(
-    animation: TransitionCreate,
+    animation: TransitionPlace,
     view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
     const environment = view
-    const create = lookupPrototypicalPathById(
+    const place = lookupPrototypicalPathById(
         environment,
-        `Create${animation.id}`
-    ) as PrototypicalCreatePath
-    endPrototypicalPath(create, environment)
-    removePrototypicalPath(environment, `Create${animation.id}`)
+        `Place${animation.id}`
+    ) as PrototypicalPlacePath
+    endPrototypicalPath(place, environment)
+    removePrototypicalPath(environment, `Place${animation.id}`)
 }
 
 function applyInvariant(
-    animation: TransitionCreate,
+    animation: TransitionPlace,
     view: PrototypicalEnvironmentState
 ) {
     const environment = view
 
-    let create = lookupPrototypicalPathById(
+    let place = lookupPrototypicalPathById(
         environment,
-        `Create${animation.id}`
-    ) as PrototypicalCreatePath
+        `Place${animation.id}`
+    ) as PrototypicalPlacePath
 
-    if (create == null) {
-        create = createPrototypicalCreatePath(
+    if (place == null) {
+        place = createPrototypicalPlacePath(
             [{ type: AccessorType.ID, value: animation.output.id }],
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            `Create${animation.id}`
+            `Place${animation.id}`
         )
-        addPrototypicalPath(environment, create)
-        beginPrototypicalPath(create, environment)
+        addPrototypicalPath(environment, place)
+        beginPrototypicalPath(place, environment)
     }
 }
 
-export function transitionCreate(
+export function transitionPlace(
     output: AnimationData,
     origins: AnimationData[],
     options: AnimationOptions = {}
-): TransitionCreate {
+): TransitionPlace {
     return {
         ...createAnimationNode(null, { ...options, delay: 0 }),
 
-        name: 'TransitionCreate',
+        name: 'TransitionPlace',
 
         output,
         origins,

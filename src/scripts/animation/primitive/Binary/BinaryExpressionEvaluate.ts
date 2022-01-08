@@ -164,8 +164,6 @@ export function binaryExpressionEvaluate(
         ...createAnimationNode(null, options),
         _name: 'BinaryExpressionEvaluate',
 
-        baseDuration: 30,
-
         name: `Binary Evaluate ${accessorsToString(
             leftSpecifier
         )} ${operator} ${accessorsToString(

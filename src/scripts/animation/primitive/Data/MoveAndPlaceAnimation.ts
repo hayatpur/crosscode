@@ -28,9 +28,9 @@ import {
     PrototypicalMovementPath,
 } from '../../../path/prototypical/PrototypicalMovementPath'
 import {
-    createPrototypicalPlacementPath,
-    PrototypicalPlacementPath,
-} from '../../../path/prototypical/PrototypicalPlacementPath'
+    createPrototypicalPlacePath,
+    PrototypicalPlacePath,
+} from '../../../path/prototypical/PrototypicalPlacePath'
 import { remap } from '../../../utilities/math'
 import { duration } from '../../animation'
 import {
@@ -43,10 +43,15 @@ import {
     createAnimationNode,
 } from '../AnimationNode'
 
+/**
+ * Move and place animation or just place if the from
+ * is not defined.
+ */
 export interface MoveAndPlaceAnimation extends AnimationNode {
     inputSpecifier: Accessor[]
     outputSpecifier: Accessor[]
-    noMove: boolean
+
+    hasReplaced: boolean
 }
 
 function onBegin(
@@ -72,60 +77,46 @@ function onBegin(
         `${animation.id}_To(${accessorsToString(animation.outputSpecifier)})`
     )
 
-    // Create movement path
-    const movement: PrototypicalPath = createPrototypicalMovementPath(
-        animation.inputSpecifier,
-        animation.outputSpecifier,
-        `Movement${animation.id}`
-    )
-    addPrototypicalPath(environment, movement)
+    let movement: PrototypicalMovementPath
+
+    if (instanceOfPrototypicalData(to)) {
+        // Create movement path
+        movement = createPrototypicalMovementPath(
+            animation.inputSpecifier,
+            animation.outputSpecifier,
+            `Movement${animation.id}`
+        )
+        addPrototypicalPath(environment, movement)
+    }
 
     // Create placement path
-    const placement: PrototypicalPath = createPrototypicalPlacementPath(
+    const placement: PrototypicalPath = createPrototypicalPlacePath(
         animation.inputSpecifier,
         `Placement${animation.id}`
     )
     addPrototypicalPath(environment, placement)
 
-    // Begin movement
-    beginPrototypicalPath(movement, view)
-
-    if (instanceOfPrototypicalEnvironment(to)) {
-        if (options.baking) {
-            computeReadAndWrites(
-                animation,
-                {
-                    location: getMemoryLocation(environment, from)
-                        .foundLocation,
-                    id: from.id,
-                },
-                null
-            )
+    if (options.baking) {
+        const fromData = {
+            location: getMemoryLocation(environment, from).foundLocation,
+            id: from.id,
         }
-    } else {
-        if (options.baking) {
-            computeReadAndWrites(
-                animation,
-                {
-                    location: getMemoryLocation(environment, from)
-                        .foundLocation,
-                    id: from.id,
-                },
-                {
-                    location: getMemoryLocation(environment, to).foundLocation,
-                    id: to.id,
-                }
-            )
+
+        if (instanceOfPrototypicalEnvironment(to)) {
+            computeReadAndWrites(animation, fromData, null)
+        } else {
+            computeReadAndWrites(animation, fromData, {
+                location: getMemoryLocation(environment, to).foundLocation,
+                id: to.id,
+            })
         }
     }
 
-    if (instanceOfPrototypicalData(to)) {
-        removeAt(
-            environment,
-            getMemoryLocation(environment, from).foundLocation
-        )
-        replacePrototypicalDataWith(to, from, { frame: true, id: true })
+    if (movement != null) {
+        beginPrototypicalPath(movement, view)
     }
+
+    animation.hasReplaced = false
 }
 
 function onSeek(
@@ -139,39 +130,67 @@ function onSeek(
     const environment = view
     const tn = time / duration(animation)
 
-    // Move
-    if (tn <= 0.7 && !animation.noMove) {
-        let t = animation.ease(remap(tn, 0, 0.7, 0, 1))
-
-        const movement = lookupPrototypicalPathById(
+    if (!animation.hasReplaced) {
+        const from = resolvePath(
             environment,
-            `Movement${animation.id}`
-        ) as PrototypicalMovementPath
+            animation.inputSpecifier,
+            null,
+            null,
+            {
+                noResolvingReference: true,
+            }
+        ) as PrototypicalDataState
+
+        const to = resolvePath(
+            environment,
+            animation.outputSpecifier,
+            `${animation.id}_To(${accessorsToString(
+                animation.outputSpecifier
+            )})`
+        )
+
+        if (instanceOfPrototypicalData(to)) {
+            removeAt(
+                environment,
+                getMemoryLocation(environment, from).foundLocation
+            )
+            replacePrototypicalDataWith(to, from, { frame: true, id: true })
+        }
+
+        animation.hasReplaced = true
+    }
+
+    const movement = lookupPrototypicalPathById(
+        environment,
+        `Movement${animation.id}`
+    ) as PrototypicalMovementPath
+
+    const placement = lookupPrototypicalPathById(
+        environment,
+        `Placement${animation.id}`
+    ) as PrototypicalPlacePath
+
+    // Move
+    if (tn <= 0.7 && movement != null) {
+        let t = animation.ease(remap(tn, 0, 0.7, 0, 1))
         seekPrototypicalPath(movement, environment, t)
     }
     // Place
-    else if (tn >= 0.8 || animation.noMove) {
+    else if (tn >= 0.8 || movement == null) {
         let t: number
 
-        if (animation.noMove) {
+        if (movement == null) {
             t = animation.ease(tn)
         } else {
             t = animation.ease(remap(tn, 0.8, 1, 0, 1))
         }
 
-        const placement = lookupPrototypicalPathById(
-            environment,
-            `Placement${animation.id}`
-        ) as PrototypicalPlacementPath
-
         if (!placement.meta.isPlaying) {
             beginPrototypicalPath(placement, environment)
 
-            const movement = lookupPrototypicalPathById(
-                environment,
-                `Movement${animation.id}`
-            ) as PrototypicalMovementPath
-            endPrototypicalPath(movement, environment)
+            if (movement != null) {
+                endPrototypicalPath(movement, environment)
+            }
         }
 
         seekPrototypicalPath(placement, environment, t)
@@ -186,23 +205,19 @@ function onEnd(
     const environment = view
 
     // Paths
-    const movement = lookupPrototypicalPathById(
-        environment,
-        `Movement${animation.id}`
-    ) as PrototypicalMovementPath
+
+    // End placement
     const placement = lookupPrototypicalPathById(
         environment,
         `Placement${animation.id}`
-    ) as PrototypicalPlacementPath
-
-    // End placement
+    ) as PrototypicalPlacePath
     endPrototypicalPath(placement, environment)
 
     // Remove paths from environment
     removePrototypicalPath(environment, `Movement${animation.id}`)
     removePrototypicalPath(environment, `Placement${animation.id}`)
 
-    const input = resolvePath(
+    const from = resolvePath(
         environment,
         animation.inputSpecifier,
         null,
@@ -211,10 +226,11 @@ function onEnd(
             noResolvingReference: true,
         }
     ) as PrototypicalDataState
+
     const to = resolvePath(
         environment,
         animation.outputSpecifier,
-        `${animation.id}_EndTo`
+        `${animation.id}_To(${accessorsToString(animation.outputSpecifier)})`
     )
 }
 
@@ -236,7 +252,6 @@ export function moveAndPlaceAnimation(
     return {
         ...createAnimationNode(null, {
             ...options,
-            duration: noMove ? 10 : 20,
         }),
         _name: 'MoveAndPlaceAnimation',
 
@@ -247,7 +262,8 @@ export function moveAndPlaceAnimation(
         // Attributes
         inputSpecifier,
         outputSpecifier,
-        noMove,
+
+        hasReplaced: false,
 
         // Callbacks
         onBegin,

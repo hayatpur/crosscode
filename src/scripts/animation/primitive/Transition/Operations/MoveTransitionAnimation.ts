@@ -1,10 +1,19 @@
-import { PrototypicalEnvironmentState } from '../../../../environment/EnvironmentState'
 import {
+    AccessorType,
+    PrototypicalEnvironmentState,
+} from '../../../../environment/EnvironmentState'
+import {
+    addPrototypicalPath,
+    beginPrototypicalPath,
     endPrototypicalPath,
     lookupPrototypicalPathById,
     removePrototypicalPath,
     seekPrototypicalPath,
 } from '../../../../path/path'
+import {
+    createPrototypicalMovementPath,
+    PrototypicalMovementPath,
+} from '../../../../path/prototypical/PrototypicalMovementPath'
 import { duration } from '../../../animation'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
 import {
@@ -20,23 +29,23 @@ function onBegin(
     view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
-    // const environment = view
-    // const data = resolvePath(
-    //     environment,
-    //     [{ type: AccessorType.ID, value: animation.output.id }],
-    //     null
-    // )
-    // const prevLeaf = getLastActiveLeafView(view)
-    // const currLeaf = getCurrentLeafView(view)
-    // // Create movement path
-    // const movement: PrototypicalPath = createPrototypicalGlobalMovementPath(
-    //     [{ type: AccessorType.ID, value: animation.output.id }],
-    //     [{ type: AccessorType.ID, value: animation.origins[0].id }],
-    //     currLeaf.id,
-    //     prevLeaf.id,
-    //     `Movement${animation.id}`
-    // )
-    // addPrototypicalPath(environment, movement)
+    const environment = view
+
+    let movement = lookupPrototypicalPathById(
+        environment,
+        `Movement${animation.id}`
+    ) as PrototypicalMovementPath
+
+    // Create movement path
+    if (movement == null) {
+        movement = createPrototypicalMovementPath(
+            [{ type: AccessorType.ID, value: animation.origins[0].id }],
+            [{ type: AccessorType.ID, value: animation.output.id }],
+            `Movement${animation.id}`
+        )
+        addPrototypicalPath(environment, movement)
+        beginPrototypicalPath(movement, environment)
+    }
 }
 
 function onSeek(
@@ -52,6 +61,7 @@ function onSeek(
         environment,
         `Movement${animation.id}`
     )
+
     seekPrototypicalPath(movement, environment, t)
 }
 
@@ -65,7 +75,7 @@ function onEnd(
     const movement = lookupPrototypicalPathById(
         environment,
         `Movement${animation.id}`
-    )
+    ) as PrototypicalMovementPath
     endPrototypicalPath(movement, environment)
     removePrototypicalPath(environment, `Movement${animation.id}`)
 }
@@ -73,7 +83,24 @@ function onEnd(
 function applyInvariant(
     animation: TransitionMove,
     view: PrototypicalEnvironmentState
-) {}
+) {
+    const environment = view
+
+    let movement = lookupPrototypicalPathById(
+        environment,
+        `Movement${animation.id}`
+    ) as PrototypicalMovementPath
+
+    if (movement == null) {
+        movement = createPrototypicalMovementPath(
+            [{ type: AccessorType.ID, value: animation.origins[0].id }],
+            [{ type: AccessorType.ID, value: animation.output.id }],
+            `Movement${animation.id}`
+        )
+        addPrototypicalPath(environment, movement)
+        beginPrototypicalPath(movement, environment)
+    }
+}
 
 export function transitionMove(
     output: AnimationData,
@@ -81,7 +108,7 @@ export function transitionMove(
     options: AnimationOptions = {}
 ): TransitionMove {
     return {
-        ...createAnimationNode(null, { ...options, duration: 150 }),
+        ...createAnimationNode(null, { ...options, delay: 0, duration: 20 }),
 
         name: 'TransitionMove',
 
@@ -97,25 +124,3 @@ export function transitionMove(
         applyInvariant,
     }
 }
-
-// function getComputedStyleOfData(data: DataTransform, property: string) {
-//     const temp = document.createElement('div')
-//     document.getElementById('temporary-layout').append(temp)
-
-//     for (const c of data.classList) {
-//         temp.classList.add(c)
-//     }
-
-//     for (const [key, value] of Object.entries(data.styles)) {
-//         temp.style[key] = value
-//     }
-
-//     temp.style.position = 'absolute'
-
-//     reflow(temp)
-
-//     const computed = getComputedStyle(temp, property)
-//     // temp.remove()
-
-//     return computed[property]
-// }

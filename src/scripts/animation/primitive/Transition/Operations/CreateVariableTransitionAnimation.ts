@@ -1,7 +1,4 @@
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../../environment/EnvironmentState'
+import { PrototypicalEnvironmentState } from '../../../../environment/EnvironmentState'
 import {
     addPrototypicalPath,
     beginPrototypicalPath,
@@ -11,10 +8,9 @@ import {
     seekPrototypicalPath,
 } from '../../../../path/path'
 import {
-    createPrototypicalCreateArrayPath,
-    PrototypicalCreateArrayPath,
-} from '../../../../path/prototypical/PrototypicalCreateArrayPath'
-import { PrototypicalCreatePath } from '../../../../path/prototypical/PrototypicalCreatePath'
+    createPrototypicalCreateVariablePath,
+    PrototypicalCreateVariablePath,
+} from '../../../../path/prototypical/PrototypicalCreateVariablePath'
 import { duration } from '../../../animation'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
 import {
@@ -23,10 +19,10 @@ import {
 } from '../../../graph/AnimationGraph'
 import { AnimationOptions, createAnimationNode } from '../../AnimationNode'
 
-export interface TransitionCreateArray extends TransitionAnimationNode {}
+export interface TransitionCreateVariable extends TransitionAnimationNode {}
 
 function onBegin(
-    animation: TransitionCreateArray,
+    animation: TransitionCreateVariable,
     view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
@@ -34,14 +30,14 @@ function onBegin(
 
     let create = lookupPrototypicalPathById(
         environment,
-        `CreateArray${animation.id}`
-    ) as PrototypicalCreateArrayPath
+        `CreateVariable${animation.id}`
+    ) as PrototypicalCreateVariablePath
 
     if (create == null) {
-        create = createPrototypicalCreateArrayPath(
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            `CreateArray${animation.id}`
+        create = createPrototypicalCreateVariablePath(
+            animation.output.id,
+            animation.output.location,
+            `CreateVariable${animation.id}`
         )
         addPrototypicalPath(environment, create)
         beginPrototypicalPath(create, environment)
@@ -49,7 +45,7 @@ function onBegin(
 }
 
 function onSeek(
-    animation: TransitionCreateArray,
+    animation: TransitionCreateVariable,
     view: PrototypicalEnvironmentState,
     time: number,
     options: AnimationRuntimeOptions
@@ -59,56 +55,56 @@ function onSeek(
 
     const create = lookupPrototypicalPathById(
         environment,
-        `CreateArray${animation.id}`
-    ) as PrototypicalCreatePath
+        `CreateVariable${animation.id}`
+    ) as PrototypicalCreateVariablePath
     seekPrototypicalPath(create, environment, t)
 }
 
 function onEnd(
-    animation: TransitionCreateArray,
+    animation: TransitionCreateVariable,
     view: PrototypicalEnvironmentState,
     options: AnimationRuntimeOptions
 ) {
     const environment = view
     const create = lookupPrototypicalPathById(
         environment,
-        `CreateArray${animation.id}`
-    ) as PrototypicalCreateArrayPath
+        `CreateVariable${animation.id}`
+    ) as PrototypicalCreateVariablePath
     endPrototypicalPath(create, environment)
-    removePrototypicalPath(environment, `Create${animation.id}`)
+    removePrototypicalPath(environment, `CreateVariable${animation.id}`)
 }
 
 function applyInvariant(
-    animation: TransitionCreateArray,
+    animation: TransitionCreateVariable,
     view: PrototypicalEnvironmentState
 ) {
     const environment = view
 
     let create = lookupPrototypicalPathById(
         environment,
-        `CreateArray${animation.id}`
-    ) as PrototypicalCreateArrayPath
+        `CreateVariable${animation.id}`
+    ) as PrototypicalCreateVariablePath
 
     if (create == null) {
-        create = createPrototypicalCreateArrayPath(
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            `CreateArray${animation.id}`
+        create = createPrototypicalCreateVariablePath(
+            animation.output.id,
+            animation.output.location,
+            `CreateVariable${animation.id}`
         )
         addPrototypicalPath(environment, create)
         beginPrototypicalPath(create, environment)
     }
 }
 
-export function transitionCreateArray(
+export function transitionCreateVariable(
     output: AnimationData,
     origins: AnimationData[],
     options: AnimationOptions = {}
-): TransitionCreateArray {
+): TransitionCreateVariable {
     return {
-        ...createAnimationNode(null, { ...options }),
+        ...createAnimationNode(null, { ...options, delay: 0 }),
 
-        name: 'TransitionCreateArray',
+        name: 'TransitionCreateVariable',
 
         output,
         origins,

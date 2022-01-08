@@ -59,7 +59,7 @@
 //     // Create new level of abstraction
 //     const abstraction = createAbstraction()
 
-//     const originalVertices = parent.abstractions[0].vertices
+//     const originalVertices = parent.vertices
 //     const vertices = []
 
 //     // Instantiates all entities

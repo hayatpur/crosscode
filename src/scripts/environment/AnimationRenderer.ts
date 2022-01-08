@@ -1,4 +1,4 @@
-import { duration, seek } from '../animation/animation'
+import { reads, seek, writes } from '../animation/animation'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
 import { AnimationNode } from '../animation/primitive/AnimationNode'
 import {
@@ -14,55 +14,93 @@ import { EnvironmentRenderer } from './EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from './EnvironmentState'
 
 export interface AnimationRendererRepresentation {
-    breakpoints: string[] // Animation ids that'll break into different environments
+    exclude: string[] | null // List of data ids to exclude from the representation, or null to include all
+    include: string[] | null // List of data ids to include in the representation, or null to include all, prioritized over exclude
 }
 
 export class AnimationRenderer {
     // State
     animation: AnimationGraph | AnimationNode
     representation: AnimationRendererRepresentation = null
-    time: number = 0
-    paused: boolean = false
-    speed: number = 1 / 128
+
     paths: { [id: string]: ConcretePath } = {}
 
     // Rendering
     environmentRenderers: EnvironmentRenderer[] = []
+    finalEnvironmentRenderers: EnvironmentRenderer[] = []
+
     environment: PrototypicalEnvironmentState = null
     element: HTMLDivElement = null
+
+    finalRenderersElement: HTMLDivElement = null
+
+    showingFinalRenderers: boolean = false
 
     constructor(animation: AnimationGraph | AnimationNode) {
         this.element = document.createElement('div')
         this.element.classList.add('animation-renderer')
+
+        this.finalRenderersElement = document.createElement('div')
+        this.finalRenderersElement.classList.add('animation-renderers-final')
+        this.element.appendChild(this.finalRenderersElement)
 
         this.environmentRenderers.push(new EnvironmentRenderer())
         this.environmentRenderers.forEach((r) =>
             this.element.appendChild(r.element)
         )
 
+        this.finalEnvironmentRenderers.push(new EnvironmentRenderer())
+        this.finalEnvironmentRenderers.forEach((r) =>
+            this.finalRenderersElement.appendChild(r.element)
+        )
+
         this.animation = animation
         this.environment = clone(this.animation.precondition)
+
+        // Create representations
+        this.updateRepresentation()
     }
 
-    tick(dt: number) {
-        if (this.animation == null || this.paused) return
-
-        if (this.time > duration(this.animation)) {
-            // Loop
-            this.time = 0
-            this.environment = clone(this.animation.precondition)
-            this.paths = {}
-            return
+    updateRepresentation() {
+        this.representation = {
+            exclude: null,
+            include: [
+                ...reads(this.animation).map((r) => r.id),
+                ...writes(this.animation).map((w) => w.id),
+            ],
         }
+    }
 
-        if (!this.paused) this.time += dt * this.speed
+    updateAnimation(animation: AnimationGraph | AnimationNode) {
+        this.animation = animation
 
+        this.environment = clone(this.animation.precondition)
+        this.paths = {}
+        this.updateRepresentation()
+    }
+
+    destroy() {
+        this.environmentRenderers.forEach((r) => r.destroy())
+        this.finalEnvironmentRenderers.forEach((r) => r.destroy())
+        this.element.remove()
+    }
+
+    seek(t: number) {
         // Apply animation
-        seek(this.animation, this.environment, this.time)
+        seek(this.animation, this.environment, t)
 
         for (const r of this.environmentRenderers) {
-            r.setState(this.environment)
+            r.setState(this.environment, this.representation)
             this.propagateEnvironmentPaths(this.environment, r)
+        }
+
+        if (this.showingFinalRenderers) {
+            for (const r of this.finalEnvironmentRenderers) {
+                r.setState(this.animation.postcondition, this.representation)
+            }
+
+            const bbox = this.finalRenderersElement.getBoundingClientRect()
+            this.element.style.minWidth = `${bbox.width}px`
         }
     }
 
@@ -100,25 +138,26 @@ export class AnimationRenderer {
         environment: PrototypicalEnvironmentState,
         renderer: EnvironmentRenderer
     ) {
-        Object.assign(
-            path,
-            getPathFromEnvironmentRepresentation(
-                this.representation,
-                path.prototype
-            )
+        const representation = getPathFromEnvironmentRepresentation(
+            this.representation,
+            path.prototype
         )
+
+        path.onBegin = representation.onBegin
+        path.onEnd = representation.onEnd
+        path.onSeek = representation.onSeek
 
         // Sync the timings of prototype path and concrete path
         if (!path.meta.isPlaying && path.prototype.meta.isPlaying) {
             beginConcretePath(path, environment, renderer)
+            path.meta.isPlaying = true
+        } else if (path.prototype.meta.isPlaying) {
+            seekConcretePath(path, environment, renderer, path.prototype.meta.t)
         }
 
         if (!path.meta.hasPlayed && path.prototype.meta.hasPlayed) {
             endConcretePath(path, environment, renderer)
-        }
-
-        if (path.prototype.meta.isPlaying) {
-            seekConcretePath(path, environment, renderer, path.prototype.meta.t)
+            path.meta.hasPlayed = true
         }
     }
 }

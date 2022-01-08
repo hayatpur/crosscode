@@ -5,6 +5,7 @@ import {
 } from '../../../environment/data/data'
 import {
     DataType,
+    instanceOfPrototypicalData,
     PrototypicalDataState,
 } from '../../../environment/data/DataState'
 import {
@@ -27,7 +28,6 @@ import {
 } from '../../../path/path'
 import { createPrototypicalCreatePath } from '../../../path/prototypical/PrototypicalCreatePath'
 import { PrototypicalElevationPath } from '../../../path/prototypical/PrototypicalElevationPath'
-import { createPrototypicalInstantMovementPath } from '../../../path/prototypical/PrototypicalInstantMovementPath'
 import { duration } from '../../animation'
 import {
     AnimationData,
@@ -76,25 +76,23 @@ function onBegin(
 
     // Index into it
     const original = (object.value as PrototypicalDataState[])[
-        property.value as number
-    ] as PrototypicalDataState
+        property.value as number | string
+    ]
 
-    // Create a copy of data
-    const copy = clonePrototypicalData(original, false, `${animation.id}_Copy`)
+    // console.log(object.value, property.value)
+
+    let copy: PrototypicalDataState
+
+    if (instanceOfPrototypicalData(original)) {
+        // Create a copy of data
+        copy = clonePrototypicalData(original, false, `${animation.id}_Copy`)
+    } else {
+        // Create a new data
+        copy = createData(DataType.Literal, original, `${animation.id}_Copy`)
+    }
+
     const location = addDataAt(environment, copy, [], null)
     environment._temps[`CopyMemberAnimation${animation.id}`] = location
-
-    // Move copy on top of data
-    const instantaneousMovement = createPrototypicalInstantMovementPath(
-        location,
-        getMemoryLocation(environment, original).foundLocation,
-        `InstantMovement${animation.id}`
-    )
-    addPrototypicalPath(environment, instantaneousMovement)
-    beginPrototypicalPath(instantaneousMovement, environment)
-    seekPrototypicalPath(instantaneousMovement, environment, 1)
-    endPrototypicalPath(instantaneousMovement, environment)
-    removePrototypicalPath(environment, `InstantMovement${animation.id}`)
 
     // Consume property
     removeAt(
@@ -126,23 +124,33 @@ function onBegin(
     )
 
     if (options.baking) {
-        computeReadAndWrites(
-            animation,
-            {
-                location: objectLocation,
-                id: objectReference.id,
-            },
-            {
-                location: propertyLocation,
-                id: property.id,
-            },
-            { location, id: copy.id },
-            {
-                location: getMemoryLocation(environment, original)
-                    .foundLocation,
-                id: original.id,
-            }
-        )
+        const propertyData = {
+            location: propertyLocation,
+            id: property.id,
+        }
+
+        const objectData = {
+            location: objectLocation,
+            id: objectReference.id,
+        }
+
+        const copyData = { location, id: copy.id }
+
+        if (instanceOfPrototypicalData(original)) {
+            computeReadAndWrites(
+                animation,
+                objectData,
+                propertyData,
+                copyData,
+                {
+                    location: getMemoryLocation(environment, original)
+                        .foundLocation,
+                    id: original.id,
+                }
+            )
+        } else {
+            computeReadAndWrites(animation, objectData, propertyData, copyData)
+        }
     }
 
     // Point the output register to the newly created data
@@ -207,9 +215,10 @@ function computeReadAndWrites(
     obj: AnimationData,
     property: AnimationData,
     copy: AnimationData,
-    original: AnimationData
+    original: AnimationData = null
 ) {
-    animation._reads = [original, obj, property]
+    animation._reads =
+        original != null ? [original, obj, property] : [obj, property]
     animation._writes = [copy, obj]
 }
 

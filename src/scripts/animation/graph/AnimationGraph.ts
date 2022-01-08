@@ -47,20 +47,12 @@ export interface AnimationGraph extends PlayableAnimation {
     nodeData: NodeData
     isChunk: boolean
 
-    // Invariant to abstraction info
+    // General info
     precondition: PrototypicalEnvironmentState
     postcondition: PrototypicalEnvironmentState
     isGroup: boolean
 
-    // Variant to abstraction info
-    abstractions: AnimationGraphVariant[]
-
-    // Index of current abstraction chosen
-    currentAbstractionIndex: number
-}
-
-export interface AnimationGraphVariant {
-    // Variant to abstraction info
+    // Animation info
     vertices: (AnimationGraph | AnimationNode)[]
     edges: Edge[]
     isParallel: boolean
@@ -96,16 +88,6 @@ export function createAnimationGraph(
         isGroup: options.isGroup || false,
 
         isChunk: false,
-
-        // Variant to abstraction info
-        abstractions: [createAbstraction()],
-
-        currentAbstractionIndex: 0,
-    }
-}
-
-export function createAbstraction(): AnimationGraphVariant {
-    return {
         vertices: [],
         edges: [],
         isParallel: false,

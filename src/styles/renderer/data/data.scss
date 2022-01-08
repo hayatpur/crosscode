@@ -5,6 +5,6 @@
     height: fit-content;
 }
 
-.environment > .data:not(last-child) {
-    margin-right: 15px;
+.environment > .data:not(:first-child) {
+    margin-left: 25px;
 }

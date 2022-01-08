@@ -5,7 +5,7 @@ import {
     getMemoryLocation,
 } from '../../environment/environment'
 import { clone } from '../../utilities/objects'
-import { addEdge, currentAbstraction, reads, writes } from '../animation'
+import { addEdge, reads, writes } from '../animation'
 import {
     AnimationNode,
     instanceOfAnimationNode,
@@ -21,7 +21,6 @@ import { createEdge, Edge, EdgeType } from './edges/Edge'
 export interface VertexOptions {
     nodeData?: NodeData
     shouldDissolve?: boolean
-    abstractionIndex?: number
 }
 
 /**
@@ -40,11 +39,8 @@ export function addVertex(
 ) {
     // Defaults
     options.shouldDissolve = options.shouldDissolve ?? false
-    options.abstractionIndex =
-        options.abstractionIndex ?? graph.currentAbstractionIndex
 
-    const { vertices: graphVertices, edges: graphEdges } =
-        graph.abstractions[options.abstractionIndex]
+    const { vertices: graphVertices, edges: graphEdges } = graph
 
     if (
         instanceOfAnimationNode(vertex) ||
@@ -58,8 +54,7 @@ export function addVertex(
             graphVertices.push(vertex)
         }
     } else {
-        const { vertices: vertexVertices, edges: vertexEdges } =
-            vertex.abstractions[options.abstractionIndex]
+        const { vertices: vertexVertices, edges: vertexEdges } = vertex
 
         // Offset all the edges
         const offset = graphVertices.length + 1
@@ -92,8 +87,7 @@ export function addVertexAt(
     vertex: AnimationGraph | AnimationNode,
     options: VertexOptions = {}
 ) {
-    const { vertices: graphVertices, edges: graphEdges } =
-        graph.abstractions[graph.currentAbstractionIndex]
+    const { vertices: graphVertices, edges: graphEdges } = graph
 
     vertex.nodeData = options.nodeData
 
@@ -127,11 +121,7 @@ export function updateGroupNodeData(
     graph: AnimationGraph,
     options: VertexOptions = {}
 ) {
-    options.abstractionIndex =
-        options.abstractionIndex ?? graph.currentAbstractionIndex
-
-    const { vertices: graphVertices, edges: graphEdges } =
-        graph.abstractions[options.abstractionIndex]
+    const { vertices: graphVertices, edges: graphEdges } = graph
 
     if (graphVertices.length === 0) {
         graph.nodeData = getEmptyNodeData(graph.nodeData)
@@ -182,11 +172,7 @@ export function removeVertexAt(
     i: number,
     options: VertexOptions = {}
 ) {
-    options.abstractionIndex =
-        options.abstractionIndex ?? graph.currentAbstractionIndex
-
-    const { vertices: graphVertices, edges: graphEdges } =
-        graph.abstractions[options.abstractionIndex]
+    const { vertices: graphVertices, edges: graphEdges } = graph
 
     // Remove vertex
     graphVertices.splice(i, 1)
@@ -213,10 +199,7 @@ export function removeVertex(
     vertex: AnimationGraph | AnimationNode,
     options: VertexOptions = {}
 ) {
-    options.abstractionIndex =
-        options.abstractionIndex ?? graph.currentAbstractionIndex
-    const { vertices: graphVertices, edges: graphEdges } =
-        graph.abstractions[options.abstractionIndex]
+    const { vertices: graphVertices, edges: graphEdges } = graph
 
     const index = graphVertices.indexOf(vertex)
     if (index == -1) {
@@ -451,8 +434,7 @@ export function computeEdges(
 ): Edge[] {
     let edges: Edge[] = []
 
-    const { vertices: graphVertices } =
-        graph.abstractions[graph.currentAbstractionIndex]
+    const { vertices: graphVertices } = graph
 
     let rs = reads(graphVertices[index]) // Reads
     let ws = writes(graphVertices[index]) // Writes
@@ -526,7 +508,7 @@ export function computeAllEdges(
 ) {
     let edges: Set<Edge> = new Set()
 
-    const { vertices } = graph.abstractions[graph.currentAbstractionIndex]
+    const { vertices } = graph
 
     for (let i = 0; i < vertices.length; i++) {
         edges = new Set([...edges, ...computeEdges(i, graph, masks)])
@@ -539,7 +521,7 @@ export function computeAllEdges(
 
 export function computeAllGraphEdges(animation: AnimationGraph) {
     if (instanceOfAnimationGraph(animation)) {
-        const { vertices } = currentAbstraction(animation)
+        const { vertices } = animation
 
         for (const node of vertices) {
             if (instanceOfAnimationGraph(node)) {
@@ -562,6 +544,8 @@ export function intersection(A: AnimationData[], B: AnimationData[]) {
 
     const satisfier = (a: AnimationData, b: AnimationData) => {
         const b_location = b.location.map((item) => item.value)
+
+        // console.log(a)
         const a_location = a.location.map((item) => item.value)
 
         if (
@@ -623,8 +607,7 @@ export function animationToString(
 
     const lookup = {}
 
-    const { vertices: animationVertices, edges: animationEdges } =
-        currentAbstraction(animation)
+    const { vertices: animationVertices, edges: animationEdges } = animation
 
     const sortedEdges = clone(animationEdges)
 
@@ -748,11 +731,12 @@ export function animationToString(
 export enum AnimationTraceOperator {
     CreateLiteral = 'Create',
     CreateReference = 'CreateReference',
+    CreateVariable = 'CreateVariable',
     CreateArray = 'CreateArray',
-
     MoveAndPlace = 'MoveAndPlace',
-
+    Place = 'Place',
     CopyLiteral = 'CopyLiteral',
+    BinaryOperation = 'BinaryOperation',
 }
 
 export interface AnimationTraceChain {
@@ -769,7 +753,7 @@ export function queryAnimationGraph(
     }
 
     if (instanceOfAnimationGraph(animation)) {
-        for (const vertex of currentAbstraction(animation).vertices) {
+        for (const vertex of animation.vertices) {
             const ret = queryAnimationGraph(vertex, query)
             if (ret != null) {
                 return ret
@@ -791,7 +775,7 @@ export function queryAllAnimationGraph(
     }
 
     if (instanceOfAnimationGraph(animation)) {
-        for (const vertex of currentAbstraction(animation).vertices) {
+        for (const vertex of animation.vertices) {
             acc.push(...queryAllAnimationGraph(vertex, query))
         }
     }
@@ -812,10 +796,7 @@ export function getTrace(
         // Only render literals and arrays
         const endMemory = flattenedEnvironmentMemory(environment)
             .filter((m) => m != null)
-            .filter(
-                (data) =>
-                    data.type == DataType.Literal || data.type == DataType.Array
-            )
+            .filter((data) => data.type != DataType.ID)
 
         // Add each memory ID as start to flow
         for (const data of endMemory) {
@@ -847,7 +828,7 @@ export function getTrace(
             }
         }
     } else {
-        const { vertices } = currentAbstraction(animation)
+        const { vertices } = animation
 
         for (let i = vertices.length - 1; i >= 0; i--) {
             flow = getTrace(vertices[i], clone(flow))
@@ -862,7 +843,7 @@ export function getChunkTrace(
     flow: AnimationTraceChain[] = null
 ): AnimationTraceChain[] {
     // Chunk
-    const nodes = clone(parent.abstractions[0].vertices)
+    const nodes = clone(parent.vertices)
 
     const postcondition = nodes[nodes.length - 1].postcondition
 
@@ -872,13 +853,10 @@ export function getChunkTrace(
 
         flow = []
 
-        // Only render literals and arrays
+        // Don't render registers
         const endMemory = flattenedEnvironmentMemory(environment)
             .filter((m) => m != null)
-            .filter(
-                (data) =>
-                    data.type == DataType.Literal || data.type == DataType.Array
-            )
+            .filter((data) => data.type != DataType.ID)
 
         // Add each memory ID as start to flow
         for (const data of endMemory) {
@@ -889,6 +867,18 @@ export function getChunkTrace(
                         .foundLocation,
                 },
             })
+        }
+
+        // Add variable bindings
+        for (const frame of environment.scope) {
+            for (const [key, identifier] of Object.entries(frame.bindings)) {
+                flow.push({
+                    value: {
+                        id: identifier.name,
+                        location: identifier.location,
+                    },
+                })
+            }
         }
     }
 
@@ -933,13 +923,24 @@ export function getTracesFromAnimationNode(
 
     switch (animation._name) {
         case 'MoveAndPlaceAnimation':
-            // First trace is the move (i.e. writes[0] <- reads[0])
-            traces.push({
-                value: ws[0],
-                children: [
-                    [AnimationTraceOperator.MoveAndPlace, { value: rs[0] }],
-                ],
-            })
+            if (ws.length == 2) {
+                // Move and place
+                // First trace is the move (i.e. writes[0] <- reads[0])
+                traces.push({
+                    value: ws[0],
+                    children: [
+                        [AnimationTraceOperator.MoveAndPlace, { value: rs[0] }],
+                    ],
+                })
+            } else {
+                // Place
+                traces.push({
+                    value: ws[0],
+                    children: [
+                        [AnimationTraceOperator.Place, { value: rs[0] }],
+                    ],
+                })
+            }
 
             break
         case 'CopyDataAnimation':
@@ -962,9 +963,9 @@ export function getTracesFromAnimationNode(
             break
         case 'BindAnimation':
             // If created 'undefined' to reference location
-            if (ws.length == 2) {
+            if (ws.length == 3) {
                 traces.push({
-                    value: ws[1],
+                    value: ws[2],
                     children: [
                         [AnimationTraceOperator.CreateLiteral, { value: null }],
                     ],
@@ -973,15 +974,19 @@ export function getTracesFromAnimationNode(
 
             // Creating reference
             traces.push({
-                value: ws[0],
+                value: ws[1],
                 children: [
                     [AnimationTraceOperator.CreateReference, { value: null }],
                 ],
             })
-            break
-        case 'FindVariableAnimation':
-            break
-        case 'GroupStartAnimation':
+
+            // Creating variable
+            traces.push({
+                value: ws[0],
+                children: [
+                    [AnimationTraceOperator.CreateVariable, { value: null }],
+                ],
+            })
             break
         case 'ArrayStartAnimation':
             // Creating array
@@ -994,15 +999,35 @@ export function getTracesFromAnimationNode(
             break
         case 'GetMember':
             // TODO, reference get members
+
+            if (rs.length == 2) {
+                // Static property like 'length'
+                traces.push({
+                    value: ws[0],
+                    children: [
+                        [AnimationTraceOperator.CreateLiteral, { value: null }],
+                    ],
+                })
+            } else {
+                traces.push({
+                    value: ws[0],
+                    children: [
+                        [AnimationTraceOperator.CopyLiteral, { value: rs[0] }],
+                    ],
+                })
+            }
+            break
+        case 'BinaryExpressionEvaluate':
             traces.push({
                 value: ws[0],
                 children: [
-                    [AnimationTraceOperator.CopyLiteral, { value: rs[0] }],
+                    [AnimationTraceOperator.BinaryOperation, { value: rs[0] }],
+                    [AnimationTraceOperator.BinaryOperation, { value: rs[1] }],
                 ],
             })
             break
         default:
-            console.warn('Trace not found for', animation._name, animation)
+        // console.warn('Trace not found for', animation._name, animation)
     }
 
     return traces

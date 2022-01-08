@@ -2,17 +2,13 @@ import acorn = require('acorn')
 import * as ESTree from 'estree'
 import { bake, reset } from '../animation/animation'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
-import {
-    animationToString,
-    computeAllGraphEdges,
-} from '../animation/graph/graph'
 import { AnimationNode } from '../animation/primitive/AnimationNode'
 import { Editor } from '../editor/Editor'
 import { createPrototypicalEnvironment } from '../environment/environment'
-import { createViewFromAnimation } from '../renderer/view'
 import { Compiler } from '../transpiler/Compiler'
 import { Ticker } from '../utilities/Ticker'
 import { RootView } from '../view/RootView'
+import { View } from '../view/View'
 import { AbstractionCreator } from './AbstractionCreator'
 
 export class Executor {
@@ -92,21 +88,10 @@ export class Executor {
         bake(this.animation)
 
         // Compute the edges
-        computeAllGraphEdges(this.animation)
+        // computeAllGraphEdges(this.animation)
 
         console.log('[Executor] Finished compiling...')
         console.log('\tAnimation', this.animation)
-
-        document.getElementById('nomnoml-button').onclick = () => {
-            const [animationString, animationUrl] = animationToString(
-                this.animation,
-                0,
-                { first: false },
-                true
-            )
-            console.log(animationString)
-            window.open(animationUrl, '_blank')
-        }
 
         this.view = new RootView()
     }
@@ -121,6 +106,6 @@ export class Executor {
         // 1. Create a time-agnostic abstraction over code
 
         // 2. Create a default abstraction that corresponds to t=0
-        this.view.addView(createViewFromAnimation(animation))
+        this.view.addView(new View(animation))
     }
 }

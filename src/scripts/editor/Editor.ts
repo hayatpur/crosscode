@@ -38,7 +38,7 @@ export class Editor {
                 vertical: 'hidden',
             },
             overviewRulerBorder: false,
-            fontSize: 22,
+            fontSize: 18,
             contextmenu: false,
             mouseWheelScrollSensitivity: 0,
             lineHeight: 34,
@@ -48,7 +48,6 @@ export class Editor {
             dragAndDrop: false,
             theme: 'atom',
             fontFamily: 'Fira Code',
-            fontLigatures: true,
             quickSuggestions: {
                 other: false,
                 comments: false,
@@ -178,7 +177,7 @@ export class Editor {
         let y = min_y
         let x =
             min_x +
-            Math.min(location.start.column, location.end.column - 1) * charWidth
+            Math.min(location.start.column, location.end.column) * charWidth
 
         let height = end.y + end.height - start.y
         let width = (location.end.column - location.start.column) * charWidth
@@ -200,6 +199,27 @@ export class Editor {
         }
 
         return line.getBoundingClientRect().width / line.innerText.length
+    }
+
+    getContainedTokenElements(bbox: {
+        x: number
+        y: number
+        width: number
+        height: number
+    }) {
+        const tokens = [
+            ...document.querySelectorAll('.view-line > span > span'),
+        ]
+
+        return tokens.filter((token) => {
+            const tokenBbox = token.getBoundingClientRect()
+            return (
+                tokenBbox.x >= bbox.x &&
+                tokenBbox.y >= bbox.y &&
+                tokenBbox.x + tokenBbox.width <= bbox.x + bbox.width &&
+                tokenBbox.y + tokenBbox.height <= bbox.y + bbox.height
+            )
+        })
     }
 
     updateDragSelection(selection: {

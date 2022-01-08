@@ -42,7 +42,7 @@ export interface PrototypicalDataState {
     type: DataType
     hints: PrototypicalDataTransform
 
-    value: string | boolean | Number | PrototypicalDataState[] | Accessor[]
+    value: string | boolean | number | PrototypicalDataState[] | Accessor[]
 
     // Binding frame
     frame: number
@@ -55,10 +55,12 @@ export interface ConcreteDataState {
 
     prototype: PrototypicalDataState
     transform: ConcreteDataTransform
-    value: string | boolean | Number | ConcreteDataState[] | Accessor[]
+    value: string | boolean | number | ConcreteDataState[] | Accessor[]
 }
 
-export function instanceOfPrototypicalData(data: any): data is PrototypicalDataState {
+export function instanceOfPrototypicalData(
+    data: any
+): data is PrototypicalDataState {
     return data['_type'] === 'PrototypicalDataState'
 }
 

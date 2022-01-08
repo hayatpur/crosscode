@@ -19,8 +19,9 @@ export class IdentifierRenderer {
         const dataBbox = data.element.getBoundingClientRect()
         const environmentBbox = environmentElement.getBoundingClientRect()
 
-        this.element.style.top = `${dataBbox.y - 14 - environmentBbox.y}px`
-        this.element.style.left = `${dataBbox.x + 8 - environmentBbox.x}px`
+        // this.element.style.top = `${dataBbox.y - 22 - environmentBbox.y}px`
+        this.element.style.top = `${18}px`
+        this.element.style.left = `${dataBbox.x - environmentBbox.x}px`
     }
 
     destroy() {

@@ -6,8 +6,11 @@ import {
 } from '../../primitive/AnimationNode'
 import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
 import { transitionCreateArray } from '../../primitive/Transition/Operations/CreateArrayTransitionAnimation'
+import { transitionCreateReference } from '../../primitive/Transition/Operations/CreateReferenceTransitionAnimation'
 import { transitionCreate } from '../../primitive/Transition/Operations/CreateTransitionAnimation'
+import { transitionCreateVariable } from '../../primitive/Transition/Operations/CreateVariableTransitionAnimation'
 import { transitionMove } from '../../primitive/Transition/Operations/MoveTransitionAnimation'
+import { transitionPlace } from '../../primitive/Transition/Operations/PlaceTransitionAnimation'
 import {
     AnimationData,
     AnimationGraph,
@@ -19,6 +22,7 @@ import {
     AnimationTraceOperator,
     getChunkTrace,
 } from '../graph'
+import { AbstractionSelection } from './Abstractor'
 
 export interface TransitionAnimationNode extends AnimationNode {
     applyInvariant: (
@@ -27,6 +31,34 @@ export interface TransitionAnimationNode extends AnimationNode {
     ) => void
     output: AnimationData
     origins: AnimationData[]
+}
+
+export function createTransitionAnimationFromSelection(
+    node: AnimationNode | AnimationGraph,
+    selection: AbstractionSelection
+) {
+    if (instanceOfAnimationNode(node)) {
+        return clone(node)
+    }
+
+    if (selection.selection == null) {
+        return createTransition(node)
+    }
+
+    const nodeData = { ...clone(node.nodeData), type: 'Transition' }
+    const transition = createAnimationGraph(nodeData)
+    transition.id = `Transition(${node.id})`
+
+    transition.precondition = node.precondition
+    transition.postcondition = node.postcondition
+
+    for (const item of selection.selection) {
+        const vertex = node.vertices.find((v) => v.id == item.id)
+        const animation = createTransitionAnimationFromSelection(vertex, item)
+        addVertex(transition, animation, { nodeData: animation.nodeData })
+    }
+
+    return transition
 }
 
 /**
@@ -41,17 +73,21 @@ export function createTransition(node: AnimationNode | AnimationGraph) {
 
     const nodeData = { ...clone(node.nodeData), type: 'Transition' }
     const transition = createAnimationGraph(nodeData)
+    transition.id = `Transition(${node.id})`
 
     const trace = getChunkTrace(node)
+    // traceChainsToString(trace, true)
     const transitions = getTransitionsFromTrace(trace)
 
     // Chunk
-    const nodes = node.abstractions[0].vertices
+    const nodes = node.vertices
 
     // Initialize to the post condition
     const init = initializeTransitionAnimation(
         clone(nodes[nodes.length - 1].postcondition)
     )
+    init._reads = []
+    init._writes = []
 
     addVertex(transition, init, {
         nodeData: { ...nodeData, type: 'Transition Animation' },
@@ -59,11 +95,17 @@ export function createTransition(node: AnimationNode | AnimationGraph) {
 
     // Add all the transitions
     for (const t of transitions) {
-        addVertex(transition, t, { nodeData: t.nodeData })
+        addVertex(transition, t, {
+            nodeData: { ...nodeData, type: 'Transition Primitive' },
+        })
     }
 
     transition.precondition = node.precondition
     transition.postcondition = node.postcondition
+
+    // Make it parallel
+    transition.isParallel = true
+    transition.parallelStarts = [0, ...transitions.map((_) => 1)]
 
     return transition
 }
@@ -78,22 +120,117 @@ function getTransitionsFromTrace(
 
         if (operations.length == 0) {
             // No operations, meaning just preserve the data from previous
-            // operations.push(AnimationTraceOperator.MoveAndPlace)
-            // leaves.push({ value: chain.value })
             continue
         }
 
-        // Create a new animations from the chain
-        const transition = createTransitionAnimation(
-            chain.value,
-            operations,
-            leaves.map((leaf) => leaf.value)
-        )
+        /*
+        1. Find all branches of animation node, `X`
+        2. If there is only one branch, `A` , and the leaf is a move, then `Move A -> X`
+        3. If there are multiple branches, then `Create X`
+            For each branch:
+            1. If leaf is a create, then ignore
+            2. If leaf is a move, then `Partial Move A -> X`
+        */
+        const branches = getAllBranches(chain)
 
-        transitions.push(transition)
+        if (branches.length == 1) {
+            // Create a new animation w.r.t the action that's there
+            const transition = createTransitionAnimation(
+                chain.value,
+                operations[operations.length - 1],
+                leaves.map((leaf) => leaf.value)
+            )
+
+            transitions.push(transition)
+        } else {
+            const create = createTransitionAnimation(
+                chain.value,
+                AnimationTraceOperator.CreateLiteral,
+                leaves.map((leaf) => leaf.value)
+            )
+
+            transitions.push(create)
+
+            // for (const branch of branches) {
+            //     const [brachOperations, branchLeaves] =
+            //         getAllOperationsAndLeaves(chain)
+
+            //     const branchOperator =
+            //         brachOperations[brachOperations.length - 1]
+
+            //     if (
+            //         branchOperator == AnimationTraceOperator.MoveAndPlace ||
+            //         branchOperator == AnimationTraceOperator.CopyLiteral
+            //     ) {
+            //         const branchTransition = createTransitionAnimation(
+            //             branch.value,
+            //             branchOperator,
+            //             branchLeaves.map((leaf) => leaf.value)
+            //         )
+
+            //         transitions.push(branchTransition)
+            //     }
+            // }
+        }
     }
 
+    // console.log(transitions.length)
     return transitions
+}
+
+function getAllBranches(
+    chain: AnimationTraceChain,
+    context: {
+        parent: AnimationTraceChain
+        operator: AnimationTraceOperator
+    } = null
+): AnimationTraceChain[] {
+    // If no children, terminate the tree and return
+    if (chain.children == null) {
+        if (context == null) {
+            return [chain]
+        } else {
+            let parent = clone(context.parent)
+            let end = parent
+
+            while (end.children != null) {
+                end = end.children[0][1]
+            }
+
+            end.children = [
+                [context.operator, { value: chain.value, children: null }],
+            ]
+
+            return [parent]
+        }
+    }
+
+    let parent: AnimationTraceChain
+
+    // Otherwise, build the context, first node
+    if (context == null) {
+        parent = { value: chain.value, children: null }
+    } else {
+        parent = clone(context.parent)
+        let end = parent
+
+        while (end.children != null && end.children.length > 0) {
+            end = end.children[0][1]
+        }
+
+        end.children = [
+            [context.operator, { value: chain.value, children: null }],
+        ]
+    }
+    const branches: AnimationTraceChain[] = []
+
+    for (const [operator, child] of chain.children) {
+        branches.push(
+            ...getAllBranches(child, { parent: parent, operator: operator })
+        )
+    }
+
+    return branches
 }
 
 function getAllOperationsAndLeaves(
@@ -125,7 +262,7 @@ function getAllOperationsAndLeaves(
 
 function createTransitionAnimation(
     output: AnimationData,
-    operations: AnimationTraceOperator[],
+    operation: AnimationTraceOperator,
     origins: AnimationData[]
 ): TransitionAnimationNode {
     const mapping = {
@@ -133,21 +270,19 @@ function createTransitionAnimation(
         [AnimationTraceOperator.CopyLiteral]: transitionMove,
         [AnimationTraceOperator.CreateLiteral]: transitionCreate,
         [AnimationTraceOperator.CreateArray]: transitionCreateArray,
+        [AnimationTraceOperator.CreateReference]: transitionCreateReference,
+        [AnimationTraceOperator.CreateVariable]: transitionCreateVariable,
+        [AnimationTraceOperator.Place]: transitionPlace,
     }
 
-    // Transition animation is dominated by the last (lease recent) operator
-    const lastOperator = operations[operations.length - 1]
-    console.assert(
-        lastOperator in mapping,
-        'Last operator not in mapping',
-        operations
-    )
-
     // Create the transition animation
-    const transition: TransitionAnimationNode = mapping[lastOperator](
+    const transition: TransitionAnimationNode = mapping[operation](
         output,
         origins
     )
+
+    transition._reads = [...origins.filter((o) => o != null)]
+    transition._writes = output == null ? [] : [output]
 
     return transition
 }

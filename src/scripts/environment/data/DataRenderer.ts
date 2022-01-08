@@ -16,4 +16,8 @@ export class DataRenderer {
     destroy() {
         this.element.remove()
     }
+
+    getAllChildRenderers() {
+        return {}
+    }
 }

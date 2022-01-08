@@ -41,11 +41,7 @@ export function VariableDeclarator(
 
     // Place down the RHS at a free spot
     if (!doNotFloat) {
-        const place = moveAndPlaceAnimation(
-            register,
-            [],
-            ast.init.type == 'Literal'
-        )
+        const place = moveAndPlaceAnimation(register, [])
         addVertex(graph, place, { nodeData: getNodeData(ast) })
         apply(place, view)
     }
