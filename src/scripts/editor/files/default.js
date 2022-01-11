@@ -1,9 +1,10 @@
-function f(x) {
-    if (x == 1) {
-        return x
-    } else {
-        return x * f(x - 1)
+function mergeSort(array) {
+    // Base case or terminating case
+    if (array.length < 2) {
+        return array
     }
-}
 
-let y = f(5)
+    const half = array.length / 2
+    const left = array.splice(0, half)
+    return merge(mergeSort(left), mergeSort(array))
+}

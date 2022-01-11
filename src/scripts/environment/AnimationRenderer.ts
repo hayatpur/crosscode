@@ -1,6 +1,4 @@
-import { reads, seek, writes } from '../animation/animation'
-import { AnimationGraph } from '../animation/graph/AnimationGraph'
-import { AnimationNode } from '../animation/primitive/AnimationNode'
+import { reads, writes } from '../animation/animation'
 import {
     beginConcretePath,
     ConcretePath,
@@ -10,6 +8,7 @@ import {
 } from '../path/path'
 import { getPathFromEnvironmentRepresentation } from '../representation/representation'
 import { clone } from '../utilities/objects'
+import { View } from '../view/View'
 import { EnvironmentRenderer } from './EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from './EnvironmentState'
 
@@ -20,7 +19,7 @@ export interface AnimationRendererRepresentation {
 
 export class AnimationRenderer {
     // State
-    animation: AnimationGraph | AnimationNode
+    view: View
     representation: AnimationRendererRepresentation = null
 
     paths: { [id: string]: ConcretePath } = {}
@@ -36,7 +35,7 @@ export class AnimationRenderer {
 
     showingFinalRenderers: boolean = false
 
-    constructor(animation: AnimationGraph | AnimationNode) {
+    constructor(view: View) {
         this.element = document.createElement('div')
         this.element.classList.add('animation-renderer')
 
@@ -54,8 +53,8 @@ export class AnimationRenderer {
             this.finalRenderersElement.appendChild(r.element)
         )
 
-        this.animation = animation
-        this.environment = clone(this.animation.precondition)
+        this.view = view
+        this.environment = clone(this.view.transitionAnimation.precondition)
 
         // Create representations
         this.updateRepresentation()
@@ -65,18 +64,10 @@ export class AnimationRenderer {
         this.representation = {
             exclude: null,
             include: [
-                ...reads(this.animation).map((r) => r.id),
-                ...writes(this.animation).map((w) => w.id),
+                ...reads(this.view.transitionAnimation).map((r) => r.id),
+                ...writes(this.view.transitionAnimation).map((w) => w.id),
             ],
         }
-    }
-
-    updateAnimation(animation: AnimationGraph | AnimationNode) {
-        this.animation = animation
-
-        this.environment = clone(this.animation.precondition)
-        this.paths = {}
-        this.updateRepresentation()
     }
 
     destroy() {
@@ -85,10 +76,7 @@ export class AnimationRenderer {
         this.element.remove()
     }
 
-    seek(t: number) {
-        // Apply animation
-        seek(this.animation, this.environment, t)
-
+    update() {
         for (const r of this.environmentRenderers) {
             r.setState(this.environment, this.representation)
             this.propagateEnvironmentPaths(this.environment, r)
@@ -96,7 +84,10 @@ export class AnimationRenderer {
 
         if (this.showingFinalRenderers) {
             for (const r of this.finalEnvironmentRenderers) {
-                r.setState(this.animation.postcondition, this.representation)
+                r.setState(
+                    this.view.transitionAnimation.postcondition,
+                    this.representation
+                )
             }
 
             const bbox = this.finalRenderersElement.getBoundingClientRect()

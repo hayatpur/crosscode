@@ -106,6 +106,7 @@ export class Executor {
         // 1. Create a time-agnostic abstraction over code
 
         // 2. Create a default abstraction that corresponds to t=0
-        this.view.addView(new View(animation))
+        const view = new View(animation)
+        view.controller.anchorToCode()
     }
 }
