@@ -1,5 +1,9 @@
+import { begin, end, reset, seek } from '../animation/animation'
 import { instanceOfAnimationGraph } from '../animation/graph/AnimationGraph'
 import { Editor } from '../editor/Editor'
+import { AnimationRenderer } from '../environment/AnimationRenderer'
+import { createPrototypicalEnvironment } from '../environment/environment'
+import { clone } from '../utilities/objects'
 import { View } from './View'
 
 export class ViewController {
@@ -14,18 +18,20 @@ export class ViewController {
         // Bind mouse events
         this.bindMouseEvents()
 
-        this.view.renderer.stepsToggle.addEventListener('click', () => {
-            if (this.view.state.isShowingSteps) {
+        const { state, renderer } = this.view
+
+        renderer.stepsToggle.addEventListener('click', () => {
+            if (state.isShowingSteps) {
                 this.destroySteps()
-                this.view.renderer.stepsToggle.innerHTML =
+                renderer.stepsToggle.innerHTML =
                     '<ion-icon name="chevron-forward"></ion-icon>'
             } else {
                 this.createSteps()
-                this.view.renderer.stepsToggle.innerHTML =
+                renderer.stepsToggle.innerHTML =
                     '<ion-icon name="chevron-down"></ion-icon>'
             }
 
-            this.view.renderer.stepsToggle.classList.toggle('active')
+            renderer.stepsToggle.classList.toggle('active')
         })
 
         // this.viewBody.addEventListener('mouseenter', (e) => {
@@ -40,26 +46,39 @@ export class ViewController {
         //     }
         // })
 
-        // this.collapseToggle.addEventListener('click', () => {
-        //     if (!this.state.collapsed) {
-        //         this.collapse()
-        //         this.collapseToggle.innerHTML =
-        //             '<ion-icon name="add"></ion-icon>'
-        //     } else {
-        //         this.expand()
-        //         this.collapseToggle.innerHTML =
-        //             '<ion-icon name="remove"></ion-icon>'
-        //     }
-        //     this.collapseToggle.classList.toggle('active')
-        // })
+        renderer.collapseToggle.addEventListener('click', () => {
+            if (!state.isCollapsed) {
+                this.collapse()
+                renderer.collapseToggle.innerHTML =
+                    '<ion-icon name="add"></ion-icon>'
+            } else {
+                this.expand()
+                renderer.collapseToggle.innerHTML =
+                    '<ion-icon name="remove"></ion-icon>'
+            }
 
-        // this.resetButton.addEventListener('click', () => {
-        //     this.resetAnimation([])
-        // })
+            renderer.collapseToggle.classList.toggle('active')
+        })
+
+        renderer.resetButton.addEventListener('click', () => {
+            this.resetAnimation([])
+            this.unPause()
+        })
+    }
+
+    unPause() {
+        this.beginAnimation([])
+        this.view.state.isPlaying = true
+        this.view.state.hasPlayed = false
+        this.view.state.isPaused = false
     }
 
     createSteps() {
-        this.view.renderer.stepsContainer.classList.remove('hidden')
+        const { state, renderer } = this.view
+
+        this.resetAnimation([])
+
+        renderer.stepsContainer.classList.remove('hidden')
 
         if (instanceOfAnimationGraph(this.view.originalAnimation)) {
             for (const child of this.view.originalAnimation.vertices) {
@@ -70,203 +89,264 @@ export class ViewController {
             }
         }
 
-        this.view.renderer.element.classList.add('showing-steps')
-        this.view.state.isShowingSteps = true
+        renderer.element.classList.add('showing-steps')
+        state.isShowingSteps = true
     }
 
     destroySteps() {
-        this.view.renderer.stepsContainer.classList.add('hidden')
+        const { state, renderer } = this.view
+
+        renderer.stepsContainer.classList.add('hidden')
 
         for (const step of this.view.steps) {
             step.destroy()
         }
 
+        this.view.renderer.stepsContainer.innerHTML = ''
+
         this.view.steps = []
 
-        this.view.renderer.element.classList.remove('showing-steps')
-        this.view.state.isShowingSteps = false
+        renderer.element.classList.remove('showing-steps')
+        state.isShowingSteps = false
     }
 
     anchorView(child: View) {
+        const { renderer } = this.view
+
         this.addAnchor()
 
-        const stepContainers = this.view.renderer.stepsContainer
+        const stepContainers = renderer.stepsContainer
 
-        const startElement =
-            stepContainers.children[stepContainers.children.length - 2]
-        const anchor =
-            stepContainers.children[stepContainers.children.length - 1]
+        let anchor: HTMLDivElement
 
-        child.controller.anchorToView(this.view, startElement, anchor)
+        if (stepContainers.children.length > 1) {
+            anchor = stepContainers.children[
+                stepContainers.children.length - 2
+            ] as HTMLDivElement
+        } else {
+            anchor = renderer.label
+        }
+
+        const endAnchor = stepContainers.children[
+            stepContainers.children.length - 1
+        ] as HTMLDivElement
+
+        child.controller.anchorToView(this.view, anchor, endAnchor)
     }
 
     addAnchor() {
         const anchor = document.createElement('div')
-        anchor.classList.add('anchor')
+        anchor.classList.add('view-anchor')
         this.view.renderer.stepsContainer.appendChild(anchor)
     }
 
     tick(dt: number) {
-        //     // Seek into animation
-        //     if (this.time > this.getDuration()) {
-        //         if (this.isPlaying) {
-        //             this.endAnimation([])
-        //         }
-        //         // this.animationRenderer.showingFinalRenderers = true
-        //     } else {
-        //         if (this.state.anchoredToCode) {
-        //             this.seekAnimation(this.time, [])
-        //             if (!this.paused) {
-        //                 this.time += dt * this.speed
-        //             }
-        //         }
-        //     }
-        //     // If steps were changed
-        //     if (
-        //         this.previousAbstractionSelection !=
-        //         JSON.stringify(this.getAbstractionSelection())
-        //     ) {
-        //         this.previousAbstractionSelection = JSON.stringify(
-        //             this.getAbstractionSelection()
-        //         )
-        //         this.resetAnimation([])
-        //     }
+        const { state, renderer } = this.view
+
+        // Seek into animation
+        if (state.time > this.view.getDuration()) {
+            if (state.isPlaying) {
+                this.endAnimation([])
+                state.isPlaying = false
+                state.hasPlayed = true
+            }
+        } else {
+            if (state.isAnchored && state.anchor._type == 'CodeAnchor') {
+                this.seekAnimation(state.time, [])
+
+                if (!state.isPaused) {
+                    state.time += dt * state.speed
+                }
+            }
+        }
+
+        // If steps were changed
+        const abstractionSelection = JSON.stringify(
+            this.view.getAbstractionSelection()
+        )
+        if (state.abstractionSelection != abstractionSelection) {
+            state.abstractionSelection = abstractionSelection
+            this.resetAnimation([])
+        }
     }
 
-    // resetAnimation(renderers: AnimationRenderer[]) {
-    //     if (this.animationRenderer != null) {
-    //         renderers = [...renderers, this.animationRenderer]
-    //     }
+    resetAnimation(renderers: AnimationRenderer[]) {
+        const { state, renderer } = this.view
 
-    //     this.time = 0
+        if (renderer.animationRenderer != null) {
+            renderers = [...renderers, renderer.animationRenderer]
+        }
 
-    //     if (this.getAbstractionSelection().selection == null) {
-    //         reset(this.transitionAnimation)
+        state.time = 0
+        state.isPlaying = false
+        state.hasPlayed = false
 
-    //         for (const renderer of renderers) {
-    //             // renderer.environment = clone(
-    //             //     this.transitionAnimation.precondition
-    //             // )
-    //             renderer.paths = {}
-    //         }
-    //     } else {
-    //         for (const step of this.steps) {
-    //             step.resetAnimation(renderers)
-    //         }
-    //     }
-    // }
+        if (this.view.getAbstractionSelection().selection == null) {
+            reset(this.view.transitionAnimation)
+        }
 
-    // beginAnimation(renderers: AnimationRenderer[]) {
-    //     if (this.animationRenderer != null) {
-    //         renderers = [...renderers, this.animationRenderer]
-    //     }
+        for (const step of this.view.steps) {
+            step.controller.resetAnimation([])
+        }
 
-    //     if (this.getAbstractionSelection().selection == null) {
-    //         for (const renderer of renderers) {
-    //             renderer.environment = clone(
-    //                 this.transitionAnimation.precondition
-    //             )
-    //             begin(this.transitionAnimation, renderer.environment)
-    //         }
-    //         this.transitionAnimation.isPlaying = true
-    //         this.transitionAnimation.hasPlayed = false
-    //     }
+        console.log(
+            'Resetting animation',
+            this.view.transitionAnimation.nodeData,
+            renderers.length
+        )
 
-    //     this.element.classList.add('playing')
+        for (const renderer of renderers) {
+            renderer.environment = createPrototypicalEnvironment()
+            renderer.paths = {}
+            renderer.update()
+        }
+    }
 
-    //     // TODO: Begin expanded steps
-    // }
+    beginAnimation(renderers: AnimationRenderer[]) {
+        const { state, renderer } = this.view
 
-    // endAnimation(renderers: AnimationRenderer[]) {
-    //     if (this.animationRenderer != null) {
-    //         renderers = [...renderers, this.animationRenderer]
-    //     }
+        if (renderer.animationRenderer != null) {
+            renderers = [...renderers, renderer.animationRenderer]
+        }
 
-    //     if (this.getAbstractionSelection().selection == null) {
-    //         for (const renderer of renderers) {
-    //             end(this.transitionAnimation, renderer.environment)
-    //         }
-    //         this.transitionAnimation.isPlaying = false
-    //         this.transitionAnimation.hasPlayed = true
-    //     }
+        if (this.view.getAbstractionSelection().selection == null) {
+            console.log(
+                'Beginning animation',
+                this.view.transitionAnimation.nodeData,
+                renderers.length
+            )
 
-    //     for (const step of this.steps) {
-    //         step.endAnimation(renderers)
-    //     }
+            for (const renderer of renderers) {
+                const precondition = this.view.transitionAnimation.precondition
+                renderer.environment = clone(precondition)
+                begin(this.view.transitionAnimation, renderer.environment)
+            }
 
-    //     this.isPlaying = false
-    //     this.element.classList.remove('playing')
-    // }
+            this.view.transitionAnimation.isPlaying = true
+            this.view.transitionAnimation.hasPlayed = false
+        }
 
-    // seekAnimation(time: number, renderers: AnimationRenderer[]) {
-    //     if (this.animationRenderer != null) {
-    //         renderers = [...renderers, this.animationRenderer]
-    //     }
+        // for (const step of this.view.steps) {
+        //     step.controller.beginAnimation(renderers)
+        // }
 
-    //     this.time = time
+        renderer.element.classList.add('playing')
+    }
 
-    //     if (this.getAbstractionSelection().selection == null) {
-    //         for (const renderer of renderers) {
-    //             // Apply transition
-    //             seek(this.transitionAnimation, renderer.environment, time)
-    //         }
-    //     } else {
-    //         // Seek into appropriate step and seek
-    //         // Keep track of the start time (for sequential animations)
-    //         let start = 0
+    endAnimation(renderers: AnimationRenderer[]) {
+        const { state, renderer } = this.view
 
-    //         for (const step of this.steps) {
-    //             // If the animation should be playing
-    //             const shouldBePlaying =
-    //                 time >= start && time < start + step.getDuration()
+        if (renderer.animationRenderer != null) {
+            renderers = [...renderers, renderer.animationRenderer]
+        }
 
-    //             // End animation
-    //             if (step.isPlaying && !shouldBePlaying) {
-    //                 // Before ending, seek into the animation at it's end time
-    //                 step.seekAnimation(step.getDuration(), renderers)
-    //                 step.endAnimation(renderers)
-    //                 step.hasPlayed = true
-    //                 step.isPlaying = false
-    //             }
+        if (this.view.getAbstractionSelection().selection == null) {
+            console.log(
+                'Ending animation',
+                this.view.transitionAnimation.nodeData,
+                renderers.length
+            )
 
-    //             let begunThisFrame = false
+            for (const renderer of renderers) {
+                end(this.view.transitionAnimation, renderer.environment)
+            }
 
-    //             // Begin animation
-    //             if (!step.isPlaying && shouldBePlaying) {
-    //                 step.beginAnimation(renderers)
-    //                 step.isPlaying = true
-    //                 begunThisFrame = true
-    //             }
+            this.view.transitionAnimation.isPlaying = false
+            this.view.transitionAnimation.hasPlayed = true
+        }
 
-    //             // Skip over this animation
-    //             if (
-    //                 time >= start + step.getDuration() &&
-    //                 !step.isPlaying &&
-    //                 !step.hasPlayed
-    //             ) {
-    //                 step.beginAnimation(renderers)
-    //                 step.isPlaying = true
-    //                 step.seekAnimation(step.getDuration(), renderers)
-    //                 step.endAnimation(renderers)
-    //                 step.isPlaying = false
-    //                 step.hasPlayed = true
-    //             }
+        for (const step of this.view.steps) {
+            if (step.state.isPlaying) {
+                step.controller.endAnimation(renderers)
+                step.state.isPlaying = false
+            }
+        }
 
-    //             // Seek into animation
-    //             if (step.isPlaying && shouldBePlaying && !begunThisFrame) {
-    //                 step.seekAnimation(time - start, renderers)
-    //             }
+        if (renderer.animationRenderer != null) {
+            renderer.animationRenderer.showingFinalRenderers = true
+        }
 
-    //             start += step.getDuration()
-    //         }
-    //     }
+        renderer.element.classList.remove('playing')
+    }
 
-    //     if (this.animationRenderer != null) {
-    //         this.animationRenderer.update()
-    //     }
+    seekAnimation(time: number, renderers: AnimationRenderer[]) {
+        console.log(time)
+        const { state, renderer } = this.view
 
-    //     // TODO: Seek in expanded steps
-    // }
+        if (renderer.animationRenderer != null) {
+            renderers = [...renderers, renderer.animationRenderer]
+        }
+
+        state.time = time
+
+        if (this.view.getAbstractionSelection().selection == null) {
+            // console.log(
+            //     'Seeking animation',
+            //     this.view.transitionAnimation.nodeData,
+            //     renderers.length
+            // )
+
+            for (const renderer of renderers) {
+                // Apply transition
+                seek(this.view.transitionAnimation, renderer.environment, time)
+            }
+        } else {
+            // Seek into appropriate step and seek
+            // Keep track of the start time (for sequential animations)
+            let start = 0
+
+            for (const step of this.view.steps) {
+                // If the animation should be playing
+                const shouldBePlaying =
+                    time >= start && time < start + step.getDuration()
+
+                // End animation
+                if (step.state.isPlaying && !shouldBePlaying) {
+                    // Before ending, seek into the animation at it's end time
+                    step.controller.seekAnimation(step.getDuration(), renderers)
+                    step.controller.endAnimation(renderers)
+                    step.state.hasPlayed = true
+                    step.state.isPlaying = false
+                }
+
+                let begunThisFrame = false
+
+                // Begin animation
+                if (!step.state.isPlaying && shouldBePlaying) {
+                    step.controller.beginAnimation(renderers)
+                    step.state.isPlaying = true
+                    begunThisFrame = true
+                }
+
+                // Skip over this animation
+                if (
+                    time >= start + step.getDuration() &&
+                    !step.state.isPlaying &&
+                    !step.state.hasPlayed
+                ) {
+                    step.controller.beginAnimation(renderers)
+                    step.state.isPlaying = true
+                    step.controller.seekAnimation(step.getDuration(), renderers)
+                    step.controller.endAnimation(renderers)
+                    step.state.isPlaying = false
+                    step.state.hasPlayed = true
+                }
+
+                // Seek into animation
+                if (
+                    step.state.isPlaying &&
+                    shouldBePlaying &&
+                    !begunThisFrame
+                ) {
+                    step.controller.seekAnimation(time - start, renderers)
+                }
+
+                start += step.getDuration()
+            }
+        }
+
+        renderer.animationRenderer?.update()
+    }
 
     bindMouseEvents() {
         // Bind mouse events to label
@@ -280,28 +360,49 @@ export class ViewController {
         document.body.addEventListener('mousemove', this.mousemove.bind(this))
     }
 
-    anchorToView(view: View, anchor: HTMLDivElement) {
-        this.view.state.anchor = { _type: 'ViewAnchor', id: view.state.id }
-        this.view.state.isAnchored = true
+    anchorToView(
+        view: View,
+        anchor: HTMLDivElement,
+        endAnchor: HTMLDivElement
+    ) {
+        const { state, renderer } = this.view
+
+        state.anchor = { _type: 'ViewAnchor', id: view.state.id }
+        state.isAnchored = true
+
+        renderer.viewAnchor = anchor
+        renderer.viewEndAnchor = endAnchor
+
+        // Update classes
+        this.view.renderer.element.classList.add('anchored-to-view')
+        this.view.renderer.startNode.classList.add('anchored-to-view')
     }
 
     anchorToCode() {
+        const { state } = this.view
+
         const location = this.view.originalAnimation.nodeData.location
-        this.view.state.anchor = {
+        state.anchor = {
             _type: 'CodeAnchor',
             loc: location,
         }
 
         const bbox = Editor.instance.computeBoundingBoxForLoc(location)
 
-        this.view.state.transform.position.x = bbox.x + bbox.width + 100
-        this.view.state.transform.position.y = bbox.y - 30
-        this.view.state.isAnchored = true
+        state.transform.position.x = bbox.x + bbox.width + 100
+        state.transform.position.y = bbox.y - 30
+        state.isAnchored = true
+
+        // Update classes
+        this.view.renderer.element.classList.add('anchored-to-code')
+        this.view.renderer.startNode.classList.add('anchored-to-code')
     }
 
     mousedown(e: MouseEvent) {
-        this.view.state.transform.dragging = true
-        this.view.renderer.element.classList.add('dragging')
+        const { state, renderer } = this.view
+
+        state.transform.dragging = true
+        renderer.element.classList.add('dragging')
 
         this.previousMouse = {
             x: e.x,
@@ -310,15 +411,19 @@ export class ViewController {
     }
 
     mouseup(e: MouseEvent) {
-        if (this.view.state.transform.dragging) {
-            this.view.state.transform.dragging = false
-            this.view.renderer.element.classList.remove('dragging')
+        const { state, renderer } = this.view
+
+        if (state.transform.dragging) {
+            state.transform.dragging = false
+            renderer.element.classList.remove('dragging')
         }
     }
 
     mousemove(e: MouseEvent) {
+        const { state } = this.view
+
         const mouse = { x: e.x, y: e.y }
-        const transform = this.view.state.transform
+        const transform = state.transform
 
         if (transform.dragging) {
             transform.position.x += mouse.x - this.previousMouse.x
@@ -347,32 +452,36 @@ export class ViewController {
     //     document.body.appendChild(this.element)
     // }
 
-    // expand() {
-    //     this.state.collapsed = false
+    expand() {
+        const { state, renderer } = this.view
 
-    //     this.animationRenderer = new AnimationRenderer(this)
-    //     this.viewBody.appendChild(this.animationRenderer.element)
-    //     this.viewBody.appendChild(this.timelineRenderer.element)
+        state.isCollapsed = false
 
-    //     this.element.classList.remove('collapsed')
-    //     this.controlElement.classList.remove('disabled')
+        renderer.animationRenderer = new AnimationRenderer(this.view)
+        renderer.viewBody.appendChild(renderer.animationRenderer.element)
 
-    //     this.endNode.classList.add('expanded')
-    //     this.stepsContainer.classList.add('expanded')
-    // }
+        renderer.element.classList.remove('collapsed')
+        renderer.controlElement.classList.remove('disabled')
 
-    // collapse() {
-    //     this.state.collapsed = true
+        renderer.endNode.classList.add('expanded')
+        renderer.stepsContainer.classList.add('expanded')
 
-    //     this.animationRenderer?.destroy()
-    //     this.animationRenderer = null
+        this.resetAnimation([])
+        this.unPause()
+    }
 
-    //     this.timelineRenderer.element.remove()
+    collapse() {
+        const { state, renderer } = this.view
 
-    //     this.element.classList.add('collapsed')
-    //     this.controlElement.classList.add('disabled')
+        state.isCollapsed = true
 
-    //     this.endNode.classList.remove('expanded')
-    //     this.stepsContainer.classList.remove('expanded')
-    // }
+        renderer.animationRenderer?.destroy()
+        renderer.animationRenderer = null
+
+        renderer.element.classList.add('collapsed')
+        renderer.controlElement.classList.add('disabled')
+
+        renderer.endNode.classList.remove('expanded')
+        renderer.stepsContainer.classList.remove('expanded')
+    }
 }

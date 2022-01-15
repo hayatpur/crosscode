@@ -6,7 +6,10 @@ import {
     queryAllAnimationGraph,
     queryAnimationGraph,
 } from '../animation/graph/graph'
-import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
+import {
+    AnimationNode,
+    instanceOfAnimationNode,
+} from '../animation/primitive/AnimationNode'
 import { Mouse } from '../utilities/Mouse'
 import { Ticker } from '../utilities/Ticker'
 import { Executor } from './Executor'
@@ -152,31 +155,16 @@ export class AbstractionCreator {
     }
 
     createAbstraction() {
-        const availableChunks: AnimationGraph[] = [Executor.instance.animation]
+        let chunks = getDeepestChunks(
+            Executor.instance.animation,
+            this.selectionChunks
+        )
+        chunks = chunks.map((chunk) => stripChunk(chunk))
+        console.log(chunks)
 
-        let deepestChunk: AnimationGraph = null
-
-        while (availableChunks.length > 0) {
-            const chunk = availableChunks.shift()
-            deepestChunk = chunk
-
-            for (const child of chunk.vertices) {
-                if (!instanceOfAnimationGraph(child)) continue
-
-                const contains = [...this.selectionChunks].every(
-                    (selection) =>
-                        queryAnimationGraph(
-                            child,
-                            (node) => node.id == selection
-                        ) != null
-                )
-                if (contains) {
-                    availableChunks.push(child)
-                }
-            }
+        for (const chunk of chunks) {
+            Executor.instance.createAbstraction(chunk)
         }
-
-        Executor.instance.createAbstraction(deepestChunk)
     }
 }
 
@@ -214,4 +202,92 @@ export function bboxContains(
         bbox1.x + bbox1.width >= bbox2.x + bbox2.width &&
         bbox1.y + bbox1.height >= bbox2.y + bbox2.height
     )
+}
+
+export function getDeepestChunks(
+    animation: AnimationGraph | AnimationNode,
+    selection: Set<string>
+): (AnimationGraph | AnimationNode)[] {
+    // Base cases
+    if (selection.size == 0) {
+        return []
+    }
+
+    if (instanceOfAnimationNode(animation)) {
+        if (selection.has(animation.id) && selection.size == 1) {
+            return [animation]
+        } else {
+            return []
+        }
+    }
+
+    if (animation.vertices.length == 0) {
+        return []
+    } else if (animation.vertices.length == 1) {
+        const deepestChunks = getDeepestChunks(animation.vertices[0], selection)
+        if (
+            deepestChunks.length == 1 &&
+            deepestChunks[0].id == animation.vertices[0].id
+        ) {
+            return [animation]
+        } else {
+            return deepestChunks
+        }
+    }
+
+    const childrenContains: Set<string>[] = []
+
+    for (const child of animation.vertices) {
+        const contains: Set<string> = new Set()
+        for (const id of selection) {
+            if (queryAnimationGraph(child, (node) => node.id == id) != null) {
+                contains.add(id)
+            }
+        }
+
+        if (contains.size == selection.size) {
+            // Found a node that contains the selection, return the deepest chunk
+            // in that node
+            return getDeepestChunks(child, selection)
+        } else {
+            childrenContains.push(contains)
+        }
+    }
+
+    // Selection is contained partially in every animation
+    const allArePartiallyContained = childrenContains.every(
+        (set) => set.size > 0
+    )
+
+    // Each of those partial containments are deepest chunks
+    let allAreDeepestChunks = true
+    let allDeepestChunks: (AnimationGraph | AnimationNode)[] = []
+    for (let i = 0; i < childrenContains.length; i++) {
+        const deepestChunks = getDeepestChunks(
+            animation.vertices[i],
+            childrenContains[i]
+        )
+        allDeepestChunks.push(...deepestChunks)
+
+        if (
+            deepestChunks.length != 1 ||
+            deepestChunks[0].id != animation.vertices[i].id
+        ) {
+            allAreDeepestChunks = false
+        }
+    }
+
+    if (allArePartiallyContained && allAreDeepestChunks) {
+        return [animation]
+    } else {
+        return allDeepestChunks
+    }
+}
+
+export function stripChunk(chunk: AnimationGraph | AnimationNode) {
+    if (instanceOfAnimationGraph(chunk) && chunk.vertices.length == 1) {
+        return stripChunk(chunk.vertices[0])
+    }
+
+    return chunk
 }

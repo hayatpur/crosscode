@@ -1,10 +1,8 @@
-function mergeSort(array) {
-    // Base case or terminating case
-    if (array.length < 2) {
-        return array
-    }
+let list = [1, 2, 3, 4]
+let n = 4
 
-    const half = array.length / 2
-    const left = array.splice(0, half)
-    return merge(mergeSort(left), mergeSort(array))
+for (let i = 0; i < n; i++) {
+    let temp = list[i]
+    list[i] = list[n - 1 - i]
+    list[n - 1 - i] = temp
 }

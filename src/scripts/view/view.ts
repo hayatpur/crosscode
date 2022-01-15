@@ -8,7 +8,6 @@ import {
 } from '../animation/primitive/AnimationNode'
 import { Executor } from '../executor/Executor'
 import { clone } from '../utilities/objects'
-import { Timeline } from './Timeline'
 import { ViewController } from './ViewController'
 import { ViewRenderer } from './ViewRenderer'
 import { createViewState, ViewState } from './ViewState'
@@ -29,7 +28,7 @@ export class View {
     transitionAnimation: AnimationGraph | AnimationNode
 
     // Timeline
-    timeline: Timeline
+    // timeline: Timeline
 
     constructor(originalAnimation: AnimationGraph | AnimationNode) {
         Executor.instance.view.addView(this)
@@ -48,14 +47,14 @@ export class View {
         this.controller = new ViewController(this)
 
         // Setup timeline
-        this.timeline = new Timeline(this)
+        // this.timeline = new Timeline(this)
     }
 
     tick(dt: number) {
         this.controller.tick(dt)
         this.renderer.tick(dt)
 
-        this.timeline.tick(dt)
+        // this.timeline.tick(dt)
     }
 
     getDuration() {
@@ -93,5 +92,8 @@ export class View {
         return selection
     }
 
-    destroy() {}
+    destroy() {
+        this.renderer.destroy()
+        // this.timeline.destroy()
+    }
 }

@@ -2,6 +2,8 @@
     position: absolute;
     top: 0;
     left: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .view-body {
@@ -22,15 +24,6 @@
 
     left: -9px;
     top: 13px;
-}
-
-.view-start-node.code {
-    // background: #ffffff0a;
-    border-radius: 7px;
-    border: none;
-    z-index: -1;
-
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .view-end-node {
@@ -77,6 +70,8 @@
     user-select: none;
     margin-right: 2px;
     white-space: pre;
+
+    font-size: 14px;
 
     font-weight: 300;
 
@@ -142,8 +137,8 @@
     transition: 0.2s;
 }
 
-.view-steps-container.hidden {
-    opacity: 0;
+.view.anchored-to-view .view-steps-container.hidden {
+    // opacity: 0;
 }
 
 .view-steps-container.expanded {
@@ -226,4 +221,37 @@
     display: flex;
     display: flex;
     flex-flow: column;
+}
+
+.view-anchor {
+    width: 5px;
+    height: 5px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.view.anchored-to-view > .view-header > .view-label {
+    font-size: 12px;
+}
+
+.view-start-node.anchored-to-view {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.view-start-node.anchored-to-code {
+    // background: #ffffff0a;
+    border-radius: 7px;
+    border: none;
+    z-index: -1;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.animation-renderers-final .identifier {
+    opacity: 0;
+}
+
+.animation-renderers-final .data-literal {
+    color: #ffffff00;
 }

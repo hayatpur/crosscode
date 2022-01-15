@@ -92,6 +92,7 @@ export class AnimationRenderer {
 
             const bbox = this.finalRenderersElement.getBoundingClientRect()
             this.element.style.minWidth = `${bbox.width}px`
+            this.element.style.minHeight = `${bbox.height - 10}px`
         }
     }
 

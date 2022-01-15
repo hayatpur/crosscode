@@ -1,4 +1,4 @@
-import { getBoxToBoxArrow } from 'perfect-arrows'
+import { getBoxToBoxArrow } from 'curved-arrows'
 import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
 import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
@@ -34,6 +34,10 @@ export class ViewRenderer {
     // Animation
     animationRenderer: AnimationRenderer
 
+    // If anchored to another view
+    viewAnchor: HTMLDivElement
+    viewEndAnchor: HTMLElement
+
     constructor(view: View) {
         this.view = view
 
@@ -54,11 +58,6 @@ export class ViewRenderer {
         this.stepsContainer.classList.add('view-steps-container')
         this.element.appendChild(this.stepsContainer)
 
-        // Body
-        this.viewBody = document.createElement('div')
-        this.viewBody.classList.add('view-body')
-        this.element.appendChild(this.viewBody)
-
         // Animation
         document.body.appendChild(this.element)
 
@@ -75,6 +74,11 @@ export class ViewRenderer {
         this.setupResetButton()
         this.setupControls()
         this.setupConnection()
+
+        // Body
+        this.viewBody = document.createElement('div')
+        this.viewBody.classList.add('view-body')
+        this.element.appendChild(this.viewBody)
     }
 
     setupConnection() {
@@ -128,7 +132,17 @@ export class ViewRenderer {
 
     updateConnection() {
         const start = this.startNode.getBoundingClientRect()
-        const end = this.endNode.getBoundingClientRect()
+
+        let end: DOMRect
+
+        // if (
+        //     this.view.state.isAnchored &&
+        //     this.view.state.anchor._type == 'ViewAnchor'
+        // ) {
+        //     end = this.viewEndAnchor.getBoundingClientRect()
+        // } else {
+        end = this.endNode.getBoundingClientRect()
+        // }
 
         // Arrow
         const arrow = getBoxToBoxArrow(
@@ -140,30 +154,53 @@ export class ViewRenderer {
             end.y,
             end.width,
             end.height,
-            { padEnd: 0 }
+            { padEnd: 0, padStart: 0 }
         )
 
-        const [sx, sy, cx, cy, ex, ey, ae, as, sc] = arrow
+        const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = arrow
 
         this.connection.setAttribute(
             'd',
-            `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`
+            `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
         )
     }
 
     updatePosition() {
+        if (
+            this.view.state.isAnchored &&
+            this.view.state.anchor._type == 'ViewAnchor'
+        ) {
+            const endAnchorBBox =
+                this.view.renderer.viewEndAnchor.getBoundingClientRect()
+
+            this.view.state.transform.position.x = endAnchorBBox.x + 9
+            this.view.state.transform.position.y = endAnchorBBox.y - 13
+
+            const endBbox = this.endNode.getBoundingClientRect()
+            this.view.renderer.viewEndAnchor.style.width = `${endBbox.width}px`
+            this.view.renderer.viewEndAnchor.style.height = `${
+                endBbox.height + (this.view.state.isCollapsed ? 0 : 14)
+            }px`
+        }
+
+        let t =
+            this.view.state.isAnchored &&
+            this.view.state.anchor._type == 'ViewAnchor'
+                ? 1
+                : 0.2
+
         // Update left
         const left = lerp(
             getNumericalValueOfStyle(this.element.style.left),
             this.view.state.transform.position.x,
-            0.2
+            t
         )
 
         // Update right
         const top = lerp(
             getNumericalValueOfStyle(this.element.style.top),
             this.view.state.transform.position.y,
-            0.2
+            t
         )
 
         // Update top
@@ -183,20 +220,30 @@ export class ViewRenderer {
     }
 
     updateEndNode() {
+        let x = 0,
+            y = 0,
+            width = 0,
+            height = 0
+
         if (this.view.state.isCollapsed) {
-            this.endNode.style.left = `${-9}px`
-            this.endNode.style.top = `${13}px`
-            this.endNode.style.width = `${5}px`
-            this.endNode.style.height = `${5}px`
+            x = -9
+            y = 13
+            width = 5
+            height = 5
         } else {
             const bodyBBox = this.viewBody.getBoundingClientRect()
             const bbox = this.element.getBoundingClientRect()
 
-            this.endNode.style.left = `${bodyBBox.x - bbox.x}px`
-            this.endNode.style.top = `${bodyBBox.y - bbox.y}px`
-            this.endNode.style.width = `${bodyBBox.width}px`
-            this.endNode.style.height = `${bodyBBox.height}px`
+            x = bodyBBox.x - bbox.x
+            y = bodyBBox.y - bbox.y
+            width = bodyBBox.width
+            height = bodyBBox.height
         }
+
+        this.endNode.style.left = `${x}px`
+        this.endNode.style.top = `${y}px`
+        this.endNode.style.width = `${width}px`
+        this.endNode.style.height = `${height}px`
     }
 
     updateStartNode() {
@@ -211,16 +258,23 @@ export class ViewRenderer {
                 this.startNode.style.top = `${bbox.y}px`
                 this.startNode.style.width = `${bbox.width + 10}px`
                 this.startNode.style.height = `${bbox.height}px`
+            } else {
+                const anchor = this.view.renderer.viewAnchor
+                const bbox = anchor.getBoundingClientRect()
+
+                this.startNode.style.left = `${bbox.x}px`
+                this.startNode.style.top = `${bbox.y}px`
+                this.startNode.style.width = `${bbox.width}px`
+                this.startNode.style.height = `${bbox.height}px`
             }
         }
+    }
 
-        if (
-            this.view.state.isAnchored &&
-            this.view.state.anchor._type == 'CodeAnchor'
-        ) {
-            this.startNode.classList.add('code')
-        } else {
-            this.startNode.classList.remove('code')
-        }
+    destroy() {
+        this.element.remove()
+
+        this.startNode.remove()
+        this.endNode.remove()
+        this.connection.remove()
     }
 }

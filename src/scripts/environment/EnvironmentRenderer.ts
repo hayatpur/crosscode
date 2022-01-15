@@ -80,12 +80,12 @@ export class EnvironmentRenderer {
             )
 
         // Filter
-        if (representation.include != null) {
-            memory = memory.filter((data) =>
-                representation.include.some((r) => includes(data, r))
-            )
-        } else if (representation.exclude != null) {
-        }
+        // if (representation.include != null) {
+        //     memory = memory.filter((data) =>
+        //         representation.include.some((r) => includes(data, r))
+        //     )
+        // } else if (representation.exclude != null) {
+        // }
 
         // Sort
         // memory.sort()

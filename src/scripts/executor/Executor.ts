@@ -93,6 +93,14 @@ export class Executor {
         console.log('[Executor] Finished compiling...')
         console.log('\tAnimation', this.animation)
 
+        // const [output, url] = animationToString(
+        //     this.animation,
+        //     0,
+        //     { first: false },
+        //     true
+        // )
+        // console.log(url)
+
         this.view = new RootView()
     }
 
