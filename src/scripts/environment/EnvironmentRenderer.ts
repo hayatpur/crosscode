@@ -78,14 +78,21 @@ export class EnvironmentRenderer {
                     data.type == DataType.Array ||
                     data.type == DataType.Function
             )
+            .filter((data) => {
+                if (data.value != null) {
+                    return !data.value.toString().includes('[native code]')
+                } else {
+                    return true
+                }
+            })
 
         // Filter
-        // if (representation.include != null) {
-        //     memory = memory.filter((data) =>
-        //         representation.include.some((r) => includes(data, r))
-        //     )
-        // } else if (representation.exclude != null) {
-        // }
+        if (representation.include != null) {
+            memory = memory.filter((data) =>
+                representation.include.some((r) => includes(data, r))
+            )
+        } else if (representation.exclude != null) {
+        }
 
         // Sort
         // memory.sort()

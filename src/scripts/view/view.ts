@@ -8,6 +8,7 @@ import {
 } from '../animation/primitive/AnimationNode'
 import { Executor } from '../executor/Executor'
 import { clone } from '../utilities/objects'
+import { createViewController, createViewRenderer } from '../utilities/view'
 import { ViewController } from './ViewController'
 import { ViewRenderer } from './ViewRenderer'
 import { createViewState, ViewState } from './ViewState'
@@ -41,10 +42,10 @@ export class View {
         this.transitionAnimation = createTransition(clone(originalAnimation))
 
         // Setup renderer
-        this.renderer = new ViewRenderer(this)
+        this.renderer = createViewRenderer(this)
 
         // Setup controller
-        this.controller = new ViewController(this)
+        this.controller = createViewController(this)
 
         // Setup timeline
         // this.timeline = new Timeline(this)

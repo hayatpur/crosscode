@@ -42,7 +42,13 @@ export interface PrototypicalDataState {
     type: DataType
     hints: PrototypicalDataTransform
 
-    value: string | boolean | number | PrototypicalDataState[] | Accessor[]
+    value:
+        | string
+        | boolean
+        | number
+        | PrototypicalDataState[]
+        | Accessor[]
+        | Function
 
     // Binding frame
     frame: number

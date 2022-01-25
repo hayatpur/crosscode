@@ -40,6 +40,7 @@ export interface AnimationContext {
     outputRegister?: Accessor[] // Register to place data at
     feed?: boolean // Puts the location of data instead of data itself - used for feeding (assignment / declaration)'
     args?: Accessor[][] // Arguments to pass to the function
+    object?: Accessor[] // Object to pass to the function
     controlOutput?: ControlOutputData
     returnData?: ReturnData // Register to place the return value at
     doNotFloat?: boolean

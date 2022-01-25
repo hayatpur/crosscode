@@ -1,12 +1,20 @@
-import { Cursor } from './Cursor'
+import { Cursor } from './Cursor/Cursor'
+import { Timeline } from './Timeline/Timeline'
 import { View } from './View'
 
 export class RootView {
     // Rendering
     views: View[] = []
     cursor: Cursor = new Cursor()
+    rootTimeline: Timeline
 
-    constructor() {}
+    constructor() {
+        this.rootTimeline = new Timeline()
+        this.rootTimeline.transform.position.x = 600
+        this.rootTimeline.transform.position.y = 100
+
+        document.body.appendChild(this.rootTimeline.element)
+    }
 
     tick(dt: number) {
         // Render views
@@ -16,6 +24,9 @@ export class RootView {
 
         // Render cursor
         this.cursor.tick()
+
+        // Render timeline
+        this.rootTimeline.tick(dt)
     }
 
     addView(view: View) {

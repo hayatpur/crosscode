@@ -2,6 +2,7 @@ import { resolvePath } from '../../environment/environment'
 import { EnvironmentRenderer } from '../../environment/EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
 import { remap } from '../../utilities/math'
+import { clone } from '../../utilities/objects'
 import { ConcretePath, createConcretePath } from '../path'
 import { PrototypicalCreatePath } from '../prototypical/PrototypicalCreatePath'
 
@@ -15,6 +16,7 @@ function onBegin(
     const pathPrototype = path.prototype as PrototypicalCreatePath
     const dataPrototype = resolvePath(environment, pathPrototype.data, null)
 
+    console.log('Beginning...', clone(dataPrototype))
     const element = renderer.getAllChildRenderers()[dataPrototype.id].element
     element.style.opacity = `${0}`
     element.style.transform = `translate(5x, -5px)`
@@ -29,6 +31,7 @@ function onSeek(
     const pathPrototype = path.prototype as PrototypicalCreatePath
     const dataPrototype = resolvePath(environment, pathPrototype.data, null)
 
+    console.log('Seeking...', clone(dataPrototype))
     const element = renderer.getAllChildRenderers()[dataPrototype.id].element
     element.style.opacity = `${2 * t}`
     element.style.transform = `translate(${remap(t, 0, 1, 5, 0)}px, ${remap(

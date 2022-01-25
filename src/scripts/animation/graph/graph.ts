@@ -737,6 +737,7 @@ export enum AnimationTraceOperator {
     Place = 'Place',
     CopyLiteral = 'CopyLiteral',
     BinaryOperation = 'BinaryOperation',
+    UpdateOperation = 'UpdateOperation',
 }
 
 export interface AnimationTraceChain {
@@ -1026,8 +1027,16 @@ export function getTracesFromAnimationNode(
                 ],
             })
             break
+        case 'UpdateExpression':
+            traces.push({
+                value: ws[0],
+                children: [
+                    [AnimationTraceOperator.UpdateOperation, { value: rs[0] }],
+                ],
+            })
+            break
         default:
-        // console.warn('Trace not found for', animation._name, animation)
+            console.warn('Trace not found for', animation._name, animation)
     }
 
     return traces

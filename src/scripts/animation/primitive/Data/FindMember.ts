@@ -4,9 +4,11 @@ import {
 } from '../../../environment/data/data'
 import {
     DataType,
+    instanceOfPrototypicalData,
     PrototypicalDataState,
 } from '../../../environment/data/DataState'
 import {
+    addDataAt,
     getMemoryLocation,
     removeAt,
     resolvePath,
@@ -64,7 +66,19 @@ function onBegin(
     // Get original data
     let original = (object.value as PrototypicalDataState[])[
         property.value as number
-    ] as PrototypicalDataState
+    ] as PrototypicalDataState | Function
+
+    let originalModified = false
+
+    if (!instanceOfPrototypicalData(original)) {
+        original = createData(
+            DataType.Literal,
+            original,
+            `${animation.id}_MemberFunction`
+        )
+        addDataAt(environment, original, [], null)
+        originalModified = true
+    }
 
     if (original == undefined && property.value != null) {
         original = createData(
@@ -75,6 +89,8 @@ function onBegin(
 
         // Create property
         object.value[property.value as number] = original
+
+        originalModified = true
     }
 
     // Consume property
@@ -115,7 +131,15 @@ function onBegin(
             {
                 location: propertyLocation,
                 id: property.id,
-            }
+            },
+            originalModified
+                ? {
+                      location: getMemoryLocation(environment, original)
+                          .foundLocation,
+
+                      id: original.id,
+                  }
+                : null
         )
     }
 
@@ -147,10 +171,11 @@ function onEnd(
 function computeReadAndWrites(
     animation: GetMember,
     obj: AnimationData,
-    property: AnimationData
+    property: AnimationData,
+    original: AnimationData | null = null
 ) {
     animation._reads = [obj, property]
-    animation._writes = [obj, property]
+    animation._writes = original != null ? [obj, original] : [obj]
 }
 
 export function findMember(

@@ -44,6 +44,7 @@ export class ViewRenderer {
         // Element
         this.element = document.createElement('div')
         this.element.classList.add('view')
+        this.element.classList.add('collapsed')
 
         // Header
         this.header = document.createElement('div')
@@ -170,13 +171,12 @@ export class ViewRenderer {
             this.view.state.isAnchored &&
             this.view.state.anchor._type == 'ViewAnchor'
         ) {
-            const endAnchorBBox =
-                this.view.renderer.viewEndAnchor.getBoundingClientRect()
+            const endAnchorBBox = this.viewEndAnchor.getBoundingClientRect()
 
             this.view.state.transform.position.x = endAnchorBBox.x + 9
             this.view.state.transform.position.y = endAnchorBBox.y - 13
 
-            const endBbox = this.endNode.getBoundingClientRect()
+            const endBbox = this.viewBody.getBoundingClientRect()
             this.view.renderer.viewEndAnchor.style.width = `${endBbox.width}px`
             this.view.renderer.viewEndAnchor.style.height = `${
                 endBbox.height + (this.view.state.isCollapsed ? 0 : 14)
@@ -224,20 +224,17 @@ export class ViewRenderer {
             y = 0,
             width = 0,
             height = 0
-
-        if (this.view.state.isCollapsed) {
+        if (this.view.state.isShowingSteps) {
+            const bbox = this.element.getBoundingClientRect()
+            x = -7
+            y = 13
+            width = 3
+            height = bbox.height
+        } else {
             x = -9
             y = 13
             width = 5
             height = 5
-        } else {
-            const bodyBBox = this.viewBody.getBoundingClientRect()
-            const bbox = this.element.getBoundingClientRect()
-
-            x = bodyBBox.x - bbox.x
-            y = bodyBBox.y - bbox.y
-            width = bodyBBox.width
-            height = bodyBBox.height
         }
 
         this.endNode.style.left = `${x}px`

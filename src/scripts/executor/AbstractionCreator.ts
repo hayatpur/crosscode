@@ -160,7 +160,6 @@ export class AbstractionCreator {
             this.selectionChunks
         )
         chunks = chunks.map((chunk) => stripChunk(chunk))
-        console.log(chunks)
 
         for (const chunk of chunks) {
             Executor.instance.createAbstraction(chunk)

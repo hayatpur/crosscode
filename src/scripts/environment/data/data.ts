@@ -26,7 +26,13 @@ export function createTransform(): Transform {
 
 export function createData(
     type: DataType,
-    value: string | boolean | number | PrototypicalDataState[] | Accessor[],
+    value:
+        | string
+        | boolean
+        | number
+        | PrototypicalDataState[]
+        | Accessor[]
+        | Function,
     id: string,
     hints: PrototypicalDataTransform = null,
     frame: number = -1

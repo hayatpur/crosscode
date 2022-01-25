@@ -33,9 +33,14 @@ export function ForStatement(
     addVertex(graph, createScope, { nodeData: getNodeData(ast) })
     apply(createScope, view)
 
+    let iteration = createAnimationGraph({
+        ...getNodeData(ast),
+        type: 'ForStatementIteration',
+    })
+
     // Init
     const init = Compiler.compile(ast.init, view, context)
-    addVertex(graph, init, { nodeData: getNodeData(ast.init) })
+    addVertex(iteration, init, { nodeData: getNodeData(ast.init) })
 
     // Points to the result of test
 
@@ -50,7 +55,7 @@ export function ForStatement(
             ...context,
             outputRegister: testRegister,
         })
-        addVertex(graph, test, { nodeData: getNodeData(ast.test) })
+        addVertex(iteration, test, { nodeData: getNodeData(ast.test) })
         const testData = resolvePath(
             view,
             testRegister,
@@ -70,7 +75,7 @@ export function ForStatement(
             controlOutput: controlOutput,
         })
 
-        addVertex(graph, body, { nodeData: getNodeData(ast.body) })
+        addVertex(iteration, body, { nodeData: getNodeData(ast.body) })
 
         if (controlOutput.output == ControlOutput.Break) {
             context.controlOutput.output = ControlOutput.None
@@ -84,7 +89,20 @@ export function ForStatement(
 
         // Update
         const update = Compiler.compile(ast.update, view, context)
-        addVertex(graph, update, { nodeData: getNodeData(ast.update) })
+        addVertex(iteration, update, { nodeData: getNodeData(ast.update) })
+
+        // Add iteration to the graph
+        addVertex(graph, iteration, {
+            nodeData: {
+                ...getNodeData(ast),
+                type: 'ForStatementIteration',
+            },
+        })
+
+        iteration = createAnimationGraph({
+            ...getNodeData(ast),
+            type: 'ForStatementIteration',
+        })
 
         _i++
     }

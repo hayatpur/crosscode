@@ -61,30 +61,17 @@ function onBegin(
         `${animation.id}_Create`
     )
 
-    const reference = resolvePath(
-        environment,
-        animation.locationHint,
-        `${animation.id}_Location`
-    ) as PrototypicalDataState
-
     // Add the newly created data to environment
     const loc = addDataAt(environment, data, [], null)
     environment._temps[`CreateLiteralAnimation${animation.id}`] = loc
 
     const create = createPrototypicalCreatePath(
         loc,
-        animation.locationHint,
+        [],
         `Create${animation.id}`
     )
     addPrototypicalPath(environment, create)
     beginPrototypicalPath(create, environment)
-
-    if (options.baking) {
-        computeReadAndWrites(animation, {
-            location: environment._temps[`CreateLiteralAnimation${this.id}`],
-            id: data.id,
-        })
-    }
 
     if (options.baking) {
         computeReadAndWrites(animation, {

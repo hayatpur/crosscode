@@ -1,18 +1,18 @@
 {
-	"compilerOptions": {
-		"experimentalDecorators": true,
-		"sourceMap": true,
-		"module": "commonjs",
-		"moduleResolution": "node",
-		"target": "ES2021",
-		"outDir": "./dist",
-		"lib": ["dom", "ES2021", "dom.iterable"],
-		"types": [],
-		"baseUrl": "./node_modules",
-		"jsx": "preserve",
-		"typeRoots": ["node_modules/@types"],
-		"allowJs": true
-	},
-	"include": ["./src/**/*"],
-	"exclude": ["node_modules"]
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "ES2021",
+        "outDir": "./dist",
+        "lib": ["dom", "ES2021", "dom.iterable"],
+        "types": [],
+        "baseUrl": "./node_modules",
+        "jsx": "preserve",
+        "typeRoots": ["node_modules/@types"],
+        "allowJs": true
+    },
+    "include": ["./src/**/*"],
+    "exclude": ["node_modules"]
 }

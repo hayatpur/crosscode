@@ -17,7 +17,11 @@ export interface AnimationRendererRepresentation {
     include: string[] | null // List of data ids to include in the representation, or null to include all, prioritized over exclude
 }
 
+let ANIMATION_RENDERER_ID = 0
+
 export class AnimationRenderer {
+    id: string
+
     // State
     view: View
     representation: AnimationRendererRepresentation = null
@@ -36,6 +40,8 @@ export class AnimationRenderer {
     showingFinalRenderers: boolean = false
 
     constructor(view: View) {
+        this.id = `AR(${ANIMATION_RENDERER_ID++})`
+
         this.element = document.createElement('div')
         this.element.classList.add('animation-renderer')
 
@@ -100,6 +106,8 @@ export class AnimationRenderer {
         environment: PrototypicalEnvironmentState,
         renderer: EnvironmentRenderer
     ) {
+        console.log(this.id, clone(this.paths))
+
         // Hit test
         const hits = new Set()
 
@@ -123,6 +131,8 @@ export class AnimationRenderer {
                 delete environment.paths[id]
             }
         }
+
+        console.log(this.id, clone(this.paths))
     }
 
     propagatePath(

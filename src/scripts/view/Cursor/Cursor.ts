@@ -1,6 +1,6 @@
 import * as ESTree from 'estree'
-import { GlobalAnimationCallbacks } from '../animation/GlobalAnimationCallbacks'
-import { Editor } from '../editor/Editor'
+import { GlobalAnimationCallbacks } from '../../animation/GlobalAnimationCallbacks'
+import { Editor } from '../../editor/Editor'
 
 export interface CursorState {
     location: ESTree.SourceLocation

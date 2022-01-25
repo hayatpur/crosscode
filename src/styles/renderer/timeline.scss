@@ -1,0 +1,94 @@
+.timeline {
+    position: absolute;
+    min-width: 10px;
+    min-height: 10px;
+}
+
+.timeline-anchor-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.timeline-anchor-container.source-code > .timeline-anchor {
+    position: absolute;
+}
+
+.timeline-anchor {
+    min-width: 10px;
+    min-height: 10px;
+    width: fit-content;
+    margin-bottom: 15px;
+}
+
+.timeline-connection {
+    fill: transparent;
+    stroke: var(--color-2);
+    stroke-width: 2px;
+    z-index: -1;
+}
+
+.timeline-anchor ion-icon {
+    color: var(--color-2);
+    font-size: 11px;
+    transition: 0.2s;
+}
+
+.timeline-anchor.start,
+.timeline-anchor.end {
+}
+
+.timeline-label {
+    font-size: 14px;
+    color: var(--color-3);
+    user-select: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.timeline.dragging > .timeline-label {
+    color: var(--s-color-3);
+}
+
+.timeline.dragging .timeline-anchor ion-icon {
+    color: var(--s-color-3);
+}
+
+.timeline-label:hover {
+    color: var(--color-4);
+}
+
+.timeline-control-button {
+    width: 10px;
+    height: 10px;
+    font-size: 12px;
+    margin: 3px;
+    transform: scale(1);
+    transition: 0.2s;
+    color: rgba(255, 255, 255, 0.349);
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.timeline-control-button:hover {
+    color: white;
+    transform: scale(1.2);
+}
+
+.timeline-control-button:active,
+.timeline-control-button.active {
+    transform: scale(1);
+    color: white;
+}
+
+.timeline-header {
+    padding: 5px;
+    width: fit-content;
+    margin-left: -4px;
+    border-radius: 5px;
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+
+    transition: 0.2s;
+}

@@ -7,8 +7,8 @@ import { Editor } from '../editor/Editor'
 import { createPrototypicalEnvironment } from '../environment/environment'
 import { Compiler } from '../transpiler/Compiler'
 import { Ticker } from '../utilities/Ticker'
+import { createView } from '../utilities/view'
 import { RootView } from '../view/RootView'
-import { View } from '../view/View'
 import { AbstractionCreator } from './AbstractionCreator'
 
 export class Executor {
@@ -114,7 +114,8 @@ export class Executor {
         // 1. Create a time-agnostic abstraction over code
 
         // 2. Create a default abstraction that corresponds to t=0
-        const view = new View(animation)
+        const view = createView(animation)
         view.controller.anchorToCode()
+        this.view.rootTimeline.addView(view)
     }
 }

@@ -12,6 +12,7 @@ import {
     ControlOutputData,
 } from '../../animation/primitive/AnimationNode'
 import { consumeDataAnimation } from '../../animation/primitive/Data/ConsumeDataAnimation'
+import { ArrayPushAnimation } from '../../animation/primitive/Functions/Native/Array/ArrayPushAnimation'
 import { PrototypicalDataState } from '../../environment/data/DataState'
 import { resolvePath } from '../../environment/environment'
 import {
@@ -28,6 +29,7 @@ export function CallExpression(
     context: AnimationContext
 ) {
     const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+    const controlOutput: ControlOutputData = { output: ControlOutput.None }
 
     const argGraph = createAnimationGraph({
         ...getNodeData(ast),
@@ -52,20 +54,68 @@ export function CallExpression(
 
     addVertex(graph, argGraph, { nodeData: argGraph.nodeData })
 
-    const controlOutput: ControlOutputData = { output: ControlOutput.None }
+    // Points to the location of the callee
+    const lookupRegister = [
+        {
+            type: AccessorType.Register,
+            value: `${graph.id}_LookupRegister`,
+        },
+    ]
+    const lookup = Compiler.compile(ast.callee, view, {
+        feed: true,
+        outputRegister: lookupRegister,
+    })
+    addVertex(graph, lookup, { nodeData: getNodeData(ast.callee) })
 
-    if (ast.callee.type === 'Identifier') {
-        const funcLocation = [
-            { type: AccessorType.Symbol, value: ast.callee.name },
-        ]
-        const environment = view
-        const funcData = resolvePath(
-            environment,
-            funcLocation,
-            `${graph.id}_CallExpressionFunc`
-        ) as PrototypicalDataState
+    const lookupData = resolvePath(
+        view,
+        lookupRegister,
+        null
+    ) as PrototypicalDataState
+    const lookupDataValue = lookupData.value as Function
+
+    if (lookupDataValue.toString().includes('[native code]')) {
+        let object: Accessor[]
+        if (ast.callee.type === 'MemberExpression') {
+            object = [
+                {
+                    type: AccessorType.Register,
+                    value: `${graph.id}_ObjectRegister`,
+                },
+            ]
+            const objectLookup = Compiler.compile(ast.callee.object, view, {
+                ...context,
+                feed: false,
+                outputRegister: object,
+            })
+            addVertex(graph, objectLookup, {
+                nodeData: getNodeData(ast.callee.object),
+            })
+        } else {
+            object = null
+        }
+
+        const nativeFunction = lookupNativeFunctionAnimation(
+            lookupDataValue.name
+        )(object, registers)
+        addVertex(graph, nativeFunction, { nodeData: getNodeData(ast) })
+        apply(nativeFunction, view)
+
+        // if (object != null) {
+        //     removeAt(
+        //         view,
+        //         getMemoryLocation(
+        //             view,
+        //             resolvePath(view, object, null) as PrototypicalDataState
+        //         ).foundLocation,
+        //         {
+        //             noResolvingReference: true,
+        //         }
+        //     )
+        // }
+    } else {
         const funcAST: ESTree.FunctionDeclaration = JSON.parse(
-            funcData.value as string
+            lookupDataValue.toString()
         )
 
         const body = FunctionCall(funcAST, view, {
@@ -74,8 +124,8 @@ export function CallExpression(
             outputRegister: [],
             returnData: {
                 register: context.outputRegister,
-                frame: environment.scope.length - 1,
-                environmentId: environment.id,
+                frame: view.scope.length - 1,
+                environmentId: view.id,
             },
             controlOutput,
         })
@@ -103,4 +153,10 @@ export function CallExpression(
     })
 
     return graph
+}
+
+export function lookupNativeFunctionAnimation(name: string) {
+    return {
+        push: ArrayPushAnimation,
+    }[name]
 }

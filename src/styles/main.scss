@@ -12,10 +12,7 @@
 @import './renderer/data/identifier.scss';
 @import './renderer/abstraction.scss';
 @import './renderer/view.scss';
-
-/* Timeline */
-@import './time/timeline.scss';
-@import './time/timeSection.scss';
+@import './renderer/timeline.scss';
 
 /** Renderer **/
 @import './renderer/cursor.scss';
@@ -43,9 +40,10 @@
     --color-5: #272727;
     --color-6: #1a1a1a;
 
-    --s-color-0: #cfe2ea;
-    --s-color-1: #bdc3c5;
-    --s-color-2: #a0c4d0;
+    --s-color-0: #7dd3fc;
+    --s-color-1: #e879f9;
+    --s-color-2: #6ee7b7;
+    --s-color-3: #ffff81;
 
     // Misc colors
     --color-shadow: 47deg 30% 70%;
@@ -75,7 +73,6 @@ body {
 }
 
 #svg-canvas {
-    z-index: 1;
     pointer-events: none;
 }
 

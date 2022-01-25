@@ -9,9 +9,14 @@
 .view-body {
     position: relative;
     width: fit-content;
-    // border-radius: 7px;
-    // border: 1px solid #5c5c5c63;
-    // backdrop-filter: blur(5px) brightness(1.2);
+    border-radius: 7px;
+    border: 1px solid #5c5c5c63;
+    backdrop-filter: blur(5px) brightness(1.2);
+    transition: 0.2s;
+}
+
+.view.collapsed > .view-body {
+    opacity: 0;
 }
 
 .view-start-node {
@@ -245,7 +250,8 @@
     border: none;
     z-index: -1;
 
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    // border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1c1c21;
 }
 
 .animation-renderers-final .identifier {
@@ -254,4 +260,8 @@
 
 .animation-renderers-final .data-literal {
     color: #ffffff00;
+}
+
+.view.showing-steps > .view-end-node {
+    border-radius: 5px;
 }

@@ -4,6 +4,7 @@ import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { createPrototypicalEnvironment } from '../environment/environment'
 import { clone } from '../utilities/objects'
+import { createView } from '../utilities/view'
 import { View } from './View'
 
 export class ViewController {
@@ -82,7 +83,7 @@ export class ViewController {
 
         if (instanceOfAnimationGraph(this.view.originalAnimation)) {
             for (const child of this.view.originalAnimation.vertices) {
-                const step = new View(child)
+                const step = createView(child)
                 this.anchorView(step)
 
                 this.view.steps.push(step)
@@ -144,22 +145,13 @@ export class ViewController {
         const { state, renderer } = this.view
 
         // Seek into animation
-        if (state.time > this.view.getDuration()) {
-            if (state.isPlaying) {
-                this.endAnimation([])
-                state.isPlaying = false
-                state.hasPlayed = true
-            }
-        } else {
-            if (state.isAnchored && state.anchor._type == 'CodeAnchor') {
-                this.seekAnimation(state.time, [])
-
-                if (!state.isPaused) {
-                    state.time += dt * state.speed
-                }
-            }
-        }
-
+        // if (state.time > this.view.getDuration()) {
+        //     // if (state.isPlaying) {
+        //     //     this.endAnimation([])
+        //     //     state.isPlaying = false
+        //     //     state.hasPlayed = true
+        //     // }
+        // }
         // If steps were changed
         const abstractionSelection = JSON.stringify(
             this.view.getAbstractionSelection()
@@ -180,6 +172,7 @@ export class ViewController {
         state.time = 0
         state.isPlaying = false
         state.hasPlayed = false
+        state.isPaused = true
 
         if (this.view.getAbstractionSelection().selection == null) {
             reset(this.view.transitionAnimation)
@@ -199,6 +192,7 @@ export class ViewController {
             renderer.environment = createPrototypicalEnvironment()
             renderer.paths = {}
             renderer.update()
+            console.log(renderer.id, clone(renderer.paths))
         }
     }
 
@@ -208,17 +202,19 @@ export class ViewController {
         if (renderer.animationRenderer != null) {
             renderers = [...renderers, renderer.animationRenderer]
         }
+        for (const renderer of renderers) {
+            console.log(renderer.id, clone(renderer.paths))
+        }
 
         if (this.view.getAbstractionSelection().selection == null) {
-            console.log(
-                'Beginning animation',
-                this.view.transitionAnimation.nodeData,
-                renderers.length
-            )
-
             for (const renderer of renderers) {
                 const precondition = this.view.transitionAnimation.precondition
                 renderer.environment = clone(precondition)
+                console.log(
+                    renderer.id,
+                    clone(renderer.environment.paths),
+                    clone(renderer.paths)
+                )
                 begin(this.view.transitionAnimation, renderer.environment)
             }
 
@@ -270,7 +266,7 @@ export class ViewController {
     }
 
     seekAnimation(time: number, renderers: AnimationRenderer[]) {
-        console.log(time)
+        // console.log(time)
         const { state, renderer } = this.view
 
         if (renderer.animationRenderer != null) {
@@ -288,6 +284,7 @@ export class ViewController {
 
             for (const renderer of renderers) {
                 // Apply transition
+                // console.log('Applying seeking animation')
                 seek(this.view.transitionAnimation, renderer.environment, time)
             }
         } else {
@@ -302,6 +299,7 @@ export class ViewController {
 
                 // End animation
                 if (step.state.isPlaying && !shouldBePlaying) {
+                    console.log('Ending animation')
                     // Before ending, seek into the animation at it's end time
                     step.controller.seekAnimation(step.getDuration(), renderers)
                     step.controller.endAnimation(renderers)
@@ -313,8 +311,10 @@ export class ViewController {
 
                 // Begin animation
                 if (!step.state.isPlaying && shouldBePlaying) {
+                    // console.log('Beginning animation')
                     step.controller.beginAnimation(renderers)
                     step.state.isPlaying = true
+                    step.state.hasPlayed = false
                     begunThisFrame = true
                 }
 
@@ -324,6 +324,7 @@ export class ViewController {
                     !step.state.isPlaying &&
                     !step.state.hasPlayed
                 ) {
+                    // console.log('Skipping animation')
                     step.controller.beginAnimation(renderers)
                     step.state.isPlaying = true
                     step.controller.seekAnimation(step.getDuration(), renderers)
@@ -338,7 +339,10 @@ export class ViewController {
                     shouldBePlaying &&
                     !begunThisFrame
                 ) {
+                    // console.log('Seeking animation')
                     step.controller.seekAnimation(time - start, renderers)
+                    step.state.isPlaying = true
+                    step.state.hasPlayed = false
                 }
 
                 start += step.getDuration()
