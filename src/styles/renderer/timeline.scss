@@ -2,6 +2,8 @@
     position: absolute;
     min-width: 10px;
     min-height: 10px;
+    display: flex;
+    flex-direction: column;
 }
 
 .timeline-anchor-container {
@@ -16,7 +18,7 @@
 
 .timeline-anchor {
     min-width: 10px;
-    min-height: 10px;
+    min-height: 2px;
     width: fit-content;
     margin-bottom: 15px;
 }
@@ -24,7 +26,7 @@
 .timeline-connection {
     fill: transparent;
     stroke: var(--color-2);
-    stroke-width: 2px;
+    stroke-width: 1px;
     z-index: -1;
 }
 
@@ -34,8 +36,21 @@
     transition: 0.2s;
 }
 
+.timeline-anchor.start {
+    cursor: pointer;
+    transition: 0.2s;
+    transform: scale(1);
+}
+
 .timeline-anchor.start,
 .timeline-anchor.end {
+    // background: var(--color-2);
+    background: #2c2c3400;
+}
+
+.timeline-anchor.start:hover {
+    transform: scale(1.2);
+    background: var(--color-3);
 }
 
 .timeline-label {
@@ -62,12 +77,12 @@
     width: 10px;
     height: 10px;
     font-size: 12px;
-    margin: 3px;
     transform: scale(1);
     transition: 0.2s;
-    color: rgba(255, 255, 255, 0.349);
+    color: rgba(255, 255, 255, 0.144);
     cursor: pointer;
     margin-left: 5px;
+    margin-top: -2px;
 }
 
 .timeline-control-button:hover {
@@ -82,13 +97,23 @@
 }
 
 .timeline-header {
-    padding: 5px;
     width: fit-content;
-    margin-left: -4px;
+    margin-left: -5px;
+    margin-bottom: 5px;
     border-radius: 5px;
     user-select: none;
     cursor: pointer;
     display: flex;
-
     transition: 0.2s;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.timeline:hover .timeline-header {
+    opacity: 1;
+    pointer-events: inherit;
+}
+
+.timeline.anchored {
+    position: relative;
 }

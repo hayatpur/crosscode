@@ -1,4 +1,5 @@
 import { Cursor } from './Cursor/Cursor'
+import { Query } from './Query/Query'
 import { Timeline } from './Timeline/Timeline'
 import { View } from './View'
 
@@ -7,6 +8,8 @@ export class RootView {
     views: View[] = []
     cursor: Cursor = new Cursor()
     rootTimeline: Timeline
+
+    queries: Query[] = []
 
     constructor() {
         this.rootTimeline = new Timeline()

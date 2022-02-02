@@ -9,6 +9,7 @@ import {
 import { Executor } from '../executor/Executor'
 import { clone } from '../utilities/objects'
 import { createViewController, createViewRenderer } from '../utilities/view'
+import { Timeline } from './Timeline/Timeline'
 import { ViewController } from './ViewController'
 import { ViewRenderer } from './ViewRenderer'
 import { createViewState, ViewState } from './ViewState'
@@ -19,8 +20,8 @@ export class View {
     renderer: ViewRenderer
     controller: ViewController
 
-    // Steps
-    steps: View[] = []
+    // Timeline
+    stepsTimeline: Timeline
 
     // Original animation, only used to derive compiled animation
     originalAnimation: AnimationGraph | AnimationNode
@@ -55,18 +56,14 @@ export class View {
         this.controller.tick(dt)
         this.renderer.tick(dt)
 
-        // this.timeline.tick(dt)
+        this.stepsTimeline?.tick(dt)
     }
 
     getDuration() {
-        if (this.getAbstractionSelection().selection == null) {
-            return duration(this.transitionAnimation)
+        if (this.state.isShowingSteps) {
+            return this.stepsTimeline.getDuration()
         } else {
-            let duration = 0
-            for (const step of this.steps) {
-                duration += step.getDuration()
-            }
-            return duration
+            return duration(this.transitionAnimation)
         }
     }
 
@@ -81,16 +78,9 @@ export class View {
             }
         }
 
-        const selection: AbstractionSelection = {
-            id: this.originalAnimation.id,
-            selection: [],
-        }
-
-        for (const step of this.steps) {
-            selection.selection.push(step.getAbstractionSelection())
-        }
-
-        return selection
+        return this.stepsTimeline.getAbstractionSelection(
+            this.originalAnimation.id
+        )
     }
 
     destroy() {

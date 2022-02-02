@@ -115,7 +115,8 @@ export class Executor {
 
         // 2. Create a default abstraction that corresponds to t=0
         const view = createView(animation)
-        view.controller.anchorToCode()
+        // view.controller.anchorToCode()
+        view.controller.expand()
         this.view.rootTimeline.addView(view)
     }
 }

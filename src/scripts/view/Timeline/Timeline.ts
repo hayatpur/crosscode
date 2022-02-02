@@ -1,4 +1,6 @@
+import { AbstractionSelection } from '../../animation/graph/abstraction/Abstractor'
 import { Editor } from '../../editor/Editor'
+import { AnimationRenderer } from '../../environment/AnimationRenderer'
 import { getNumericalValueOfStyle, lerp } from '../../utilities/math'
 import { View } from '../View'
 
@@ -26,7 +28,7 @@ export class Timeline {
     startAnchor: HTMLDivElement
     endAnchor: HTMLDivElement
     anchorContainer: HTMLDivElement
-    labelElement: HTMLElement
+    // labelElement: HTMLElement
     header: HTMLElement
     resetButton: HTMLElement
 
@@ -43,15 +45,16 @@ export class Timeline {
     constructor() {
         this.element = document.createElement('div')
         this.element.classList.add('timeline')
+        document.body.appendChild(this.element)
 
         this.header = document.createElement('div')
         this.header.classList.add('timeline-header')
         this.element.appendChild(this.header)
 
-        this.labelElement = document.createElement('div')
-        this.labelElement.classList.add('timeline-label')
-        this.labelElement.innerText = 'Timeline'
-        this.header.appendChild(this.labelElement)
+        // this.labelElement = document.createElement('div')
+        // this.labelElement.classList.add('timeline-label')
+        // this.labelElement.innerText = 'Timeline'
+        // this.header.appendChild(this.labelElement)
 
         this.setupControls()
 
@@ -61,13 +64,13 @@ export class Timeline {
 
         this.startAnchor = document.createElement('div')
         this.startAnchor.classList.add('timeline-anchor', 'start')
-        this.startAnchor.innerHTML = '<ion-icon name="ellipse"></ion-icon>'
+        // this.startAnchor.innerHTML = '<ion-icon name="ellipse"></ion-icon>'
         this.anchorContainer.appendChild(this.startAnchor)
 
         this.endAnchor = document.createElement('div')
         this.endAnchor.classList.add('timeline-anchor', 'end')
-        this.endAnchor.innerHTML =
-            '<ion-icon name="ellipse-outline"></ion-icon>'
+        // this.endAnchor.innerHTML =
+        //     '<ion-icon name="ellipse-outline"></ion-icon>'
         this.anchorContainer.appendChild(this.endAnchor)
 
         this.transform = {
@@ -101,7 +104,7 @@ export class Timeline {
         this.header.appendChild(this.resetButton)
 
         this.resetButton.addEventListener('click', () => {
-            this.resetAnimation()
+            this.resetAnimation([])
         })
     }
 
@@ -124,13 +127,15 @@ export class Timeline {
         connection.classList.add('timeline-connection')
         document.getElementById('svg-canvas').append(connection)
         this.connections.push(connection)
+
+        this.resetAnimation([])
     }
 
     destroy() {}
 
     bindMouseEvents() {
         // Bind mouse events to label
-        const node = this.labelElement
+        const node = this.startAnchor
 
         node.addEventListener('mousedown', this.mousedown.bind(this))
         node.addEventListener('mouseover', this.mouseover.bind(this))
@@ -196,7 +201,7 @@ export class Timeline {
             //     this.endAnimation()
             // }
         } else if (!this.isPaused) {
-            this.seekAnimation(this.time)
+            this.seekAnimation(this.time, [])
             this.time += dt * this.speed
         }
     }
@@ -209,16 +214,28 @@ export class Timeline {
         return duration
     }
 
-    resetAnimation() {
+    beginAnimation(renderers: AnimationRenderer[]) {}
+
+    endAnimation(renderers: AnimationRenderer[]) {
+        for (const step of this.views) {
+            if (step.state.isPlaying) {
+                step.controller.endAnimation(renderers)
+                step.state.isPlaying = false
+                step.state.hasPlayed = true
+            }
+        }
+    }
+
+    resetAnimation(renderers: AnimationRenderer[]) {
         this.time = 0
         this.isPaused = false
 
         for (const step of this.views) {
-            step.controller.resetAnimation([])
+            step.controller.resetAnimation(renderers)
         }
     }
 
-    seekAnimation(time: number) {
+    seekAnimation(time: number, renderers: AnimationRenderer[]) {
         // Seek into appropriate step and seek
         // Keep track of the start time (for sequential animations)
         let start = 0
@@ -231,8 +248,8 @@ export class Timeline {
             // End animation
             if (step.state.isPlaying && !shouldBePlaying) {
                 // Before ending, seek into the animation at it's end time
-                step.controller.seekAnimation(step.getDuration(), [])
-                step.controller.endAnimation([])
+                step.controller.seekAnimation(step.getDuration(), renderers)
+                step.controller.endAnimation(renderers)
                 step.state.hasPlayed = true
                 step.state.isPlaying = false
             }
@@ -241,7 +258,7 @@ export class Timeline {
 
             // Begin animation
             if (!step.state.isPlaying && shouldBePlaying) {
-                step.controller.beginAnimation([])
+                step.controller.beginAnimation(renderers)
                 step.state.isPlaying = true
                 step.state.hasPlayed = false
                 begunThisFrame = true
@@ -253,17 +270,17 @@ export class Timeline {
                 !step.state.isPlaying &&
                 !step.state.hasPlayed
             ) {
-                step.controller.beginAnimation([])
+                step.controller.beginAnimation(renderers)
                 step.state.isPlaying = true
-                step.controller.seekAnimation(step.getDuration(), [])
-                step.controller.endAnimation([])
+                step.controller.seekAnimation(step.getDuration(), renderers)
+                step.controller.endAnimation(renderers)
                 step.state.isPlaying = false
                 step.state.hasPlayed = true
             }
 
             // Seek into animation
             if (step.state.isPlaying && shouldBePlaying && !begunThisFrame) {
-                step.controller.seekAnimation(time - start, [])
+                step.controller.seekAnimation(time - start, renderers)
             }
 
             start += step.getDuration()
@@ -271,27 +288,25 @@ export class Timeline {
     }
 
     updateConnections() {
-        for (let i = 0; i < this.connections.length; i++) {
-            // Connection at i connects anchors at i and anchor at i + 1
-            const connection = this.connections[i]
-            const start =
-                i == 0
-                    ? getPositionOfAnchor(this.startAnchor)
-                    : getPositionOfView(this.views[i - 1])
-            const end =
-                i == this.connections.length - 1
-                    ? getPositionOfAnchor(this.endAnchor)
-                    : getPositionOfView(this.views[i])
-
-            if (i == this.connections.length - 1) {
-                end.y -= 5
-            }
-
-            connection.setAttribute(
-                'd',
-                `M ${start.x} ${start.y} L${end.x} ${end.y}`
-            )
-        }
+        // for (let i = 0; i < this.connections.length; i++) {
+        //     // Connection at i connects anchors at i and anchor at i + 1
+        //     const connection = this.connections[i]
+        //     const start =
+        //         i == 0
+        //             ? getPositionOfAnchor(this.startAnchor)
+        //             : getPositionOfView(this.views[i - 1])
+        //     const end =
+        //         i == this.connections.length - 1
+        //             ? getPositionOfAnchor(this.endAnchor)
+        //             : getPositionOfView(this.views[i])
+        //     if (i == this.connections.length - 1) {
+        //         end.y -= 5
+        //     }
+        //     connection.setAttribute(
+        //         'd',
+        //         `M ${start.x} ${start.y} L${end.x} ${end.y}`
+        //     )
+        // }
     }
 
     updateAnchorPositions() {
@@ -361,6 +376,29 @@ export class Timeline {
             anchor.style.height = `${viewBbox.height}px`
         }
     }
+
+    getAbstractionSelection(originId: string = null) {
+        const selection: AbstractionSelection = {
+            id: originId,
+            selection: [],
+        }
+
+        for (const step of this.views) {
+            selection.selection.push(step.getAbstractionSelection())
+        }
+
+        return selection
+    }
+
+    anchorToView(view: View) {
+        view.renderer.stepsContainer.appendChild(this.element)
+        this.element.classList.add('anchored')
+    }
+
+    unAnchor() {
+        document.body.appendChild(this.element)
+        this.element.classList.remove('anchored')
+    }
 }
 
 function getPositionOfView(view: View) {
@@ -378,6 +416,10 @@ function getPositionOfAnchor(anchor: HTMLDivElement) {
     const position = {
         x: bbox.x + bbox.width / 2,
         y: bbox.y + bbox.height / 2,
+    }
+
+    if (anchor.classList.contains('end')) {
+        position.y += 5
     }
 
     return position

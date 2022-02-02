@@ -142,10 +142,6 @@
     transition: 0.2s;
 }
 
-.view.anchored-to-view .view-steps-container.hidden {
-    // opacity: 0;
-}
-
 .view-steps-container.expanded {
     right: 0px;
 }
@@ -226,22 +222,6 @@
     display: flex;
     display: flex;
     flex-flow: column;
-}
-
-.view-anchor {
-    width: 5px;
-    height: 5px;
-    margin-bottom: 10px;
-    margin-top: 10px;
-}
-
-.view.anchored-to-view > .view-header > .view-label {
-    font-size: 12px;
-}
-
-.view-start-node.anchored-to-view {
-    opacity: 0;
-    pointer-events: none;
 }
 
 .view-start-node.anchored-to-code {

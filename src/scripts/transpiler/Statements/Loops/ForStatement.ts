@@ -56,17 +56,28 @@ export function ForStatement(
             outputRegister: testRegister,
         })
         addVertex(iteration, test, { nodeData: getNodeData(ast.test) })
+
         const testData = resolvePath(
             view,
             testRegister,
             null
-        ) as PrototypicalDataState // @TODO: Add a probe test animation
+        ) as PrototypicalDataState
         const testValue = testData.value as boolean
+
         // Consume testData
         const consume = consumeDataAnimation(testRegister)
-        addVertex(test, consume, { nodeData: getNodeData(ast.test) })
+        addVertex(iteration, consume, { nodeData: getNodeData(ast) })
         apply(consume, view)
-        if (!testValue) break
+
+        if (!testValue) {
+            addVertex(graph, iteration, {
+                nodeData: {
+                    ...getNodeData(ast),
+                    type: 'ForStatementIteration',
+                },
+            })
+            break
+        }
 
         // Body
         const controlOutput: ControlOutputData = { output: ControlOutput.None }
@@ -88,7 +99,10 @@ export function ForStatement(
         }
 
         // Update
-        const update = Compiler.compile(ast.update, view, context)
+        const update = Compiler.compile(ast.update, view, {
+            ...context,
+            outputRegister: null,
+        })
         addVertex(iteration, update, { nodeData: getNodeData(ast.update) })
 
         // Add iteration to the graph

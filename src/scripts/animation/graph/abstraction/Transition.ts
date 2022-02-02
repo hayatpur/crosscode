@@ -273,6 +273,7 @@ function createTransitionAnimation(
         [AnimationTraceOperator.CreateReference]: transitionCreateReference,
         [AnimationTraceOperator.CreateVariable]: transitionCreateVariable,
         [AnimationTraceOperator.Place]: transitionPlace,
+        [AnimationTraceOperator.UpdateOperation]: transitionMove,
     }
 
     // Create the transition animation

@@ -32,6 +32,16 @@ export function UpdateExpression(
     })
     addVertex(graph, argument, { nodeData: getNodeData(ast.argument) })
 
+    if (context.outputRegister != null) {
+        // Return a copy of it before applying update
+        const output = Compiler.compile(ast.argument, view, {
+            ...context,
+            outputRegister: context.outputRegister,
+            feed: false,
+        })
+        addVertex(graph, output, { nodeData: getNodeData(ast.argument) })
+    }
+
     // Apply the operation
     const update = updateAnimation(argRegister, ast.operator)
     addVertex(graph, update, { nodeData: getNodeData(ast.argument) })

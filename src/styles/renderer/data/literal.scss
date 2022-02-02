@@ -11,6 +11,15 @@
     min-width: 30px;
     min-height: 30px;
     font-weight: 400;
+    position: relative;
+
+    transition-property: box-shadow, background;
+    transition-duration: 0.2s;
+}
+
+.data-literal:hover {
+    background: #2d2d31;
+    box-shadow: 0px 0px 0px 0.5px #ffffff46 inset;
 }
 
 .data-function {
@@ -28,4 +37,13 @@
 
 .data-literal-string {
     color: #6ee7b7 !important;
+}
+
+.environment > .data:not(:first-child)::before {
+    content: '';
+    width: 1px;
+    height: 14px;
+    background: #ffffff17;
+    position: absolute;
+    left: -13px;
 }

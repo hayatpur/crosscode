@@ -8,11 +8,6 @@ export interface ViewTransform {
     }
 }
 
-export interface ViewAnchor {
-    _type: 'ViewAnchor'
-    id: string
-}
-
 export interface CodeAnchor {
     _type: 'CodeAnchor'
     loc: ESTree.SourceLocation
@@ -28,10 +23,6 @@ export interface ViewState {
     // View status
     isCollapsed: boolean
     isShowingSteps: boolean
-    isAnchored: boolean
-
-    // View options
-    anchor: ViewAnchor | CodeAnchor | null
 
     // Animation time
     time: number
@@ -62,8 +53,6 @@ export function createViewState(): ViewState {
         },
         isCollapsed: true,
         isShowingSteps: false,
-        isAnchored: true,
-        anchor: null,
         time: 0,
         isPaused: true,
         speed: 1 / 100,

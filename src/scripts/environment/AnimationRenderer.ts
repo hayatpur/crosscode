@@ -37,7 +37,7 @@ export class AnimationRenderer {
 
     finalRenderersElement: HTMLDivElement = null
 
-    showingFinalRenderers: boolean = false
+    showingFinalRenderers: boolean = true
 
     constructor(view: View) {
         this.id = `AR(${ANIMATION_RENDERER_ID++})`
@@ -70,10 +70,15 @@ export class AnimationRenderer {
         this.representation = {
             exclude: null,
             include: [
-                ...reads(this.view.transitionAnimation).map((r) => r.id),
-                ...writes(this.view.transitionAnimation).map((w) => w.id),
+                ...reads(this.view.originalAnimation).map((r) => r.id),
+                ...writes(this.view.originalAnimation).map((w) => w.id),
             ],
         }
+
+        console.log(
+            this.view.transitionAnimation.nodeData.type,
+            clone(this.representation)
+        )
     }
 
     destroy() {
@@ -106,8 +111,6 @@ export class AnimationRenderer {
         environment: PrototypicalEnvironmentState,
         renderer: EnvironmentRenderer
     ) {
-        console.log(this.id, clone(this.paths))
-
         // Hit test
         const hits = new Set()
 
@@ -131,8 +134,6 @@ export class AnimationRenderer {
                 delete environment.paths[id]
             }
         }
-
-        console.log(this.id, clone(this.paths))
     }
 
     propagatePath(

@@ -47,7 +47,7 @@ export function IfStatement(
 
     // Consume testData
     const consume = consumeDataAnimation(testRegister)
-    addVertex(test, consume, { nodeData: getNodeData(ast.test) })
+    addVertex(graph, consume, { nodeData: getNodeData(ast) })
     apply(consume, view)
 
     const controlOutput: ControlOutputData = { output: ControlOutput.None }

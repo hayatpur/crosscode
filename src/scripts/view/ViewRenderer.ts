@@ -1,10 +1,7 @@
-import { getBoxToBoxArrow } from 'curved-arrows'
 import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
-import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { getNumericalValueOfStyle, lerp } from '../utilities/math'
 import { View } from './View'
-import { CodeAnchor } from './ViewState'
 
 export class ViewRenderer {
     view: View
@@ -20,23 +17,14 @@ export class ViewRenderer {
     // Control elements
     controlElement: HTMLDivElement
     stepsToggle: HTMLDivElement
+    hardStepsToggle: HTMLDivElement
     collapseToggle: HTMLDivElement
-    resetButton: HTMLDivElement
 
     // Body
     viewBody: HTMLDivElement
 
-    // Start, end, and connection
-    startNode: HTMLDivElement
-    endNode: HTMLDivElement
-    connection: SVGPathElement
-
     // Animation
     animationRenderer: AnimationRenderer
-
-    // If anchored to another view
-    viewAnchor: HTMLDivElement
-    viewEndAnchor: HTMLElement
 
     constructor(view: View) {
         this.view = view
@@ -70,9 +58,6 @@ export class ViewRenderer {
             .replace(/([A-Z])/g, ' $1')
             .trim()
 
-        this.setupStepsToggle()
-        this.setupCollapseToggle()
-        this.setupResetButton()
         this.setupControls()
         this.setupConnection()
 
@@ -103,18 +88,36 @@ export class ViewRenderer {
         svg.append(this.connection)
     }
 
-    setupStepsToggle() {
-        this.stepsToggle = document.createElement('div')
-        this.stepsToggle.classList.add('view-control-button')
-        this.stepsToggle.innerHTML =
-            '<ion-icon name="chevron-forward"></ion-icon>'
-        this.header.appendChild(this.stepsToggle)
-    }
-
     setupControls() {
         this.controlElement = document.createElement('div')
         this.controlElement.classList.add('view-controls')
         this.element.appendChild(this.controlElement)
+
+        this.setupStepsToggle()
+        this.setupCollapseToggle()
+        this.setupHardStepsToggle()
+    }
+
+    setupInPlaceStepsToggle() {
+        this.stepsToggle = document.createElement('div')
+        this.stepsToggle.classList.add('view-control-button')
+        this.stepsToggle.innerHTML = '<ion-icon name="albums"></ion-icon>'
+        this.header.appendChild(this.stepsToggle)
+    }
+
+    setupStepsToggle() {
+        this.stepsToggle = document.createElement('div')
+        this.stepsToggle.classList.add('view-control-button')
+        this.stepsToggle.innerHTML = '<ion-icon name="albums"></ion-icon>'
+        this.header.appendChild(this.stepsToggle)
+    }
+
+    setupHardStepsToggle() {
+        this.hardStepsToggle = document.createElement('div')
+        this.hardStepsToggle.classList.add('view-control-button')
+        this.hardStepsToggle.innerHTML =
+            '<ion-icon name="chevron-forward"></ion-icon>'
+        this.header.appendChild(this.hardStepsToggle)
     }
 
     setupCollapseToggle() {
@@ -124,70 +127,31 @@ export class ViewRenderer {
         this.header.appendChild(this.collapseToggle)
     }
 
-    setupResetButton() {
-        this.resetButton = document.createElement('div')
-        this.resetButton.classList.add('view-control-button')
-        this.resetButton.innerHTML = '<ion-icon name="refresh"></ion-icon>'
-        this.header.appendChild(this.resetButton)
-    }
-
     updateConnection() {
-        const start = this.startNode.getBoundingClientRect()
-
-        let end: DOMRect
-
-        // if (
-        //     this.view.state.isAnchored &&
-        //     this.view.state.anchor._type == 'ViewAnchor'
-        // ) {
-        //     end = this.viewEndAnchor.getBoundingClientRect()
-        // } else {
-        end = this.endNode.getBoundingClientRect()
-        // }
-
-        // Arrow
-        const arrow = getBoxToBoxArrow(
-            start.x,
-            start.y,
-            start.width,
-            start.height,
-            end.x,
-            end.y,
-            end.width,
-            end.height,
-            { padEnd: 0, padStart: 0 }
-        )
-
-        const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = arrow
-
-        this.connection.setAttribute(
-            'd',
-            `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
-        )
+        // const start = this.startNode.getBoundingClientRect()
+        // let end: DOMRect
+        // end = this.endNode.getBoundingClientRect()
+        // // Arrow
+        // const arrow = getBoxToBoxArrow(
+        //     start.x,
+        //     start.y,
+        //     start.width,
+        //     start.height,
+        //     end.x,
+        //     end.y,
+        //     end.width,
+        //     end.height,
+        //     { padEnd: 0, padStart: 0 }
+        // )
+        // const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = arrow
+        // this.connection.setAttribute(
+        //     'd',
+        //     `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
+        // )
     }
 
     updatePosition() {
-        if (
-            this.view.state.isAnchored &&
-            this.view.state.anchor._type == 'ViewAnchor'
-        ) {
-            const endAnchorBBox = this.viewEndAnchor.getBoundingClientRect()
-
-            this.view.state.transform.position.x = endAnchorBBox.x + 9
-            this.view.state.transform.position.y = endAnchorBBox.y - 13
-
-            const endBbox = this.viewBody.getBoundingClientRect()
-            this.view.renderer.viewEndAnchor.style.width = `${endBbox.width}px`
-            this.view.renderer.viewEndAnchor.style.height = `${
-                endBbox.height + (this.view.state.isCollapsed ? 0 : 14)
-            }px`
-        }
-
-        let t =
-            this.view.state.isAnchored &&
-            this.view.state.anchor._type == 'ViewAnchor'
-                ? 1
-                : 0.2
+        let t = 0.2
 
         // Update left
         const left = lerp(
@@ -226,7 +190,7 @@ export class ViewRenderer {
             height = 0
         if (this.view.state.isShowingSteps) {
             const bbox = this.element.getBoundingClientRect()
-            x = -7
+            x = -8
             y = 13
             width = 3
             height = bbox.height
@@ -243,29 +207,7 @@ export class ViewRenderer {
         this.endNode.style.height = `${height}px`
     }
 
-    updateStartNode() {
-        if (this.view.state.isAnchored) {
-            if (this.view.state.anchor._type == 'CodeAnchor') {
-                const anchor = this.view.state.anchor as CodeAnchor
-                const bbox = Editor.instance.computeBoundingBoxForLoc(
-                    anchor.loc
-                )
-
-                this.startNode.style.left = `${bbox.x - 5}px`
-                this.startNode.style.top = `${bbox.y}px`
-                this.startNode.style.width = `${bbox.width + 10}px`
-                this.startNode.style.height = `${bbox.height}px`
-            } else {
-                const anchor = this.view.renderer.viewAnchor
-                const bbox = anchor.getBoundingClientRect()
-
-                this.startNode.style.left = `${bbox.x}px`
-                this.startNode.style.top = `${bbox.y}px`
-                this.startNode.style.width = `${bbox.width}px`
-                this.startNode.style.height = `${bbox.height}px`
-            }
-        }
-    }
+    updateStartNode() {}
 
     destroy() {
         this.element.remove()
