@@ -1,10 +1,10 @@
+import { getArrow } from 'curved-arrows'
 import {
     getAllBranches,
     getAllOperationsAndLeaves,
 } from '../../animation/graph/abstraction/Transition'
 import { AnimationTraceChain } from '../../animation/graph/graph'
 import { LiteralRenderer } from '../../environment/data/literal/LiteralRenderer'
-import { catmullRomSolve } from '../../utilities/math'
 import { View } from '../View'
 
 // A single trace
@@ -18,9 +18,12 @@ export class Trace {
     // Connection
     connection: SVGPathElement
     traceIndicator: HTMLElement
+    endArrow: SVGPolygonElement
 
     operationsContainer: HTMLElement
     operations: HTMLElement[]
+
+    arrowHeadSize = 3
 
     constructor(view: View, chain: AnimationTraceChain) {
         this.view = view
@@ -45,13 +48,18 @@ export class Trace {
         // this.startCircle.setAttribute('r', '2')
         // document.getElementById('svg-canvas').append(this.startCircle)
 
-        // this.endArrow = document.createElementNS(
-        //     'http://www.w3.org/2000/svg',
-        //     'polygon'
-        // )
-        // this.endArrow.classList.add('trace-end-arrow')
-        // this.endArrow.setAttribute('points', '0,-3 6,0, 0,3')
-        // document.getElementById('svg-canvas').append(this.endArrow)
+        this.endArrow = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'polygon'
+        )
+        this.endArrow.classList.add('trace-end-arrow')
+        this.endArrow.setAttribute(
+            'points',
+            `0,${-this.arrowHeadSize} ${this.arrowHeadSize * 2},0, 0,${
+                this.arrowHeadSize
+            }`
+        )
+        document.getElementById('svg-canvas').append(this.endArrow)
     }
 
     select() {
@@ -67,25 +75,39 @@ export class Trace {
             const startBbox = this.startElement.getBoundingClientRect()
             const endBbox = this.endElement.getBoundingClientRect()
 
-            const points = [
-                endBbox.x + endBbox.width / 2,
-                endBbox.y,
+            // const points = [
+            //     endBbox.x + endBbox.width / 2,
+            //     endBbox.y + endBbox.height / 2,
 
-                (startBbox.x +
-                    startBbox.width / 2 +
-                    endBbox.x +
-                    endBbox.width / 2) /
-                    2,
-                (startBbox.y + startBbox.height + endBbox.y) / 2,
-
+            //     startBbox.x + startBbox.width / 2,
+            //     startBbox.y + startBbox.height / 2,
+            // ]
+            const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getArrow(
                 startBbox.x + startBbox.width / 2,
-                startBbox.y + startBbox.height,
-            ]
+                startBbox.y + startBbox.height / 2,
+                endBbox.x + endBbox.width / 2,
+                endBbox.y + endBbox.height / 2,
+                {
+                    padEnd: 0,
+                    padStart: 0,
+                }
+            )
+            this.connection.setAttribute(
+                'd',
+                `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
+            )
+            // this.endArrow.setAttribute(
+            //     'transform',
+            //     `translate(${ex}, ${ey}) rotate(${ae})`
+            // )
 
-            this.connection.setAttribute('d', catmullRomSolve(points, 4))
+            // this.connection.setAttribute(
+            //     'd',
+            //     catmullRomSolve(points, Executor.instance.PARAMS.a * 10)
+            // )
 
-            this.traceIndicator.style.left = `${points[0]}px`
-            this.traceIndicator.style.top = `${points[1]}px`
+            // this.traceIndicator.style.left = `${points[0]}px`
+            // this.traceIndicator.style.top = `${points[1]}px`
         } else {
             this.connection.setAttribute('d', '')
             this.traceIndicator.style.opacity = '0'
@@ -137,6 +159,7 @@ export class Trace {
             if (branches.length == 1) {
                 const branch = branches[0]
                 const start = leaves[0].value
+
                 if (start != null) {
                     this.startElement =
                         preEnvironmentRenderers[start.id].element
@@ -157,5 +180,6 @@ export class Trace {
     destroy() {
         this.connection.remove()
         this.traceIndicator.remove()
+        this.endArrow.remove()
     }
 }

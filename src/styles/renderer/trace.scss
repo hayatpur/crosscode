@@ -26,11 +26,10 @@
 }
 
 .trace-connection {
-    fill: transparent;
-    stroke: var(--color-2);
-    stroke-width: 1px;
+    fill: #0000;
+    stroke: #2c2c344d;
+    stroke-width: 24px;
     z-index: -1;
-
     stroke-dasharray: 1000;
     stroke-dashoffset: 0;
     animation: showStroke 5s;
@@ -47,7 +46,10 @@
 }
 
 .trace-connection.selected {
+    // stroke: var(--s-color-4);
     stroke: var(--s-color-4);
+    opacity: 0.1;
+    mix-blend-mode: overlay;
 }
 
 .trace-start-circle.selected {

@@ -105,11 +105,17 @@ export class CodeQuery {
             if (this.selectedView.state.isShowingSteps) {
                 const viewBbox =
                     this.selectedView.renderer.stepsContainer.getBoundingClientRect()
-                points.push(viewBbox.x - 7, viewBbox.y + viewBbox.height / 2)
+                points.push(
+                    viewBbox.x,
+                    viewBbox.y + (0.5 * viewBbox.height) / 2
+                )
             } else {
                 const viewBbox =
                     this.selectedView.renderer.viewBody.getBoundingClientRect()
-                points.push(viewBbox.x, viewBbox.y + viewBbox.height / 2)
+                points.push(
+                    viewBbox.x,
+                    viewBbox.y + (0.5 * viewBbox.height) / 2
+                )
             }
 
             this.incomingConnection.classList.remove('dashed')

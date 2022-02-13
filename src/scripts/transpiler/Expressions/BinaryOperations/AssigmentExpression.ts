@@ -35,7 +35,7 @@ export function AssignmentExpression(
     })
     addVertex(graph, left, { nodeData: getNodeData(ast.left) })
 
-    // Right should be in the floating stack
+    // RHS should be in the  stack
     const right = Compiler.compile(ast.right, view, {
         ...context,
         outputRegister: rightRegister,

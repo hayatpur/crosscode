@@ -1,5 +1,6 @@
 import acorn = require('acorn')
 import * as ESTree from 'estree'
+import { Pane } from 'tweakpane'
 import { bake, reset } from '../animation/animation'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
 import { Editor } from '../editor/Editor'
@@ -57,17 +58,17 @@ export class Executor {
         // Create abstraction creator
         this.codeQueryCreator = new CodeQueryCreator()
 
-        // const pane = new Pane({
-        //     title: 'Parameters',
-        //     expanded: true,
-        // })
+        const pane = new Pane({
+            title: 'Parameters',
+            expanded: true,
+        })
 
-        // for (const key of Object.keys(this.PARAMS)) {
-        //     pane.addInput(this.PARAMS, key as any, {
-        //         min: 0,
-        //         max: 1,
-        //     })
-        // }
+        for (const key of Object.keys(this.PARAMS)) {
+            pane.addInput(this.PARAMS, key as any, {
+                min: 0,
+                max: 1,
+            })
+        }
     }
 
     reset() {

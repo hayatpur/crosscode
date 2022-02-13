@@ -1,7 +1,7 @@
 /** Literal style used for computing layout **/
 
 .data-literal {
-    background: #1f1f22;
+    background: #ffffff08;
     border-radius: 7px;
     font-size: 16px;
     font-family: Fira Code;
@@ -12,9 +12,10 @@
     min-height: 30px;
     font-weight: 400;
     position: relative;
-
     transition-property: box-shadow, background;
     transition-duration: 0.2s;
+    z-index: 10;
+    backdrop-filter: blur(5px);
 }
 
 .data-literal.selected {
