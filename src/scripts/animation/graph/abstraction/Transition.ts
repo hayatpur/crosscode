@@ -67,6 +67,8 @@ export function createTransitionAnimationFromSelection(
  * @returns
  */
 export function createTransition(node: AnimationNode | AnimationGraph) {
+    let start = performance.now()
+
     if (instanceOfAnimationNode(node)) {
         return clone(node)
     }
@@ -76,7 +78,6 @@ export function createTransition(node: AnimationNode | AnimationGraph) {
     transition.id = `Transition(${node.id})`
 
     const trace = getChunkTrace(node)
-    // traceChainsToString(trace, true)
     const transitions = getTransitionsFromTrace(trace)
 
     // Chunk
@@ -100,12 +101,14 @@ export function createTransition(node: AnimationNode | AnimationGraph) {
         })
     }
 
-    transition.precondition = node.precondition
-    transition.postcondition = node.postcondition
+    transition.precondition = clone(node.precondition)
+    transition.postcondition = clone(node.postcondition)
 
     // Make it parallel
     transition.isParallel = true
     transition.parallelStarts = [0, ...transitions.map((_) => 1)]
+
+    console.log('Total of everything: ', performance.now() - start)
 
     return transition
 }
@@ -178,7 +181,7 @@ function getTransitionsFromTrace(
     return transitions
 }
 
-function getAllBranches(
+export function getAllBranches(
     chain: AnimationTraceChain,
     context: {
         parent: AnimationTraceChain
@@ -233,7 +236,7 @@ function getAllBranches(
     return branches
 }
 
-function getAllOperationsAndLeaves(
+export function getAllOperationsAndLeaves(
     chain: AnimationTraceChain
 ): [AnimationTraceOperator[], AnimationTraceChain[]] {
     if (chain.children == null) return [[], []]
@@ -282,8 +285,8 @@ function createTransitionAnimation(
         origins
     )
 
-    transition._reads = [...origins.filter((o) => o != null)]
-    transition._writes = output == null ? [] : [output]
+    // transition._reads = [...origins.filter((o) => o != null)]
+    // transition._writes = output == null ? [] : [output]
 
     return transition
 }

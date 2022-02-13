@@ -30,6 +30,8 @@ export class EnvironmentRenderer {
 
     private memoryCache: string = ''
 
+    selection: Set<string> = new Set()
+
     constructor() {
         this.element = document.createElement('div')
         this.element.classList.add('environment')
@@ -54,6 +56,37 @@ export class EnvironmentRenderer {
         // Render identifiers
         env.renderIdentifiers(state, representation)
         setTimeout(() => env.renderIdentifiers(state, representation))
+    }
+
+    select(selection: Set<string>) {
+        // Highlight data that was modified
+        this.selection = new Set([...this.selection, ...selection])
+
+        const flattened = this.getAllChildRenderers()
+
+        for (const [id, renderer] of Object.entries(flattened)) {
+            if (this.selection.has(id)) {
+                renderer.select(this.selection)
+            } else {
+                renderer.deselect(this.selection)
+            }
+        }
+    }
+
+    deselect(deselection: Set<string>) {
+        for (const toRemove of deselection) {
+            this.selection.delete(toRemove)
+        }
+
+        const flattened = this.getAllChildRenderers()
+
+        for (const [id, renderer] of Object.entries(flattened)) {
+            if (this.selection.has(id)) {
+                renderer.select(this.selection)
+            } else {
+                renderer.deselect(deselection)
+            }
+        }
     }
 
     renderMemory(
@@ -104,6 +137,10 @@ export class EnvironmentRenderer {
                 const renderer = createDataRenderer(data)
                 this.dataRenderers[data.id] = renderer
                 this.element.append(renderer.element)
+            }
+
+            if (this.selection != null && data.id in this.selection) {
+                this.dataRenderers[data.id].select(this.selection)
             }
 
             // this.element.append(this.dataRenderers[data.id].element)
@@ -181,7 +218,7 @@ export class EnvironmentRenderer {
     }
 
     getAllChildRenderers() {
-        let renderers = {}
+        let renderers: { [id: string]: DataRenderer | IdentifierRenderer } = {}
 
         for (const [id, renderer] of Object.entries(this.dataRenderers)) {
             renderers[id] = renderer

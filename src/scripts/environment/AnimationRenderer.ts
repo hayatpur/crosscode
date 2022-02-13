@@ -29,15 +29,18 @@ export class AnimationRenderer {
     paths: { [id: string]: ConcretePath } = {}
 
     // Rendering
-    environmentRenderers: EnvironmentRenderer[] = []
-    finalEnvironmentRenderers: EnvironmentRenderer[] = []
+    preEnvironmentRenderer: EnvironmentRenderer
+    environmentRenderer: EnvironmentRenderer
+    postEnvironmentRenderer: EnvironmentRenderer
 
     environment: PrototypicalEnvironmentState = null
     element: HTMLDivElement = null
 
-    finalRenderersElement: HTMLDivElement = null
+    preRendererElement: HTMLDivElement = null
+    postRendererElement: HTMLDivElement = null
 
-    showingFinalRenderers: boolean = true
+    showingPostRenderer: boolean = true
+    showingPreRenderer: boolean = false
 
     constructor(view: View) {
         this.id = `AR(${ANIMATION_RENDERER_ID++})`
@@ -45,25 +48,38 @@ export class AnimationRenderer {
         this.element = document.createElement('div')
         this.element.classList.add('animation-renderer')
 
-        this.finalRenderersElement = document.createElement('div')
-        this.finalRenderersElement.classList.add('animation-renderers-final')
-        this.element.appendChild(this.finalRenderersElement)
+        this.preRendererElement = document.createElement('div')
+        this.preRendererElement.classList.add('animation-renderers-pre')
+        this.element.appendChild(this.preRendererElement)
 
-        this.environmentRenderers.push(new EnvironmentRenderer())
-        this.environmentRenderers.forEach((r) =>
-            this.element.appendChild(r.element)
+        this.postRendererElement = document.createElement('div')
+        this.postRendererElement.classList.add('animation-renderers-post')
+        this.element.appendChild(this.postRendererElement)
+
+        this.environmentRenderer = new EnvironmentRenderer()
+        this.element.appendChild(this.environmentRenderer.element)
+
+        this.postEnvironmentRenderer = new EnvironmentRenderer()
+        this.postRendererElement.appendChild(
+            this.postEnvironmentRenderer.element
         )
 
-        this.finalEnvironmentRenderers.push(new EnvironmentRenderer())
-        this.finalEnvironmentRenderers.forEach((r) =>
-            this.finalRenderersElement.appendChild(r.element)
-        )
+        this.preEnvironmentRenderer = new EnvironmentRenderer()
+        this.preRendererElement.appendChild(this.preEnvironmentRenderer.element)
 
         this.view = view
         this.environment = clone(this.view.transitionAnimation.precondition)
 
         // Create representations
         this.updateRepresentation()
+    }
+
+    select(selection: Set<string>) {
+        this.environmentRenderer.select(selection)
+    }
+
+    deselect(deselection: Set<string>) {
+        this.environmentRenderer.deselect(deselection)
     }
 
     updateRepresentation() {
@@ -74,36 +90,45 @@ export class AnimationRenderer {
                 ...writes(this.view.originalAnimation).map((w) => w.id),
             ],
         }
-
-        console.log(
-            this.view.transitionAnimation.nodeData.type,
-            clone(this.representation)
-        )
     }
 
     destroy() {
-        this.environmentRenderers.forEach((r) => r.destroy())
-        this.finalEnvironmentRenderers.forEach((r) => r.destroy())
+        this.environmentRenderer.destroy()
+        this.postEnvironmentRenderer.destroy()
         this.element.remove()
     }
 
     update() {
-        for (const r of this.environmentRenderers) {
-            r.setState(this.environment, this.representation)
-            this.propagateEnvironmentPaths(this.environment, r)
-        }
+        // console.trace(
+        //     'Updating animation renderer',
+        //     clone(this.view.renderer.animationRenderer.environment)
+        // )
 
-        if (this.showingFinalRenderers) {
-            for (const r of this.finalEnvironmentRenderers) {
-                r.setState(
-                    this.view.transitionAnimation.postcondition,
-                    this.representation
-                )
-            }
+        // Update the environment
+        this.environmentRenderer.setState(this.environment, this.representation)
+        this.propagateEnvironmentPaths(
+            this.environment,
+            this.environmentRenderer
+        )
+        this.environmentRenderer.setState(this.environment, this.representation)
 
-            const bbox = this.finalRenderersElement.getBoundingClientRect()
+        // Update the post environment
+        if (this.showingPostRenderer) {
+            this.postEnvironmentRenderer.setState(
+                this.view.transitionAnimation.postcondition,
+                this.representation
+            )
+
+            const bbox = this.postRendererElement.getBoundingClientRect()
             this.element.style.minWidth = `${bbox.width}px`
             this.element.style.minHeight = `${bbox.height - 10}px`
+        }
+
+        if (this.showingPreRenderer) {
+            this.preEnvironmentRenderer.setState(
+                this.view.transitionAnimation.precondition,
+                this.representation
+            )
         }
     }
 
@@ -129,12 +154,30 @@ export class AnimationRenderer {
         }
 
         // Remove paths that are no longer in the view
-        for (const id in Object.keys(environment.paths)) {
+        for (const id of Object.keys(this.paths)) {
             if (!hits.has(id)) {
-                delete environment.paths[id]
+                console.log(this.paths[id])
+                endConcretePath(this.paths[id], environment, renderer)
+                delete this.paths[id]
             }
         }
     }
+
+    showTrace() {
+        this.preRendererElement.classList.add('visible')
+        this.showingPreRenderer = true
+
+        this.update()
+    }
+
+    hideTrace() {
+        this.preRendererElement.classList.remove('visible')
+        this.showingPreRenderer = false
+
+        this.update()
+    }
+
+    tick(dt: number) {}
 
     propagatePath(
         path: ConcretePath,
@@ -149,6 +192,8 @@ export class AnimationRenderer {
         path.onBegin = representation.onBegin
         path.onEnd = representation.onEnd
         path.onSeek = representation.onSeek
+
+        console.log(clone(path.meta), clone(path.prototype.meta))
 
         // Sync the timings of prototype path and concrete path
         if (!path.meta.isPlaying && path.prototype.meta.isPlaying) {

@@ -23,7 +23,7 @@ export interface TimelineTransform {
 export class Timeline {
     // Renderer
     element: HTMLElement
-    connections: SVGPathElement[] = []
+    // connections: SVGPathElement[] = []
     anchors: HTMLDivElement[] = []
     startAnchor: HTMLDivElement
     endAnchor: HTMLDivElement
@@ -39,10 +39,13 @@ export class Timeline {
     isPaused: boolean = true
     speed: number = 1 / 64
 
+    parent: View
+
     // Temp
     private previousMouse: { x: number; y: number }
 
-    constructor() {
+    constructor(parent: View) {
+        this.parent = parent
         this.element = document.createElement('div')
         this.element.classList.add('timeline')
         document.body.appendChild(this.element)
@@ -85,13 +88,13 @@ export class Timeline {
         // this.transform.layout = TimelineLayoutType.SourceCode
 
         // Add connection
-        const connection = document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'path'
-        )
-        connection.classList.add('timeline-connection')
-        document.getElementById('svg-canvas').append(connection)
-        this.connections.push(connection)
+        // const connection = document.createElementNS(
+        //     'http://www.w3.org/2000/svg',
+        //     'path'
+        // )
+        // connection.classList.add('timeline-connection')
+        // document.getElementById('svg-canvas').append(connection)
+        // this.connections.push(connection)
 
         // Bind mouse events
         this.bindMouseEvents()
@@ -101,7 +104,7 @@ export class Timeline {
         this.resetButton = document.createElement('div')
         this.resetButton.classList.add('timeline-control-button')
         this.resetButton.innerHTML = '<ion-icon name="refresh"></ion-icon>'
-        this.header.appendChild(this.resetButton)
+        // this.header.appendChild(this.resetButton)
 
         this.resetButton.addEventListener('click', () => {
             this.resetAnimation([])
@@ -120,18 +123,37 @@ export class Timeline {
         this.views.push(view)
 
         // Add connection
-        const connection = document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'path'
-        )
-        connection.classList.add('timeline-connection')
-        document.getElementById('svg-canvas').append(connection)
-        this.connections.push(connection)
+        // const connection = document.createElementNS(
+        //     'http://www.w3.org/2000/svg',
+        //     'path'
+        // )
+        // connection.classList.add('timeline-connection')
+        // document.getElementById('svg-canvas').append(connection)
+        // this.connections.push(connection)
 
         this.resetAnimation([])
+
+        const anchorBbox = anchor.getBoundingClientRect()
+        const viewBbox = view.renderer.element.getBoundingClientRect()
+
+        // Put view in right position
+        view.state.transform.position.x = anchorBbox.x
+        view.state.transform.position.y = anchorBbox.y
+
+        // Update width and height of anchor
+        anchor.style.width = `${viewBbox.width}px`
+        anchor.style.height = `${viewBbox.height}px`
+
+        view.renderer.updatePosition(1)
     }
 
-    destroy() {}
+    destroy() {
+        for (const view of this.views) {
+            view.destroy()
+        }
+
+        this.element.remove()
+    }
 
     bindMouseEvents() {
         // Bind mouse events to label
@@ -196,14 +218,14 @@ export class Timeline {
         this.updateConnections()
 
         // Seek into animation
-        if (this.time > this.getDuration()) {
-            // if (!this.isPaused) {
-            //     this.endAnimation()
-            // }
-        } else if (!this.isPaused) {
-            this.seekAnimation(this.time, [])
-            this.time += dt * this.speed
-        }
+        // if (this.time > this.getDuration()) {
+        //     if (!this.isPaused) {
+        //         this.endAnimation([])
+        //     }
+        // } else if (!this.isPaused) {
+        //     this.seekAnimation(this.time, [])
+        //     this.time += dt * this.speed
+        // }
     }
 
     getDuration() {
@@ -224,6 +246,8 @@ export class Timeline {
                 step.state.hasPlayed = true
             }
         }
+
+        this.isPaused = true
     }
 
     resetAnimation(renderers: AnimationRenderer[]) {
@@ -351,7 +375,7 @@ export class Timeline {
         }
     }
 
-    updateViewPositions() {
+    updateViewPositions(t = 0.4) {
         for (let i = 0; i < this.views.length; i++) {
             const view = this.views[i]
             const anchor = this.anchors[i]
@@ -362,14 +386,17 @@ export class Timeline {
             // Put view in right position
             view.state.transform.position.x = lerp(
                 view.state.transform.position.x,
-                anchorBbox.x + 12,
-                0.4
+                anchorBbox.x,
+                t
             )
             view.state.transform.position.y = lerp(
                 view.state.transform.position.y,
                 anchorBbox.y,
-                0.4
+                t
             )
+
+            // view.state.transform.scaleMultiplier =
+            //     this.parent.state.transform.scale
 
             // Update width and height of anchor
             anchor.style.width = `${viewBbox.width}px`
@@ -399,28 +426,4 @@ export class Timeline {
         document.body.appendChild(this.element)
         this.element.classList.remove('anchored')
     }
-}
-
-function getPositionOfView(view: View) {
-    const bbox = view.renderer.endNode.getBoundingClientRect()
-    const position = {
-        x: bbox.x + bbox.width / 2,
-        y: bbox.y + bbox.height / 2,
-    }
-
-    return position
-}
-
-function getPositionOfAnchor(anchor: HTMLDivElement) {
-    const bbox = anchor.getBoundingClientRect()
-    const position = {
-        x: bbox.x + bbox.width / 2,
-        y: bbox.y + bbox.height / 2,
-    }
-
-    if (anchor.classList.contains('end')) {
-        position.y += 5
-    }
-
-    return position
 }

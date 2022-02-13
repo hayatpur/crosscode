@@ -17,6 +17,10 @@
     transition-duration: 0.2s;
 }
 
+.data-literal.selected {
+    box-shadow: inset 0 0 0px 1px var(--s-color-4);
+}
+
 .data-literal:hover {
     background: #2d2d31;
     box-shadow: 0px 0px 0px 0.5px #ffffff46 inset;

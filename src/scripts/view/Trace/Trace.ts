@@ -1,0 +1,161 @@
+import {
+    getAllBranches,
+    getAllOperationsAndLeaves,
+} from '../../animation/graph/abstraction/Transition'
+import { AnimationTraceChain } from '../../animation/graph/graph'
+import { LiteralRenderer } from '../../environment/data/literal/LiteralRenderer'
+import { catmullRomSolve } from '../../utilities/math'
+import { View } from '../View'
+
+// A single trace
+export class Trace {
+    chain: AnimationTraceChain
+    view: View
+
+    startElement: HTMLElement
+    endElement: HTMLElement
+
+    // Connection
+    connection: SVGPathElement
+    traceIndicator: HTMLElement
+
+    operationsContainer: HTMLElement
+    operations: HTMLElement[]
+
+    constructor(view: View, chain: AnimationTraceChain) {
+        this.view = view
+        this.chain = chain
+
+        this.connection = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'path'
+        )
+        this.connection.classList.add('trace-connection')
+        document.getElementById('svg-canvas').append(this.connection)
+
+        this.traceIndicator = document.createElement('div')
+        this.traceIndicator.classList.add('trace-indicator')
+        document.body.append(this.traceIndicator)
+
+        // this.startCircle = document.createElementNS(
+        //     'http://www.w3.org/2000/svg',
+        //     'circle'
+        // )
+        // this.startCircle.classList.add('trace-start-circle')
+        // this.startCircle.setAttribute('r', '2')
+        // document.getElementById('svg-canvas').append(this.startCircle)
+
+        // this.endArrow = document.createElementNS(
+        //     'http://www.w3.org/2000/svg',
+        //     'polygon'
+        // )
+        // this.endArrow.classList.add('trace-end-arrow')
+        // this.endArrow.setAttribute('points', '0,-3 6,0, 0,3')
+        // document.getElementById('svg-canvas').append(this.endArrow)
+    }
+
+    select() {
+        this.connection.classList.add('selected')
+    }
+
+    deselect() {
+        this.connection.classList.remove('selected')
+    }
+
+    tick(dt: number) {
+        if (this.startElement != null && this.endElement != null) {
+            const startBbox = this.startElement.getBoundingClientRect()
+            const endBbox = this.endElement.getBoundingClientRect()
+
+            const points = [
+                endBbox.x + endBbox.width / 2,
+                endBbox.y,
+
+                (startBbox.x +
+                    startBbox.width / 2 +
+                    endBbox.x +
+                    endBbox.width / 2) /
+                    2,
+                (startBbox.y + startBbox.height + endBbox.y) / 2,
+
+                startBbox.x + startBbox.width / 2,
+                startBbox.y + startBbox.height,
+            ]
+
+            this.connection.setAttribute('d', catmullRomSolve(points, 4))
+
+            this.traceIndicator.style.left = `${points[0]}px`
+            this.traceIndicator.style.top = `${points[1]}px`
+        } else {
+            this.connection.setAttribute('d', '')
+            this.traceIndicator.style.opacity = '0'
+        }
+    }
+
+    show() {
+        const animationRenderer = this.view.renderer.animationRenderer
+        if (animationRenderer == null) {
+            return
+        }
+
+        // Pre-environment data
+        const preEnvironmentRenderers =
+            animationRenderer.preEnvironmentRenderer.getAllChildRenderers()
+        for (const id of Object.keys(preEnvironmentRenderers)) {
+            if (!(preEnvironmentRenderers[id] instanceof LiteralRenderer)) {
+                delete preEnvironmentRenderers[id]
+            }
+        }
+
+        // Environment data
+        const environmentRenderers =
+            animationRenderer.environmentRenderer.getAllChildRenderers()
+        for (const id of Object.keys(environmentRenderers)) {
+            if (!(environmentRenderers[id] instanceof LiteralRenderer)) {
+                delete environmentRenderers[id]
+            }
+        }
+
+        const [operations, leaves] = getAllOperationsAndLeaves(this.chain)
+
+        // Set end element
+        const end = this.chain.value
+        if (!(end.id in environmentRenderers)) {
+            return
+        }
+        this.endElement = environmentRenderers[end.id].element
+
+        // Set start element
+        if (operations.length == 0) {
+            // No operations, meaning just preserve the data from previous
+            if (preEnvironmentRenderers[end.id] != null) {
+                this.startElement = preEnvironmentRenderers[end.id].element
+            }
+        } else {
+            const branches = getAllBranches(this.chain)
+
+            if (branches.length == 1) {
+                const branch = branches[0]
+                const start = leaves[0].value
+                if (start != null) {
+                    this.startElement =
+                        preEnvironmentRenderers[start.id].element
+                } else {
+                    this.startElement = null
+                }
+            } else {
+                console.warn("Can't handle multiple branches")
+            }
+        }
+    }
+
+    hide() {
+        this.startElement = null
+        this.endElement = null
+    }
+
+    destroy() {
+        this.connection.remove()
+        this.traceIndicator.remove()
+    }
+}

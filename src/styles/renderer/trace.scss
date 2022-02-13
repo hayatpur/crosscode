@@ -1,0 +1,71 @@
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes showStroke {
+    from {
+        stroke-dashoffset: 1000;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.trace-connection {
+    fill: transparent;
+    stroke: var(--color-2);
+    stroke-width: 1px;
+    z-index: -1;
+
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+    animation: showStroke 5s;
+}
+
+.trace-start-circle {
+    fill: var(--color-3);
+    stroke: none;
+}
+
+.trace-end-arrow {
+    fill: var(--color-3);
+    stroke: none;
+}
+
+.trace-connection.selected {
+    stroke: var(--s-color-4);
+}
+
+.trace-start-circle.selected {
+    fill: var(--s-color-4);
+}
+
+.trace-end-arrow.selected {
+    fill: var(--s-color-4);
+}
+
+.trace-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-3);
+    position: absolute;
+    margin-left: -2.5px;
+    margin-top: -2.5px;
+    z-index: 11;
+    animation: scaleUp 1s;
+}

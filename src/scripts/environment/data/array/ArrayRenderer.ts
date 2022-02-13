@@ -10,6 +10,8 @@ export class ArrayRenderer extends DataRenderer {
     closingBrace: HTMLDivElement
     openingBrace: HTMLDivElement
 
+    selection: Set<string> = new Set()
+
     constructor() {
         super()
 
@@ -59,6 +61,12 @@ export class ArrayRenderer extends DataRenderer {
             this.element.append(this.dataRenderers[item.id].renderer.element)
             this.dataRenderers[item.id].renderer.setState(item)
 
+            if (this.selection.has(item.id)) {
+                this.dataRenderers[item.id].renderer.select(this.selection)
+            } else {
+                this.dataRenderers[item.id].renderer.deselect(this.selection)
+            }
+
             // this.dataRenderers[item.id].index.setState(
             //     i,
             //     item.transform.rendered
@@ -96,7 +104,7 @@ export class ArrayRenderer extends DataRenderer {
     }
 
     getAllChildRenderers() {
-        let renderers = {}
+        let renderers: { [id: string]: DataRenderer } = {}
 
         for (const [id, item] of Object.entries(this.dataRenderers)) {
             renderers[id] = item.renderer
@@ -108,6 +116,31 @@ export class ArrayRenderer extends DataRenderer {
         }
 
         return renderers
+    }
+
+    select(selection: Set<string>) {
+        this.selection = new Set([...selection, ...this.selection])
+        for (const id of Object.keys(this.dataRenderers)) {
+            const renderer = this.dataRenderers[id].renderer
+
+            if (this.selection.has(id)) {
+                renderer.select(this.selection)
+            }
+        }
+    }
+
+    deselect(deselection: Set<string>) {
+        for (const toRemove of deselection) {
+            this.selection.delete(toRemove)
+        }
+
+        for (const id of Object.keys(this.dataRenderers)) {
+            const renderer = this.dataRenderers[id].renderer
+
+            if (!this.selection.has(id)) {
+                renderer.deselect(deselection)
+            }
+        }
     }
 }
 

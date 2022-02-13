@@ -1,6 +1,7 @@
 import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { getNumericalValueOfStyle, lerp } from '../utilities/math'
+import { TraceCollection } from './Trace/TraceCollection'
 import { View } from './View'
 
 export class ViewRenderer {
@@ -17,14 +18,16 @@ export class ViewRenderer {
     // Control elements
     controlElement: HTMLDivElement
     stepsToggle: HTMLDivElement
-    hardStepsToggle: HTMLDivElement
     collapseToggle: HTMLDivElement
+    traceToggle: HTMLDivElement
 
     // Body
     viewBody: HTMLDivElement
 
     // Animation
     animationRenderer: AnimationRenderer
+
+    trace: TraceCollection
 
     constructor(view: View) {
         this.view = view
@@ -59,33 +62,21 @@ export class ViewRenderer {
             .trim()
 
         this.setupControls()
-        this.setupConnection()
 
         // Body
         this.viewBody = document.createElement('div')
         this.viewBody.classList.add('view-body')
         this.element.appendChild(this.viewBody)
+
+        this.trace = new TraceCollection(this.view)
     }
 
-    setupConnection() {
-        this.startNode = document.createElement('div')
-        this.startNode.classList.add('view-start-node')
-        document.body.appendChild(this.startNode)
+    hide() {
+        this.element.classList.add('hidden')
+    }
 
-        this.endNode = document.createElement('div')
-        this.endNode.classList.add('view-end-node')
-        this.element.appendChild(this.endNode)
-
-        // The connection path
-        this.connection = document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'path'
-        )
-        this.connection.classList.add('connection-path')
-
-        // Add them to global svg canvas
-        const svg = document.getElementById('svg-canvas')
-        svg.append(this.connection)
+    show() {
+        this.element.classList.remove('hidden')
     }
 
     setupControls() {
@@ -95,7 +86,7 @@ export class ViewRenderer {
 
         this.setupStepsToggle()
         this.setupCollapseToggle()
-        this.setupHardStepsToggle()
+        this.setupTraceToggle()
     }
 
     setupInPlaceStepsToggle() {
@@ -108,23 +99,24 @@ export class ViewRenderer {
     setupStepsToggle() {
         this.stepsToggle = document.createElement('div')
         this.stepsToggle.classList.add('view-control-button')
-        this.stepsToggle.innerHTML = '<ion-icon name="albums"></ion-icon>'
-        this.header.appendChild(this.stepsToggle)
-    }
-
-    setupHardStepsToggle() {
-        this.hardStepsToggle = document.createElement('div')
-        this.hardStepsToggle.classList.add('view-control-button')
-        this.hardStepsToggle.innerHTML =
+        this.stepsToggle.innerHTML =
             '<ion-icon name="chevron-forward"></ion-icon>'
-        this.header.appendChild(this.hardStepsToggle)
+        // this.header.appendChild(this.stepsToggle)
     }
 
     setupCollapseToggle() {
         this.collapseToggle = document.createElement('div')
         this.collapseToggle.classList.add('view-control-button')
         this.collapseToggle.innerHTML = '<ion-icon name="add"></ion-icon>'
-        this.header.appendChild(this.collapseToggle)
+        // this.header.appendChild(this.collapseToggle)
+    }
+
+    setupTraceToggle() {
+        this.traceToggle = document.createElement('div')
+        this.traceToggle.classList.add('view-control-button')
+        this.traceToggle.innerHTML =
+            '<ion-icon name="git-branch-outline"></ion-icon>'
+        this.header.appendChild(this.traceToggle)
     }
 
     updateConnection() {
@@ -150,9 +142,7 @@ export class ViewRenderer {
         // )
     }
 
-    updatePosition() {
-        let t = 0.2
-
+    updatePosition(t = 0.8) {
         // Update left
         const left = lerp(
             getNumericalValueOfStyle(this.element.style.left),
@@ -171,16 +161,45 @@ export class ViewRenderer {
         this.element.style.left = `${left}px`
         this.element.style.top = `${top}px`
 
+        // Update scale
+        // const scale = lerp(
+        //     getNumericalValueOfStyle(
+        //         this.element.style.transform.substring(6),
+        //         1
+        //     ),
+        //     this.view.state.transform.scale,
+        //     t * 0.1
+        // )
+        // this.element.style.transform = `scale(${
+        //     scale * this.view.state.transform.scaleMultiplier
+        // })`
+
         this.updateConnection()
     }
 
     tick(dt: number) {
         this.updatePosition()
 
+        // Update trace
+        this.updateTrace()
+
         // Update animation
         // TODO: Make this part of an animation layer
         this.updateEndNode()
         this.updateStartNode()
+
+        this.animationRenderer?.tick(dt)
+        this.trace.tick(dt)
+    }
+
+    updateTrace() {
+        if (this.animationRenderer == null) return
+
+        // if (this.view.state.isShowingTrace) {
+        //     this.animationRenderer.showingPreRenderer = true
+        // } else {
+        //     this.animationRenderer.showingPreRenderer = false
+        // }
     }
 
     updateEndNode() {
@@ -200,20 +219,12 @@ export class ViewRenderer {
             width = 5
             height = 5
         }
-
-        this.endNode.style.left = `${x}px`
-        this.endNode.style.top = `${y}px`
-        this.endNode.style.width = `${width}px`
-        this.endNode.style.height = `${height}px`
     }
 
     updateStartNode() {}
 
     destroy() {
         this.element.remove()
-
-        this.startNode.remove()
-        this.endNode.remove()
-        this.connection.remove()
+        this.element = null
     }
 }

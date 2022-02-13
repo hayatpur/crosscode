@@ -13,6 +13,8 @@
 @import './renderer/abstraction.scss';
 @import './renderer/view.scss';
 @import './renderer/timeline.scss';
+@import './renderer/query.scss';
+@import './renderer/trace.scss';
 
 /** Renderer **/
 @import './renderer/cursor.scss';
@@ -44,6 +46,8 @@
     --s-color-1: #e879f9;
     --s-color-2: #6ee7b7;
     --s-color-3: #ffff81;
+    --s-color-4: #9981ff;
+    --s-color-5: #f97979;
 
     // Misc colors
     --color-shadow: 47deg 30% 70%;
@@ -74,6 +78,7 @@ body {
 
 #svg-canvas {
     pointer-events: none;
+    z-index: 5;
 }
 
 .connection-path {
@@ -81,4 +86,18 @@ body {
     stroke: rgba(255, 255, 255, 0.2);
     stroke-width: 0.5px;
     opacity: 1;
+}
+
+#test {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 10px;
+    height: 10px;
+    // background: rgba(132, 218, 233, 0.2);
+}
+
+// Tweak pane
+.tp-dfwv {
+    z-index: 10;
 }

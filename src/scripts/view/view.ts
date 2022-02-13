@@ -7,8 +7,11 @@ import {
     instanceOfAnimationNode,
 } from '../animation/primitive/AnimationNode'
 import { Executor } from '../executor/Executor'
-import { clone } from '../utilities/objects'
-import { createViewController, createViewRenderer } from '../utilities/view'
+import {
+    createViewController,
+    CreateViewOptions,
+    createViewRenderer,
+} from '../utilities/view'
 import { Timeline } from './Timeline/Timeline'
 import { ViewController } from './ViewController'
 import { ViewRenderer } from './ViewRenderer'
@@ -32,15 +35,18 @@ export class View {
     // Timeline
     // timeline: Timeline
 
-    constructor(originalAnimation: AnimationGraph | AnimationNode) {
-        Executor.instance.view.addView(this)
+    isRoot: boolean = false
 
+    constructor(
+        originalAnimation: AnimationGraph | AnimationNode,
+        options: CreateViewOptions
+    ) {
         // Initial state
         this.state = createViewState()
 
         // Setup animations
         this.originalAnimation = originalAnimation
-        this.transitionAnimation = createTransition(clone(originalAnimation))
+        this.transitionAnimation = createTransition(originalAnimation)
 
         // Setup renderer
         this.renderer = createViewRenderer(this)
@@ -48,14 +54,22 @@ export class View {
         // Setup controller
         this.controller = createViewController(this)
 
-        // Setup timeline
-        // this.timeline = new Timeline(this)
+        if (options.expand) {
+            this.controller.expand()
+        }
+
+        if (options.goToEnd) {
+            this.controller.goToEnd()
+        }
+
+        if (options.isRoot) {
+            this.isRoot = true
+        }
     }
 
     tick(dt: number) {
         this.controller.tick(dt)
         this.renderer.tick(dt)
-
         this.stepsTimeline?.tick(dt)
     }
 
@@ -85,6 +99,12 @@ export class View {
 
     destroy() {
         this.renderer.destroy()
-        // this.timeline.destroy()
+        this.stepsTimeline?.destroy()
+
+        Executor.instance.rootView.removeView(this)
+
+        this.renderer = null
+        this.stepsTimeline = null
+        this.controller = null
     }
 }

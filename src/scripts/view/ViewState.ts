@@ -6,6 +6,8 @@ export interface ViewTransform {
         x: number
         y: number
     }
+    scale: number
+    scaleMultiplier: number
 }
 
 export interface CodeAnchor {
@@ -23,6 +25,8 @@ export interface ViewState {
     // View status
     isCollapsed: boolean
     isShowingSteps: boolean
+    isShowingTrace: boolean
+    isHidden: boolean
 
     // Animation time
     time: number
@@ -50,9 +54,13 @@ export function createViewState(): ViewState {
                 x: 0,
                 y: 0,
             },
+            scale: 1,
+            scaleMultiplier: 1,
         },
         isCollapsed: true,
         isShowingSteps: false,
+        isShowingTrace: false,
+        isHidden: false,
         time: 0,
         isPaused: true,
         speed: 1 / 100,

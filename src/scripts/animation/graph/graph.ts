@@ -844,7 +844,7 @@ export function getChunkTrace(
     flow: AnimationTraceChain[] = null
 ): AnimationTraceChain[] {
     // Chunk
-    const nodes = clone(parent.vertices)
+    const nodes = parent.vertices
 
     const postcondition = nodes[nodes.length - 1].postcondition
 
@@ -1036,7 +1036,7 @@ export function getTracesFromAnimationNode(
             })
             break
         default:
-            console.warn('Trace not found for', animation._name, animation)
+        // console.warn('Trace not found for', animation._name, animation)
     }
 
     return traces

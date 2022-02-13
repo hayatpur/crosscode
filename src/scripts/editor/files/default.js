@@ -1,8 +1,12 @@
-// Correct
+let list = [],
+    n = 10
 
-let list = [1, 2, 3, 4]
-let n = 4
+// Add to list
+for (let i = 0; i < n; i++) {
+    list.push(i)
+}
 
+// Reverse list
 for (let i = 0; i < n / 2; i++) {
     let temp = list[i]
     list[i] = list[n - 1 - i]

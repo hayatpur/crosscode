@@ -101,6 +101,7 @@ export function beginPrototypicalPath(
 ) {
     path.onBegin(path, environment)
     path.meta.isPlaying = true
+    path.meta.hasPlayed = false
 }
 
 export function seekPrototypicalPath(
@@ -109,6 +110,7 @@ export function seekPrototypicalPath(
     t: number
 ) {
     path.onSeek(path, environment, t)
+    path.meta.isPlaying = true
 }
 
 export function endPrototypicalPath(
@@ -117,7 +119,7 @@ export function endPrototypicalPath(
 ) {
     path.onEnd(path, environment)
     path.meta.isPlaying = false
-    path.meta.hasPlayed = false
+    path.meta.hasPlayed = true
 }
 
 export function addPrototypicalPath(

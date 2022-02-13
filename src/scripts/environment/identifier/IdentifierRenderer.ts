@@ -9,6 +9,14 @@ export class IdentifierRenderer {
         this.element.classList.add('identifier')
     }
 
+    select(selection: Set<string>) {
+        this.element.classList.add('selected')
+    }
+
+    deselect(deselection: Set<string>) {
+        this.element.classList.remove('selected')
+    }
+
     setState(
         state: PrototypicalIdentifierState,
         data: DataRenderer,

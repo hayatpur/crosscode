@@ -136,8 +136,10 @@ export function end(
     } else {
         for (const vertex of animation.vertices) {
             if (vertex.isPlaying) {
+                console.log('Ending vertex...', clone(vertex.nodeData))
                 end(vertex, view, options)
                 vertex.isPlaying = false
+                vertex.hasPlayed = true
             }
         }
     }
@@ -238,12 +240,12 @@ export function seek(
         ) {
             begin(vertex, view, options)
             vertex.isPlaying = true
+            vertex.hasPlayed = false
 
             seek(vertex, view, duration(vertex), options)
 
             end(vertex, view, options)
             vertex.isPlaying = false
-
             vertex.hasPlayed = true
         }
 
@@ -253,7 +255,7 @@ export function seek(
         }
 
         // Apply invariant if any
-        if ('applyInvariant' in vertex) {
+        if (!vertex.hasPlayed && 'applyInvariant' in vertex) {
             const transition = vertex as TransitionAnimationNode
             transition.applyInvariant(transition, view)
         }

@@ -2,14 +2,12 @@ import acorn = require('acorn')
 import * as ESTree from 'estree'
 import { bake, reset } from '../animation/animation'
 import { AnimationGraph } from '../animation/graph/AnimationGraph'
-import { AnimationNode } from '../animation/primitive/AnimationNode'
 import { Editor } from '../editor/Editor'
 import { createPrototypicalEnvironment } from '../environment/environment'
 import { Compiler } from '../transpiler/Compiler'
 import { Ticker } from '../utilities/Ticker'
-import { createView } from '../utilities/view'
-import { RootView } from '../view/RootView'
-import { AbstractionCreator } from './AbstractionCreator'
+import { CodeQueryCreator } from '../view/Query/CodeQuery/CodeQueryCreator'
+import { RootView } from '../view/Root/RootView'
 
 export class Executor {
     static instance: Executor = null
@@ -21,10 +19,17 @@ export class Executor {
     animation: AnimationGraph
 
     // View, the visual output
-    view: RootView
+    rootView: RootView
 
     // Controller
-    abstractionCreator: AbstractionCreator
+    codeQueryCreator: CodeQueryCreator
+
+    PARAMS: { a: number; b: number; c: number; d: number } = {
+        a: 0.5,
+        b: 0.5,
+        c: 0.5,
+        d: 0.5,
+    }
 
     constructor(editor: Editor) {
         // Singleton
@@ -50,7 +55,19 @@ export class Executor {
         window['_executor'] = this
 
         // Create abstraction creator
-        this.abstractionCreator = new AbstractionCreator()
+        this.codeQueryCreator = new CodeQueryCreator()
+
+        // const pane = new Pane({
+        //     title: 'Parameters',
+        //     expanded: true,
+        // })
+
+        // for (const key of Object.keys(this.PARAMS)) {
+        //     pane.addInput(this.PARAMS, key as any, {
+        //         min: 0,
+        //         max: 1,
+        //     })
+        // }
     }
 
     reset() {
@@ -100,23 +117,17 @@ export class Executor {
         //     true
         // )
         // console.log(url)
+        this.rootView = new RootView()
 
-        this.view = new RootView()
+        this.rootView.createView(this.animation, {
+            expand: true,
+            goToEnd: true,
+            isRoot: true,
+        })
     }
 
     tick(dt: number = 10) {
         if (this.animation == null) return
-
-        this.view.tick(dt)
-    }
-
-    createAbstraction(animation: AnimationGraph | AnimationNode) {
-        // 1. Create a time-agnostic abstraction over code
-
-        // 2. Create a default abstraction that corresponds to t=0
-        const view = createView(animation)
-        // view.controller.anchorToCode()
-        view.controller.expand()
-        this.view.rootTimeline.addView(view)
+        this.rootView.tick(dt)
     }
 }

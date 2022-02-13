@@ -1,29 +1,27 @@
 import {
     AnimationGraph,
     instanceOfAnimationGraph,
-} from '../animation/graph/AnimationGraph'
-import {
-    queryAllAnimationGraph,
-    queryAnimationGraph,
-} from '../animation/graph/graph'
+} from '../../../animation/graph/AnimationGraph'
+import { queryAnimationGraph } from '../../../animation/graph/graph'
 import {
     AnimationNode,
     instanceOfAnimationNode,
-} from '../animation/primitive/AnimationNode'
-import { Mouse } from '../utilities/Mouse'
-import { Ticker } from '../utilities/Ticker'
-import { Executor } from './Executor'
+} from '../../../animation/primitive/AnimationNode'
+import { Executor } from '../../../executor/Executor'
+import { Mouse } from '../../../utilities/Mouse'
+import { Ticker } from '../../../utilities/Ticker'
+import { CodeQueryGroupState } from './CodeQueryGroup'
 
-export enum AbstractionCreatorState {
+export enum CodeQueryCreatorState {
     Inactive,
     Active,
     Pressed,
 }
 
-export class AbstractionCreator {
+export class CodeQueryCreator {
     cursor: HTMLDivElement
 
-    state: AbstractionCreatorState
+    state: CodeQueryCreatorState
 
     selectionBounds: { x1: number; y1: number; x2: number; y2: number } = null
     selectionIndicator: HTMLDivElement
@@ -38,29 +36,29 @@ export class AbstractionCreator {
         this.selectionIndicator.classList.add('abstraction-selection')
         document.body.appendChild(this.selectionIndicator)
 
-        this.state = AbstractionCreatorState.Inactive
+        this.state = CodeQueryCreatorState.Inactive
 
         Ticker.instance.registerTick(this.tick.bind(this))
 
         document.addEventListener('keydown', (e) => {
             if (e.key != 'Control') return
 
-            if (this.state == AbstractionCreatorState.Inactive) {
-                this.state = AbstractionCreatorState.Active
+            if (this.state == CodeQueryCreatorState.Inactive) {
+                this.state = CodeQueryCreatorState.Active
             }
         })
 
         document.addEventListener('keyup', (e) => {
             if (e.key != 'Control') return
 
-            if (this.state == AbstractionCreatorState.Active) {
-                this.state = AbstractionCreatorState.Inactive
+            if (this.state == CodeQueryCreatorState.Active) {
+                this.state = CodeQueryCreatorState.Inactive
             }
         })
 
         document.addEventListener('mousedown', (e) => {
-            if (this.state == AbstractionCreatorState.Active) {
-                this.state = AbstractionCreatorState.Pressed
+            if (this.state == CodeQueryCreatorState.Active) {
+                this.state = CodeQueryCreatorState.Pressed
 
                 this.selectionBounds = {
                     x1: Mouse.instance.position.x,
@@ -72,17 +70,17 @@ export class AbstractionCreator {
         })
 
         document.addEventListener('mouseup', (e) => {
-            if (this.state == AbstractionCreatorState.Pressed) {
+            if (this.state == CodeQueryCreatorState.Pressed) {
                 this.createAbstraction()
 
-                this.state = AbstractionCreatorState.Active
+                this.state = CodeQueryCreatorState.Active
 
                 this.selectionBounds = null
             }
         })
 
         document.addEventListener('mousemove', (e) => {
-            if (this.state == AbstractionCreatorState.Pressed) {
+            if (this.state == CodeQueryCreatorState.Pressed) {
                 this.selectionBounds.x2 = Mouse.instance.position.x
                 this.selectionBounds.y2 = Mouse.instance.position.y
 
@@ -96,16 +94,18 @@ export class AbstractionCreator {
     }
 
     tick(dt: number) {
+        // Update cursor position
         this.cursor.style.left = `${Mouse.instance.position.x - 5}px`
         this.cursor.style.top = `${Mouse.instance.position.y - 5}px`
 
-        if (this.state == AbstractionCreatorState.Active) {
+        // Update cursor indicator
+        if (this.state == CodeQueryCreatorState.Active) {
             this.cursor.classList.add('active')
         } else {
             this.cursor.classList.remove('active')
         }
 
-        if (this.state == AbstractionCreatorState.Pressed) {
+        if (this.state == CodeQueryCreatorState.Pressed) {
             this.selectionIndicator.classList.add('active')
             this.cursor.classList.add('pressed')
 
@@ -119,51 +119,17 @@ export class AbstractionCreator {
             this.selectionIndicator.classList.remove('active')
             this.cursor.classList.remove('pressed')
         }
-
-        const animation = Executor.instance.animation
-        const editor = Executor.instance.editor
-
-        if (animation != null) {
-            const indicators = queryAllAnimationGraph(
-                Executor.instance.animation,
-                (animation) => instanceOfAnimationNode(animation)
-            )
-
-            for (const indicator of indicators) {
-                if (indicator.isChunk) continue
-
-                const location = indicator.nodeData.location
-                const bbox = editor.computeBoundingBoxForLoc(location)
-
-                const contains =
-                    this.state == AbstractionCreatorState.Pressed &&
-                    bboxContains(
-                        this.selectionIndicator.getBoundingClientRect(),
-                        bbox
-                    )
-
-                if (contains && !this.selectionChunks.has(indicator.id)) {
-                    this.selectionChunks.add(indicator.id)
-                } else if (
-                    !contains &&
-                    this.selectionChunks.has(indicator.id)
-                ) {
-                    this.selectionChunks.delete(indicator.id)
-                }
-            }
-        }
     }
 
     createAbstraction() {
-        let chunks = getDeepestChunks(
-            Executor.instance.animation,
-            this.selectionChunks
-        )
-        chunks = chunks.map((chunk) => stripChunk(chunk))
-
-        for (const chunk of chunks) {
-            Executor.instance.createAbstraction(chunk)
+        const state: CodeQueryGroupState = {
+            selection: getBoundingBoxOfStartAndEnd(this.selectionBounds),
         }
+        Executor.instance.rootView.createCodeQueryGroup(state)
+
+        // for (const chunk of chunks) {
+        //     Executor.instance.createAbstraction(chunk)
+        // }
     }
 }
 

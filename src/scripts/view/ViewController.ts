@@ -1,9 +1,12 @@
-import { begin, end, reset, seek } from '../animation/animation'
+import { begin, end, reset, seek, writes } from '../animation/animation'
 import { instanceOfAnimationGraph } from '../animation/graph/AnimationGraph'
+import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
+import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { createPrototypicalEnvironment } from '../environment/environment'
+import { Executor } from '../executor/Executor'
 import { clone } from '../utilities/objects'
-import { createView } from '../utilities/view'
+import { CodeQueryGroup } from './Query/CodeQuery/CodeQueryGroup'
 import { Timeline } from './Timeline/Timeline'
 import { View } from './View'
 
@@ -12,6 +15,9 @@ export class ViewController {
 
     // Misc
     previousMouse: { x: number; y: number }
+    startMouse: { x: number; y: number }
+
+    temporaryCodeQuery: CodeQueryGroup
 
     constructor(view: View) {
         this.view = view
@@ -21,34 +27,7 @@ export class ViewController {
 
         const { state, renderer } = this.view
 
-        renderer.stepsToggle.addEventListener('click', () => {
-            if (state.isShowingSteps) {
-                this.destroySteps()
-                renderer.stepsToggle.innerHTML =
-                    '<ion-icon name="chevron-forward"></ion-icon>'
-            } else {
-                this.createSteps(!state.isCollapsed)
-                renderer.stepsToggle.innerHTML =
-                    '<ion-icon name="chevron-down"></ion-icon>'
-            }
-
-            renderer.stepsToggle.classList.toggle('active')
-        })
-
-        renderer.hardStepsToggle.addEventListener('click', () => {
-            this.createHardSteps(!state.isCollapsed)
-            // if (state.isShowingSteps) {
-            //     this.destroySteps()
-            //     renderer.stepsToggle.innerHTML =
-            //         '<ion-icon name="chevron-forward"></ion-icon>'
-            // } else {
-            //     this.createSteps()
-            //     renderer.stepsToggle.innerHTML =
-            //         '<ion-icon name="chevron-down"></ion-icon>'
-            // }
-
-            // renderer.stepsToggle.classList.toggle('active')
-        })
+        // Setup click behavior
 
         // this.viewBody.addEventListener('mouseenter', (e) => {
         //     if (!this.state.collapsed && this.timelineRenderer.disabled) {
@@ -62,81 +41,190 @@ export class ViewController {
         //     }
         // })
 
-        renderer.collapseToggle.addEventListener('click', () => {
-            if (!state.isCollapsed) {
-                this.collapse()
-                renderer.collapseToggle.innerHTML =
-                    '<ion-icon name="add"></ion-icon>'
+        // renderer.collapseToggle.addEventListener('click', () => {
+        //     if (!state.isCollapsed) {
+        //         this.collapse()
+        //         renderer.collapseToggle.innerHTML =
+        //             '<ion-icon name="add"></ion-icon>'
+        //     } else {
+        //         this.expand()
+        //         renderer.collapseToggle.innerHTML =
+        //             '<ion-icon name="remove"></ion-icon>'
+        //     }
+
+        //     renderer.collapseToggle.classList.toggle('active')
+        // })
+
+        renderer.traceToggle.addEventListener('click', () => {
+            if (!state.isShowingTrace) {
+                this.showTrace()
             } else {
-                this.expand()
-                renderer.collapseToggle.innerHTML =
-                    '<ion-icon name="remove"></ion-icon>'
+                this.hideTrace()
             }
 
-            renderer.collapseToggle.classList.toggle('active')
+            renderer.traceToggle.classList.toggle('active')
         })
+    }
+
+    hide() {
+        this.view.state.isHidden = true
+        this.view.renderer.hide()
+
+        if (this.view.state.isShowingSteps) {
+            this.view.stepsTimeline?.destroy()
+            this.view.stepsTimeline = undefined
+            this.view.state.isShowingSteps = false
+        }
+    }
+
+    show() {
+        this.view.state.isHidden = false
+        this.view.renderer.show()
+    }
+
+    select() {
+        const selection = new Set(
+            writes(this.view.originalAnimation).map((w) => w.id)
+        )
+        this.view.renderer.animationRenderer?.select(selection)
+        this.view.renderer.trace.select(selection)
+        this.view.renderer.element.classList.add('selected')
+    }
+
+    deselect() {
+        const deselection = new Set(
+            writes(this.view.originalAnimation).map((w) => w.id)
+        )
+        this.view.renderer.animationRenderer?.deselect(deselection)
+        this.view.renderer.trace.deselect(deselection)
+        this.view.renderer.element.classList.remove('selected')
+    }
+
+    goToEnd() {
+        this.resetAnimation([])
+        this.beginAnimation([])
+        this.seekAnimation(this.view.getDuration(), [])
+        this.endAnimation([])
+
+        console.log(this.view.state.isCollapsed)
+        this.view.renderer.animationRenderer.update()
+    }
+
+    goToStart() {
+        this.resetAnimation([])
+        // this.beginAnimation([])
+        this.view.renderer.animationRenderer.update()
     }
 
     createSteps(expanded: boolean = false) {
         const { state, renderer } = this.view
+        state.isShowingSteps = true
 
         renderer.stepsContainer.classList.remove('hidden')
 
-        this.view.stepsTimeline = new Timeline()
+        this.view.stepsTimeline = new Timeline(this.view)
         this.view.stepsTimeline.anchorToView(this.view)
 
+        let start = performance.now()
+
         if (instanceOfAnimationGraph(this.view.originalAnimation)) {
-            for (const child of this.view.originalAnimation.vertices) {
-                const step = createView(child)
-                if (expanded) {
-                    step.controller.expand()
-                }
+            const children = this.queryChildren()
+
+            for (const child of children) {
+                const step = Executor.instance.rootView.createView(child, {
+                    expand: expanded,
+                })
                 this.view.stepsTimeline.addView(step)
             }
         }
+
+        this.view.stepsTimeline.resetAnimation([])
+        this.view.stepsTimeline.beginAnimation([])
+        this.view.stepsTimeline.seekAnimation(
+            this.view.stepsTimeline.getDuration(),
+            []
+        )
+        this.view.stepsTimeline.endAnimation([])
 
         this.resetAnimation([])
-        // if (!state.isCollapsed) {
-        //     this.collapse()
-        // }
+        this.collapse()
 
         renderer.element.classList.add('showing-steps')
-        // state.isShowingSteps = true
     }
 
-    createHardSteps(expanded: boolean = false) {
-        this.view.stepsTimeline = new Timeline()
-
-        const bbox = this.view.renderer.element.getBoundingClientRect()
-        this.view.stepsTimeline.transform.position.x =
-            bbox.left + bbox.width + 50
-        this.view.stepsTimeline.transform.position.y = bbox.top
-
-        if (instanceOfAnimationGraph(this.view.originalAnimation)) {
-            for (const child of this.view.originalAnimation.vertices) {
-                const step = createView(child)
-                if (expanded) {
-                    step.controller.expand()
-                }
-                this.view.stepsTimeline.addView(step)
-            }
+    queryChildren() {
+        if (instanceOfAnimationNode(this.view.originalAnimation)) {
+            return []
         }
+        const children = []
+        const blacklist: Set<string> = new Set([
+            'ConsumeDataAnimation',
+            'PopScopeAnimation',
+            'CreateScopeAnimation',
+            'MoveAndPlaceAnimation',
+        ])
+
+        for (const child of this.view.originalAnimation.vertices) {
+            if (instanceOfAnimationNode(child) && blacklist.has(child._name)) {
+                continue
+            } else if (blacklist.has(child.nodeData.type)) {
+                continue
+            }
+
+            children.push(child)
+        }
+
+        return children
     }
 
     destroySteps() {
         const { state, renderer } = this.view
+        state.isShowingSteps = false
 
         renderer.stepsContainer.classList.add('hidden')
 
         this.view.stepsTimeline.destroy()
+        this.view.stepsTimeline = null
+        this.expand()
+
+        this.resetAnimation([])
+        this.beginAnimation([])
+        this.seekAnimation(this.view.getDuration(), [])
+        this.endAnimation([])
+
+        renderer.animationRenderer.update()
 
         this.view.renderer.stepsContainer.innerHTML = ''
         renderer.element.classList.remove('showing-steps')
-        state.isShowingSteps = false
+    }
+
+    showTrace() {
+        const { state, renderer } = this.view
+
+        state.isShowingTrace = true
+        renderer.animationRenderer?.showTrace()
+        renderer.trace.show()
+    }
+
+    hideTrace() {
+        const { state, renderer } = this.view
+
+        state.isShowingTrace = false
+        renderer.animationRenderer?.hideTrace()
+        renderer.trace.hide()
     }
 
     tick(dt: number) {
         const { state, renderer } = this.view
+
+        // renderer.animationRenderer?.tick(dt)
+
+        // if (this.view.isRoot) {
+        //     const separator = Executor.instance.rootView.separator
+        //     state.transform.position.x =
+        //         getNumericalValueOfStyle(separator.element.style.left, 0) + 100
+        //     state.transform.position.y = 100
+        // }
 
         // Seek into animation
         // if (state.time > this.view.getDuration()) {
@@ -147,13 +235,13 @@ export class ViewController {
         //     // }
         // }
         // If steps were changed
-        const abstractionSelection = JSON.stringify(
-            this.view.getAbstractionSelection()
-        )
-        if (state.abstractionSelection != abstractionSelection) {
-            state.abstractionSelection = abstractionSelection
-            this.resetAnimation([])
-        }
+        // const abstractionSelection = JSON.stringify(
+        //     this.view.getAbstractionSelection()
+        // )
+        // if (state.abstractionSelection != abstractionSelection) {
+        //     state.abstractionSelection = abstractionSelection
+        //     this.resetAnimation([])
+        // }
     }
 
     resetAnimation(renderers: AnimationRenderer[]) {
@@ -167,7 +255,7 @@ export class ViewController {
         state.isPlaying = false
         state.hasPlayed = false
 
-        if (state.isShowingSteps) {
+        if (state.isShowingSteps && false) {
             this.view.stepsTimeline.resetAnimation(renderers)
         } else {
             reset(this.view.transitionAnimation)
@@ -187,7 +275,9 @@ export class ViewController {
             renderers = [...renderers, renderer.animationRenderer]
         }
 
-        if (!state.isShowingSteps) {
+        if (state.isShowingSteps && false) {
+            this.view.stepsTimeline.beginAnimation(renderers)
+        } else {
             for (const renderer of renderers) {
                 const precondition = this.view.transitionAnimation.precondition
                 renderer.environment = clone(precondition)
@@ -197,29 +287,34 @@ export class ViewController {
 
             this.view.transitionAnimation.isPlaying = true
             this.view.transitionAnimation.hasPlayed = false
-        } else {
-            this.view.stepsTimeline.beginAnimation(renderers)
         }
 
         // for (const step of this.view.steps) {
         //     step.controller.beginAnimation(renderers)
         // }
 
+        this.view.renderer.animationRenderer?.update()
+
         renderer.element.classList.add('playing')
     }
 
-    endAnimation(renderers: AnimationRenderer[]) {
+    endAnimation(renderers: AnimationRenderer[], force: boolean = false) {
         const { state, renderer } = this.view
 
         if (renderer.animationRenderer != null) {
             renderers = [...renderers, renderer.animationRenderer]
         }
 
-        if (state.isShowingSteps) {
+        if (state.isShowingSteps && false) {
             this.view.stepsTimeline.endAnimation(renderers)
         } else {
             for (const renderer of renderers) {
                 end(this.view.transitionAnimation, renderer.environment)
+                if (force) {
+                    const postcondition =
+                        this.view.transitionAnimation.postcondition
+                    renderer.environment = clone(postcondition)
+                }
             }
 
             this.view.transitionAnimation.isPlaying = false
@@ -227,7 +322,7 @@ export class ViewController {
         }
 
         if (renderer.animationRenderer != null) {
-            renderer.animationRenderer.showingFinalRenderers = true
+            renderer.animationRenderer.showingPostRenderer = true
         }
 
         renderer.element.classList.remove('playing')
@@ -242,7 +337,7 @@ export class ViewController {
 
         state.time = time
 
-        if (state.isShowingSteps) {
+        if (state.isShowingSteps && false) {
             this.view.stepsTimeline.seekAnimation(time, renderers)
         } else {
             for (const renderer of renderers) {
@@ -251,7 +346,6 @@ export class ViewController {
             }
         }
 
-        console.log('Updating...', this.view.originalAnimation.nodeData.type)
         renderer.animationRenderer?.update()
     }
 
@@ -273,6 +367,11 @@ export class ViewController {
         state.transform.dragging = true
         renderer.element.classList.add('dragging')
 
+        this.startMouse = {
+            x: e.x,
+            y: e.y,
+        }
+
         this.previousMouse = {
             x: e.x,
             y: e.y,
@@ -285,6 +384,14 @@ export class ViewController {
         if (state.transform.dragging) {
             state.transform.dragging = false
             renderer.element.classList.remove('dragging')
+
+            const dx = Math.abs(this.startMouse.x - e.x)
+            const dy = Math.abs(this.startMouse.y - e.y)
+
+            if (dx < 6 && dy < 6) {
+                // Click!
+                this.click()
+            }
         }
     }
 
@@ -294,7 +401,7 @@ export class ViewController {
         const mouse = { x: e.x, y: e.y }
         const transform = state.transform
 
-        if (transform.dragging) {
+        if (transform.dragging && !this.view.isRoot) {
             transform.position.x += mouse.x - this.previousMouse.x
             transform.position.y += mouse.y - this.previousMouse.y
         }
@@ -305,9 +412,55 @@ export class ViewController {
         }
     }
 
-    mouseover(e: MouseEvent) {}
+    mouseover(e: MouseEvent) {
+        const bbox = Editor.instance.computeBoundingBoxForLoc(
+            this.view.originalAnimation.nodeData.location
+        )
+        const paddingX = 20
+        const paddingY = 10
 
-    mouseout(e: MouseEvent) {}
+        bbox.x -= paddingX
+        bbox.y -= paddingY
+        bbox.width += paddingX * 2
+        bbox.height += paddingY * 2
+
+        // const test = document.querySelector('#test') as HTMLElement
+        // test.style.left = `${bbox.x}px`
+        // test.style.top = `${bbox.y}px`
+        // test.style.width = `${bbox.width}px`
+        // test.style.height = `${bbox.height}px`
+
+        this.temporaryCodeQuery =
+            Executor.instance.rootView.createCodeQueryGroup({
+                selection: {
+                    x: bbox.x,
+                    y: bbox.y,
+                    width: bbox.width,
+                    height: bbox.height,
+                },
+            })
+
+        // this.temporaryCodeQuery.queries[0].select(false)
+    }
+
+    mouseout(e: MouseEvent) {
+        this.temporaryCodeQuery?.destroy()
+    }
+
+    click() {
+        const { renderer, state } = this.view
+        if (state.isShowingSteps) {
+            this.destroySteps()
+            renderer.stepsToggle.innerHTML =
+                '<ion-icon name="chevron-forward"></ion-icon>'
+        } else {
+            this.createSteps(!state.isCollapsed)
+            renderer.stepsToggle.innerHTML =
+                '<ion-icon name="chevron-down"></ion-icon>'
+        }
+
+        renderer.stepsToggle.classList.toggle('active')
+    }
 
     // attach(parent: HTMLDivElement) {
     //     this.state.attached = true
@@ -332,7 +485,6 @@ export class ViewController {
         renderer.element.classList.remove('collapsed')
         renderer.controlElement.classList.remove('disabled')
 
-        renderer.endNode.classList.add('expanded')
         renderer.stepsContainer.classList.add('expanded')
 
         this.resetAnimation([])
@@ -349,7 +501,6 @@ export class ViewController {
         renderer.element.classList.add('collapsed')
         renderer.controlElement.classList.add('disabled')
 
-        renderer.endNode.classList.remove('expanded')
         renderer.stepsContainer.classList.remove('expanded')
     }
 }

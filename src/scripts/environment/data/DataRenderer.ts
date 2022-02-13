@@ -17,7 +17,15 @@ export class DataRenderer {
         this.element.remove()
     }
 
-    getAllChildRenderers() {
+    getAllChildRenderers(): { [id: string]: DataRenderer } {
         return {}
+    }
+
+    select(selection: Set<string>) {
+        this.element.classList.add('selected')
+    }
+
+    deselect(deselection: Set<string>) {
+        this.element.classList.remove('selected')
     }
 }

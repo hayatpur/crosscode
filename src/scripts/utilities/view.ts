@@ -14,6 +14,12 @@ import { View } from '../view/View'
 import { ViewController } from '../view/ViewController'
 import { ViewRenderer } from '../view/ViewRenderer'
 
+export interface CreateViewOptions {
+    goToEnd?: boolean
+    expand?: boolean
+    isRoot?: boolean
+}
+
 export function createViewRenderer(view: View) {
     if (view.originalAnimation.nodeData.type == 'ForStatement') {
         return new ForStatementViewRenderer(view)
@@ -38,12 +44,15 @@ export function createViewController(view: View) {
     }
 }
 
-export function createView(animation: AnimationGraph | AnimationNode) {
+export function createView(
+    animation: AnimationGraph | AnimationNode,
+    options: CreateViewOptions
+) {
     if (animation.nodeData.type == 'ForStatement') {
-        return new ForStatementView(animation)
+        return new ForStatementView(animation, options)
     } else if (animation.nodeData.type == 'ForStatementIteration') {
-        return new ForStatementIterationView(animation)
+        return new ForStatementIterationView(animation, options)
     } else {
-        return new View(animation)
+        return new View(animation, options)
     }
 }

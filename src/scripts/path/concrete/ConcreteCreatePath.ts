@@ -15,6 +15,7 @@ function onBegin(
     const pathPrototype = path.prototype as PrototypicalCreatePath
     const dataPrototype = resolvePath(environment, pathPrototype.data, null)
 
+    console.log('Beginning create for ' + dataPrototype.id)
     const element = renderer.getAllChildRenderers()[dataPrototype.id].element
     element.style.opacity = `${0}`
     element.style.transform = `translate(5x, -5px)`
@@ -48,6 +49,7 @@ function onEnd(
     const pathPrototype = path.prototype as PrototypicalCreatePath
     const dataPrototype = resolvePath(environment, pathPrototype.data, null)
 
+    console.log('Ending create for ' + dataPrototype.id)
     const element = renderer.getAllChildRenderers()[dataPrototype.id].element
     element.style.opacity = `${1}`
     element.style.transform = `translate(0px, 0px)`

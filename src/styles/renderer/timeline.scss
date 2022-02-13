@@ -10,6 +10,11 @@
     position: relative;
     display: flex;
     flex-direction: column;
+
+    border: 1px solid #5c5c5c2d;
+    padding: 0px 25px;
+    border-radius: 5px;
+    // backdrop-filter: blur(5px);
 }
 
 .timeline-anchor-container.source-code > .timeline-anchor {
@@ -62,11 +67,11 @@
 }
 
 .timeline.dragging > .timeline-label {
-    color: var(--s-color-3);
+    color: var(--s-color-4);
 }
 
 .timeline.dragging .timeline-anchor ion-icon {
-    color: var(--s-color-3);
+    color: var(--s-color-4);
 }
 
 .timeline-label:hover {
