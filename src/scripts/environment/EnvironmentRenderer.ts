@@ -103,7 +103,7 @@ export class EnvironmentRenderer {
         // Hit test
         const hits = new Set()
 
-        let memory = state.memory
+        let memory = Object.values(state.memory)
             .filter((m) => m != null)
             .filter(
                 (data) =>
@@ -120,17 +120,16 @@ export class EnvironmentRenderer {
             })
 
         // Filter
-        if (representation.include != null) {
-            memory = memory.filter((data) =>
-                representation.include.some((r) => includes(data, r))
-            )
-        } else if (representation.exclude != null) {
-        }
+        // if (representation.include != null) {
+        //     memory = memory.filter((data) => representation.include.some((r) => includes(data, r)))
+        // } else if (representation.exclude != null) {
+        // }
 
         // Sort
         // memory.sort()
 
         // Render data
+        console.log(Object.values(state.memory))
         for (const data of memory) {
             // Create renderer if not there
             if (!(data.id in this.dataRenderers)) {
@@ -246,9 +245,7 @@ function includes(data: PrototypicalDataState, query: string) {
     } else {
         return (
             data.id == query ||
-            (data.value as PrototypicalDataState[]).some((d) =>
-                includes(d, query)
-            )
+            (data.value as PrototypicalDataState[]).some((d) => includes(d, query))
         )
     }
 }

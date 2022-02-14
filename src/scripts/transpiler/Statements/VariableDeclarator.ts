@@ -1,27 +1,23 @@
 import * as ESTree from 'estree'
-import { apply } from '../../animation/animation'
-import {
-    AnimationGraph,
-    createAnimationGraph,
-} from '../../animation/graph/AnimationGraph'
-import { addVertex } from '../../animation/graph/graph'
-import { AnimationContext } from '../../animation/primitive/AnimationNode'
-import { bindAnimation } from '../../animation/primitive/Binding/BindAnimation'
-import { moveAndPlaceAnimation } from '../../animation/primitive/Data/MoveAndPlaceAnimation'
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../environment/EnvironmentState'
+import { cleanUpRegister } from '../../environment/environment'
+import { AccessorType, PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { applyExecutionNode } from '../../execution/execution'
+import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../execution/graph/graph'
+import { bindAnimation } from '../../execution/primitive/Binding/BindAnimation'
+import { ExecutionContext } from '../../execution/primitive/ExecutionNode'
+import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 
 export function VariableDeclarator(
     ast: ESTree.VariableDeclarator,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+    const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
-    // Create a register to allocate RHS in
+    // Create a register that'll point to the RHS
     const register = [
         {
             type: AccessorType.Register,
@@ -29,27 +25,20 @@ export function VariableDeclarator(
         },
     ]
 
-    const doNotFloat = ast.init.type == 'ArrayExpression'
-
-    // Copy / create and float it up RHS
-    const init = Compiler.compile(ast.init, view, {
+    // Copy / create and float up RHS
+    const init = Compiler.compile(ast.init, environment, {
         ...context,
         outputRegister: register,
-        doNotFloat,
     })
     addVertex(graph, init, { nodeData: getNodeData(ast.init) })
 
-    // Place down the RHS at a free spot
-    if (!doNotFloat) {
-        const place = moveAndPlaceAnimation(register, [])
-        addVertex(graph, place, { nodeData: getNodeData(ast) })
-        apply(place, view)
-    }
-
-    // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier
+    // Allocate a place for variable that *points* to the RHS
+    // @TODO: support initializations other than identifier
     const bind = bindAnimation((ast.id as ESTree.Identifier).name, register)
     addVertex(graph, bind, { nodeData: getNodeData(ast.id) })
-    apply(bind, view)
+    applyExecutionNode(bind, environment)
+    cleanUpRegister(environment, register[0].value)
 
+    graph.postcondition = clone(environment)
     return graph
 }

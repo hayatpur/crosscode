@@ -1,10 +1,10 @@
 import { getArrow } from 'curved-arrows'
+import { LiteralRenderer } from '../../environment/data/literal/LiteralRenderer'
 import {
     getAllBranches,
     getAllOperationsAndLeaves,
-} from '../../animation/graph/abstraction/Transition'
-import { AnimationTraceChain } from '../../animation/graph/graph'
-import { LiteralRenderer } from '../../environment/data/literal/LiteralRenderer'
+} from '../../execution/graph/abstraction/Transition'
+import { AnimationTraceChain } from '../../execution/graph/graph'
 import { View } from '../View'
 
 // A single trace
@@ -29,10 +29,7 @@ export class Trace {
         this.view = view
         this.chain = chain
 
-        this.connection = document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'path'
-        )
+        this.connection = document.createElementNS('http://www.w3.org/2000/svg', 'path')
         this.connection.classList.add('trace-connection')
         document.getElementById('svg-canvas').append(this.connection)
 
@@ -48,16 +45,11 @@ export class Trace {
         // this.startCircle.setAttribute('r', '2')
         // document.getElementById('svg-canvas').append(this.startCircle)
 
-        this.endArrow = document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'polygon'
-        )
+        this.endArrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
         this.endArrow.classList.add('trace-end-arrow')
         this.endArrow.setAttribute(
             'points',
-            `0,${-this.arrowHeadSize} ${this.arrowHeadSize * 2},0, 0,${
-                this.arrowHeadSize
-            }`
+            `0,${-this.arrowHeadSize} ${this.arrowHeadSize * 2},0, 0,${this.arrowHeadSize}`
         )
         document.getElementById('svg-canvas').append(this.endArrow)
     }
@@ -130,8 +122,7 @@ export class Trace {
         }
 
         // Environment data
-        const environmentRenderers =
-            animationRenderer.environmentRenderer.getAllChildRenderers()
+        const environmentRenderers = animationRenderer.environmentRenderer.getAllChildRenderers()
         for (const id of Object.keys(environmentRenderers)) {
             if (!(environmentRenderers[id] instanceof LiteralRenderer)) {
                 delete environmentRenderers[id]
@@ -161,8 +152,7 @@ export class Trace {
                 const start = leaves[0].value
 
                 if (start != null) {
-                    this.startElement =
-                        preEnvironmentRenderers[start.id].element
+                    this.startElement = preEnvironmentRenderers[start.id].element
                 } else {
                     this.startElement = null
                 }

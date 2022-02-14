@@ -1,18 +1,16 @@
 import * as ESTree from 'estree'
-import { apply } from '../../animation/animation'
+import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { applyExecutionNode } from '../../execution/execution'
+import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../execution/graph/graph'
 import {
-    AnimationGraph,
-    createAnimationGraph,
-} from '../../animation/graph/AnimationGraph'
-import { addVertex } from '../../animation/graph/graph'
-import {
-    AnimationContext,
     ControlOutput,
     ControlOutputData,
-} from '../../animation/primitive/AnimationNode'
-import { createScopeAnimation } from '../../animation/primitive/Scope/CreateScopeAnimation'
-import { popScopeAnimation } from '../../animation/primitive/Scope/PopScopeAnimation'
-import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+    ExecutionContext,
+} from '../../execution/primitive/ExecutionNode'
+import { createScopeAnimation } from '../../execution/primitive/Scope/CreateScopeAnimation'
+import { popScopeAnimation } from '../../execution/primitive/Scope/PopScopeAnimation'
+import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 
 export enum ScopeType {
@@ -26,15 +24,16 @@ export enum ScopeType {
  * @param ast Block Statement AST
  * @param view ViewState state leading up to block statement
  * @param context
- * @returns {AnimationGraph} animation
+ * @returns {ExecutionGraph} animation
  */
 export function BlockStatement(
     ast: ESTree.BlockStatement,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext,
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext,
     scopeType: ScopeType = ScopeType.Default
-): AnimationGraph {
-    const graph = createAnimationGraph(getNodeData(ast))
+): ExecutionGraph {
+    const graph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
     context.locationHint = []
 
@@ -42,14 +41,14 @@ export function BlockStatement(
     if (scopeType == ScopeType.Default) {
         const createScope = createScopeAnimation()
         addVertex(graph, createScope, { nodeData: getNodeData(ast) })
-        apply(createScope, view)
+        applyExecutionNode(createScope, environment)
     }
 
     // Add statements
     for (const statement of ast.body) {
         const controlOutput: ControlOutputData = { output: ControlOutput.None }
 
-        const animation = Compiler.compile(statement, view, {
+        const animation = Compiler.compile(statement, environment, {
             ...context,
             controlOutput,
         })
@@ -74,8 +73,9 @@ export function BlockStatement(
     if (scopeType == ScopeType.Default) {
         const popScope = popScopeAnimation()
         addVertex(graph, popScope, { nodeData: getNodeData(ast) })
-        apply(popScope, view)
+        applyExecutionNode(popScope, environment)
     }
 
+    graph.postcondition = clone(environment)
     return graph
 }

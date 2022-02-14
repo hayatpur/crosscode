@@ -1,12 +1,9 @@
 //@ts-check
 
 import * as ESTree from 'estree'
-import { AnimationGraph } from '../animation/graph/AnimationGraph'
-import {
-    AnimationContext,
-    NodeData,
-} from '../animation/primitive/AnimationNode'
 import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { ExecutionContext, NodeData } from '../execution/primitive/ExecutionNode'
 import { ArrayExpression } from './Expressions/Array/ArrayExpression'
 import { AssignmentExpression } from './Expressions/BinaryOperations/AssigmentExpression'
 import { BinaryExpression } from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression'
@@ -35,9 +32,9 @@ export function getNodeData(node: ESTree.Node): NodeData {
 export class Compiler {
     static compile(
         ast: ESTree.Node,
-        view: PrototypicalEnvironmentState,
-        context: AnimationContext
-    ): AnimationGraph {
+        environment: PrototypicalEnvironmentState,
+        context: ExecutionContext
+    ): ExecutionGraph {
         const mapping = {
             VariableDeclarator,
 
@@ -69,7 +66,7 @@ export class Compiler {
             return
         }
 
-        const node = new mapping[`${ast.type}`](ast, view, context)
+        const node = new mapping[`${ast.type}`](ast, environment, context)
         return node
     }
 }

@@ -1,40 +1,41 @@
 import acorn = require('acorn')
 import * as ESTree from 'estree'
-import { apply } from '../../animation/animation'
-import {
-    AnimationGraph,
-    createAnimationGraph,
-} from '../../animation/graph/AnimationGraph'
-import { addVertex } from '../../animation/graph/graph'
-import {
-    AnimationContext,
-    ControlOutput,
-    ControlOutputData,
-} from '../../animation/primitive/AnimationNode'
-import { consumeDataAnimation } from '../../animation/primitive/Data/ConsumeDataAnimation'
-import { ArrayPushAnimation } from '../../animation/primitive/Functions/Native/Array/ArrayPushAnimation'
 import { PrototypicalDataState } from '../../environment/data/DataState'
-import { resolvePath } from '../../environment/environment'
+import { cleanUpRegister, resolvePath } from '../../environment/environment'
 import {
     Accessor,
     AccessorType,
     PrototypicalEnvironmentState,
 } from '../../environment/EnvironmentState'
+import { applyExecutionNode } from '../../execution/execution'
+import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../execution/graph/graph'
+import { consumeDataAnimation } from '../../execution/primitive/Data/ConsumeDataAnimation'
+import {
+    ControlOutput,
+    ControlOutputData,
+    ExecutionContext,
+} from '../../execution/primitive/ExecutionNode'
+import { ArrayPushAnimation } from '../../execution/primitive/Functions/Native/Array/ArrayPushAnimation'
+import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 import { FunctionCall } from '../Functions/FunctionCall'
 
 export function CallExpression(
     ast: ESTree.CallExpression,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+    const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
+
     const controlOutput: ControlOutputData = { output: ControlOutput.None }
 
-    const argGraph = createAnimationGraph({
+    const argGraph = createExecutionGraph({
         ...getNodeData(ast),
         type: 'Arguments',
     })
+    argGraph.precondition = clone(environment)
 
     // Compile the arguments
     const registers: Accessor[][] = []
@@ -45,13 +46,14 @@ export function CallExpression(
                 value: `${graph.id}_${i}_CallExpression`,
             },
         ]
-        const arg = Compiler.compile(ast.arguments[i], view, {
+        const arg = Compiler.compile(ast.arguments[i], environment, {
             ...context,
             outputRegister: registers[i],
         })
         addVertex(argGraph, arg, { nodeData: getNodeData(ast.arguments[i]) })
     }
 
+    argGraph.postcondition = clone(environment)
     addVertex(graph, argGraph, { nodeData: argGraph.nodeData })
 
     // Points to the location of the callee
@@ -61,45 +63,45 @@ export function CallExpression(
             value: `${graph.id}_LookupRegister`,
         },
     ]
-    const lookup = Compiler.compile(ast.callee, view, {
+    const lookup = Compiler.compile(ast.callee, environment, {
         feed: true,
         outputRegister: lookupRegister,
     })
     addVertex(graph, lookup, { nodeData: getNodeData(ast.callee) })
 
-    const lookupData = resolvePath(
-        view,
-        lookupRegister,
-        null
-    ) as PrototypicalDataState
+    const lookupData = resolvePath(environment, lookupRegister, null) as PrototypicalDataState
     const lookupDataValue = lookupData.value as Function
 
     if (lookupDataValue.toString().includes('[native code]')) {
-        let object: Accessor[]
+        let objectRegister: Accessor[]
         if (ast.callee.type === 'MemberExpression') {
-            object = [
+            objectRegister = [
                 {
                     type: AccessorType.Register,
                     value: `${graph.id}_ObjectRegister`,
                 },
             ]
-            const objectLookup = Compiler.compile(ast.callee.object, view, {
+            const objectLookup = Compiler.compile(ast.callee.object, environment, {
                 ...context,
                 feed: false,
-                outputRegister: object,
+                outputRegister: objectRegister,
             })
             addVertex(graph, objectLookup, {
                 nodeData: getNodeData(ast.callee.object),
             })
         } else {
-            object = null
+            objectRegister = null
         }
 
-        const nativeFunction = lookupNativeFunctionAnimation(
-            lookupDataValue.name
-        )(object, registers)
+        const nativeFunction = lookupNativeFunctionAnimation(lookupDataValue.name)(
+            objectRegister,
+            registers
+        )
         addVertex(graph, nativeFunction, { nodeData: getNodeData(ast) })
-        apply(nativeFunction, view)
+        applyExecutionNode(nativeFunction, environment)
+        if (objectRegister != null) {
+            cleanUpRegister(environment, objectRegister[0].value)
+        }
 
         // if (object != null) {
         //     removeAt(
@@ -114,44 +116,33 @@ export function CallExpression(
         //     )
         // }
     } else {
-        const funcAST: ESTree.FunctionDeclaration = JSON.parse(
-            lookupDataValue.toString()
-        )
+        const funcAST: ESTree.FunctionDeclaration = JSON.parse(lookupDataValue.toString())
 
-        const body = FunctionCall(funcAST, view, {
+        const body = FunctionCall(funcAST, environment, {
             ...context,
             args: registers,
             outputRegister: [],
             returnData: {
                 register: context.outputRegister,
-                frame: view.scope.length - 1,
-                environmentId: view.id,
+                frame: environment.scope.length - 1,
+                environmentId: environment.id,
             },
             controlOutput,
         })
         addVertex(graph, body, { nodeData: getNodeData(ast) })
     }
 
-    // Consumption
-    const consumption = createAnimationGraph({
-        ...getNodeData(ast),
-        type: 'Consume',
-    })
+    // Cleanup
+    cleanUpRegister(environment, lookupRegister[0].value)
 
-    // Consume arguments
     for (let i = 0; i < ast.arguments.length; i++) {
         const consume = consumeDataAnimation(registers[i])
-        addVertex(consumption, consume, { nodeData: getNodeData(ast) })
-        apply(consume, view)
+        // addVertex(graph, consume, { nodeData: getNodeData(ast) })
+        applyExecutionNode(consume, environment)
+        cleanUpRegister(environment, registers[i][0].value)
     }
 
-    addVertex(graph, consumption, {
-        nodeData: {
-            ...getNodeData(ast),
-            type: 'Consume',
-        },
-    })
-
+    graph.postcondition = clone(environment)
     return graph
 }
 

@@ -1,29 +1,25 @@
 import * as ESTree from 'estree'
-import { apply } from '../animation/animation'
-import {
-    AnimationGraph,
-    createAnimationGraph,
-} from '../animation/graph/AnimationGraph'
-import { addVertex } from '../animation/graph/graph'
-import { AnimationContext } from '../animation/primitive/AnimationNode'
-import { createLiteralAnimation } from '../animation/primitive/Data/CreateLiteralAnimation'
 import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { applyExecutionNode } from '../execution/execution'
+import { createExecutionGraph, ExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { addVertex } from '../execution/graph/graph'
+import { createLiteralAnimation } from '../execution/primitive/Data/CreateLiteralAnimation'
+import { ExecutionContext } from '../execution/primitive/ExecutionNode'
+import { clone } from '../utilities/objects'
 import { getNodeData } from './Compiler'
 
 export function Literal(
     ast: ESTree.Literal,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+    const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
-    const create = createLiteralAnimation(
-        ast.value,
-        context.outputRegister,
-        context.locationHint
-    )
+    const create = createLiteralAnimation(ast.value, context.outputRegister, context.locationHint)
     addVertex(graph, create, { nodeData: getNodeData(ast) })
-    apply(create, view)
+    applyExecutionNode(create, environment)
 
+    graph.postcondition = clone(environment)
     return graph
 }

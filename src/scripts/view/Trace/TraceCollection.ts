@@ -1,5 +1,5 @@
-import { AnimationTraceChain, getChunkTrace } from '../../animation/graph/graph'
-import { instanceOfAnimationNode } from '../../animation/primitive/AnimationNode'
+import { AnimationTraceChain } from '../../execution/graph/graph'
+import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { View } from '../View'
 import { Trace } from './Trace'
 
@@ -14,12 +14,12 @@ export class TraceCollection {
     constructor(view: View) {
         this.view = view
 
-        if (instanceOfAnimationNode(this.view.originalAnimation)) {
+        if (instanceOfExecutionNode(this.view.originalAnimation)) {
             console.warn('Trying to create trace for animation node.')
             return
         }
 
-        this.traceChains = getChunkTrace(this.view.originalAnimation)
+        // this.traceChains = getChunkTrace(this.view.originalAnimation)
     }
 
     select(selection: Set<string>) {
@@ -48,10 +48,10 @@ export class TraceCollection {
     }
 
     show() {
-        for (const chain of this.traceChains) {
-            const trace = new Trace(this.view, chain)
-            this.traces.push(trace)
-        }
+        // for (const chain of this.traceChains) {
+        //     const trace = new Trace(this.view, chain)
+        //     this.traces.push(trace)
+        // }
 
         for (const trace of this.traces) {
             trace.show()

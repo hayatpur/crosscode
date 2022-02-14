@@ -1,5 +1,5 @@
-import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
+import { instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { getNumericalValueOfStyle, lerp } from '../utilities/math'
 import { TraceCollection } from './Trace/TraceCollection'
 import { View } from './View'
@@ -54,7 +54,7 @@ export class ViewRenderer {
         document.body.appendChild(this.element)
 
         this.label.innerHTML = (
-            instanceOfAnimationNode(view.originalAnimation)
+            instanceOfExecutionNode(view.originalAnimation)
                 ? view.originalAnimation.name
                 : view.originalAnimation.nodeData.type
         )
@@ -99,8 +99,7 @@ export class ViewRenderer {
     setupStepsToggle() {
         this.stepsToggle = document.createElement('div')
         this.stepsToggle.classList.add('view-control-button')
-        this.stepsToggle.innerHTML =
-            '<ion-icon name="chevron-forward"></ion-icon>'
+        this.stepsToggle.innerHTML = '<ion-icon name="chevron-forward"></ion-icon>'
         // this.header.appendChild(this.stepsToggle)
     }
 
@@ -114,8 +113,7 @@ export class ViewRenderer {
     setupTraceToggle() {
         this.traceToggle = document.createElement('div')
         this.traceToggle.classList.add('view-control-button')
-        this.traceToggle.innerHTML =
-            '<ion-icon name="git-branch-outline"></ion-icon>'
+        this.traceToggle.innerHTML = '<ion-icon name="git-branch-outline"></ion-icon>'
         this.header.appendChild(this.traceToggle)
     }
 

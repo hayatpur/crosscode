@@ -1,6 +1,6 @@
-// import { AnimationData, AnimationGraph } from '../animation/graph/AnimationGraph';
+// import { DataInfo, ExecutionGraph } from '../animation/graph/ExecutionGraph';
 // import { Edge } from '../animation/graph/edges/Edge';
-// import { AnimationNode } from '../animation/primitive/AnimationNode';
+// import { ExecutionNode } from '../animation/primitive/ExecutionNode';
 // import { solveLP } from './math';
 
 // // Of type ......... Move(A, B) ---B--> Copy(B, C) ---C--> Move(C, D)
@@ -17,9 +17,9 @@
 // }
 
 // // Type 1 Movement, can be simplified to: Move(A,D)
-// export function findType1Movement(graph: AnimationGraph, edge: Edge): Type1Movement {
+// export function findType1Movement(graph: ExecutionGraph, edge: Edge): Type1Movement {
 //     // Data Ids
-//     let A: AnimationData, B: AnimationData, C: AnimationData, D: AnimationData;
+//     let A: DataInfo, B: DataInfo, C: DataInfo, D: DataInfo;
 
 //     // Movement
 //     const movement: Type1Movement = {
@@ -101,9 +101,9 @@
 //     edge1: Edge;
 // }
 
-// export function findDirectMovement(graph: AnimationGraph, edge: Edge): DirectMovement {
+// export function findDirectMovement(graph: ExecutionGraph, edge: Edge): DirectMovement {
 //     // Data Ids
-//     let A: AnimationData, B: AnimationData, C: AnimationData, D: AnimationData;
+//     let A: DataInfo, B: DataInfo, C: DataInfo, D: DataInfo;
 
 //     // Movement
 //     const movement: DirectMovement = {
@@ -174,7 +174,7 @@
 //     return null;
 // }
 
-// export function findMovementsInSubgraph(graph: AnimationGraph): { type1: Type1Movement[]; direct: DirectMovement[] } {
+// export function findMovementsInSubgraph(graph: ExecutionGraph): { type1: Type1Movement[]; direct: DirectMovement[] } {
 //     const movements: { type1: Type1Movement[]; direct: DirectMovement[] } = { type1: [], direct: [] };
 
 //     for (const edge of graph.edges) {
@@ -196,7 +196,7 @@
 //     return movements;
 // }
 
-// export function simplifyType1Movement(graph: AnimationGraph, movement: Type1Movement) {
+// export function simplifyType1Movement(graph: ExecutionGraph, movement: Type1Movement) {
 //     const move0Index = graph.vertices.findIndex((v) => v.id == movement.move0.id);
 
 //     // Redirect outgoing edges and incoming edges into start vertex
@@ -224,7 +224,7 @@
 //     graph.removeEdge(movement.edge1);
 // }
 
-// export function simplifyDirectMovement(graph: AnimationGraph, movement: DirectMovement) {
+// export function simplifyDirectMovement(graph: ExecutionGraph, movement: DirectMovement) {
 //     // const move0Index = graph.vertices.findIndex((v) => v.id == movement.move0.id);
 
 //     movement.copy.hardCopy = true;
@@ -260,7 +260,7 @@
 //     // graph.removeEdge(movement.edge0);
 // }
 
-// export function collapseAnimation(graph: AnimationGraph) {
+// export function collapseAnimation(graph: ExecutionGraph) {
 //     if (graph.vertices.length == 0) {
 //         graph.collapsedStarts = [];
 //         return;
@@ -318,8 +318,8 @@
 //     console.log(graph.collapsedStarts);
 // }
 
-// export function simplify(graph: AnimationGraph | AnimationNode, options: { depth: number } = { depth: 0 }) {
-//     if (graph instanceof AnimationNode) return;
+// export function simplify(graph: ExecutionGraph | ExecutionNode, options: { depth: number } = { depth: 0 }) {
+//     if (graph instanceof ExecutionNode) return;
 
 //     // Simplify all children
 //     for (let i = graph.vertices.length - 1; i >= 0; i--) {

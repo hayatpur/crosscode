@@ -41,18 +41,12 @@ export class CodeQuery {
         document.body.appendChild(this.codeSelectionElement)
 
         // Create incoming connection
-        this.incomingConnection = document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'path'
-        )
+        this.incomingConnection = document.createElementNS('http://www.w3.org/2000/svg', 'path')
         this.incomingConnection.classList.add('query-connection')
         document.getElementById('svg-canvas').append(this.incomingConnection)
 
         // Create outgoing connection
-        this.outgoingConnection = document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'path'
-        )
+        this.outgoingConnection = document.createElementNS('http://www.w3.org/2000/svg', 'path')
         this.outgoingConnection.classList.add('query-connection')
         document.getElementById('svg-canvas').append(this.outgoingConnection)
 
@@ -80,42 +74,33 @@ export class CodeQuery {
         const padding = 4
         this.codeSelectionElement.style.left = `${codeBbox.x - padding}px`
         this.codeSelectionElement.style.top = `${codeBbox.y - padding / 2}px`
-        this.codeSelectionElement.style.width = `${
-            codeBbox.width + padding * 2
-        }px`
-        this.codeSelectionElement.style.height = `${
-            codeBbox.height + padding
-        }px`
+        this.codeSelectionElement.style.width = `${codeBbox.width + padding * 2}px`
+        this.codeSelectionElement.style.height = `${codeBbox.height + padding}px`
     }
 
     updateConnection() {
-        const codeSelectionBbox =
-            this.codeSelectionElement.getBoundingClientRect()
-        const indicatorBbox = this.indicatorElement.getBoundingClientRect()
+        const codeSelectionBbox = this.codeSelectionElement.getBoundingClientRect()
 
         const points = [
             codeSelectionBbox.x + codeSelectionBbox.width,
             codeSelectionBbox.y + codeSelectionBbox.height / 2,
-
-            indicatorBbox.x + indicatorBbox.width / 2,
-            indicatorBbox.y + indicatorBbox.height / 2,
         ]
+
+        if (document.body.contains(this.indicatorElement)) {
+            const indicatorBbox = this.indicatorElement.getBoundingClientRect()
+            points.push(
+                indicatorBbox.x + indicatorBbox.width / 2,
+                indicatorBbox.y + indicatorBbox.height / 2
+            )
+        }
 
         if (this.selectedView.renderer?.element != null) {
             if (this.selectedView.state.isShowingSteps) {
-                const viewBbox =
-                    this.selectedView.renderer.stepsContainer.getBoundingClientRect()
-                points.push(
-                    viewBbox.x,
-                    viewBbox.y + (0.5 * viewBbox.height) / 2
-                )
+                const viewBbox = this.selectedView.renderer.stepsContainer.getBoundingClientRect()
+                points.push(viewBbox.x, viewBbox.y + (0.5 * viewBbox.height) / 2)
             } else {
-                const viewBbox =
-                    this.selectedView.renderer.viewBody.getBoundingClientRect()
-                points.push(
-                    viewBbox.x,
-                    viewBbox.y + (0.5 * viewBbox.height) / 2
-                )
+                const viewBbox = this.selectedView.renderer.viewBody.getBoundingClientRect()
+                points.push(viewBbox.x, viewBbox.y + (0.5 * viewBbox.height) / 2)
             }
 
             this.incomingConnection.classList.remove('dashed')
@@ -159,12 +144,9 @@ export class CodeQuery {
                 ? this.selectedView.renderer.stepsContainer.getBoundingClientRect()
                 : this.selectedView.renderer.viewBody.getBoundingClientRect()
             const delta =
-                indicatorBbox.y +
-                indicatorBbox.height / 2 -
-                (viewBbox.y + viewBbox.height / 2)
+                indicatorBbox.y + indicatorBbox.height / 2 - (viewBbox.y + viewBbox.height / 2)
 
-            Executor.instance.rootView.parentView.state.transform.position.y +=
-                delta
+            Executor.instance.rootView.parentView.state.transform.position.y += delta
         }
 
         this.isSelected = true

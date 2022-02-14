@@ -1,4 +1,4 @@
-function copyBuffer(cur) {
+function RFDCcopyBuffer(cur) {
     if (cur instanceof Buffer) {
         return Buffer.from(cur)
     }
@@ -6,7 +6,7 @@ function copyBuffer(cur) {
     return new cur.constructor(cur.buffer.slice(), cur.byteOffset, cur.length)
 }
 
-export function cloneArray(a, fn) {
+export function RFDCcloneArray(a, fn) {
     var keys = Object.keys(a)
     var a2 = new Array(keys.length)
     for (var i = 0; i < keys.length; i++) {
@@ -17,7 +17,7 @@ export function cloneArray(a, fn) {
         } else if (cur instanceof Date) {
             a2[k] = new Date(cur)
         } else if (ArrayBuffer.isView(cur)) {
-            a2[k] = copyBuffer(cur)
+            a2[k] = RFDCcopyBuffer(cur)
         } else {
             a2[k] = fn(cur)
         }
@@ -25,12 +25,12 @@ export function cloneArray(a, fn) {
     return a2
 }
 
-export function clone(o) {
+export function RFDCclone(o) {
     if (typeof o !== 'object' || o === null) return o
     if (o instanceof Date) return new Date(o)
-    if (Array.isArray(o)) return cloneArray(o, clone)
-    if (o instanceof Map) return new Map(cloneArray(Array.from(o), clone))
-    if (o instanceof Set) return new Set(cloneArray(Array.from(o), clone))
+    if (Array.isArray(o)) return RFDCcloneArray(o, RFDCclone)
+    if (o instanceof Map) return new Map(RFDCcloneArray(Array.from(o), RFDCclone))
+    if (o instanceof Set) return new Set(RFDCcloneArray(Array.from(o), clone))
     var o2 = {}
     for (var k in o) {
         if (Object.hasOwnProperty.call(o, k) === false) continue
@@ -40,24 +40,24 @@ export function clone(o) {
         } else if (cur instanceof Date) {
             o2[k] = new Date(cur)
         } else if (cur instanceof Map) {
-            o2[k] = new Map(cloneArray(Array.from(cur), clone))
+            o2[k] = new Map(RFDCcloneArray(Array.from(cur), RFDCclone))
         } else if (cur instanceof Set) {
-            o2[k] = new Set(cloneArray(Array.from(cur), clone))
+            o2[k] = new Set(RFDCcloneArray(Array.from(cur), RFDCclone))
         } else if (ArrayBuffer.isView(cur)) {
-            o2[k] = copyBuffer(cur)
+            o2[k] = RFDCcopyBuffer(cur)
         } else {
-            o2[k] = clone(cur)
+            o2[k] = RFDCclone(cur)
         }
     }
     return o2
 }
 
-export function cloneProto(o) {
+export function RFDCcloneProto(o) {
     if (typeof o !== 'object' || o === null) return o
     if (o instanceof Date) return new Date(o)
-    if (Array.isArray(o)) return cloneArray(o, cloneProto)
-    if (o instanceof Map) return new Map(cloneArray(Array.from(o), cloneProto))
-    if (o instanceof Set) return new Set(cloneArray(Array.from(o), cloneProto))
+    if (Array.isArray(o)) return RFDCcloneArray(o, RFDCcloneProto)
+    if (o instanceof Map) return new Map(RFDCcloneArray(Array.from(o), RFDCcloneProto))
+    if (o instanceof Set) return new Set(RFDCcloneArray(Array.from(o), RFDCcloneProto))
     var o2 = {}
     for (var k in o) {
         var cur = o[k]
@@ -66,13 +66,13 @@ export function cloneProto(o) {
         } else if (cur instanceof Date) {
             o2[k] = new Date(cur)
         } else if (cur instanceof Map) {
-            o2[k] = new Map(cloneArray(Array.from(cur), cloneProto))
+            o2[k] = new Map(RFDCcloneArray(Array.from(cur), RFDCcloneProto))
         } else if (cur instanceof Set) {
-            o2[k] = new Set(cloneArray(Array.from(cur), cloneProto))
+            o2[k] = new Set(RFDCcloneArray(Array.from(cur), RFDCcloneProto))
         } else if (ArrayBuffer.isView(cur)) {
-            o2[k] = copyBuffer(cur)
+            o2[k] = RFDCcopyBuffer(cur)
         } else {
-            o2[k] = cloneProto(cur)
+            o2[k] = RFDCcloneProto(cur)
         }
     }
     return o2

@@ -1,61 +1,52 @@
 import * as ESTree from 'estree'
-import { apply } from '../../../animation/animation'
+import { PrototypicalDataState } from '../../../environment/data/DataState'
+import { cleanUpRegister, resolvePath } from '../../../environment/environment'
+import { AccessorType, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { applyExecutionNode } from '../../../execution/execution'
+import { createExecutionGraph, ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../../execution/graph/graph'
 import {
-    AnimationGraph,
-    createAnimationGraph,
-} from '../../../animation/graph/AnimationGraph'
-import { addVertex } from '../../../animation/graph/graph'
-import {
-    AnimationContext,
     ControlOutput,
     ControlOutputData,
-} from '../../../animation/primitive/AnimationNode'
-import { createScopeAnimation } from '../../../animation/primitive/Scope/CreateScopeAnimation'
-import { popScopeAnimation } from '../../../animation/primitive/Scope/PopScopeAnimation'
-import { PrototypicalDataState } from '../../../environment/data/DataState'
-import { resolvePath } from '../../../environment/environment'
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../environment/EnvironmentState'
+    ExecutionContext,
+} from '../../../execution/primitive/ExecutionNode'
+import { createScopeAnimation } from '../../../execution/primitive/Scope/CreateScopeAnimation'
+import { popScopeAnimation } from '../../../execution/primitive/Scope/PopScopeAnimation'
+import { clone } from '../../../utilities/objects'
 import { Compiler, getNodeData } from '../../Compiler'
 
 export function WhileStatement(
     ast: ESTree.WhileStatement,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+    const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
     // Create a scope
     const createScope = createScopeAnimation()
     addVertex(graph, createScope, { nodeData: getNodeData(ast) })
-    apply(createScope, view)
+    applyExecutionNode(createScope, environment)
 
     let _i = 0
 
     // Loop
     while (true) {
         // Test
-        const testRegister = [
-            { type: AccessorType.Register, value: `${graph.id}_TestIf${_i}` },
-        ]
-        const test = Compiler.compile(ast.test, view, {
+        const testRegister = [{ type: AccessorType.Register, value: `${graph.id}_TestIf${_i}` }]
+        const test = Compiler.compile(ast.test, environment, {
             ...context,
             outputRegister: testRegister,
         })
         addVertex(graph, test, { nodeData: getNodeData(ast.test) })
-        const testData = resolvePath(
-            view,
-            testRegister,
-            null
-        ) as PrototypicalDataState // @TODO: Add a probe test animation
+        const testData = resolvePath(environment, testRegister, null) as PrototypicalDataState // @TODO: Add a probe test animation
         const testValue = testData.value as boolean
+        cleanUpRegister(environment, testRegister[0].value)
         if (!testValue) break
 
         // Body
         const controlOutput: ControlOutputData = { output: ControlOutput.None }
-        const body = Compiler.compile(ast.body, view, {
+        const body = Compiler.compile(ast.body, environment, {
             ...context,
             controlOutput: controlOutput,
         })
@@ -82,7 +73,7 @@ export function WhileStatement(
     // Pop scope
     const popScope = popScopeAnimation()
     addVertex(graph, popScope, { nodeData: getNodeData(ast) })
-    apply(popScope, view)
+    applyExecutionNode(popScope, environment)
 
     return graph
 }

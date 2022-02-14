@@ -1,32 +1,26 @@
 import * as ESTree from 'estree'
-import { apply } from '../../../animation/animation'
-import {
-    AnimationGraph,
-    createAnimationGraph,
-} from '../../../animation/graph/AnimationGraph'
-import { addVertex } from '../../../animation/graph/graph'
-import { AnimationContext } from '../../../animation/primitive/AnimationNode'
-import { arrayStartAnimation } from '../../../animation/primitive/Container/ArrayStartAnimation'
-import { moveAndPlaceAnimation } from '../../../animation/primitive/Data/MoveAndPlaceAnimation'
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../environment/EnvironmentState'
+import { cleanUpRegister } from '../../../environment/environment'
+import { AccessorType, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { applyExecutionNode } from '../../../execution/execution'
+import { createExecutionGraph, ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../../execution/graph/graph'
+import { arrayStartAnimation } from '../../../execution/primitive/Container/ArrayStartAnimation'
+import { moveAndPlaceAnimation } from '../../../execution/primitive/Data/MoveAndPlaceAnimation'
+import { ExecutionContext } from '../../../execution/primitive/ExecutionNode'
+import { clone } from '../../../utilities/objects'
 import { Compiler, getNodeData } from '../../Compiler'
 
 export function ArrayExpression(
     ast: ESTree.ArrayExpression,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+    const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
-    const start = arrayStartAnimation(
-        context.outputRegister,
-        context.doNotFloat
-    )
+    const start = arrayStartAnimation(context.outputRegister)
     addVertex(graph, start, { nodeData: getNodeData(ast) })
-    apply(start, view)
+    applyExecutionNode(start, environment)
 
     for (let i = 0; i < ast.elements.length; i++) {
         // Create a register that'll point to the RHS
@@ -37,7 +31,8 @@ export function ArrayExpression(
             },
         ]
 
-        const animation = Compiler.compile(ast.elements[i], view, {
+        // Array element
+        const animation = Compiler.compile(ast.elements[i], environment, {
             ...context,
             outputRegister: register,
         })
@@ -45,63 +40,18 @@ export function ArrayExpression(
 
         const place = moveAndPlaceAnimation(register, [
             ...context.outputRegister,
-            { type: AccessorType.Index, value: i },
+            { type: AccessorType.Index, value: i.toString() },
         ])
         addVertex(graph, place, { nodeData: getNodeData(ast.elements[i]) })
-        apply(place, view)
+        applyExecutionNode(place, environment)
+
+        cleanUpRegister(environment, register[0].value)
     }
 
     // const end = arrayEndAnimation(context.outputRegister);
     // addVertex(graph, end, getNodeData(ast));
-    // apply(end, view);
+    // applyExecution(end, view);
 
+    graph.postcondition = clone(environment)
     return graph
 }
-
-// import * as ESTree from 'estree';
-// import { AnimationGraph } from '../../../animation/graph/AnimationGraph';
-// import { AnimationContext } from '../../../animation/primitive/AnimationNode';
-// import { ArrayStartAnimation } from '../../../animation/primitive/Container/ArrayStartAnimation';
-// import { AccessorType, Data } from '../../../environment/data/data';
-// import { Node, NodeMeta } from '../../Node';
-// import { ArrayExpressionItem, ArrayExpressionItemAST } from './ArrayExpressionItem';
-
-// export class ArrayExpression extends Node {
-//     elements: ArrayExpressionItem[];
-//     data: Data;
-
-//     constructor(ast: ESTree.ArrayExpression, meta: NodeMeta) {
-//         super(ast, meta);
-
-//         // Compile each element of the list
-//         this.elements = ast.elements.map((el, i) => {
-//             const index = { type: 'Literal', value: i, raw: i.toString(), loc: el.loc } as ESTree.Literal;
-//             const ast = { type: 'ArrayExpressionItem', item: el, index: index, loc: el.loc } as ArrayExpressionItemAST;
-//             return new ArrayExpressionItem(ast, meta);
-//         });
-//     }
-
-//     animation(context: AnimationContext): AnimationGraph {
-//         const graph = createAnimationGraph(this);
-
-//         addVertex(graph, new ArrayStartAnimation(context.outputRegister), this);
-
-//         for (let i = 0; i < this.elements.length; i++) {
-//             const animation = this.elements[i].animation({
-//                 ...context,
-//                 outputRegister: [...context.outputRegister, { type: AccessorType.Index, value: i }],
-//                 locationHint: [...context.outputRegister, { type: AccessorType.Index, value: i }],
-//             });
-//             addVertex(graph, animation, this);
-//         }
-
-//         // graph.computeEdges();
-
-//         // // Add sequential dependencies between array elements
-//         // for (let i = 0; i < this.elements.length; i++) {
-//         //     graph.addEdge(new FlowEdge(0, i + 1, this.getData.bind(this)));
-//         // }
-
-//         return graph;
-//     }
-// }

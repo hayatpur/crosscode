@@ -1,12 +1,6 @@
-import {
-    AnimationGraph,
-    instanceOfAnimationGraph,
-} from '../../../animation/graph/AnimationGraph'
-import { queryAnimationGraph } from '../../../animation/graph/graph'
-import {
-    AnimationNode,
-    instanceOfAnimationNode,
-} from '../../../animation/primitive/AnimationNode'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { queryExecutionGraph } from '../../../execution/graph/graph'
+import { ExecutionNode, instanceOfExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { Executor } from '../../../executor/Executor'
 import { Mouse } from '../../../utilities/Mouse'
 import { Ticker } from '../../../utilities/Ticker'
@@ -170,15 +164,15 @@ export function bboxContains(
 }
 
 export function getDeepestChunks(
-    animation: AnimationGraph | AnimationNode,
+    animation: ExecutionGraph | ExecutionNode,
     selection: Set<string>
-): (AnimationGraph | AnimationNode)[] {
+): (ExecutionGraph | ExecutionNode)[] {
     // Base cases
     if (selection.size == 0) {
         return []
     }
 
-    if (instanceOfAnimationNode(animation)) {
+    if (instanceOfExecutionNode(animation)) {
         if (selection.has(animation.id) && selection.size == 1) {
             return [animation]
         } else {
@@ -190,10 +184,7 @@ export function getDeepestChunks(
         return []
     } else if (animation.vertices.length == 1) {
         const deepestChunks = getDeepestChunks(animation.vertices[0], selection)
-        if (
-            deepestChunks.length == 1 &&
-            deepestChunks[0].id == animation.vertices[0].id
-        ) {
+        if (deepestChunks.length == 1 && deepestChunks[0].id == animation.vertices[0].id) {
             return [animation]
         } else {
             return deepestChunks
@@ -205,7 +196,7 @@ export function getDeepestChunks(
     for (const child of animation.vertices) {
         const contains: Set<string> = new Set()
         for (const id of selection) {
-            if (queryAnimationGraph(child, (node) => node.id == id) != null) {
+            if (queryExecutionGraph(child, (node) => node.id == id) != null) {
                 contains.add(id)
             }
         }
@@ -220,24 +211,16 @@ export function getDeepestChunks(
     }
 
     // Selection is contained partially in every animation
-    const allArePartiallyContained = childrenContains.every(
-        (set) => set.size > 0
-    )
+    const allArePartiallyContained = childrenContains.every((set) => set.size > 0)
 
     // Each of those partial containments are deepest chunks
     let allAreDeepestChunks = true
-    let allDeepestChunks: (AnimationGraph | AnimationNode)[] = []
+    let allDeepestChunks: (ExecutionGraph | ExecutionNode)[] = []
     for (let i = 0; i < childrenContains.length; i++) {
-        const deepestChunks = getDeepestChunks(
-            animation.vertices[i],
-            childrenContains[i]
-        )
+        const deepestChunks = getDeepestChunks(animation.vertices[i], childrenContains[i])
         allDeepestChunks.push(...deepestChunks)
 
-        if (
-            deepestChunks.length != 1 ||
-            deepestChunks[0].id != animation.vertices[i].id
-        ) {
+        if (deepestChunks.length != 1 || deepestChunks[0].id != animation.vertices[i].id) {
             allAreDeepestChunks = false
         }
     }
@@ -249,8 +232,8 @@ export function getDeepestChunks(
     }
 }
 
-export function stripChunk(chunk: AnimationGraph | AnimationNode) {
-    if (instanceOfAnimationGraph(chunk) && chunk.vertices.length == 1) {
+export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
+    if (instanceOfExecutionGraph(chunk) && chunk.vertices.length == 1) {
         return stripChunk(chunk.vertices[0])
     }
 

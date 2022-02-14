@@ -1,10 +1,9 @@
 import acorn = require('acorn')
 import * as ESTree from 'estree'
 import { Pane } from 'tweakpane'
-import { bake, reset } from '../animation/animation'
-import { AnimationGraph } from '../animation/graph/AnimationGraph'
 import { Editor } from '../editor/Editor'
 import { createPrototypicalEnvironment } from '../environment/environment'
+import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { Compiler } from '../transpiler/Compiler'
 import { Ticker } from '../utilities/Ticker'
 import { CodeQueryCreator } from '../view/Query/CodeQuery/CodeQueryCreator'
@@ -16,8 +15,8 @@ export class Executor {
     // Editor, the code editor
     editor: Editor = null
 
-    // Animation, the dynamic analysis graph of code execution
-    animation: AnimationGraph
+    // Execution, the dynamic execution of user code
+    execution: ExecutionGraph
 
     // View, the visual output
     rootView: RootView
@@ -47,10 +46,7 @@ export class Executor {
         })
 
         // Bind update
-        setTimeout(
-            () => Ticker.instance.registerTick(this.tick.bind(this)),
-            1000
-        )
+        setTimeout(() => Ticker.instance.registerTick(this.tick.bind(this)), 1000)
 
         // Global binding
         window['_executor'] = this
@@ -60,7 +56,7 @@ export class Executor {
 
         const pane = new Pane({
             title: 'Parameters',
-            expanded: true,
+            expanded: false,
         })
 
         for (const key of Object.keys(this.PARAMS)) {
@@ -72,10 +68,11 @@ export class Executor {
     }
 
     reset() {
-        this.animation = undefined
+        this.execution = undefined
     }
 
     compile() {
+        let start = performance.now()
         // Reset visualization
         this.reset()
 
@@ -92,24 +89,18 @@ export class Executor {
         }
 
         // Create animation from user code
-        this.animation = Compiler.compile(
-            ast,
-            createPrototypicalEnvironment(),
-            {
-                outputRegister: [],
-                locationHint: [],
-            }
-        )
-        reset(this.animation)
-
-        // Bake the animation
-        bake(this.animation)
+        const env = createPrototypicalEnvironment()
+        this.execution = Compiler.compile(ast, env, {
+            outputRegister: [],
+            locationHint: [],
+        })
 
         // Compute the edges
         // computeAllGraphEdges(this.animation)
 
-        console.log('[Executor] Finished compiling...')
-        console.log('\tAnimation', this.animation)
+        console.log('[Executor] Finished compiling in ...', performance.now() - start, 'ms')
+        console.log('\tAnimation', this.execution)
+        console.log('\tEnvironment', env)
 
         // const [output, url] = animationToString(
         //     this.animation,
@@ -120,7 +111,7 @@ export class Executor {
         // console.log(url)
         this.rootView = new RootView()
 
-        this.rootView.createView(this.animation, {
+        this.rootView.createView(this.execution, {
             expand: true,
             goToEnd: true,
             isRoot: true,
@@ -128,7 +119,8 @@ export class Executor {
     }
 
     tick(dt: number = 10) {
-        if (this.animation == null) return
+        if (this.execution == null) return
+
         this.rootView.tick(dt)
     }
 }

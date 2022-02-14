@@ -1,5 +1,5 @@
-import { AnimationGraph } from '../animation/graph/AnimationGraph'
-import { AnimationNode } from '../animation/primitive/AnimationNode'
+import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../execution/primitive/ExecutionNode'
 import {
     ForStatementView,
     ForStatementViewController,
@@ -23,9 +23,7 @@ export interface CreateViewOptions {
 export function createViewRenderer(view: View) {
     if (view.originalAnimation.nodeData.type == 'ForStatement') {
         return new ForStatementViewRenderer(view)
-    } else if (
-        view.originalAnimation.nodeData.type == 'ForStatementIteration'
-    ) {
+    } else if (view.originalAnimation.nodeData.type == 'ForStatementIteration') {
         return new ForStatementIterationViewRenderer(view)
     } else {
         return new ViewRenderer(view)
@@ -35,19 +33,14 @@ export function createViewRenderer(view: View) {
 export function createViewController(view: View) {
     if (view.originalAnimation.nodeData.type == 'ForStatement') {
         return new ForStatementViewController(view)
-    } else if (
-        view.originalAnimation.nodeData.type == 'ForStatementIteration'
-    ) {
+    } else if (view.originalAnimation.nodeData.type == 'ForStatementIteration') {
         return new ForStatementIterationViewController(view)
     } else {
         return new ViewController(view)
     }
 }
 
-export function createView(
-    animation: AnimationGraph | AnimationNode,
-    options: CreateViewOptions
-) {
+export function createView(animation: ExecutionGraph | ExecutionNode, options: CreateViewOptions) {
     if (animation.nodeData.type == 'ForStatement') {
         return new ForStatementView(animation, options)
     } else if (animation.nodeData.type == 'ForStatementIteration') {

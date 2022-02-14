@@ -1,30 +1,30 @@
 import * as ESTree from 'estree'
-import { createAnimationGraph } from '../../animation/graph/AnimationGraph'
-import { addVertex } from '../../animation/graph/graph'
-import {
-    AnimationContext,
-    ControlOutput,
-} from '../../animation/primitive/AnimationNode'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { createExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../execution/graph/graph'
+import { ControlOutput, ExecutionContext } from '../../execution/primitive/ExecutionNode'
+import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 
 export function Program(
     ast: ESTree.Program,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph = createAnimationGraph(getNodeData(ast))
+    const graph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
     const controlOutput = { output: ControlOutput.None }
 
     // Add blocks
     for (const statement of ast.body) {
-        const animation = Compiler.compile(statement, view, {
+        const animation = Compiler.compile(statement, environment, {
             ...context,
             controlOutput,
         })
         addVertex(graph, animation, { nodeData: getNodeData(statement) })
     }
 
+    graph.postcondition = clone(environment)
     return graph
 }

@@ -1,19 +1,108 @@
-import { createPrototypicalEnvironment } from '../environment/environment'
 import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
-import { clone } from '../utilities/objects'
-import { GlobalAnimationCallbacks } from './GlobalAnimationCallbacks'
-import { TransitionAnimationNode } from './graph/abstraction/Transition'
-import {
-    AnimationData,
-    AnimationGraph,
-    AnimationRuntimeOptions,
-    instanceOfAnimationGraph,
-} from './graph/AnimationGraph'
-import { Edge } from './graph/edges/Edge'
-import {
-    AnimationNode,
-    instanceOfAnimationNode,
-} from './primitive/AnimationNode'
+import { TransitionAnimationNode } from '../execution/graph/abstraction/Transition'
+
+export enum AnimationPlayback {
+    Normal = 'Normal',
+    WithPrevious = 'WithPrevious',
+}
+
+export interface AnimationOptions {
+    playback?: AnimationPlayback
+    delay?: number
+
+    // Length of animation
+    duration?: number
+    speedMultiplier?: number
+}
+
+export interface PlayableAnimation {
+    // Playback state
+    isPlaying: boolean
+    hasPlayed: boolean
+
+    // Playback options
+    speed: number
+    delay: number
+
+    ease: (t: number) => number
+}
+
+export interface AnimationNode extends PlayableAnimation {
+    _type: 'AnimationNode'
+
+    name: string // Name of animation
+    id: string
+
+    baseDuration: number
+
+    onBegin: (animation: AnimationNode, view: PrototypicalEnvironmentState) => void
+    onSeek: (animation: AnimationNode, view: PrototypicalEnvironmentState, time: number) => void
+    onEnd: (animation: AnimationNode, view: PrototypicalEnvironmentState) => void
+}
+
+export interface AnimationGraph extends PlayableAnimation {
+    // Meta info
+    _type: 'AnimationGraph'
+    id: string
+
+    // Animation info
+    vertices: (AnimationGraph | AnimationNode)[]
+    isParallel: boolean
+    parallelStarts: number[]
+}
+
+export function instanceOfAnimationNode(animation: any): animation is AnimationNode {
+    return animation._type == 'AnimationNode'
+}
+
+export function createAnimationNode(options: AnimationOptions = {}): AnimationNode {
+    if (this.id == undefined) this.id = 0
+
+    return {
+        _type: 'AnimationNode',
+        name: 'Animation Node',
+
+        id: `AN(${++this.id})`,
+        delay: options.delay ?? 10,
+        isPlaying: false,
+        hasPlayed: false,
+        speed: 1,
+        baseDuration: options.duration ?? 20,
+
+        ease: (t) => ParametricBlend(t),
+
+        onBegin: () => console.warn('[AnimationNode] Non-implemented on begin callback'),
+        onSeek: () => console.warn('[AnimationNode] Non-implemented on seek callback'),
+        onEnd: () => console.warn('[AnimationNode] Non-implemented on end callback'),
+    }
+}
+
+export function createAnimationGraph(): AnimationGraph {
+    if (this.id == undefined) this.id = 0
+
+    return {
+        // Meta info
+        _type: 'AnimationGraph',
+        id: `AG(${++this.id})`,
+
+        // Invariant to abstraction info
+        isPlaying: false,
+        hasPlayed: false,
+        speed: 1,
+        delay: 0,
+
+        ease: (t) => ParametricBlend(t),
+
+        vertices: [],
+        isParallel: false,
+        parallelStarts: [],
+    }
+}
+
+function ParametricBlend(t: number) {
+    const sqt = t * t
+    return sqt / (2.0 * (sqt - t) + 1.0)
+}
 
 /**
  * Computes and returns the duration of an animation.
@@ -34,10 +123,7 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
     // If a parallel animation, return the end point of the longest animation vertex
     if (abstraction.isParallel && abstraction.parallelStarts[0] != undefined) {
         const ends = abstraction.parallelStarts.map(
-            (start, i) =>
-                start +
-                duration(abstraction.vertices[i]) +
-                abstraction.vertices[i].delay
+            (start, i) => start + duration(abstraction.vertices[i]) + abstraction.vertices[i].delay
         )
         return Math.max(...ends)
     }
@@ -53,66 +139,17 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
 }
 
 /**
- * Removes an edge from an animation graph. Warns if edge was not found in the animation graph.
- * @param graph - Animation graph to remove edge from
- * @param edge - Edge to remove
- */
-export function removeEdge(graph: AnimationGraph, edge: Edge) {
-    const index = graph.edges.findIndex((e) => e.id == edge.id)
-    if (index == -1) {
-        console.warn('Attempting to remove non-existent edge', edge)
-        return
-    }
-
-    graph.edges.splice(index, 1)
-}
-
-/**
- * Add an edge to animation graph if it does not already exist.
- * @param graph - Animation graph to add edge to
- * @param edge - Edge to add
- */
-export function addEdge(graph: AnimationGraph, edge: Edge) {
-    for (const other of graph.edges) {
-        if (
-            other.from == edge.from &&
-            other.to == edge.to &&
-            other.constructor.name == edge.constructor.name
-        ) {
-            return
-        }
-    }
-
-    graph.edges.push(edge)
-}
-
-/**
  * Begin an animation, or animation node. If animation node, invoke it's onBegin callback.
  * @param animation - Animation to start
  * @param view - View to apply the animation on
- * @param options - Mostly used for setting flags to bake animation
  */
 export function begin(
     animation: AnimationGraph | AnimationNode,
-    view: PrototypicalEnvironmentState,
-    options: AnimationRuntimeOptions = {}
+    environment: PrototypicalEnvironmentState
 ) {
-    if (options.baking) {
-        animation.precondition = clone(view)
-    }
-
     if (instanceOfAnimationNode(animation)) {
-        animation.onBegin(animation, view, options)
+        animation.onBegin(animation, environment)
     }
-
-    if (!options.baking) {
-        GlobalAnimationCallbacks.instance.begin(animation)
-    }
-
-    // if (animation.isChunk) {
-    //     view.cursor.location = animation.nodeData.location
-    //     view.cursor.label = animation.nodeData.type
-    // }
 }
 
 /**
@@ -123,29 +160,18 @@ export function begin(
  */
 export function end(
     animation: AnimationGraph | AnimationNode,
-    view: PrototypicalEnvironmentState,
-    options: AnimationRuntimeOptions = {}
+    environment: PrototypicalEnvironmentState
 ) {
-    if (!options.baking) {
-        GlobalAnimationCallbacks.instance.end(animation)
-    }
-
     if (instanceOfAnimationNode(animation)) {
-        animation.onEnd(animation, view, options)
-        // animation.isPlaying = false
+        animation.onEnd(animation, environment)
     } else {
         for (const vertex of animation.vertices) {
             if (vertex.isPlaying) {
-                console.log('Ending vertex...', clone(vertex.nodeData))
-                end(vertex, view, options)
+                end(vertex, environment)
                 vertex.isPlaying = false
                 vertex.hasPlayed = true
             }
         }
-    }
-
-    if (options.baking) {
-        animation.postcondition = clone(view)
     }
 }
 
@@ -158,16 +184,11 @@ export function end(
  */
 export function seek(
     animation: AnimationGraph | AnimationNode,
-    view: PrototypicalEnvironmentState,
-    time: number,
-    options: AnimationRuntimeOptions = {}
+    environment: PrototypicalEnvironmentState,
+    time: number
 ) {
-    if (!options.baking) {
-        GlobalAnimationCallbacks.instance.seek(animation, time)
-    }
-
     if (instanceOfAnimationNode(animation)) {
-        animation.onSeek(animation, view, time, options)
+        animation.onSeek(animation, environment, time)
         return
     }
 
@@ -212,8 +233,8 @@ export function seek(
         // End animation
         if (vertex.isPlaying && !shouldBePlaying) {
             // Before ending, seek into the animation at it's end time
-            seek(vertex, view, duration(vertex), options)
-            end(vertex, view, options)
+            seek(vertex, environment, duration(vertex))
+            end(vertex, environment)
 
             if (instanceOfAnimationNode(vertex)) {
                 console.log(`[${~~time}ms] ${vertex.name}`)
@@ -227,37 +248,33 @@ export function seek(
 
         // Begin animation
         if (!vertex.isPlaying && shouldBePlaying) {
-            begin(vertex, view, options)
+            begin(vertex, environment)
             vertex.isPlaying = true
             begunThisFrame = true
         }
 
         // Skip over this animation
-        if (
-            time >= start + duration(vertex) &&
-            !vertex.isPlaying &&
-            !vertex.hasPlayed
-        ) {
-            begin(vertex, view, options)
+        if (time >= start + duration(vertex) && !vertex.isPlaying && !vertex.hasPlayed) {
+            begin(vertex, environment)
             vertex.isPlaying = true
             vertex.hasPlayed = false
 
-            seek(vertex, view, duration(vertex), options)
+            seek(vertex, environment, duration(vertex))
 
-            end(vertex, view, options)
+            end(vertex, environment)
             vertex.isPlaying = false
             vertex.hasPlayed = true
         }
 
         // Seek into animation
         if (vertex.isPlaying && shouldBePlaying && !begunThisFrame) {
-            seek(vertex, view, time - start, options)
+            seek(vertex, environment, time - start)
         }
 
         // Apply invariant if any
         if (!vertex.hasPlayed && 'applyInvariant' in vertex) {
             const transition = vertex as TransitionAnimationNode
-            transition.applyInvariant(transition, view)
+            transition.applyInvariant(transition, environment)
         }
 
         start += duration(vertex)
@@ -268,94 +285,21 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     animation.isPlaying = false
     animation.hasPlayed = false
 
-    if (instanceOfAnimationGraph(animation)) {
+    if (!instanceOfAnimationNode(animation)) {
         animation.vertices.forEach((vertex) => reset(vertex))
     }
 }
 
-export function bake(
-    animation: AnimationGraph | AnimationNode,
-    view: PrototypicalEnvironmentState = null
-) {
-    if (view == null) {
-        view = createPrototypicalEnvironment()
-    }
-
-    begin(animation, view, { baking: true })
-    animation.isPlaying = true
-
-    seek(animation, view, duration(animation), {
-        baking: true,
-        indent: 0,
-        globalTime: 0,
-    })
-
-    end(animation, view, { baking: true })
-    animation.isPlaying = false
-    animation.hasPlayed = true
-
-    reset(animation)
-}
-
 export function apply(
     animation: AnimationGraph | AnimationNode,
-    view: PrototypicalEnvironmentState
+    environment: PrototypicalEnvironmentState
 ) {
-    begin(animation, view)
+    begin(animation, environment)
     animation.isPlaying = true
 
-    seek(animation, view, duration(animation))
+    seek(animation, environment, duration(animation))
 
-    end(animation, view)
+    end(animation, environment)
     animation.isPlaying = false
     animation.hasPlayed = true
-}
-
-/**
- *
- * TODO: Specify abstraction level
- * @param animation
- * @returns
- */
-export function reads(
-    animation: AnimationGraph | AnimationNode
-): AnimationData[] {
-    if (instanceOfAnimationNode(animation)) {
-        if (animation._reads == null) {
-            console.error('Animation reads not set for', animation)
-        }
-        return animation._reads
-    }
-
-    let result = []
-    const { vertices } = animation
-
-    for (const vertex of vertices) {
-        result.push(...reads(vertex))
-    }
-
-    return result
-}
-
-/**
- *
- * TODO: Specify abstraction level
- * @param animation
- * @returns
- */
-export function writes(
-    animation: AnimationGraph | AnimationNode
-): AnimationData[] {
-    if (instanceOfAnimationNode(animation)) {
-        return animation._writes
-    }
-
-    let result = []
-    const { vertices } = animation
-
-    for (const vertex of vertices) {
-        result.push(...writes(vertex))
-    }
-
-    return result
 }

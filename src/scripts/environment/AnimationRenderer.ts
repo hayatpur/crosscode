@@ -1,4 +1,4 @@
-import { reads, writes } from '../animation/animation'
+import { reads, writes } from '../execution/execution'
 import {
     beginConcretePath,
     ConcretePath,
@@ -7,7 +7,6 @@ import {
     seekConcretePath,
 } from '../path/path'
 import { getPathFromEnvironmentRepresentation } from '../representation/representation'
-import { clone } from '../utilities/objects'
 import { View } from '../view/View'
 import { EnvironmentRenderer } from './EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from './EnvironmentState'
@@ -36,8 +35,8 @@ export class AnimationRenderer {
     environment: PrototypicalEnvironmentState = null
     element: HTMLDivElement = null
 
-    preRendererElement: HTMLDivElement = null
-    postRendererElement: HTMLDivElement = null
+    // preRendererElement: HTMLDivElement = null
+    // postRendererElement: HTMLDivElement = null
 
     showingPostRenderer: boolean = true
     showingPreRenderer: boolean = false
@@ -48,27 +47,25 @@ export class AnimationRenderer {
         this.element = document.createElement('div')
         this.element.classList.add('animation-renderer')
 
-        this.preRendererElement = document.createElement('div')
-        this.preRendererElement.classList.add('animation-renderers-pre')
-        this.element.appendChild(this.preRendererElement)
+        // this.preRendererElement = document.createElement('div')
+        // this.preRendererElement.classList.add('animation-renderers-pre')
+        // this.element.appendChild(this.preRendererElement)
 
-        this.postRendererElement = document.createElement('div')
-        this.postRendererElement.classList.add('animation-renderers-post')
-        this.element.appendChild(this.postRendererElement)
+        // this.postRendererElement = document.createElement('div')
+        // this.postRendererElement.classList.add('animation-renderers-post')
+        // this.element.appendChild(this.postRendererElement)
 
         this.environmentRenderer = new EnvironmentRenderer()
         this.element.appendChild(this.environmentRenderer.element)
 
-        this.postEnvironmentRenderer = new EnvironmentRenderer()
-        this.postRendererElement.appendChild(
-            this.postEnvironmentRenderer.element
-        )
+        // this.postEnvironmentRenderer = new EnvironmentRenderer()
+        // this.element.appendChild(this.postEnvironmentRenderer.element)
 
-        this.preEnvironmentRenderer = new EnvironmentRenderer()
-        this.preRendererElement.appendChild(this.preEnvironmentRenderer.element)
+        // this.preEnvironmentRenderer = new EnvironmentRenderer()
+        // this.element.appendChild(this.preEnvironmentRenderer.element)
 
         this.view = view
-        this.environment = clone(this.view.transitionAnimation.precondition)
+        this.environment = this.view.originalAnimation.postcondition
 
         // Create representations
         this.updateRepresentation()
@@ -94,7 +91,7 @@ export class AnimationRenderer {
 
     destroy() {
         this.environmentRenderer.destroy()
-        this.postEnvironmentRenderer.destroy()
+        // this.postEnvironmentRenderer.destroy()
         this.element.remove()
     }
 
@@ -106,30 +103,27 @@ export class AnimationRenderer {
 
         // Update the environment
         this.environmentRenderer.setState(this.environment, this.representation)
-        this.propagateEnvironmentPaths(
-            this.environment,
-            this.environmentRenderer
-        )
+        this.propagateEnvironmentPaths(this.environment, this.environmentRenderer)
         this.environmentRenderer.setState(this.environment, this.representation)
 
         // Update the post environment
-        if (this.showingPostRenderer) {
-            this.postEnvironmentRenderer.setState(
-                this.view.transitionAnimation.postcondition,
-                this.representation
-            )
+        // if (this.showingPostRenderer) {
+        //     this.postEnvironmentRenderer.setState(
+        //         this.view.originalAnimation.postcondition,
+        //         this.representation
+        //     )
 
-            const bbox = this.postRendererElement.getBoundingClientRect()
-            this.element.style.minWidth = `${bbox.width}px`
-            this.element.style.minHeight = `${bbox.height - 10}px`
-        }
+        //     const bbox = this.postRendererElement.getBoundingClientRect()
+        //     this.element.style.minWidth = `${bbox.width}px`
+        //     this.element.style.minHeight = `${bbox.height - 10}px`
+        // }
 
-        if (this.showingPreRenderer) {
-            this.preEnvironmentRenderer.setState(
-                this.view.transitionAnimation.precondition,
-                this.representation
-            )
-        }
+        // if (this.showingPreRenderer) {
+        //     this.preEnvironmentRenderer.setState(
+        //         this.view.originalAnimation.precondition,
+        //         this.representation
+        //     )
+        // }
     }
 
     propagateEnvironmentPaths(
@@ -156,7 +150,6 @@ export class AnimationRenderer {
         // Remove paths that are no longer in the view
         for (const id of Object.keys(this.paths)) {
             if (!hits.has(id)) {
-                console.log(this.paths[id])
                 endConcretePath(this.paths[id], environment, renderer)
                 delete this.paths[id]
             }
@@ -164,14 +157,14 @@ export class AnimationRenderer {
     }
 
     showTrace() {
-        this.preRendererElement.classList.add('visible')
+        // this.preRendererElement.classList.add('visible')
         this.showingPreRenderer = true
 
         this.update()
     }
 
     hideTrace() {
-        this.preRendererElement.classList.remove('visible')
+        // this.preRendererElement.classList.remove('visible')
         this.showingPreRenderer = false
 
         this.update()
@@ -192,8 +185,6 @@ export class AnimationRenderer {
         path.onBegin = representation.onBegin
         path.onEnd = representation.onEnd
         path.onSeek = representation.onSeek
-
-        console.log(clone(path.meta), clone(path.prototype.meta))
 
         // Sync the timings of prototype path and concrete path
         if (!path.meta.isPlaying && path.prototype.meta.isPlaying) {

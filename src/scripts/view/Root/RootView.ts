@@ -1,12 +1,10 @@
-import { AnimationGraph } from '../../animation/graph/AnimationGraph'
-import { AnimationNode } from '../../animation/primitive/AnimationNode'
+import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { getNumericalValueOfStyle } from '../../utilities/math'
 import { createView, CreateViewOptions } from '../../utilities/view'
 import { Cursor } from '../Cursor/Cursor'
-import {
-    CodeQueryGroup,
-    CodeQueryGroupState,
-} from '../Query/CodeQuery/CodeQueryGroup'
+import { CodeQuery } from '../Query/CodeQuery/CodeQuery'
+import { CodeQueryGroup, CodeQueryGroupState } from '../Query/CodeQuery/CodeQueryGroup'
 import { View } from '../View'
 import { PanningArea } from './PanningArea'
 import { RootViewSeparator } from './RootViewSeparator'
@@ -22,6 +20,7 @@ export class RootView {
     // Queries
     codeQueryContainer: HTMLElement
     codeQueryGroups: CodeQueryGroup[] = []
+    codeQueries: CodeQuery[] = []
     // rootTimeline: Timeline
 
     // Parent animation
@@ -53,17 +52,17 @@ export class RootView {
         this.separator.tick(dt)
 
         // Render code queries
-        for (const query of this.codeQueryGroups) {
+        for (const group of this.codeQueryGroups) {
+            group.tick(dt)
+        }
+
+        for (const query of this.codeQueries) {
             query.tick(dt)
         }
 
-        const separatorPosition = getNumericalValueOfStyle(
-            this.separator.element.style.left,
-            0
-        )
+        const separatorPosition = getNumericalValueOfStyle(this.separator.element.style.left, 0)
         this.codeQueryContainer.style.left = `${
-            separatorPosition -
-            this.codeQueryContainer.getBoundingClientRect().width / 2
+            separatorPosition - this.codeQueryContainer.getBoundingClientRect().width / 2
         }px`
 
         this.panningArea.element.style.left = `${separatorPosition}px`
@@ -72,10 +71,7 @@ export class RootView {
         // this.rootTimeline.tick(dt)
     }
 
-    createView(
-        animation: AnimationNode | AnimationGraph,
-        options: CreateViewOptions
-    ) {
+    createView(animation: ExecutionNode | ExecutionGraph, options: CreateViewOptions) {
         const view = createView(animation, options)
         this.views.push(view)
 
@@ -94,6 +90,12 @@ export class RootView {
         const queryGroup = new CodeQueryGroup(state)
         this.codeQueryGroups.push(queryGroup)
         return queryGroup
+    }
+
+    createCodeQuery(selectedView: View) {
+        const query = new CodeQuery(selectedView)
+        this.codeQueries.push(query)
+        return query
     }
 
     addView(view: View) {

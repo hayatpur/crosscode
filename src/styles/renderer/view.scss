@@ -22,9 +22,10 @@
     width: fit-content;
     border-radius: 7px;
     box-shadow: inset 0 0 0px 1px #5c5c5c63;
-    background: #141418;
+    // background: #141418;
     // backdrop-filter: blur(5px);
     transition: 0.2s;
+    backdrop-filter: brightness(1.1);
 }
 
 .view.selected > .view-body {

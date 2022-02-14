@@ -1,21 +1,24 @@
 import * as ESTree from 'estree'
-import { apply } from '../../../../animation/animation'
-import { createAnimationGraph } from '../../../../animation/graph/AnimationGraph'
-import { addVertex } from '../../../../animation/graph/graph'
-import { AnimationContext } from '../../../../animation/primitive/AnimationNode'
-import { binaryExpressionEvaluate } from '../../../../animation/primitive/Binary/BinaryExpressionEvaluate'
+import { cleanUpRegister } from '../../../../environment/environment'
 import {
     AccessorType,
     PrototypicalEnvironmentState,
 } from '../../../../environment/EnvironmentState'
+import { applyExecutionNode } from '../../../../execution/execution'
+import { createExecutionGraph } from '../../../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../../../execution/graph/graph'
+import { binaryExpressionEvaluate } from '../../../../execution/primitive/Binary/BinaryExpressionEvaluate'
+import { ExecutionContext } from '../../../../execution/primitive/ExecutionNode'
+import { clone } from '../../../../utilities/objects'
 import { Compiler, getNodeData } from '../../../Compiler'
 
 export function BinaryExpression(
     ast: ESTree.BinaryExpression,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph = createAnimationGraph(getNodeData(ast))
+    const graph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
     const leftRegister = [
         {
@@ -30,13 +33,13 @@ export function BinaryExpression(
         },
     ]
 
-    const left = Compiler.compile(ast.left, view, {
+    const left = Compiler.compile(ast.left, environment, {
         ...context,
         outputRegister: leftRegister,
     })
     addVertex(graph, left, { nodeData: getNodeData(ast.left) })
 
-    const right = Compiler.compile(ast.right, view, {
+    const right = Compiler.compile(ast.right, environment, {
         ...context,
         outputRegister: rightRegister,
     })
@@ -49,7 +52,10 @@ export function BinaryExpression(
         context.outputRegister
     )
     addVertex(graph, evaluate, { nodeData: getNodeData(ast) })
-    apply(evaluate, view)
+    applyExecutionNode(evaluate, environment)
+
+    cleanUpRegister(environment, leftRegister[0].value)
+    cleanUpRegister(environment, rightRegister[0].value)
 
     return graph
 }

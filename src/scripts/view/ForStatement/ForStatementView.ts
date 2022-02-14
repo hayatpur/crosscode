@@ -1,4 +1,4 @@
-import { instanceOfAnimationGraph } from '../../animation/graph/AnimationGraph'
+import { instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { View } from '../View'
 import { ViewController } from '../ViewController'
 import { ViewRenderer } from '../ViewRenderer'
@@ -9,7 +9,7 @@ export class ForStatementViewRenderer extends ViewRenderer {}
 
 export class ForStatementViewController extends ViewController {
     queryChildren() {
-        if (instanceOfAnimationGraph(this.view.originalAnimation)) {
+        if (instanceOfExecutionGraph(this.view.originalAnimation)) {
             return this.view.originalAnimation.vertices.slice(1, -2)
         } else {
             return []

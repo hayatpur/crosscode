@@ -1,27 +1,23 @@
 import * as ESTree from 'estree'
-import { apply } from '../../animation/animation'
-import {
-    AnimationGraph,
-    createAnimationGraph,
-} from '../../animation/graph/AnimationGraph'
-import { addVertex } from '../../animation/graph/graph'
-import {
-    AnimationContext,
-    ControlOutput,
-} from '../../animation/primitive/AnimationNode'
-import { returnStatementAnimation } from '../../animation/primitive/Functions/ReturnStatementAnimation'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { applyExecutionNode } from '../../execution/execution'
+import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../execution/graph/graph'
+import { ControlOutput, ExecutionContext } from '../../execution/primitive/ExecutionNode'
+import { returnStatementAnimation } from '../../execution/primitive/Functions/ReturnStatementAnimation'
+import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 
 export function ReturnStatement(
     ast: ESTree.ReturnStatement,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+    const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
     // Evaluate the result of argument into register
-    const argument = Compiler.compile(ast.argument, view, {
+    const argument = Compiler.compile(ast.argument, environment, {
         ...context,
         outputRegister: context.returnData.register,
     })
@@ -31,14 +27,15 @@ export function ReturnStatement(
     // when popping scopes
     const ret = returnStatementAnimation(context.returnData)
     addVertex(graph, ret, { nodeData: getNodeData(ast) })
-    apply(ret, view)
+    applyExecutionNode(ret, environment)
 
     // TODO: Does this need a move and place?
     // const place = moveAndPlaceAnimation(register, context.returnData.register);
     // addVertex(graph, place, getNodeData(ast));
-    // apply(place, view);
+    //applyExecution(place, view);
 
     context.controlOutput.output = ControlOutput.Return
 
+    graph.postcondition = clone(environment)
     return graph
 }

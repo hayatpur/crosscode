@@ -6,15 +6,20 @@
     flex-direction: column;
 }
 
+.timeline.selected > .timeline-anchor-container {
+    box-shadow: inset 0 0 0px 1px var(--s-color-4);
+}
+
 .timeline-anchor-container {
     position: relative;
     display: flex;
     flex-direction: column;
 
     border: 1px solid #5c5c5c2d;
-    padding: 0px 25px;
+    padding: 25px;
     border-radius: 5px;
     // backdrop-filter: blur(5px);
+    background: #ffffff02;
 }
 
 .timeline-anchor-container.source-code > .timeline-anchor {

@@ -1,25 +1,25 @@
 import * as ESTree from 'estree'
-import {
-    AnimationGraph,
-    createAnimationGraph,
-} from '../../animation/graph/AnimationGraph'
-import { addVertex } from '../../animation/graph/graph'
-import { AnimationContext } from '../../animation/primitive/AnimationNode'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../execution/graph/graph'
+import { ExecutionContext } from '../../execution/primitive/ExecutionNode'
+import { clone } from '../../utilities/objects'
 import { getNodeData } from '../Compiler'
 import { VariableDeclarator } from './VariableDeclarator'
 
 export function VariableDeclaration(
     ast: ESTree.VariableDeclaration,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph: AnimationGraph = createAnimationGraph(getNodeData(ast))
+    const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
     for (const declaration of ast.declarations) {
-        const animation = VariableDeclarator(declaration, view, context)
+        const animation = VariableDeclarator(declaration, environment, context)
         addVertex(graph, animation, { nodeData: getNodeData(declaration) })
     }
 
+    graph.postcondition = clone(environment)
     return graph
 }

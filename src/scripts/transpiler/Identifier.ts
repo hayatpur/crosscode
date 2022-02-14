@@ -1,37 +1,33 @@
 import * as ESTree from 'estree'
-import { apply } from '../animation/animation'
-import { createAnimationGraph } from '../animation/graph/AnimationGraph'
-import { addVertex } from '../animation/graph/graph'
-import { AnimationContext } from '../animation/primitive/AnimationNode'
-import { copyDataAnimation } from '../animation/primitive/Data/CopyDataAnimation'
-import { copyReferenceAnimation } from '../animation/primitive/Data/CopyReferenceAnimation'
-import { findVariableAnimation } from '../animation/primitive/Data/FindVariableAnimation'
 import { DataType, PrototypicalDataState } from '../environment/data/DataState'
 import { resolvePath } from '../environment/environment'
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../environment/EnvironmentState'
+import { AccessorType, PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { applyExecutionNode } from '../execution/execution'
+import { createExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { addVertex } from '../execution/graph/graph'
+import { copyDataAnimation } from '../execution/primitive/Data/CopyDataAnimation'
+import { copyReferenceAnimation } from '../execution/primitive/Data/CopyReferenceAnimation'
+import { findVariableAnimation } from '../execution/primitive/Data/FindVariableAnimation'
+import { ExecutionContext } from '../execution/primitive/ExecutionNode'
+import { clone } from '../utilities/objects'
 import { getNodeData } from './Compiler'
 
 export function Identifier(
     ast: ESTree.Identifier,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph = createAnimationGraph(getNodeData(ast))
+    const graph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
     if (context.feed) {
         // Feeding
-        const reference = findVariableAnimation(
-            ast.name,
-            context.outputRegister
-        )
+        const reference = findVariableAnimation(ast.name, context.outputRegister)
         addVertex(graph, reference, { nodeData: getNodeData(ast) })
-        apply(reference, view)
+        applyExecutionNode(reference, environment)
     } else {
         const data = resolvePath(
-            view,
+            environment,
             [{ type: AccessorType.Symbol, value: ast.name }],
             null
         ) as PrototypicalDataState
@@ -43,7 +39,7 @@ export function Identifier(
                 context.outputRegister
             )
             addVertex(graph, copyReference, { nodeData: getNodeData(ast) })
-            apply(copyReference, view)
+            applyExecutionNode(copyReference, environment)
         } else if (data.type == DataType.Literal) {
             // Create a copy of it
             const copy = copyDataAnimation(
@@ -51,9 +47,10 @@ export function Identifier(
                 context.outputRegister
             )
             addVertex(graph, copy, { nodeData: getNodeData(ast) })
-            apply(copy, view)
+            applyExecutionNode(copy, environment)
         }
     }
 
+    graph.postcondition = clone(environment)
     return graph
 }

@@ -1,11 +1,7 @@
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { clone } from '../utilities/objects'
 import { createData, createTransform } from './data/data'
-import {
-    DataType,
-    instanceOfPrototypicalData,
-    PrototypicalDataState,
-} from './data/DataState'
+import { DataType, instanceOfPrototypicalData, PrototypicalDataState } from './data/DataState'
 import {
     Accessor,
     AccessorType,
@@ -22,18 +18,14 @@ export function createPrototypicalEnvironment(): PrototypicalEnvironmentState {
     return {
         _type: 'PrototypicalEnvironmentState',
         scope: [{ bindings: {}, type: ScopeType.Default }],
-        memory: [],
+        memory: {},
         registers: {},
-        _temps: {},
         paths: {},
         id: `Env(${++CUR_ENV_ID})`,
     }
 }
 
-export function createIdentifier(
-    name: string,
-    location: Accessor[]
-): PrototypicalIdentifierState {
+export function createIdentifier(name: string, location: Accessor[]): PrototypicalIdentifierState {
     return { name, location }
 }
 
@@ -62,17 +54,16 @@ export function createScope(
  * @param environment
  * @returns the latest scope
  */
-export function popScope(
-    environment: PrototypicalEnvironmentState
-): PrototypicalScope {
+export function popScope(environment: PrototypicalEnvironmentState): PrototypicalScope {
     const frame = environment.scope.length
-    for (let i = environment.memory.length - 1; i >= 0; i--) {
-        if (environment.memory[i] == null) continue
+
+    for (const k of Object.keys(environment.memory)) {
         // TODO: Nested structures
-        if (environment.memory[i].frame == frame) {
-            environment.memory[i] = null
+        if (environment.memory[k].frame == frame) {
+            delete environment.memory[k]
         }
     }
+
     return environment.scope.pop()
 }
 
@@ -89,8 +80,10 @@ export function declareVariable(
     location: Accessor[],
     shouldBeGlobal = false
 ) {
-    environment.scope[environment.scope.length - 1].bindings[name] =
-        createIdentifier(name, location)
+    environment.scope[environment.scope.length - 1].bindings[name] = createIdentifier(
+        name,
+        location
+    )
     // updateLayout(environment);
 }
 
@@ -131,7 +124,6 @@ export function cloneEnvironment(
         scope: clone(environment.scope),
         memory: clone(environment.memory),
         registers: clone(environment.registers),
-        _temps: clone(environment._temps),
         paths: clone(environment.paths),
         id: assignNewId ? `Env(${++CUR_ENV_ID})` : environment.id,
     }
@@ -149,7 +141,6 @@ export function replaceEnvironmentWith(
     const clone = cloneEnvironment(newEnv)
     current.scope = clone.scope
     current.memory = clone.memory
-    current._temps = clone._temps
     current.registers = clone.registers
 }
 
@@ -169,9 +160,9 @@ export function removeAt(
     const index = location[location.length - 1]
 
     if (instanceOfPrototypicalData(parent)) {
-        parent.value[index.value] = null
+        delete parent.value[index.value]
     } else if (instanceOfPrototypicalEnvironment(parent)) {
-        parent.memory[index.value] = null
+        delete parent.memory[index.value]
     } else {
         console.error('Unknown parent type', parent)
     }
@@ -194,7 +185,7 @@ export function logEnvironment(environment: PrototypicalEnvironmentState) {
 export function flattenedEnvironmentMemory(
     environment: PrototypicalEnvironmentState
 ): PrototypicalDataState[] {
-    const search = [...environment.memory]
+    const search = [...Object.values(environment.memory)]
     const flattened: PrototypicalDataState[] = []
 
     while (search.length > 0) {
@@ -202,8 +193,9 @@ export function flattenedEnvironmentMemory(
         if (data == null) continue
         flattened.push(data)
 
-        if (data.type == DataType.Array)
+        if (data.type == DataType.Array) {
             search.push(...(data.value as PrototypicalDataState[]))
+        }
     }
 
     return flattened
@@ -225,11 +217,7 @@ export function resolve(
     if (accessor.type == AccessorType.Register) {
         // Registers are always located in the root
         if (root.registers[accessor.value] == null) {
-            root.registers[accessor.value] = createData(
-                DataType.Register,
-                null,
-                srcId
-            )
+            root.registers[accessor.value] = createData(DataType.Register, null, srcId)
         }
 
         const registerData = root.registers[accessor.value]
@@ -259,7 +247,7 @@ export function resolve(
         const search = [
             ...(instanceOfPrototypicalData(parent)
                 ? (parent.value as PrototypicalDataState[])
-                : parent.memory),
+                : Object.values(parent.memory)),
         ]
 
         while (search.length > 0) {
@@ -285,17 +273,10 @@ export function resolve(
         const accessors = lookupVariable(root, accessor.value as string)
         return resolvePath(root, accessors, srcId, null, options)
     } else if (accessor.type == AccessorType.Index) {
-        if (
-            instanceOfPrototypicalData(parent) &&
-            parent.type == DataType.Array
-        ) {
+        if (instanceOfPrototypicalData(parent) && parent.type == DataType.Array) {
             const value = parent.value as PrototypicalDataState[]
-            if (accessor.value >= value.length) {
-                value[accessor.value] = createData(
-                    DataType.Literal,
-                    null,
-                    srcId
-                )
+            if (parseInt(accessor.value) >= value.length) {
+                value[accessor.value] = createData(DataType.Literal, null, srcId)
                 value[accessor.value].frame = parent.frame
             }
         }
@@ -325,13 +306,7 @@ export function resolve(
             if (options.noResolvingReference) {
                 return data
             } else {
-                return resolvePath(
-                    root,
-                    data.value as Accessor[],
-                    srcId,
-                    null,
-                    options
-                )
+                return resolvePath(root, data.value as Accessor[], srcId, null, options)
             }
         }
 
@@ -370,9 +345,7 @@ export function addDataAt(
 
     if (instanceOfPrototypicalData(origin)) {
         if (origin.type != DataType.Array)
-            console.error(
-                '[Data] Invalid addAt, trying to add to a non-addable type'
-            )
+            console.error('[Data] Invalid addAt, trying to add to a non-addable type')
 
         // No path specified, push it into memory
         if (path.length == 0) {
@@ -397,11 +370,8 @@ export function addDataAt(
 
         // No path specified, push it into memory
         if (path.length == 0) {
-            origin.memory.push(data)
-            // updateLayout(origin);
-            return [
-                { value: origin.memory.length - 1, type: AccessorType.Index },
-            ]
+            origin.memory[data.id] = data
+            return [{ value: data.id, type: AccessorType.Index }]
         }
 
         const parentPath = path.slice(0, -1)
@@ -424,30 +394,30 @@ export function getMemoryLocation(
     location: Accessor[] = [],
     parent: PrototypicalDataState | PrototypicalEnvironmentState | null = null
 ): { found: boolean; foundLocation: Accessor[] } {
-    let search: PrototypicalDataState[] = []
-
-    if (
+    let search: { [id: string]: PrototypicalDataState } | { [id: number]: PrototypicalDataState } =
+        {}
+    let isArray =
         parent != null &&
         instanceOfPrototypicalData(parent) &&
         parent.type == DataType.Array &&
         parent.frame >= 0
-    ) {
-        search = parent.value as PrototypicalDataState[]
+
+    if (isArray) {
+        // Array
+        search = (parent as PrototypicalDataState).value as PrototypicalDataState[]
     } else if (parent == null) {
+        // Whole memory
         search = root.memory
     }
 
-    for (let i = 0; i < search.length; i++) {
-        if (search[i] == null) continue
-
+    for (const k of Object.keys(search)) {
         // Check if this item is the data
-        if (search[i].id == data.id) {
+        if (search[k].id == data.id) {
+            const acc = { type: AccessorType.Index, value: k }
+
             return {
                 found: true,
-                foundLocation: [
-                    ...location,
-                    { type: AccessorType.Index, value: i },
-                ],
+                foundLocation: [...location, acc],
             }
         }
 
@@ -455,8 +425,8 @@ export function getMemoryLocation(
         const { found, foundLocation } = getMemoryLocation(
             root,
             data,
-            [...location, { type: AccessorType.Index, value: i }],
-            search[i]
+            [...location, { type: AccessorType.Index, value: k }],
+            search[k]
         )
 
         if (found) {
@@ -468,10 +438,7 @@ export function getMemoryLocation(
 }
 
 // Converts register IDs to memory counter-parts
-export function getTrueId(
-    environment: PrototypicalEnvironmentState,
-    id: string
-) {
+export function getTrueId(environment: PrototypicalEnvironmentState, id: string) {
     const register = environment.registers[id]
     if (register == null) return id
 
@@ -480,7 +447,11 @@ export function getTrueId(
     }
 }
 
-// export function getEmptyPosition(view: PrototypicalEnvironmentState, id: string) {
+export function cleanUpRegister(environment: PrototypicalEnvironmentState, registerName: string) {
+    delete environment.registers[registerName]
+}
+
+// export function getEmptyPosition(environment: PrototypicalEnvironmentState, id: string) {
 //     // Then it doesn't have a place yet
 //     // Find an empty space and put it there
 //     const placeholder = createData(DataType.Literal, '', `${id}_Placeholder`)

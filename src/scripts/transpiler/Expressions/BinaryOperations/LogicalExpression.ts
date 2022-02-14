@@ -1,23 +1,22 @@
 import * as ESTree from 'estree'
-import { apply } from '../../../animation/animation'
-import { createAnimationGraph } from '../../../animation/graph/AnimationGraph'
-import { addVertex } from '../../../animation/graph/graph'
-import { AnimationContext } from '../../../animation/primitive/AnimationNode'
-import { logicalExpressionEvaluate } from '../../../animation/primitive/Binary/LogicalExpressionEvaluate'
 import { PrototypicalDataState } from '../../../environment/data/DataState'
-import { resolvePath } from '../../../environment/environment'
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../environment/EnvironmentState'
+import { cleanUpRegister, resolvePath } from '../../../environment/environment'
+import { AccessorType, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { applyExecutionNode } from '../../../execution/execution'
+import { createExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../../execution/graph/graph'
+import { logicalExpressionEvaluate } from '../../../execution/primitive/Binary/LogicalExpressionEvaluate'
+import { ExecutionContext } from '../../../execution/primitive/ExecutionNode'
+import { clone } from '../../../utilities/objects'
 import { Compiler, getNodeData } from '../../Compiler'
 
 export function LogicalExpression(
     ast: ESTree.LogicalExpression,
-    view: PrototypicalEnvironmentState,
-    context: AnimationContext
+    environment: PrototypicalEnvironmentState,
+    context: ExecutionContext
 ) {
-    const graph = createAnimationGraph(getNodeData(ast))
+    const graph = createExecutionGraph(getNodeData(ast))
+    graph.precondition = clone(environment)
 
     const leftRegister = [
         {
@@ -26,18 +25,13 @@ export function LogicalExpression(
         },
     ]
 
-    const left = Compiler.compile(ast.left, view, {
+    const left = Compiler.compile(ast.left, environment, {
         ...context,
         outputRegister: leftRegister,
     })
     addVertex(graph, left, { nodeData: getNodeData(ast) })
 
-    const environment = view
-    const leftValue = resolvePath(
-        environment,
-        leftRegister,
-        null
-    ) as PrototypicalDataState
+    const leftValue = resolvePath(environment, leftRegister, null) as PrototypicalDataState
 
     let shortCircuit = false
 
@@ -56,7 +50,7 @@ export function LogicalExpression(
     ]
 
     if (!shortCircuit) {
-        const right = Compiler.compile(ast.right, view, {
+        const right = Compiler.compile(ast.right, environment, {
             ...context,
             outputRegister: rightRegister,
         })
@@ -72,7 +66,11 @@ export function LogicalExpression(
     )
 
     addVertex(graph, evaluate, { nodeData: getNodeData(ast) })
-    apply(evaluate, view)
+    applyExecutionNode(evaluate, environment)
 
+    cleanUpRegister(environment, leftRegister[0].value)
+    cleanUpRegister(environment, rightRegister[0].value)
+
+    graph.postcondition = clone(environment)
     return graph
 }

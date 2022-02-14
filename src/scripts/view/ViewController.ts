@@ -1,12 +1,10 @@
-import { begin, end, reset, seek, writes } from '../animation/animation'
-import { instanceOfAnimationGraph } from '../animation/graph/AnimationGraph'
-import { instanceOfAnimationNode } from '../animation/primitive/AnimationNode'
 import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
-import { createPrototypicalEnvironment } from '../environment/environment'
+import { writes } from '../execution/execution'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
-import { clone } from '../utilities/objects'
-import { CodeQueryGroup } from './Query/CodeQuery/CodeQueryGroup'
+import { CodeQuery } from './Query/CodeQuery/CodeQuery'
 import { Timeline } from './Timeline/Timeline'
 import { View } from './View'
 
@@ -17,7 +15,7 @@ export class ViewController {
     previousMouse: { x: number; y: number }
     startMouse: { x: number; y: number }
 
-    temporaryCodeQuery: CodeQueryGroup
+    temporaryCodeQuery: CodeQuery
 
     constructor(view: View) {
         this.view = view
@@ -83,40 +81,24 @@ export class ViewController {
     }
 
     select() {
-        const selection = new Set(
-            writes(this.view.originalAnimation).map((w) => w.id)
-        )
+        const selection = new Set(writes(this.view.originalAnimation).map((w) => w.id))
         this.view.renderer.animationRenderer?.select(selection)
         this.view.renderer.trace.select(selection)
         this.view.renderer.element.classList.add('selected')
+        this.view.stepsTimeline?.select()
     }
 
     deselect() {
-        const deselection = new Set(
-            writes(this.view.originalAnimation).map((w) => w.id)
-        )
+        const deselection = new Set(writes(this.view.originalAnimation).map((w) => w.id))
         this.view.renderer.animationRenderer?.deselect(deselection)
         this.view.renderer.trace.deselect(deselection)
         this.view.renderer.element.classList.remove('selected')
-    }
-
-    goToEnd() {
-        this.resetAnimation([])
-        this.beginAnimation([])
-        this.seekAnimation(this.view.getDuration(), [])
-        this.endAnimation([])
-
-        console.log(this.view.state.isCollapsed)
-        this.view.renderer.animationRenderer.update()
-    }
-
-    goToStart() {
-        this.resetAnimation([])
-        // this.beginAnimation([])
-        this.view.renderer.animationRenderer.update()
+        this.view.stepsTimeline?.deselect()
     }
 
     createSteps(expanded: boolean = false) {
+        let start = performance.now()
+
         const { state, renderer } = this.view
         state.isShowingSteps = true
 
@@ -125,35 +107,37 @@ export class ViewController {
         this.view.stepsTimeline = new Timeline(this.view)
         this.view.stepsTimeline.anchorToView(this.view)
 
-        let start = performance.now()
-
-        if (instanceOfAnimationGraph(this.view.originalAnimation)) {
+        if (instanceOfExecutionGraph(this.view.originalAnimation)) {
             const children = this.queryChildren()
 
             for (const child of children) {
+                const start = performance.now()
+                console.log(child)
                 const step = Executor.instance.rootView.createView(child, {
                     expand: expanded,
                 })
                 this.view.stepsTimeline.addView(step)
+                console.log(
+                    `Created step for ${child.nodeData.type} in ${performance.now() - start}ms`
+                )
             }
         }
 
-        this.view.stepsTimeline.resetAnimation([])
-        this.view.stepsTimeline.beginAnimation([])
-        this.view.stepsTimeline.seekAnimation(
-            this.view.stepsTimeline.getDuration(),
-            []
-        )
-        this.view.stepsTimeline.endAnimation([])
+        // this.view.stepsTimeline.resetAnimation([])
+        // this.view.stepsTimeline.beginAnimation([])
+        // this.view.stepsTimeline.seekAnimation(this.view.stepsTimeline.getDuration(), [])
+        // this.view.stepsTimeline.endAnimation([])
 
-        this.resetAnimation([])
+        // this.resetAnimation([])
         this.collapse()
 
         renderer.element.classList.add('showing-steps')
+
+        console.log(`Created steps in ${performance.now() - start}ms`)
     }
 
-    queryChildren() {
-        if (instanceOfAnimationNode(this.view.originalAnimation)) {
+    queryChildren(): (ExecutionGraph | ExecutionNode)[] {
+        if (instanceOfExecutionNode(this.view.originalAnimation)) {
             return []
         }
         const children = []
@@ -165,7 +149,7 @@ export class ViewController {
         ])
 
         for (const child of this.view.originalAnimation.vertices) {
-            if (instanceOfAnimationNode(child) && blacklist.has(child._name)) {
+            if (instanceOfExecutionNode(child) && blacklist.has(child._name)) {
                 continue
             } else if (blacklist.has(child.nodeData.type)) {
                 continue
@@ -186,11 +170,6 @@ export class ViewController {
         this.view.stepsTimeline.destroy()
         this.view.stepsTimeline = null
         this.expand()
-
-        this.resetAnimation([])
-        this.beginAnimation([])
-        this.seekAnimation(this.view.getDuration(), [])
-        this.endAnimation([])
 
         renderer.animationRenderer.update()
 
@@ -242,111 +221,6 @@ export class ViewController {
         //     state.abstractionSelection = abstractionSelection
         //     this.resetAnimation([])
         // }
-    }
-
-    resetAnimation(renderers: AnimationRenderer[]) {
-        const { state, renderer } = this.view
-
-        if (renderer.animationRenderer != null) {
-            renderers = [...renderers, renderer.animationRenderer]
-        }
-
-        state.time = 0
-        state.isPlaying = false
-        state.hasPlayed = false
-
-        if (state.isShowingSteps && false) {
-            this.view.stepsTimeline.resetAnimation(renderers)
-        } else {
-            reset(this.view.transitionAnimation)
-        }
-
-        for (const renderer of renderers) {
-            renderer.environment = createPrototypicalEnvironment()
-            renderer.paths = {}
-            renderer.update()
-        }
-    }
-
-    beginAnimation(renderers: AnimationRenderer[]) {
-        const { state, renderer } = this.view
-
-        if (renderer.animationRenderer != null) {
-            renderers = [...renderers, renderer.animationRenderer]
-        }
-
-        if (state.isShowingSteps && false) {
-            this.view.stepsTimeline.beginAnimation(renderers)
-        } else {
-            for (const renderer of renderers) {
-                const precondition = this.view.transitionAnimation.precondition
-                renderer.environment = clone(precondition)
-
-                begin(this.view.transitionAnimation, renderer.environment)
-            }
-
-            this.view.transitionAnimation.isPlaying = true
-            this.view.transitionAnimation.hasPlayed = false
-        }
-
-        // for (const step of this.view.steps) {
-        //     step.controller.beginAnimation(renderers)
-        // }
-
-        this.view.renderer.animationRenderer?.update()
-
-        renderer.element.classList.add('playing')
-    }
-
-    endAnimation(renderers: AnimationRenderer[], force: boolean = false) {
-        const { state, renderer } = this.view
-
-        if (renderer.animationRenderer != null) {
-            renderers = [...renderers, renderer.animationRenderer]
-        }
-
-        if (state.isShowingSteps && false) {
-            this.view.stepsTimeline.endAnimation(renderers)
-        } else {
-            for (const renderer of renderers) {
-                end(this.view.transitionAnimation, renderer.environment)
-                if (force) {
-                    const postcondition =
-                        this.view.transitionAnimation.postcondition
-                    renderer.environment = clone(postcondition)
-                }
-            }
-
-            this.view.transitionAnimation.isPlaying = false
-            this.view.transitionAnimation.hasPlayed = true
-        }
-
-        if (renderer.animationRenderer != null) {
-            renderer.animationRenderer.showingPostRenderer = true
-        }
-
-        renderer.element.classList.remove('playing')
-    }
-
-    seekAnimation(time: number, renderers: AnimationRenderer[]) {
-        const { state, renderer } = this.view
-
-        if (renderer.animationRenderer != null) {
-            renderers = [...renderers, renderer.animationRenderer]
-        }
-
-        state.time = time
-
-        if (state.isShowingSteps && false) {
-            this.view.stepsTimeline.seekAnimation(time, renderers)
-        } else {
-            for (const renderer of renderers) {
-                // Apply transition
-                seek(this.view.transitionAnimation, renderer.environment, time)
-            }
-        }
-
-        renderer.animationRenderer?.update()
     }
 
     bindMouseEvents() {
@@ -430,33 +304,25 @@ export class ViewController {
         // test.style.width = `${bbox.width}px`
         // test.style.height = `${bbox.height}px`
 
-        this.temporaryCodeQuery =
-            Executor.instance.rootView.createCodeQueryGroup({
-                selection: {
-                    x: bbox.x,
-                    y: bbox.y,
-                    width: bbox.width,
-                    height: bbox.height,
-                },
-            })
+        this.temporaryCodeQuery?.destroy()
 
-        // this.temporaryCodeQuery.queries[0].select(false)
+        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
+        this.temporaryCodeQuery.select(false)
     }
 
     mouseout(e: MouseEvent) {
         this.temporaryCodeQuery?.destroy()
+        this.temporaryCodeQuery = null
     }
 
     click() {
         const { renderer, state } = this.view
         if (state.isShowingSteps) {
             this.destroySteps()
-            renderer.stepsToggle.innerHTML =
-                '<ion-icon name="chevron-forward"></ion-icon>'
+            renderer.stepsToggle.innerHTML = '<ion-icon name="chevron-forward"></ion-icon>'
         } else {
             this.createSteps(!state.isCollapsed)
-            renderer.stepsToggle.innerHTML =
-                '<ion-icon name="chevron-down"></ion-icon>'
+            renderer.stepsToggle.innerHTML = '<ion-icon name="chevron-down"></ion-icon>'
         }
 
         renderer.stepsToggle.classList.toggle('active')
@@ -487,7 +353,7 @@ export class ViewController {
 
         renderer.stepsContainer.classList.add('expanded')
 
-        this.resetAnimation([])
+        renderer.animationRenderer.update()
     }
 
     collapse() {

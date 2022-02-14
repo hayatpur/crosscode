@@ -1,13 +1,7 @@
-import { AnimationGraph } from '../../../animation/graph/AnimationGraph'
-import {
-    queryAllAnimationGraph,
-    queryAnimationGraph,
-} from '../../../animation/graph/graph'
-import {
-    AnimationNode,
-    instanceOfAnimationNode,
-} from '../../../animation/primitive/AnimationNode'
 import { Editor } from '../../../editor/Editor'
+import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { queryAllExecutionGraph, queryExecutionGraph } from '../../../execution/graph/graph'
+import { ExecutionNode, instanceOfExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { Executor } from '../../../executor/Executor'
 import { View } from '../../View'
 import { CodeQuery } from './CodeQuery'
@@ -20,7 +14,7 @@ export interface CodeQueryGroupState {
 export class CodeQueryGroup {
     state: CodeQueryGroupState
 
-    animationSelection: (AnimationGraph | AnimationNode)[]
+    animationSelection: (ExecutionGraph | ExecutionNode)[]
     viewSelection: View[] = []
 
     // Query element
@@ -35,9 +29,7 @@ export class CodeQueryGroup {
         // Create element
         this.element = document.createElement('div')
         this.element.classList.add('code-query-group')
-        document
-            .querySelector('.code-query-container')
-            .appendChild(this.element)
+        document.querySelector('.code-query-container').appendChild(this.element)
 
         // Create label
         // this.labelElement = document.createElement('div')
@@ -46,9 +38,8 @@ export class CodeQueryGroup {
         // this.element.appendChild(this.labelElement)
 
         // List of base nodes
-        const nodes = queryAllAnimationGraph(
-            Executor.instance.animation,
-            (animation) => instanceOfAnimationNode(animation)
+        const nodes = queryAllExecutionGraph(Executor.instance.execution, (animation) =>
+            instanceOfExecutionNode(animation)
         )
 
         // Find nodes that are inside the selection
@@ -66,20 +57,15 @@ export class CodeQueryGroup {
         }
 
         // Group nodes into chunks
-        this.animationSelection = getDeepestChunks(
-            Executor.instance.animation,
-            selectedNodeIds
-        )
-        this.animationSelection = this.animationSelection.map((chunk) =>
-            stripChunk(chunk)
-        )
+        this.animationSelection = getDeepestChunks(Executor.instance.execution, selectedNodeIds)
+        this.animationSelection = this.animationSelection.map((chunk) => stripChunk(chunk))
 
         // Expand the view to show the query
         for (const selection of this.animationSelection) {
             let parent: View = Executor.instance.rootView.parentView
 
             while (parent.originalAnimation.id !== selection.id) {
-                if (instanceOfAnimationNode(parent.originalAnimation)) {
+                if (instanceOfExecutionNode(parent.originalAnimation)) {
                     console.warn('Animation not found - reached end')
                     break
                 }
@@ -98,7 +84,7 @@ export class CodeQueryGroup {
                 let foundMatch = false
                 for (const step of parent.stepsTimeline.views) {
                     const contains =
-                        queryAnimationGraph(
+                        queryExecutionGraph(
                             step.originalAnimation,
                             (animation) => animation.id == selection.id
                         ) != null

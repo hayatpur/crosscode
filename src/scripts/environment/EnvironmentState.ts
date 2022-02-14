@@ -12,7 +12,7 @@ export enum AccessorType {
 
 export interface Accessor {
     type: AccessorType
-    value: number | string
+    value: string
 }
 
 export function accessorToString(accessor: Accessor): string {
@@ -63,13 +63,10 @@ export interface PrototypicalEnvironmentState {
     paths: { [id: string]: PrototypicalPath }
 
     // Storage data
-    memory: (PrototypicalDataState | null)[]
+    memory: { [id: string]: PrototypicalDataState }
 
     // Temporary data
     registers: { [name: string]: PrototypicalDataState }
-
-    // Unsafe temporary data (used to exchange data within an animation)
-    _temps: { [name: string]: any }
 
     id: string
 }

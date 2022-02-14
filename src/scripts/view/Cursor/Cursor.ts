@@ -1,5 +1,4 @@
 import * as ESTree from 'estree'
-import { GlobalAnimationCallbacks } from '../../animation/GlobalAnimationCallbacks'
 import { Editor } from '../../editor/Editor'
 
 export interface CursorState {
@@ -37,21 +36,10 @@ export class Cursor {
         this.element.className = 'view-cursor'
 
         document.body.appendChild(this.element)
-
-        // Setup bindings
-        GlobalAnimationCallbacks.instance.registerBeginCallback((animation) => {
-            this.state.location = animation.nodeData.location
-        })
-
-        GlobalAnimationCallbacks.instance.registerSeekCallback((animation) => {
-            this.lastActive = performance.now()
-        })
     }
 
     tick() {
-        const bbox = Editor.instance.computeBoundingBoxForLoc(
-            this.state.location
-        )
+        const bbox = Editor.instance.computeBoundingBoxForLoc(this.state.location)
         bbox.x -= 5
         bbox.width += 10
 
