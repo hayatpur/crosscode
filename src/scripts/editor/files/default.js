@@ -1,11 +1,15 @@
-function fib(N) {
-    const memo = [0, 1]
-
-    for (let i = 2; i <= N; i++) {
-        memo[i] = memo[i - 1] + memo[i - 2]
+function ack(m, n) {
+    if (m === 0) {
+        return n + 1
     }
 
-    return memo[N]
+    if (n === 0) {
+        return ack(m - 1, 1)
+    }
+
+    if (m !== 0 && n !== 0) {
+        return ack(m - 1, ack(m, n - 1))
+    }
 }
 
-let y = fib(20)
+const y = ack(3, 2)

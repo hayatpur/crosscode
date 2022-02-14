@@ -129,7 +129,7 @@ export class EnvironmentRenderer {
         // memory.sort()
 
         // Render data
-        console.log(Object.values(state.memory))
+        // console.log(Object.values(state.memory))
         for (const data of memory) {
             // Create renderer if not there
             if (!(data.id in this.dataRenderers)) {

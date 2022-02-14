@@ -57,5 +57,6 @@ export function BinaryExpression(
     cleanUpRegister(environment, leftRegister[0].value)
     cleanUpRegister(environment, rightRegister[0].value)
 
+    graph.postcondition = clone(environment)
     return graph
 }
