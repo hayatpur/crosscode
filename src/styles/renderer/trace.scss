@@ -71,3 +71,57 @@
     z-index: 11;
     animation: scaleUp 1s;
 }
+
+.trace-interactable {
+    cursor: pointer;
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+    transform: scale(1);
+
+    transition: 0.2s;
+
+    z-index: 20;
+
+    background: var(--color-3);
+
+    animation: scaleUp 0.2s;
+}
+
+.trace-interactable:hover {
+    opacity: 0.8;
+}
+
+.trace-tooltip-container {
+    position: absolute;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(5px);
+    background: #0000005e;
+    border-radius: 5px;
+    padding: 5px;
+    padding-left: 10px;
+}
+
+.trace-tooltip {
+    border-radius: 5px;
+    margin: 3px 0px;
+    color: #cbcbcb9c;
+    width: fit-content;
+    user-select: none;
+    margin-right: 5px;
+    white-space: pre;
+    font-size: 12px;
+    font-weight: 300;
+    font-family: Fira Code;
+}
+
+.global-trace-connection {
+    fill: #0000;
+    stroke: #2c2c344d;
+    stroke-width: 24px;
+    z-index: -1;
+}

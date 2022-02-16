@@ -26,12 +26,20 @@ function apply(animation: BindFunctionAnimation, environment: PrototypicalEnviro
     reference.value = location
 
     declareVariable(environment, animation.identifier, referenceLocation)
-    computeReadAndWrites(animation, { location, id: data.id })
+    computeReadAndWrites(
+        animation,
+        { location, id: data.id },
+        { location, id: animation.identifier }
+    )
 }
 
-function computeReadAndWrites(animation: BindFunctionAnimation, data: DataInfo) {
+function computeReadAndWrites(
+    animation: BindFunctionAnimation,
+    funcData: DataInfo,
+    funcIdentifier: DataInfo
+) {
     animation._reads = []
-    animation._writes = [data]
+    animation._writes = [funcData, funcIdentifier]
 }
 
 export function bindFunctionAnimation(

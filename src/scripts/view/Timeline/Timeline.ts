@@ -121,6 +121,8 @@ export class Timeline {
             view.destroy()
         }
 
+        this.views = []
+
         this.element.remove()
     }
 
@@ -149,13 +151,13 @@ export class Timeline {
         // }
     }
 
-    getDuration() {
-        let duration = 0
-        for (const view of this.views) {
-            duration += view.getDuration()
-        }
-        return duration
-    }
+    // getDuration() {
+    //     let duration = 0
+    //     for (const view of this.views) {
+    //         duration += view.getDuration()
+    //     }
+    //     return duration
+    // }
 
     updateConnections() {
         // for (let i = 0; i < this.connections.length; i++) {

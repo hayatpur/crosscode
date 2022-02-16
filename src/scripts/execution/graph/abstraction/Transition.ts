@@ -1,7 +1,7 @@
 import { AnimationGraph, AnimationNode, createAnimationGraph } from '../../../animation/animation'
 import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
 import { clone } from '../../../utilities/objects'
-import { ExecutionNode } from '../../primitive/ExecutionNode'
+import { ExecutionNode, instanceOfExecutionNode } from '../../primitive/ExecutionNode'
 import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
 import { transitionCreateArray } from '../../primitive/Transition/Operations/CreateArrayTransitionAnimation'
 import { transitionCreateReference } from '../../primitive/Transition/Operations/CreateReferenceTransitionAnimation'
@@ -10,7 +10,7 @@ import { transitionCreateVariable } from '../../primitive/Transition/Operations/
 import { transitionMove } from '../../primitive/Transition/Operations/MoveTransitionAnimation'
 import { transitionPlace } from '../../primitive/Transition/Operations/PlaceTransitionAnimation'
 import { DataInfo, ExecutionGraph } from '../ExecutionGraph'
-import { AnimationTraceChain, AnimationTraceOperator } from '../graph'
+import { AnimationTraceChain, AnimationTraceOperator, getChunkTrace } from '../graph'
 
 export interface TransitionAnimationNode extends AnimationNode {
     applyInvariant: (
@@ -27,32 +27,28 @@ export interface TransitionAnimationNode extends AnimationNode {
  * @returns
  */
 export function createTransition(node: ExecutionNode | ExecutionGraph): AnimationGraph {
-    // if (instanceOfExecutionNode(node)) {
-    //     throw new Error('Nodes are not supported yet.')
-    // }
-
-    const nodeData = { ...clone(node.nodeData), type: 'Transition' }
     const transition = createAnimationGraph()
     transition.id = `Transition(${node.id})`
-
-    // const trace = getChunkTrace(node)
-    // const transitions = getTransitionsFromTrace(trace)
-
-    // Chunk
-    // const nodes = node.vertices
 
     // Initialize to the post condition
     const init = initializeTransitionAnimation(node.postcondition)
     transition.vertices.push(init)
 
+    if (instanceOfExecutionNode(node)) {
+        return transition
+    }
+
+    const trace = getChunkTrace(node)
+    const transitions = getTransitionsFromTrace(trace)
+
     // Add all the transitions
-    // for (const t of transitions) {
-    //     transition.vertices.push(t)
-    // }
+    for (const t of transitions) {
+        transition.vertices.push(t)
+    }
 
     // Make it parallel
-    // transition.isParallel = true
-    // transition.parallelStarts = [0, ...transitions.map((_) => 1)]
+    transition.isParallel = true
+    transition.parallelStarts = [0, ...transitions.map((_) => 1)]
 
     return transition
 }

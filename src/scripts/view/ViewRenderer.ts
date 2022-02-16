@@ -1,6 +1,7 @@
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { getNumericalValueOfStyle, lerp } from '../utilities/math'
+import { GlobalTrace } from './Trace/GlobalTrace'
 import { TraceCollection } from './Trace/TraceCollection'
 import { View } from './View'
 
@@ -17,8 +18,7 @@ export class ViewRenderer {
 
     // Control elements
     controlElement: HTMLDivElement
-    stepsToggle: HTMLDivElement
-    collapseToggle: HTMLDivElement
+    animationToggle: HTMLDivElement
     traceToggle: HTMLDivElement
 
     // Body
@@ -28,6 +28,7 @@ export class ViewRenderer {
     animationRenderer: AnimationRenderer
 
     trace: TraceCollection
+    globalTrace: GlobalTrace
 
     constructor(view: View) {
         this.view = view
@@ -54,9 +55,9 @@ export class ViewRenderer {
         document.body.appendChild(this.element)
 
         this.label.innerHTML = (
-            instanceOfExecutionNode(view.originalAnimation)
-                ? view.originalAnimation.name
-                : view.originalAnimation.nodeData.type
+            instanceOfExecutionNode(view.originalExecution)
+                ? view.originalExecution.name
+                : view.originalExecution.nodeData.type
         )
             .replace(/([A-Z])/g, ' $1')
             .trim()
@@ -69,6 +70,7 @@ export class ViewRenderer {
         this.element.appendChild(this.viewBody)
 
         this.trace = new TraceCollection(this.view)
+        this.globalTrace = new GlobalTrace(this.view)
     }
 
     hide() {
@@ -83,31 +85,8 @@ export class ViewRenderer {
         this.controlElement = document.createElement('div')
         this.controlElement.classList.add('view-controls')
         this.element.appendChild(this.controlElement)
-
-        this.setupStepsToggle()
-        this.setupCollapseToggle()
         this.setupTraceToggle()
-    }
-
-    setupInPlaceStepsToggle() {
-        this.stepsToggle = document.createElement('div')
-        this.stepsToggle.classList.add('view-control-button')
-        this.stepsToggle.innerHTML = '<ion-icon name="albums"></ion-icon>'
-        this.header.appendChild(this.stepsToggle)
-    }
-
-    setupStepsToggle() {
-        this.stepsToggle = document.createElement('div')
-        this.stepsToggle.classList.add('view-control-button')
-        this.stepsToggle.innerHTML = '<ion-icon name="chevron-forward"></ion-icon>'
-        // this.header.appendChild(this.stepsToggle)
-    }
-
-    setupCollapseToggle() {
-        this.collapseToggle = document.createElement('div')
-        this.collapseToggle.classList.add('view-control-button')
-        this.collapseToggle.innerHTML = '<ion-icon name="add"></ion-icon>'
-        // this.header.appendChild(this.collapseToggle)
+        this.setupAnimationToggle()
     }
 
     setupTraceToggle() {
@@ -115,6 +94,13 @@ export class ViewRenderer {
         this.traceToggle.classList.add('view-control-button')
         this.traceToggle.innerHTML = '<ion-icon name="git-branch-outline"></ion-icon>'
         this.header.appendChild(this.traceToggle)
+    }
+
+    setupAnimationToggle() {
+        this.animationToggle = document.createElement('div')
+        this.animationToggle.classList.add('view-control-button')
+        this.animationToggle.innerHTML = '<ion-icon name="videocam-outline"></ion-icon>'
+        this.header.appendChild(this.animationToggle)
     }
 
     updateConnection() {
@@ -178,26 +164,18 @@ export class ViewRenderer {
     tick(dt: number) {
         this.updatePosition()
 
-        // Update trace
-        this.updateTrace()
-
         // Update animation
         // TODO: Make this part of an animation layer
         this.updateEndNode()
         this.updateStartNode()
 
         this.animationRenderer?.tick(dt)
+
+        // Update trace
         this.trace.tick(dt)
-    }
 
-    updateTrace() {
-        if (this.animationRenderer == null) return
-
-        // if (this.view.state.isShowingTrace) {
-        //     this.animationRenderer.showingPreRenderer = true
-        // } else {
-        //     this.animationRenderer.showingPreRenderer = false
-        // }
+        // Update global trace
+        this.globalTrace.tick(dt)
     }
 
     updateEndNode() {

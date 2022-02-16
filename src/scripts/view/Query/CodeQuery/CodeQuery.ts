@@ -17,6 +17,8 @@ export class CodeQuery {
 
     isSelected: boolean = false
 
+    opacity: number = 1
+
     constructor(selectedView: View) {
         this.selectedView = selectedView
 
@@ -65,11 +67,31 @@ export class CodeQuery {
 
         // Update connection
         this.updateConnection()
+
+        // Update opacity
+        this.opacity = Math.max(Math.min(this.opacity, 1), 0)
+
+        if (this.opacity < 0.5) {
+            this.codeSelectionElement.classList.add('fade-out')
+            this.incomingConnection.classList.add('fade-out')
+            this.outgoingConnection.classList.add('fade-out')
+            this.element.classList.add('fade-out')
+        } else {
+            this.codeSelectionElement.classList.remove('fade-out')
+            this.incomingConnection.classList.remove('fade-out')
+            this.outgoingConnection.classList.remove('fade-out')
+            this.element.classList.remove('fade-out')
+        }
+
+        this.codeSelectionElement.style.opacity = this.opacity.toString()
+        this.incomingConnection.style.opacity = this.opacity.toString()
+        this.outgoingConnection.style.opacity = this.opacity.toString()
+        this.element.style.opacity = this.opacity.toString()
     }
 
     updateCodeSelection() {
         const codeBbox = Editor.instance.computeBoundingBoxForLoc(
-            this.selectedView.originalAnimation.nodeData.location
+            this.selectedView.originalExecution.nodeData.location
         )
         const padding = 4
         this.codeSelectionElement.style.left = `${codeBbox.x - padding}px`
@@ -92,6 +114,10 @@ export class CodeQuery {
                 indicatorBbox.x + indicatorBbox.width / 2,
                 indicatorBbox.y + indicatorBbox.height / 2
             )
+        } else {
+            const separatorX =
+                Executor.instance.rootView.separator.element.getBoundingClientRect().x
+            points.push(separatorX, codeSelectionBbox.y + codeSelectionBbox.height / 2)
         }
 
         if (this.selectedView.renderer?.element != null) {
@@ -108,7 +134,7 @@ export class CodeQuery {
             this.incomingConnection.classList.add('dashed')
         }
 
-        const d = catmullRomSolve(points, 2) // SVGCatmullRomSpline.toPath(points, 4, true)
+        const d = catmullRomSolve(points, 0.8) // SVGCatmullRomSpline.toPath(points, 4, true)
         this.incomingConnection.setAttribute('d', d)
         // this.perfectArrows()
     }
@@ -177,6 +203,8 @@ export class CodeQuery {
         this.incomingConnection.remove()
         this.outgoingConnection.remove()
         this.codeSelectionElement.remove()
+
+        Executor.instance.rootView.removeQuery(this)
 
         this.element = null
     }

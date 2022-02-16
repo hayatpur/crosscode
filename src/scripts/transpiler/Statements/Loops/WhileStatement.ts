@@ -75,5 +75,6 @@ export function WhileStatement(
     addVertex(graph, popScope, { nodeData: getNodeData(ast) })
     applyExecutionNode(popScope, environment)
 
+    graph.postcondition = clone(environment)
     return graph
 }

@@ -1,4 +1,4 @@
-import { AnimationTraceChain } from '../../execution/graph/graph'
+import { AnimationTraceChain, getChunkTrace } from '../../execution/graph/graph'
 import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { View } from '../View'
 import { Trace } from './Trace'
@@ -13,13 +13,6 @@ export class TraceCollection {
 
     constructor(view: View) {
         this.view = view
-
-        if (instanceOfExecutionNode(this.view.originalAnimation)) {
-            console.warn('Trying to create trace for animation node.')
-            return
-        }
-
-        // this.traceChains = getChunkTrace(this.view.originalAnimation)
     }
 
     select(selection: Set<string>) {
@@ -34,24 +27,26 @@ export class TraceCollection {
         }
     }
 
-    deselect(deselection: Set<string>) {
-        for (const toRemove of deselection) {
-            this.selection.delete(toRemove)
-        }
+    deselect() {
         for (const trace of this.traces) {
-            if (this.selection.has(trace.chain.value.id)) {
-                trace.select()
-            } else {
-                trace.deselect()
-            }
+            trace.deselect()
         }
     }
 
     show() {
-        // for (const chain of this.traceChains) {
-        //     const trace = new Trace(this.view, chain)
-        //     this.traces.push(trace)
-        // }
+        if (instanceOfExecutionNode(this.view.originalExecution)) {
+            console.warn('Trying to create trace for animation node.')
+            return
+        }
+
+        if (this.traceChains == null) {
+            this.traceChains = getChunkTrace(this.view.originalExecution)
+        }
+
+        for (const chain of this.traceChains) {
+            const trace = new Trace(this.view, chain)
+            this.traces.push(trace)
+        }
 
         for (const trace of this.traces) {
             trace.show()

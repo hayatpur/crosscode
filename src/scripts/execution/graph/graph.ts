@@ -1,11 +1,18 @@
 import * as ESTree from 'estree'
 import { DataType } from '../../environment/data/DataState'
 import { flattenedEnvironmentMemory, getMemoryLocation } from '../../environment/environment'
+import { AccessorType } from '../../environment/EnvironmentState'
 import { clone } from '../../utilities/objects'
+import { View } from '../../view/View'
 import { addEdge, reads, writes } from '../execution'
 import { ExecutionNode, instanceOfExecutionNode, NodeData } from '../primitive/ExecutionNode'
 import { createEdge, Edge, EdgeType } from './edges/Edge'
-import { DataInfo, ExecutionGraph, instanceOfExecutionGraph } from './ExecutionGraph'
+import {
+    DataInfo,
+    ExecutionGraph,
+    GlobalDataInfo,
+    instanceOfExecutionGraph,
+} from './ExecutionGraph'
 
 export interface VertexOptions {
     nodeData?: NodeData
@@ -701,11 +708,82 @@ export enum AnimationTraceOperator {
     CopyLiteral = 'CopyLiteral',
     BinaryOperation = 'BinaryOperation',
     UpdateOperation = 'UpdateOperation',
+    Unknown = 'Unknown',
 }
 
 export interface AnimationTraceChain {
     value: DataInfo
     children?: [operator: AnimationTraceOperator, child: AnimationTraceChain][]
+}
+
+export interface GlobalAnimationTraceChain {
+    value: GlobalDataInfo
+    children?: [operator: AnimationTraceOperator, child: GlobalAnimationTraceChain][]
+}
+
+export function getGlobalTrace(parent: View) {
+    if (!parent.state.isShowingSteps) {
+        return null
+    }
+
+    // Get all leafs of parent
+    let leaves: View[] = []
+    let candidates: View[] = [parent]
+    let filter: Set<string> = new Set()
+
+    while (candidates.length > 0) {
+        const candidate = candidates.pop()
+        if (!candidate.state.isShowingSteps) {
+            leaves.push(candidate)
+            const renderers =
+                candidate.renderer.animationRenderer?.environmentRenderer.getAllChildRenderers()
+            const showing = Object.keys(renderers ?? {})
+            filter = new Set([...filter, ...showing])
+            continue
+        }
+
+        for (const view of candidate.stepsTimeline.views) {
+            candidates.push(view)
+        }
+    }
+
+    // Initialize trace
+    const traces: GlobalAnimationTraceChain[] = []
+    for (const id of filter) {
+        const chain = { value: { id, location: null }, children: [] }
+        traces.push(chain)
+    }
+
+    // Go through each leaf and append to trace
+    for (const leaf of leaves) {
+        const representation = leaf.renderer.animationRenderer?.representation
+        if (representation == null || representation.include == null) continue
+
+        for (const trace of traces) {
+            if (representation.include.includes(trace.value.id)) {
+                const node: GlobalAnimationTraceChain = {
+                    value: {
+                        id: trace.value.id,
+                        location: {
+                            viewId: leaf.id,
+                            localLocation: [{ type: AccessorType.ID, value: trace.value.id }],
+                        },
+                    },
+                    children: [],
+                }
+
+                // Add to end of chain
+                let end = trace
+                while (end.children.length > 0) {
+                    end = end.children[0][1]
+                }
+
+                end.children.push([AnimationTraceOperator.Unknown, node])
+            }
+        }
+    }
+
+    return traces
 }
 
 export function queryExecutionGraph(

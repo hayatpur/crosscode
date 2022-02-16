@@ -31,7 +31,6 @@ function apply(animation: GetMember, environment: PrototypicalEnvironmentState) 
         animation.objectRegister,
         `${animation.id}_Object`
     ) as PrototypicalDataState
-    console.assert(object.type === DataType.Array, `${animation.id}_Object is not an object`)
 
     // Get property
     const property = resolvePath(

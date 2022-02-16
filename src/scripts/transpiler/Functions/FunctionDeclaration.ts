@@ -2,6 +2,7 @@ import * as ESTree from 'estree'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { addVertex } from '../../execution/graph/graph'
 import { bindFunctionAnimation } from '../../execution/primitive/Binding/BindFunctionAnimation'
 import { ExecutionContext } from '../../execution/primitive/ExecutionNode'
 import { clone } from '../../utilities/objects'
@@ -17,7 +18,7 @@ export function FunctionDeclaration(
 
     // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier
     const bind = bindFunctionAnimation((ast.id as ESTree.Identifier).name, ast)
-    // addVertex(graph, bind, { nodeData: getNodeData(ast.id) })
+    addVertex(graph, bind, { nodeData: getNodeData(ast.id) })
     applyExecutionNode(bind, environment)
 
     // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, environment: PrototypicalEnvironmentState, context: ExecutionContext) => {

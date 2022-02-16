@@ -25,7 +25,7 @@ export class DataRenderer {
         this.element.classList.add('selected')
     }
 
-    deselect(deselection: Set<string>) {
+    deselect() {
         this.element.classList.remove('selected')
     }
 }

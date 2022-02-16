@@ -27,13 +27,8 @@ export interface ViewState {
     isShowingSteps: boolean
     isShowingTrace: boolean
     isHidden: boolean
-
-    // Animation time
-    time: number
-    speed: number
-    isPlaying: boolean
-    hasPlayed: boolean
-    isPaused: boolean
+    isPlayingAnimation: boolean
+    isSelected: boolean
 
     // Current selection state
     abstractionSelection: string
@@ -61,11 +56,8 @@ export function createViewState(): ViewState {
         isShowingSteps: false,
         isShowingTrace: false,
         isHidden: false,
-        time: 0,
-        isPaused: true,
-        speed: 1 / 100,
-        isPlaying: false,
-        hasPlayed: false,
+        isSelected: false,
+        isPlayingAnimation: false,
         abstractionSelection: '',
     }
 }

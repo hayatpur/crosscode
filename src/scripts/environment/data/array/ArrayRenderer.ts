@@ -19,18 +19,12 @@ export class ArrayRenderer extends DataRenderer {
 
         // Opening brace
         this.openingBrace = document.createElement('div')
-        this.openingBrace.classList.add(
-            'data-array-brace',
-            'data-array-opening-brace'
-        )
+        this.openingBrace.classList.add('data-array-brace', 'data-array-opening-brace')
         this.openingBrace.innerText = '['
 
         // Closing brace
         this.closingBrace = document.createElement('div')
-        this.closingBrace.classList.add(
-            'data-array-brace',
-            'data-array-closing-brace'
-        )
+        this.closingBrace.classList.add('data-array-brace', 'data-array-closing-brace')
         this.closingBrace.innerText = ']'
 
         // this.element.append(this.openingBrace, this.closingBrace)
@@ -64,18 +58,14 @@ export class ArrayRenderer extends DataRenderer {
             if (this.selection.has(item.id)) {
                 this.dataRenderers[item.id].renderer.select(this.selection)
             } else {
-                this.dataRenderers[item.id].renderer.deselect(this.selection)
+                this.dataRenderers[item.id].renderer.deselect()
             }
 
             // this.dataRenderers[item.id].index.setState(
             //     i,
             //     item.transform.rendered
             // )
-            updateIndexClasses(
-                this.dataRenderers[item.id].renderer.element,
-                i,
-                items.length
-            )
+            updateIndexClasses(this.dataRenderers[item.id].renderer.element, i, items.length)
         }
 
         // Remove data that are no longer in the view
@@ -129,17 +119,10 @@ export class ArrayRenderer extends DataRenderer {
         }
     }
 
-    deselect(deselection: Set<string>) {
-        for (const toRemove of deselection) {
-            this.selection.delete(toRemove)
-        }
-
+    deselect() {
         for (const id of Object.keys(this.dataRenderers)) {
             const renderer = this.dataRenderers[id].renderer
-
-            if (!this.selection.has(id)) {
-                renderer.deselect(deselection)
-            }
+            renderer.deselect()
         }
     }
 }

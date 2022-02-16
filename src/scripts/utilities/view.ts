@@ -21,9 +21,9 @@ export interface CreateViewOptions {
 }
 
 export function createViewRenderer(view: View) {
-    if (view.originalAnimation.nodeData.type == 'ForStatement') {
+    if (view.originalExecution.nodeData.type == 'ForStatement') {
         return new ForStatementViewRenderer(view)
-    } else if (view.originalAnimation.nodeData.type == 'ForStatementIteration') {
+    } else if (view.originalExecution.nodeData.type == 'ForStatementIteration') {
         return new ForStatementIterationViewRenderer(view)
     } else {
         return new ViewRenderer(view)
@@ -31,9 +31,9 @@ export function createViewRenderer(view: View) {
 }
 
 export function createViewController(view: View) {
-    if (view.originalAnimation.nodeData.type == 'ForStatement') {
+    if (view.originalExecution.nodeData.type == 'ForStatement') {
         return new ForStatementViewController(view)
-    } else if (view.originalAnimation.nodeData.type == 'ForStatementIteration') {
+    } else if (view.originalExecution.nodeData.type == 'ForStatementIteration') {
         return new ForStatementIterationViewController(view)
     } else {
         return new ViewController(view)

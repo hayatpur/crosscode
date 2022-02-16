@@ -12,10 +12,14 @@
 
     border-radius: 7px;
     z-index: -1;
-    background: #141418;
     transition: 0.2s;
     box-shadow: inset 0 0 0px 1px #5c5c5c63;
     animation: fadein 0.2s;
+    background: #ffffff04;
+}
+
+.code-selection.fade-out {
+    box-shadow: inset 0 0 0px 1px #5c5c5c00;
 }
 
 .code-selection.selected {
@@ -80,6 +84,7 @@
     cursor: pointer;
     border-radius: 50%;
     z-index: 1;
+    transition: 0.2s;
 
     animation: fadein 0.2s;
 }

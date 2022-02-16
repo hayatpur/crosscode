@@ -9,8 +9,8 @@ export class ForStatementViewRenderer extends ViewRenderer {}
 
 export class ForStatementViewController extends ViewController {
     queryChildren() {
-        if (instanceOfExecutionGraph(this.view.originalAnimation)) {
-            return this.view.originalAnimation.vertices.slice(1, -2)
+        if (instanceOfExecutionGraph(this.view.originalExecution)) {
+            return this.view.originalExecution.vertices.slice(1, -2)
         } else {
             return []
         }

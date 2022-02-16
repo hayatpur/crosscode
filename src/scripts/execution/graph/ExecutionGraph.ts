@@ -12,6 +12,11 @@ export interface DataInfo {
     id: string
 }
 
+export interface GlobalDataInfo {
+    location: { viewId: string; localLocation: Accessor[] }
+    id: string
+}
+
 export interface ExecutionGraphPath {
     node: ExecutionGraph | ExecutionNode
     edge?: Edge

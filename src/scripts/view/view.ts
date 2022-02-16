@@ -1,6 +1,5 @@
-import { AnimationGraph, duration } from '../animation/animation'
+import { AnimationGraph } from '../animation/animation'
 import { AbstractionSelection } from '../execution/graph/abstraction/Abstractor'
-import { createTransition } from '../execution/graph/abstraction/Transition'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
@@ -10,6 +9,7 @@ import { ViewController } from './ViewController'
 import { ViewRenderer } from './ViewRenderer'
 import { createViewState, ViewState } from './ViewState'
 
+let _VIEW_ID = 0
 export class View {
     // State
     state: ViewState
@@ -20,7 +20,7 @@ export class View {
     stepsTimeline: Timeline
 
     // Original animation, only used to derive compiled animation
-    originalAnimation: ExecutionGraph | ExecutionNode
+    originalExecution: ExecutionGraph | ExecutionNode
 
     // Transition animation, used when this view's steps are not shown
     transitionAnimation: AnimationGraph
@@ -30,14 +30,18 @@ export class View {
 
     isRoot: boolean = false
 
-    constructor(originalAnimation: ExecutionGraph | ExecutionNode, options: CreateViewOptions) {
+    id: string
+
+    constructor(originalExecution: ExecutionGraph | ExecutionNode, options: CreateViewOptions) {
+        this.id = `View(${++_VIEW_ID})`
+
         let start = performance.now()
         // Initial state
         this.state = createViewState()
 
         // Setup animations
-        this.originalAnimation = originalAnimation
-        this.transitionAnimation = createTransition(originalAnimation)
+        this.originalExecution = originalExecution
+        // this.transitionAnimation = createTransition(originalExecution)
         console.log('Setup animations:', performance.now() - start, 'ms')
         start = performance.now()
 
@@ -69,28 +73,29 @@ export class View {
         this.stepsTimeline?.tick(dt)
     }
 
-    getDuration() {
-        if (this.state.isShowingSteps) {
-            return this.stepsTimeline.getDuration()
-        } else {
-            return duration(this.transitionAnimation)
-        }
-    }
+    // getDuration() {
+    //     if (this.state.isShowingSteps) {
+    //         return this.stepsTimeline.getDuration()
+    //     } else {
+    //         return duration(this.transitionAnimation)
+    //     }
+    // }
 
     getAbstractionSelection(): AbstractionSelection {
-        if (!this.state.isShowingSteps || instanceOfExecutionNode(this.originalAnimation)) {
+        if (!this.state.isShowingSteps || instanceOfExecutionNode(this.originalExecution)) {
             return {
-                id: this.originalAnimation.id,
+                id: this.originalExecution.id,
                 selection: null,
             }
         }
 
-        return this.stepsTimeline.getAbstractionSelection(this.originalAnimation.id)
+        return this.stepsTimeline.getAbstractionSelection(this.originalExecution.id)
     }
 
     destroy() {
         this.renderer.destroy()
         this.stepsTimeline?.destroy()
+        this.controller.temporaryCodeQuery?.destroy()
 
         Executor.instance.rootView.removeView(this)
 

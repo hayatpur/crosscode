@@ -1,9 +1,10 @@
 import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
-import { writes } from '../execution/execution'
+import { reads, writes } from '../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
+import { AnimationPlayer } from './Animation/AnimationPlayer'
 import { CodeQuery } from './Query/CodeQuery/CodeQuery'
 import { Timeline } from './Timeline/Timeline'
 import { View } from './View'
@@ -16,6 +17,7 @@ export class ViewController {
     startMouse: { x: number; y: number }
 
     temporaryCodeQuery: CodeQuery
+    animationPlayer: AnimationPlayer
 
     constructor(view: View) {
         this.view = view
@@ -62,6 +64,31 @@ export class ViewController {
 
             renderer.traceToggle.classList.toggle('active')
         })
+
+        renderer.animationToggle.addEventListener('click', () => {
+            if (!state.isPlayingAnimation) {
+                this.playAnimation()
+            }
+
+            renderer.animationToggle.classList.add('active')
+        })
+
+        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
+    }
+
+    playAnimation() {
+        this.animationPlayer = new AnimationPlayer(this.view)
+        this.animationPlayer.restart()
+
+        this.view.state.isPlayingAnimation = true
+    }
+
+    stopAnimation() {
+        this.animationPlayer.destroy()
+        this.animationPlayer = null
+
+        this.view.state.isPlayingAnimation = false
+        this.view.renderer.animationToggle.classList.remove('active')
     }
 
     hide() {
@@ -73,27 +100,39 @@ export class ViewController {
             this.view.stepsTimeline = undefined
             this.view.state.isShowingSteps = false
         }
+
+        this.temporaryCodeQuery?.destroy()
+        this.temporaryCodeQuery = null
     }
 
     show() {
         this.view.state.isHidden = false
         this.view.renderer.show()
+
+        this.temporaryCodeQuery?.destroy()
+        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
     }
 
     select() {
-        const selection = new Set(writes(this.view.originalAnimation).map((w) => w.id))
+        const selection = new Set([
+            ...writes(this.view.originalExecution).map((w) => w.id),
+            ...reads(this.view.originalExecution).map((r) => r.id),
+        ])
         this.view.renderer.animationRenderer?.select(selection)
         this.view.renderer.trace.select(selection)
         this.view.renderer.element.classList.add('selected')
         this.view.stepsTimeline?.select()
+
+        this.view.state.isSelected = true
     }
 
     deselect() {
-        const deselection = new Set(writes(this.view.originalAnimation).map((w) => w.id))
-        this.view.renderer.animationRenderer?.deselect(deselection)
-        this.view.renderer.trace.deselect(deselection)
+        this.view.renderer.animationRenderer?.deselect()
+        this.view.renderer.trace.deselect()
         this.view.renderer.element.classList.remove('selected')
         this.view.stepsTimeline?.deselect()
+
+        this.view.state.isSelected = false
     }
 
     createSteps(expanded: boolean = false) {
@@ -107,7 +146,7 @@ export class ViewController {
         this.view.stepsTimeline = new Timeline(this.view)
         this.view.stepsTimeline.anchorToView(this.view)
 
-        if (instanceOfExecutionGraph(this.view.originalAnimation)) {
+        if (instanceOfExecutionGraph(this.view.originalExecution)) {
             const children = this.queryChildren()
 
             for (const child of children) {
@@ -134,10 +173,18 @@ export class ViewController {
         renderer.element.classList.add('showing-steps')
 
         console.log(`Created steps in ${performance.now() - start}ms`)
+
+        // this.temporaryCodeQuery.opacity -= 0.8
+        this.temporaryCodeQuery.destroy()
+        this.temporaryCodeQuery = null
+
+        if (state.isSelected) {
+            this.view.stepsTimeline.select()
+        }
     }
 
     queryChildren(): (ExecutionGraph | ExecutionNode)[] {
-        if (instanceOfExecutionNode(this.view.originalAnimation)) {
+        if (instanceOfExecutionNode(this.view.originalExecution)) {
             return []
         }
         const children = []
@@ -148,7 +195,7 @@ export class ViewController {
             'MoveAndPlaceAnimation',
         ])
 
-        for (const child of this.view.originalAnimation.vertices) {
+        for (const child of this.view.originalExecution.vertices) {
             if (instanceOfExecutionNode(child) && blacklist.has(child._name)) {
                 continue
             } else if (blacklist.has(child.nodeData.type)) {
@@ -175,26 +222,47 @@ export class ViewController {
 
         this.view.renderer.stepsContainer.innerHTML = ''
         renderer.element.classList.remove('showing-steps')
+
+        this.temporaryCodeQuery?.destroy()
+        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
     }
 
     showTrace() {
         const { state, renderer } = this.view
-
         state.isShowingTrace = true
-        renderer.animationRenderer?.showTrace()
-        renderer.trace.show()
+
+        if (state.isShowingSteps) {
+            renderer.globalTrace.show()
+        } else {
+            renderer.animationRenderer?.showTrace()
+            renderer.trace.show()
+        }
     }
 
     hideTrace() {
         const { state, renderer } = this.view
-
         state.isShowingTrace = false
-        renderer.animationRenderer?.hideTrace()
-        renderer.trace.hide()
+
+        if (state.isShowingSteps) {
+            renderer.globalTrace.hide()
+        } else {
+            renderer.animationRenderer?.hideTrace()
+            renderer.trace.hide()
+        }
     }
 
     tick(dt: number) {
         const { state, renderer } = this.view
+
+        this.animationPlayer?.tick(dt)
+
+        if (
+            this.animationPlayer != null &&
+            state.isPlayingAnimation &&
+            this.animationPlayer.hasEnded
+        ) {
+            this.stopAnimation()
+        }
 
         // renderer.animationRenderer?.tick(dt)
 
@@ -288,7 +356,7 @@ export class ViewController {
 
     mouseover(e: MouseEvent) {
         const bbox = Editor.instance.computeBoundingBoxForLoc(
-            this.view.originalAnimation.nodeData.location
+            this.view.originalExecution.nodeData.location
         )
         const paddingX = 20
         const paddingY = 10
@@ -304,28 +372,22 @@ export class ViewController {
         // test.style.width = `${bbox.width}px`
         // test.style.height = `${bbox.height}px`
 
-        this.temporaryCodeQuery?.destroy()
+        // this.temporaryCodeQuery?.destroy()
 
-        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
-        this.temporaryCodeQuery.select(false)
+        this.temporaryCodeQuery?.select(false)
     }
 
     mouseout(e: MouseEvent) {
-        this.temporaryCodeQuery?.destroy()
-        this.temporaryCodeQuery = null
+        this.temporaryCodeQuery?.deselect()
     }
 
     click() {
         const { renderer, state } = this.view
         if (state.isShowingSteps) {
             this.destroySteps()
-            renderer.stepsToggle.innerHTML = '<ion-icon name="chevron-forward"></ion-icon>'
         } else {
             this.createSteps(!state.isCollapsed)
-            renderer.stepsToggle.innerHTML = '<ion-icon name="chevron-down"></ion-icon>'
         }
-
-        renderer.stepsToggle.classList.toggle('active')
     }
 
     // attach(parent: HTMLDivElement) {
@@ -353,6 +415,7 @@ export class ViewController {
 
         renderer.stepsContainer.classList.add('expanded')
 
+        console.log(this.view.originalExecution.nodeData)
         renderer.animationRenderer.update()
     }
 

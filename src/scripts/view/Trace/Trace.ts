@@ -23,7 +23,11 @@ export class Trace {
     operationsContainer: HTMLElement
     operations: HTMLElement[]
 
+    interactableElement: HTMLElement
+
     arrowHeadSize = 3
+
+    tooltip: HTMLElement
 
     constructor(view: View, chain: AnimationTraceChain) {
         this.view = view
@@ -52,6 +56,33 @@ export class Trace {
             `0,${-this.arrowHeadSize} ${this.arrowHeadSize * 2},0, 0,${this.arrowHeadSize}`
         )
         document.getElementById('svg-canvas').append(this.endArrow)
+
+        this.interactableElement = document.createElement('div')
+        this.interactableElement.classList.add('trace-interactable')
+        document.body.append(this.interactableElement)
+
+        this.interactableElement.addEventListener('mouseover', () => {
+            // Create a tooltip at interactable location
+            this.tooltip = document.createElement('div')
+            this.tooltip.classList.add('trace-tooltip-container')
+            document.body.append(this.tooltip)
+
+            const [operations, leaves] = getAllOperationsAndLeaves(this.chain)
+            for (const op of operations) {
+                const opTooltip = document.createElement('div')
+                opTooltip.classList.add('trace-tooltip')
+                opTooltip.innerText = op
+                this.tooltip.append(opTooltip)
+            }
+
+            const iBbox = this.interactableElement.getBoundingClientRect()
+            this.tooltip.style.left = `${iBbox.x + iBbox.width / 2 + 10}px`
+            this.tooltip.style.top = `${iBbox.y + iBbox.height / 2}px`
+        })
+
+        this.interactableElement.addEventListener('mouseout', () => {
+            this.tooltip?.remove()
+        })
     }
 
     select() {
@@ -100,6 +131,11 @@ export class Trace {
 
             // this.traceIndicator.style.left = `${points[0]}px`
             // this.traceIndicator.style.top = `${points[1]}px`
+
+            const mid = this.connection.getPointAtLength(this.connection.getTotalLength() * 0.7)
+            const iBbox = this.interactableElement.getBoundingClientRect()
+            this.interactableElement.style.left = `${mid.x - iBbox.width / 2}px`
+            this.interactableElement.style.top = `${mid.y - iBbox.height / 2}px`
         } else {
             this.connection.setAttribute('d', '')
             this.traceIndicator.style.opacity = '0'
@@ -142,7 +178,8 @@ export class Trace {
         if (operations.length == 0) {
             // No operations, meaning just preserve the data from previous
             if (preEnvironmentRenderers[end.id] != null) {
-                this.startElement = preEnvironmentRenderers[end.id].element
+                this.startElement = null
+                // this.startElement = preEnvironmentRenderers[end.id].element
             }
         } else {
             const branches = getAllBranches(this.chain)
@@ -171,5 +208,7 @@ export class Trace {
         this.connection.remove()
         this.traceIndicator.remove()
         this.endArrow.remove()
+
+        this.interactableElement.remove()
     }
 }

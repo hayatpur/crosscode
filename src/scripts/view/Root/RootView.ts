@@ -12,6 +12,7 @@ import { RootViewSeparator } from './RootViewSeparator'
 export class RootView {
     // Rendering
     views: View[] = []
+    viewLookup: { [key: string]: View } = {}
     cursor: Cursor = new Cursor()
     separator: RootViewSeparator = new RootViewSeparator()
 
@@ -83,6 +84,8 @@ export class RootView {
             view.state.transform.position.y = 100
         }
 
+        this.viewLookup[view.id] = view
+
         return view
     }
 
@@ -98,19 +101,23 @@ export class RootView {
         return query
     }
 
-    addView(view: View) {
-        this.views.push(view)
-    }
-
     removeView(view: View) {
         const index = this.views.indexOf(view)
         if (index === -1) return
         this.views.splice(index, 1)
+
+        delete this.viewLookup[view.id]
     }
 
     removeQueryGroup(queryGroup: CodeQueryGroup) {
         const index = this.codeQueryGroups.indexOf(queryGroup)
         if (index === -1) return
         this.codeQueryGroups.splice(index, 1)
+    }
+
+    removeQuery(query: CodeQuery) {
+        const index = this.codeQueries.indexOf(query)
+        if (index === -1) return
+        this.codeQueries.splice(index, 1)
     }
 }

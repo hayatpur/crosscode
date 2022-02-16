@@ -1,15 +1,14 @@
-function ack(m, n) {
-    if (m === 0) {
-        return n + 1
-    }
+// Correct
 
-    if (n === 0) {
-        return ack(m - 1, 1)
-    }
+let list = [],
+    n = 10
 
-    if (m !== 0 && n !== 0) {
-        return ack(m - 1, ack(m, n - 1))
-    }
+for (let i = 0; i < n; i++) {
+    list.push(i)
 }
 
-const y = ack(3, 2)
+for (let i = 0; i < n / 2; i++) {
+    let temp = list[i]
+    list[i] = list[n - 1 - i]
+    list[n - 1 - i] = temp
+}

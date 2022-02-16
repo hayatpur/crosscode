@@ -64,8 +64,8 @@ export class CodeQueryGroup {
         for (const selection of this.animationSelection) {
             let parent: View = Executor.instance.rootView.parentView
 
-            while (parent.originalAnimation.id !== selection.id) {
-                if (instanceOfExecutionNode(parent.originalAnimation)) {
+            while (parent.originalExecution.id !== selection.id) {
+                if (instanceOfExecutionNode(parent.originalExecution)) {
                     console.warn('Animation not found - reached end')
                     break
                 }
@@ -85,7 +85,7 @@ export class CodeQueryGroup {
                 for (const step of parent.stepsTimeline.views) {
                     const contains =
                         queryExecutionGraph(
-                            step.originalAnimation,
+                            step.originalExecution,
                             (animation) => animation.id == selection.id
                         ) != null
 
@@ -110,11 +110,10 @@ export class CodeQueryGroup {
 
         // Create queries
         for (const view of this.viewSelection) {
-            const query = new CodeQuery(view)
-            this.queries.push(query)
-
-            // Add query to element
-            this.element.appendChild(query.element)
+            // const query = new CodeQuery(view)
+            // this.queries.push(query)
+            // // Add query to element
+            // this.element.appendChild(query.element)
         }
 
         // this.queries[0].select()

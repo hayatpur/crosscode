@@ -68,24 +68,16 @@ export class EnvironmentRenderer {
             if (this.selection.has(id)) {
                 renderer.select(this.selection)
             } else {
-                renderer.deselect(this.selection)
+                renderer.deselect()
             }
         }
     }
 
-    deselect(deselection: Set<string>) {
-        for (const toRemove of deselection) {
-            this.selection.delete(toRemove)
-        }
-
+    deselect() {
         const flattened = this.getAllChildRenderers()
 
         for (const [id, renderer] of Object.entries(flattened)) {
-            if (this.selection.has(id)) {
-                renderer.select(this.selection)
-            } else {
-                renderer.deselect(deselection)
-            }
+            renderer.deselect()
         }
     }
 
@@ -120,10 +112,10 @@ export class EnvironmentRenderer {
             })
 
         // Filter
-        // if (representation.include != null) {
-        //     memory = memory.filter((data) => representation.include.some((r) => includes(data, r)))
-        // } else if (representation.exclude != null) {
-        // }
+        if (representation.include != null) {
+            memory = memory.filter((data) => representation.include.some((r) => includes(data, r)))
+        } else if (representation.exclude != null) {
+        }
 
         // Sort
         // memory.sort()
