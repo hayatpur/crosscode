@@ -4,7 +4,9 @@ import {
     getAllBranches,
     getAllOperationsAndLeaves,
 } from '../../execution/graph/abstraction/Transition'
-import { AnimationTraceChain } from '../../execution/graph/graph'
+import { AnimationTraceChain, queryExecutionGraph } from '../../execution/graph/graph'
+import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { Executor } from '../../executor/Executor'
 import { View } from '../View'
 
 // A single trace
@@ -20,14 +22,9 @@ export class Trace {
     traceIndicator: HTMLElement
     endArrow: SVGPolygonElement
 
-    operationsContainer: HTMLElement
-    operations: HTMLElement[]
-
-    interactableElement: HTMLElement
+    operationElements: HTMLElement[] = []
 
     arrowHeadSize = 3
-
-    tooltip: HTMLElement
 
     constructor(view: View, chain: AnimationTraceChain) {
         this.view = view
@@ -57,32 +54,17 @@ export class Trace {
         )
         document.getElementById('svg-canvas').append(this.endArrow)
 
-        this.interactableElement = document.createElement('div')
-        this.interactableElement.classList.add('trace-interactable')
-        document.body.append(this.interactableElement)
+        // this.interactableElement = document.createElement('div')
+        // this.interactableElement.classList.add('trace-interactable')
+        // document.body.append(this.interactableElement)
 
-        this.interactableElement.addEventListener('mouseover', () => {
-            // Create a tooltip at interactable location
-            this.tooltip = document.createElement('div')
-            this.tooltip.classList.add('trace-tooltip-container')
-            document.body.append(this.tooltip)
+        // this.interactableElement.addEventListener('mouseover', () => {
 
-            const [operations, leaves] = getAllOperationsAndLeaves(this.chain)
-            for (const op of operations) {
-                const opTooltip = document.createElement('div')
-                opTooltip.classList.add('trace-tooltip')
-                opTooltip.innerText = op
-                this.tooltip.append(opTooltip)
-            }
+        // })
 
-            const iBbox = this.interactableElement.getBoundingClientRect()
-            this.tooltip.style.left = `${iBbox.x + iBbox.width / 2 + 10}px`
-            this.tooltip.style.top = `${iBbox.y + iBbox.height / 2}px`
-        })
-
-        this.interactableElement.addEventListener('mouseout', () => {
-            this.tooltip?.remove()
-        })
+        // this.interactableElement.addEventListener('mouseout', () => {
+        //     this.tooltip?.remove()
+        // })
     }
 
     select() {
@@ -132,10 +114,19 @@ export class Trace {
             // this.traceIndicator.style.left = `${points[0]}px`
             // this.traceIndicator.style.top = `${points[1]}px`
 
-            const mid = this.connection.getPointAtLength(this.connection.getTotalLength() * 0.7)
-            const iBbox = this.interactableElement.getBoundingClientRect()
-            this.interactableElement.style.left = `${mid.x - iBbox.width / 2}px`
-            this.interactableElement.style.top = `${mid.y - iBbox.height / 2}px`
+            for (let i = 0; i < this.operationElements.length; i++) {
+                const operationElement = this.operationElements[i]
+                const deviation = i - this.operationElements.length / 2 + 0.5
+
+                const pt = this.connection.getPointAtLength(
+                    this.connection.getTotalLength() -
+                        80 * Executor.instance.PARAMS.b +
+                        deviation * 20 * Executor.instance.PARAMS.a
+                )
+
+                operationElement.style.left = `${pt.x}px`
+                operationElement.style.top = `${pt.y}px`
+            }
         } else {
             this.connection.setAttribute('d', '')
             this.traceIndicator.style.opacity = '0'
@@ -167,6 +158,8 @@ export class Trace {
 
         const [operations, leaves] = getAllOperationsAndLeaves(this.chain)
 
+        console.log(this.chain)
+
         // Set end element
         const end = this.chain.value
         if (!(end.id in environmentRenderers)) {
@@ -197,6 +190,36 @@ export class Trace {
                 console.warn("Can't handle multiple branches")
             }
         }
+
+        // Create operations
+        operations.reverse()
+        for (const op of operations) {
+            const opTooltip = document.createElement('div')
+            opTooltip.classList.add('trace-interactable')
+            const executionNode = queryExecutionGraph(
+                this.view.originalExecution,
+                (e) => e.id == op.executionId
+            )
+            let label = ''
+
+            if (executionNode != null) {
+                // label = `${executionNode.nodeData.preLabel ?? 'pre'} |`
+                label += (
+                    instanceOfExecutionNode(executionNode)
+                        ? executionNode.name
+                        : executionNode.nodeData.type
+                )
+                    .replace(/([A-Z])/g, ' $1')
+                    .trim()
+            } else {
+                label = 'Unknown'
+            }
+
+            opTooltip.innerHTML = `<span class="trace-tooltip-text">${label}</span>`
+            this.operationElements.push(opTooltip)
+
+            document.body.append(opTooltip)
+        }
     }
 
     hide() {
@@ -209,6 +232,9 @@ export class Trace {
         this.traceIndicator.remove()
         this.endArrow.remove()
 
-        this.interactableElement.remove()
+        for (const op of this.operationElements) {
+            op.remove()
+        }
+        this.operationElements = []
     }
 }

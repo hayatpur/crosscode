@@ -17,7 +17,7 @@ export function VariableDeclaration(
 
     for (const declaration of ast.declarations) {
         const animation = VariableDeclarator(declaration, environment, context)
-        addVertex(graph, animation, { nodeData: getNodeData(declaration) })
+        addVertex(graph, animation, { nodeData: getNodeData(declaration, 'declaration') })
     }
 
     graph.postcondition = clone(environment)

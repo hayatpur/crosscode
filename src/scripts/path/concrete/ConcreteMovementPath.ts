@@ -2,12 +2,12 @@ import { DataRenderer } from '../../environment/data/DataRenderer'
 import { resolvePath } from '../../environment/environment'
 import { EnvironmentRenderer } from '../../environment/EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
-import { remap } from '../../utilities/math'
 import { ConcretePath, createConcretePath } from '../path'
 import { PrototypicalMovementPath } from '../prototypical/PrototypicalMovementPath'
 
 export interface ConcreteMovementPath extends ConcretePath {
-    delta: { x: number; y: number }
+    // delta: { x: number; y: number }
+    movement: SVGPathElement
 }
 
 function onBegin(
@@ -20,19 +20,35 @@ function onBegin(
     const fromPrototype = resolvePath(environment, pathPrototype.from, null)
     const toPrototype = resolvePath(environment, pathPrototype.to, null)
 
-    const from = renderer.getAllChildRenderers()[
-        fromPrototype.id
-    ] as DataRenderer
+    const from = renderer.getAllChildRenderers()[fromPrototype.id] as DataRenderer
     const to = renderer.getAllChildRenderers()[toPrototype.id] as DataRenderer
 
-    if (path.delta == null) {
+    if (path.movement == null) {
+        // The movement path
+        path.movement = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        path.movement.classList.add('movement-path')
+        path.movement.style.opacity = '0'
+        document.getElementById('svg-canvas').append(path.movement)
+
         const fromBbox = from.element.getBoundingClientRect()
         const toBbox = to.element.getBoundingClientRect()
 
-        path.delta = {
-            x: fromBbox.x - toBbox.x,
-            y: fromBbox.y - toBbox.y,
-        }
+        // path.delta = {
+        //     x: fromBbox.x - toBbox.x,
+        //     y: fromBbox.y - toBbox.y,
+        // }
+
+        let start = { x: fromBbox.x - toBbox.x, y: fromBbox.y - toBbox.y }
+        let end = { x: 0, y: 0 }
+        let mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 }
+
+        // Convex
+        let convex = start.x < end.x
+        mid.y += (convex ? 1 : -1) * Math.abs(end.x - start.x) * 0.5
+        path.movement.setAttribute(
+            'd',
+            `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`
+        )
     }
 }
 
@@ -47,13 +63,8 @@ function onSeek(
     const toPrototype = resolvePath(environment, pathPrototype.to, null)
     const to = renderer.getAllChildRenderers()[toPrototype.id] as DataRenderer
 
-    to.element.style.transform = `translate(${remap(
-        t,
-        0,
-        1,
-        path.delta.x,
-        0
-    )}px, ${remap(t, 0, 1, path.delta.y, 0)}px)`
+    const { x, y } = this.movement.getPointAtLength(t * this.movement.getTotalLength())
+    to.element.style.transform = `translate(${x}px, ${y}px)`
 }
 
 function onEnd(
@@ -67,6 +78,7 @@ function onEnd(
     const to = renderer.getAllChildRenderers()[toPrototype.id] as DataRenderer
 
     to.element.style.transform = `translate(0px, 0px)`
+    path.movement?.remove()
 }
 
 /**
@@ -81,7 +93,7 @@ export function createConcreteMovementPath(
     return {
         ...createConcretePath(prototype),
 
-        delta: null,
+        movement: null,
 
         onBegin,
         onSeek,

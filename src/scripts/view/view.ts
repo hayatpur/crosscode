@@ -96,6 +96,7 @@ export class View {
         this.renderer.destroy()
         this.stepsTimeline?.destroy()
         this.controller.temporaryCodeQuery?.destroy()
+        this.controller.hideTrace()
 
         Executor.instance.rootView.removeView(this)
 

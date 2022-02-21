@@ -37,13 +37,13 @@ export function BinaryExpression(
         ...context,
         outputRegister: leftRegister,
     })
-    addVertex(graph, left, { nodeData: getNodeData(ast.left) })
+    addVertex(graph, left, { nodeData: getNodeData(ast.left, 'left') })
 
     const right = Compiler.compile(ast.right, environment, {
         ...context,
         outputRegister: rightRegister,
     })
-    addVertex(graph, right, { nodeData: getNodeData(ast.right) })
+    addVertex(graph, right, { nodeData: getNodeData(ast.right, 'right') })
 
     const evaluate = binaryExpressionEvaluate(
         leftRegister,
@@ -51,7 +51,7 @@ export function BinaryExpression(
         ast.operator,
         context.outputRegister
     )
-    addVertex(graph, evaluate, { nodeData: getNodeData(ast) })
+    addVertex(graph, evaluate, { nodeData: getNodeData(ast, 'operator') })
     applyExecutionNode(evaluate, environment)
 
     cleanUpRegister(environment, leftRegister[0].value)

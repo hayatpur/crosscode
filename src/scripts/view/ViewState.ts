@@ -26,6 +26,7 @@ export interface ViewState {
     isCollapsed: boolean
     isShowingSteps: boolean
     isShowingTrace: boolean
+    isSeparated: boolean
     isHidden: boolean
     isPlayingAnimation: boolean
     isSelected: boolean
@@ -55,6 +56,7 @@ export function createViewState(): ViewState {
         isCollapsed: true,
         isShowingSteps: false,
         isShowingTrace: false,
+        isSeparated: false,
         isHidden: false,
         isSelected: false,
         isPlayingAnimation: false,

@@ -19,7 +19,7 @@ export function ArrayExpression(
     graph.precondition = clone(environment)
 
     const start = arrayStartAnimation(context.outputRegister)
-    addVertex(graph, start, { nodeData: getNodeData(ast) })
+    addVertex(graph, start, { nodeData: getNodeData(ast, 'start') })
     applyExecutionNode(start, environment)
 
     for (let i = 0; i < ast.elements.length; i++) {
@@ -36,7 +36,7 @@ export function ArrayExpression(
             ...context,
             outputRegister: register,
         })
-        addVertex(graph, animation, { nodeData: getNodeData(ast.elements[i]) })
+        addVertex(graph, animation, { nodeData: getNodeData(ast.elements[i], `element ${i}`) })
 
         const place = moveAndPlaceAnimation(register, [
             ...context.outputRegister,

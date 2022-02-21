@@ -1,11 +1,11 @@
 import * as ESTree from 'estree'
 import { DataType } from '../../environment/data/DataState'
 import { flattenedEnvironmentMemory, getMemoryLocation } from '../../environment/environment'
-import { AccessorType } from '../../environment/EnvironmentState'
 import { clone } from '../../utilities/objects'
 import { View } from '../../view/View'
 import { addEdge, reads, writes } from '../execution'
 import { ExecutionNode, instanceOfExecutionNode, NodeData } from '../primitive/ExecutionNode'
+import { getAllBranches } from './abstraction/Transition'
 import { createEdge, Edge, EdgeType } from './edges/Edge'
 import {
     DataInfo,
@@ -110,6 +110,7 @@ export function getEmptyNodeData(pivot: NodeData): NodeData {
             },
         },
         type: 'AnimationGroup',
+        preLabel: null,
     }
 }
 
@@ -152,6 +153,7 @@ export function updateGroupNodeData(graph: ExecutionGraph, options: VertexOption
             },
         },
         type: 'AnimationGroup',
+        preLabel: null,
     }
 }
 
@@ -698,7 +700,7 @@ export function animationToString(
     return output
 }
 
-export enum AnimationTraceOperator {
+export enum AnimationTraceOperatorType {
     CreateLiteral = 'Create',
     CreateReference = 'CreateReference',
     CreateVariable = 'CreateVariable',
@@ -711,6 +713,11 @@ export enum AnimationTraceOperator {
     Unknown = 'Unknown',
 }
 
+export interface AnimationTraceOperator {
+    type: AnimationTraceOperatorType
+    executionId: string
+}
+
 export interface AnimationTraceChain {
     value: DataInfo
     children?: [operator: AnimationTraceOperator, child: AnimationTraceChain][]
@@ -721,12 +728,234 @@ export interface GlobalAnimationTraceChain {
     children?: [operator: AnimationTraceOperator, child: GlobalAnimationTraceChain][]
 }
 
-export function getGlobalTrace(parent: View) {
+export function getGlobalTrace(parent: View, leaves: View[], index: number) {
+    const parentTrace = getTrace(parent.originalExecution)
+    let globalTraces: GlobalAnimationTraceChain[] = []
+
+    const contains = (view: View, traceChain: AnimationTraceChain) => {
+        const representation = Object.keys(
+            view.renderer.animationRenderer.environmentRenderer.getAllChildRenderers()
+        )
+
+        const operation = traceChain.children[0][0]
+
+        const a =
+            queryExecutionGraph(view.originalExecution, (e) => e.id == operation?.executionId) !=
+            null
+        const b = representation.includes(traceChain.value.id)
+
+        return a && b
+    }
+
+    for (const trace of parentTrace) {
+        let branches = getAllBranches(trace)
+
+        for (const branch of branches) {
+            let branchPointer = branch
+            let currIndex = index
+
+            // Find representation that includes data
+            while (currIndex >= 0 && !contains(leaves[currIndex], branchPointer)) {
+                currIndex--
+            }
+            if (currIndex < 0) continue
+
+            let globalTrace: GlobalAnimationTraceChain = {
+                value: {
+                    location: {
+                        viewId: leaves[currIndex].id,
+                        localLocation: branch.value.location,
+                    },
+                    id: branch.value.id,
+                },
+                children: [],
+            }
+
+            if (branchPointer.children == null || branch.children.length == 0) {
+                continue
+            }
+
+            // Next child in branch
+            branchPointer = branchPointer.children[0][1]
+
+            // Look for next child in previous view
+            currIndex -= 1
+
+            // While there are more children
+            while (branchPointer.children?.length > 0) {
+                // Try to find a view which contains that node
+                for (let i = currIndex; i >= 0; i--) {
+                    const view = leaves[i]
+
+                    if (contains(view, branchPointer)) {
+                        // Decrement current view
+                        currIndex = i - 1
+
+                        // Add to end of chain
+                        let end = globalTrace
+                        while (end.children.length > 0) {
+                            end = end.children[0][1]
+                        }
+
+                        const node = {
+                            value: {
+                                location: {
+                                    viewId: view.id,
+                                    localLocation: branchPointer.value.location,
+                                },
+                                id: branchPointer.value.id,
+                            },
+                            children: [],
+                        }
+
+                        const operator = {
+                            type: AnimationTraceOperatorType.Unknown,
+                            executionId: null,
+                        }
+
+                        end.children.push([operator, node])
+                        break
+                    }
+                }
+
+                branchPointer = branchPointer.children[0][1]
+            }
+
+            globalTraces.push(globalTrace)
+        }
+    }
+
+    return globalTraces
+}
+
+export function getGlobalTraces(parent: View): GlobalAnimationTraceChain[] {
     if (!parent.state.isShowingSteps) {
         return null
     }
 
-    // Get all leafs of parent
+    const leaves = getLeavesOfView(parent)
+    let globalTraces: GlobalAnimationTraceChain[] = []
+
+    // Create trace from target to other leaves
+    for (let i = leaves.length - 1; i >= 0; i--) {
+        const targetTrace = getGlobalTrace(parent, leaves, i)
+        globalTraces = [...globalTraces, ...targetTrace]
+    }
+
+    // Initialize trace
+    // for (const trace of traces) {
+    //     let branches = getAllBranches(trace)
+
+    //     for (const branch of branches) {
+    //         let branchPointer = branch
+
+    //         // Find representation that includes data
+    //         if (!currRepresentation.include.includes(branch.value.id)) {
+    //             continue
+    //         }
+
+    //         let currIndex = leaves.length - 1
+    //         let currView = leaves[currIndex]
+    //         let currRepresentation = currView.renderer.animationRenderer?.representation
+
+    //         let globalTrace: GlobalAnimationTraceChain = {
+    //             value: {
+    //                 location: { viewId: currView.id, localLocation: branch.value.location },
+    //                 id: branch.value.id,
+    //             },
+    //             children: [],
+    //         }
+
+    //         if (branchPointer.children == null || branch.children.length == 0) {
+    //             globalTraces.push(globalTrace)
+    //             continue
+    //         }
+
+    //         branchPointer = branchPointer.children[0][1]
+    //         currIndex -= 1
+
+    //         while (branchPointer.children?.length > 0) {
+    //             for (let i = currIndex; i >= 0; i--) {
+    //                 const view = leaves[i]
+    //                 const representation = view.renderer.animationRenderer?.representation
+
+    //                 if (representation.include.includes(branchPointer.value.id)) {
+    //                     currView = view
+    //                     currRepresentation = representation
+    //                     currIndex = i - 1
+
+    //                     // Add to end of chain
+    //                     let end = globalTrace
+    //                     while (end.children.length > 0) {
+    //                         end = end.children[0][1]
+    //                     }
+
+    //                     const node = {
+    //                         value: {
+    //                             location: {
+    //                                 viewId: currView.id,
+    //                                 localLocation: branchPointer.value.location,
+    //                             },
+    //                             id: branchPointer.value.id,
+    //                         },
+    //                         children: [],
+    //                     }
+
+    //                     const operator = {
+    //                         type: AnimationTraceOperatorType.Unknown,
+    //                         executionId: null,
+    //                     }
+
+    //                     end.children.push([operator, node])
+    //                     break
+    //                 }
+    //             }
+
+    //             branchPointer = branchPointer.children[0][1]
+    //         }
+
+    //         globalTraces.push(globalTrace)
+    //     }
+    // }
+
+    // for (const id of filter) {
+    //     const chain = { value: { id, location: null }, children: [] }
+    //     traces.push(chain)
+    // }
+
+    // // Go through each leaf and append to trace
+    // for (const leaf of leaves) {
+    //     const representation = leaf.renderer.animationRenderer?.representation
+    //     if (representation == null || representation.include == null) continue
+
+    //     for (const trace of traces) {
+    //         if (representation.include.includes(trace.value.id)) {
+    //             const node: GlobalAnimationTraceChain = {
+    //                 value: {
+    //                     id: trace.value.id,
+    //                     location: {
+    //                         viewId: leaf.id,
+    //                         localLocation: [{ type: AccessorType.ID, value: trace.value.id }],
+    //                     },
+    //                 },
+    //                 children: [],
+    //             }
+
+    //             // Add to end of chain
+    //             let end = trace
+    //             while (end.children.length > 0) {
+    //                 end = end.children[0][1]
+    //             }
+
+    //             end.children.push([AnimationTraceOperator.Unknown, node])
+    //         }
+    //     }
+    // }
+
+    return globalTraces
+}
+
+export function getLeavesOfView(parent: View): View[] {
     let leaves: View[] = []
     let candidates: View[] = [parent]
     let filter: Set<string> = new Set()
@@ -746,44 +975,9 @@ export function getGlobalTrace(parent: View) {
             candidates.push(view)
         }
     }
+    leaves.reverse()
 
-    // Initialize trace
-    const traces: GlobalAnimationTraceChain[] = []
-    for (const id of filter) {
-        const chain = { value: { id, location: null }, children: [] }
-        traces.push(chain)
-    }
-
-    // Go through each leaf and append to trace
-    for (const leaf of leaves) {
-        const representation = leaf.renderer.animationRenderer?.representation
-        if (representation == null || representation.include == null) continue
-
-        for (const trace of traces) {
-            if (representation.include.includes(trace.value.id)) {
-                const node: GlobalAnimationTraceChain = {
-                    value: {
-                        id: trace.value.id,
-                        location: {
-                            viewId: leaf.id,
-                            localLocation: [{ type: AccessorType.ID, value: trace.value.id }],
-                        },
-                    },
-                    children: [],
-                }
-
-                // Add to end of chain
-                let end = trace
-                while (end.children.length > 0) {
-                    end = end.children[0][1]
-                }
-
-                end.children.push([AnimationTraceOperator.Unknown, node])
-            }
-        }
-    }
-
-    return traces
+    return leaves
 }
 
 export function queryExecutionGraph(
@@ -849,6 +1043,18 @@ export function getTrace(
                 },
             })
         }
+
+        // Add variable bindings
+        for (const frame of environment.scope) {
+            for (const [key, identifier] of Object.entries(frame.bindings)) {
+                flow.push({
+                    value: {
+                        id: identifier.name,
+                        location: identifier.location,
+                    },
+                })
+            }
+        }
     }
 
     // Update the flow based on operation of animation node
@@ -880,12 +1086,10 @@ export function getTrace(
 }
 
 export function getChunkTrace(
-    parent: ExecutionGraph,
+    nodes: (ExecutionGraph | ExecutionNode)[],
     flow: AnimationTraceChain[] = null
 ): AnimationTraceChain[] {
     // Chunk
-    const nodes = parent.vertices
-
     const postcondition = nodes[nodes.length - 1].postcondition
 
     // Set default flow to ids of literals and arrays in environment
@@ -964,13 +1168,26 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                 // First trace is the move (i.e. writes[0] <- reads[0])
                 traces.push({
                     value: ws[0],
-                    children: [[AnimationTraceOperator.MoveAndPlace, { value: rs[0] }]],
+                    children: [
+                        [
+                            {
+                                type: AnimationTraceOperatorType.MoveAndPlace,
+                                executionId: animation.id,
+                            },
+                            { value: rs[0] },
+                        ],
+                    ],
                 })
             } else {
                 // Place
                 traces.push({
                     value: ws[0],
-                    children: [[AnimationTraceOperator.Place, { value: rs[0] }]],
+                    children: [
+                        [
+                            { type: AnimationTraceOperatorType.Place, executionId: animation.id },
+                            { value: rs[0] },
+                        ],
+                    ],
                 })
             }
 
@@ -979,14 +1196,27 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
             // Copy <-- Original
             traces.push({
                 value: ws[0],
-                children: [[AnimationTraceOperator.CopyLiteral, { value: rs[0] }]],
+                children: [
+                    [
+                        { type: AnimationTraceOperatorType.CopyLiteral, executionId: animation.id },
+                        { value: rs[0] },
+                    ],
+                ],
             })
             break
         case 'CreateLiteralAnimation':
             // Literal <-- Create
             traces.push({
                 value: ws[0],
-                children: [[AnimationTraceOperator.CreateLiteral, { value: null }]],
+                children: [
+                    [
+                        {
+                            type: AnimationTraceOperatorType.CreateLiteral,
+                            executionId: animation.id,
+                        },
+                        { value: null },
+                    ],
+                ],
             })
             break
         case 'BindAnimation':
@@ -994,27 +1224,56 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
             if (ws.length == 3) {
                 traces.push({
                     value: ws[2],
-                    children: [[AnimationTraceOperator.CreateLiteral, { value: null }]],
+                    children: [
+                        [
+                            {
+                                type: AnimationTraceOperatorType.CreateLiteral,
+                                executionId: animation.id,
+                            },
+                            { value: null },
+                        ],
+                    ],
                 })
             }
 
             // Creating reference
             traces.push({
                 value: ws[1],
-                children: [[AnimationTraceOperator.CreateReference, { value: null }]],
+                children: [
+                    [
+                        {
+                            type: AnimationTraceOperatorType.CreateReference,
+                            executionId: animation.id,
+                        },
+                        { value: null },
+                    ],
+                ],
             })
 
             // Creating variable
             traces.push({
                 value: ws[0],
-                children: [[AnimationTraceOperator.CreateVariable, { value: null }]],
+                children: [
+                    [
+                        {
+                            type: AnimationTraceOperatorType.CreateVariable,
+                            executionId: animation.id,
+                        },
+                        { value: null },
+                    ],
+                ],
             })
             break
         case 'ArrayStartAnimation':
             // Creating array
             traces.push({
                 value: ws[0],
-                children: [[AnimationTraceOperator.CreateArray, { value: null }]],
+                children: [
+                    [
+                        { type: AnimationTraceOperatorType.CreateArray, executionId: animation.id },
+                        { value: null },
+                    ],
+                ],
             })
             break
         case 'GetMember':
@@ -1024,12 +1283,28 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                 // Static property like 'length'
                 traces.push({
                     value: ws[0],
-                    children: [[AnimationTraceOperator.CreateLiteral, { value: null }]],
+                    children: [
+                        [
+                            {
+                                type: AnimationTraceOperatorType.CreateLiteral,
+                                executionId: animation.id,
+                            },
+                            { value: null },
+                        ],
+                    ],
                 })
             } else {
                 traces.push({
                     value: ws[0],
-                    children: [[AnimationTraceOperator.CopyLiteral, { value: rs[0] }]],
+                    children: [
+                        [
+                            {
+                                type: AnimationTraceOperatorType.CopyLiteral,
+                                executionId: animation.id,
+                            },
+                            { value: rs[0] },
+                        ],
+                    ],
                 })
             }
             break
@@ -1037,15 +1312,35 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
             traces.push({
                 value: ws[0],
                 children: [
-                    [AnimationTraceOperator.BinaryOperation, { value: rs[0] }],
-                    [AnimationTraceOperator.BinaryOperation, { value: rs[1] }],
+                    [
+                        {
+                            type: AnimationTraceOperatorType.BinaryOperation,
+                            executionId: animation.id,
+                        },
+                        { value: rs[0] },
+                    ],
+                    [
+                        {
+                            type: AnimationTraceOperatorType.BinaryOperation,
+                            executionId: animation.id,
+                        },
+                        { value: rs[1] },
+                    ],
                 ],
             })
             break
         case 'UpdateExpression':
             traces.push({
                 value: ws[0],
-                children: [[AnimationTraceOperator.UpdateOperation, { value: rs[0] }]],
+                children: [
+                    [
+                        {
+                            type: AnimationTraceOperatorType.UpdateOperation,
+                            executionId: animation.id,
+                        },
+                        { value: rs[0] },
+                    ],
+                ],
             })
             break
         default:
@@ -1110,7 +1405,7 @@ export function traceChainToString(chain: AnimationTraceChain) {
         const { box: childBox, output: childString } = traceChainToString(childChain)
 
         rest += `\n${childString}`
-        rest += `\n${box}-->${operator.toString()}${childBox}`
+        rest += `\n${box}-->${operator.executionId.toString()}${childBox}`
     }
 
     const output = `${box}\n${rest}`

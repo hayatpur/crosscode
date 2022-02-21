@@ -1,6 +1,8 @@
 ```typescript
 
 // Data describes all program variables and literals
+
+
 interface Data: {
     name: string; // Name of variable, i.e. `arr[i]`
     type: DataType;

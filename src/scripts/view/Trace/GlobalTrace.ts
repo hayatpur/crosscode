@@ -1,5 +1,5 @@
 import { getArrow } from 'curved-arrows'
-import { getGlobalTrace, GlobalAnimationTraceChain } from '../../execution/graph/graph'
+import { getGlobalTraces, GlobalAnimationTraceChain } from '../../execution/graph/graph'
 import { Executor } from '../../executor/Executor'
 import { View } from '../View'
 
@@ -15,20 +15,25 @@ export class GlobalTrace {
     }
 
     show() {
-        this.globalTrace = getGlobalTrace(this.parent)
+        this.globalTrace = getGlobalTraces(this.parent)
         console.log(this.globalTrace)
+
+        console.log(
+            this.parent.stepsTimeline.views.map((v) =>
+                v.renderer.animationRenderer.environmentRenderer.getAllChildRenderers()
+            )
+        )
 
         for (const trace of this.globalTrace) {
             let end = trace
             let currentElement = null
 
-            while (end.children.length > 0) {
+            while (end != null) {
                 if (end.value.location == null) {
                     end = end.children[0][1]
                     continue
                 }
 
-                console.log(end.value.location.viewId)
                 const view = Executor.instance.rootView.viewLookup[end.value.location.viewId]
 
                 const renderers =
@@ -36,17 +41,27 @@ export class GlobalTrace {
 
                 // Connection is between the first and second element
                 const firstElement = currentElement
-                const secondElement = renderers[end.value.id].element
+                const secondElement = renderers[end.value.id]?.element
                 if (secondElement == null) {
-                    end = end.children[0][1]
-                    console.warn('No element found for id', end.value.id)
+                    console.warn('No element found for id', end.value.id, Object.keys(renderers))
+
+                    if (end.children != null && end.children[0] != null) {
+                        end = end.children[0][1]
+                    } else {
+                        end = null
+                    }
                     continue
                 }
 
+                currentElement = secondElement
+
                 // Start of trace
                 if (firstElement == null) {
-                    currentElement = secondElement
-                    end = end.children[0][1]
+                    if (end.children != null && end.children[0] != null) {
+                        end = end.children[0][1]
+                    } else {
+                        end = null
+                    }
                     continue
                 }
 
@@ -59,7 +74,11 @@ export class GlobalTrace {
                 // Create connection reference
                 this.connectionReferences.push({ first: firstElement, second: secondElement })
 
-                end = end.children[0][1]
+                if (end.children != null && end.children[0] != null) {
+                    end = end.children[0][1]
+                } else {
+                    end = null
+                }
             }
         }
     }
@@ -74,7 +93,7 @@ export class GlobalTrace {
 
             const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getArrow(
                 firstBbox.x + firstBbox.width / 2,
-                firstBbox.y + firstBbox.height / 2,
+                firstBbox.y + firstBbox.height,
                 secondBbox.x + secondBbox.width / 2,
                 secondBbox.y + secondBbox.height / 2,
                 {

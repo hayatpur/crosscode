@@ -12,6 +12,7 @@ export class ViewRenderer {
     element: HTMLDivElement
     header: HTMLDivElement
     label: HTMLDivElement
+    preLabel: HTMLDivElement
 
     // Steps
     stepsContainer: HTMLDivElement
@@ -20,6 +21,7 @@ export class ViewRenderer {
     controlElement: HTMLDivElement
     animationToggle: HTMLDivElement
     traceToggle: HTMLDivElement
+    separateToggle: HTMLDivElement
 
     // Body
     viewBody: HTMLDivElement
@@ -42,6 +44,14 @@ export class ViewRenderer {
         this.header = document.createElement('div')
         this.header.classList.add('view-header')
         this.element.appendChild(this.header)
+
+        // this.preLabel = document.createElement('div')
+        // this.preLabel.classList.add('pre-view-label')
+        // this.header.appendChild(this.preLabel)
+        // this.preLabel.innerHTML =
+        //     view.originalExecution.nodeData.preLabel != null
+        //         ? `${view.originalExecution.nodeData.preLabel} >`
+        //         : ''
 
         this.label = document.createElement('div')
         this.label.classList.add('view-label')
@@ -87,6 +97,7 @@ export class ViewRenderer {
         this.element.appendChild(this.controlElement)
         this.setupTraceToggle()
         this.setupAnimationToggle()
+        this.setupSeparateToggle()
     }
 
     setupTraceToggle() {
@@ -94,6 +105,13 @@ export class ViewRenderer {
         this.traceToggle.classList.add('view-control-button')
         this.traceToggle.innerHTML = '<ion-icon name="git-branch-outline"></ion-icon>'
         this.header.appendChild(this.traceToggle)
+    }
+
+    setupSeparateToggle() {
+        this.separateToggle = document.createElement('div')
+        this.separateToggle.classList.add('view-control-button')
+        this.separateToggle.innerHTML = '<ion-icon name="layers-outline"></ion-icon>'
+        this.header.appendChild(this.separateToggle)
     }
 
     setupAnimationToggle() {
@@ -146,18 +164,16 @@ export class ViewRenderer {
         this.element.style.top = `${top}px`
 
         // Update scale
-        // const scale = lerp(
-        //     getNumericalValueOfStyle(
-        //         this.element.style.transform.substring(6),
-        //         1
-        //     ),
-        //     this.view.state.transform.scale,
-        //     t * 0.1
-        // )
-        // this.element.style.transform = `scale(${
-        //     scale * this.view.state.transform.scaleMultiplier
-        // })`
-
+        // if (!this.element.parentElement.classList.contains('panning-area')) {
+        //     const scale = lerp(
+        //         getNumericalValueOfStyle(this.element.style.transform.substring(6), 1),
+        //         this.view.state.transform.scale,
+        //         t * 0.1
+        //     )
+        //     this.element.style.transform = `scale(${
+        //         scale * this.view.state.transform.scaleMultiplier
+        //     })`
+        // }
         this.updateConnection()
     }
 

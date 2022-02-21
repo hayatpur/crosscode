@@ -67,6 +67,7 @@ export class RootView {
         }px`
 
         this.panningArea.element.style.left = `${separatorPosition}px`
+        // this.panningArea.element.style.top = `${0}px`
 
         // Render timeline
         // this.rootTimeline.tick(dt)
@@ -78,8 +79,7 @@ export class RootView {
 
         if (options.isRoot) {
             this.parentView = view
-            this.panningArea.element.appendChild(view.renderer.element)
-            this.panningArea.view = view
+            this.panningArea.addRoot(view)
             view.state.transform.position.x = 100
             view.state.transform.position.y = 100
         }
@@ -119,5 +119,36 @@ export class RootView {
         const index = this.codeQueries.indexOf(query)
         if (index === -1) return
         this.codeQueries.splice(index, 1)
+    }
+
+    destroy() {
+        // views: View[] = []
+        // viewLookup: { [key: string]: View } = {}
+        // cursor: Cursor = new Cursor()
+        // separator: RootViewSeparator = new RootViewSeparator()
+
+        // panningArea: PanningArea
+
+        // // Queries
+        // codeQueryContainer: HTMLElement
+        // codeQueryGroups: CodeQueryGroup[] = []
+        // codeQueries: CodeQuery[] = []
+
+        for (const view of this.views) {
+            view.destroy()
+        }
+
+        this.cursor.destroy()
+        this.separator.destroy()
+
+        for (const group of this.codeQueryGroups) {
+            group.destroy()
+        }
+
+        for (const query of this.codeQueries) {
+            query.destroy()
+        }
+
+        this.codeQueryContainer.remove()
     }
 }

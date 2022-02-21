@@ -1,4 +1,5 @@
-import { AnimationTraceChain, getChunkTrace } from '../../execution/graph/graph'
+import { getAllBranches } from '../../execution/graph/abstraction/Transition'
+import { AnimationTraceChain, getTrace } from '../../execution/graph/graph'
 import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { View } from '../View'
 import { Trace } from './Trace'
@@ -40,12 +41,15 @@ export class TraceCollection {
         }
 
         if (this.traceChains == null) {
-            this.traceChains = getChunkTrace(this.view.originalExecution)
+            this.traceChains = getTrace(this.view.originalExecution)
         }
 
         for (const chain of this.traceChains) {
-            const trace = new Trace(this.view, chain)
-            this.traces.push(trace)
+            const branches = getAllBranches(chain)
+            for (const branch of branches) {
+                const trace = new Trace(this.view, branch)
+                this.traces.push(trace)
+            }
         }
 
         for (const trace of this.traces) {

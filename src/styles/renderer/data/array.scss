@@ -12,6 +12,11 @@
     // margin-left: -1px;
 }
 
+// .data.data-literal.array-item:not(.last-array-item):after {
+//     content: ',';
+//     color: var(--color-3);
+// }
+
 .data-array-brace {
     opacity: 0.7;
     font-weight: 400;

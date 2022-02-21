@@ -5,7 +5,7 @@ import { DataType, PrototypicalDataState } from './data/DataState'
 import { LiteralRenderer } from './data/literal/LiteralRenderer'
 import { FunctionRenderer } from './data/reference/FunctionRenderer'
 import { resolvePath } from './environment'
-import { PrototypicalEnvironmentState } from './EnvironmentState'
+import { AccessorType, PrototypicalEnvironmentState } from './EnvironmentState'
 import { IdentifierRenderer } from './identifier/IdentifierRenderer'
 
 export function createDataRenderer(data: PrototypicalDataState) {
@@ -56,6 +56,12 @@ export class EnvironmentRenderer {
         // Render identifiers
         env.renderIdentifiers(state, representation)
         setTimeout(() => env.renderIdentifiers(state, representation))
+    }
+
+    tick(dt: number) {
+        for (const id of Object.keys(this.identifierRenderers)) {
+            this.identifierRenderers[id].tick(dt)
+        }
     }
 
     select(selection: Set<string>) {
@@ -156,6 +162,7 @@ export class EnvironmentRenderer {
     ) {
         // Hit test
         const hits = new Set()
+        const dataHits = new Set()
 
         for (const scope of state.scope) {
             for (const name of Object.keys(scope.bindings)) {
@@ -174,6 +181,7 @@ export class EnvironmentRenderer {
                 // this.element.appendChild(this.identifierRenderers[name].element)
 
                 hits.add(name)
+                dataHits.add(data.id)
 
                 this.identifierRenderers[name].setState(
                     scope.bindings[name],
@@ -190,6 +198,34 @@ export class EnvironmentRenderer {
                 renderer.destroy()
                 renderer.element.remove()
                 delete this.identifierRenderers[name]
+            }
+        }
+
+        // Add out label to the RHS of the data
+        for (const id of Object.keys(this.dataRenderers)) {
+            if (!dataHits.has(id)) {
+                const dataRenderer = this.dataRenderers[id]
+                if (dataRenderer == null) continue
+
+                const name = 'out'
+
+                if (!(name in this.identifierRenderers)) {
+                    const renderer = new IdentifierRenderer()
+                    this.identifierRenderers[name] = renderer
+                    this.element.appendChild(renderer.element)
+                }
+
+                hits.add(name)
+
+                this.identifierRenderers[name].setState(
+                    { name, location: [{ type: AccessorType.ID, value: id }] },
+                    dataRenderer,
+                    this.element
+                )
+
+                this.identifierRenderers[name].element.classList.add('out')
+
+                break
             }
         }
     }

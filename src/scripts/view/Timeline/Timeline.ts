@@ -1,9 +1,9 @@
 import { AbstractionSelection } from '../../execution/graph/abstraction/Abstractor'
-import { lerp } from '../../utilities/math'
 import { View } from '../View'
 
 export enum TimelineLayoutType {
     Vertical = 'Vertical',
+
     SourceCode = 'SourceCode',
 }
 
@@ -93,6 +93,7 @@ export class Timeline {
         // Add view
         this.views.push(view)
 
+        anchor.appendChild(view.renderer.element)
         // Add connection
         // const connection = document.createElementNS(
         //     'http://www.w3.org/2000/svg',
@@ -102,16 +103,16 @@ export class Timeline {
         // document.getElementById('svg-canvas').append(connection)
         // this.connections.push(connection)
 
-        const anchorBbox = anchor.getBoundingClientRect()
-        const viewBbox = view.renderer.element.getBoundingClientRect()
+        // const anchorBbox = anchor.getBoundingClientRect()
+        // const viewBbox = view.renderer.element.getBoundingClientRect()
 
-        // Put view in right position
-        view.state.transform.position.x = anchorBbox.x
-        view.state.transform.position.y = anchorBbox.y
+        // // Put view in right position
+        // view.state.transform.position.x = anchorBbox.x
+        // view.state.transform.position.y = anchorBbox.y
 
-        // Update width and height of anchor
-        anchor.style.width = `${viewBbox.width}px`
-        anchor.style.height = `${viewBbox.height}px`
+        // // Update width and height of anchor
+        // anchor.style.width = `${viewBbox.width}px`
+        // anchor.style.height = `${viewBbox.height}px`
 
         view.renderer.updatePosition(1)
     }
@@ -184,24 +185,20 @@ export class Timeline {
     updateAnchorPositions() {}
 
     updateViewPositions(t = 0.4) {
-        for (let i = 0; i < this.views.length; i++) {
-            const view = this.views[i]
-            const anchor = this.anchors[i]
-
-            const anchorBbox = anchor.getBoundingClientRect()
-            const viewBbox = view.renderer.element.getBoundingClientRect()
-
-            // Put view in right position
-            view.state.transform.position.x = lerp(view.state.transform.position.x, anchorBbox.x, t)
-            view.state.transform.position.y = lerp(view.state.transform.position.y, anchorBbox.y, t)
-
-            // view.state.transform.scaleMultiplier =
-            //     this.parent.state.transform.scale
-
-            // Update width and height of anchor
-            anchor.style.width = `${viewBbox.width}px`
-            anchor.style.height = `${viewBbox.height}px`
-        }
+        // for (let i = 0; i < this.views.length; i++) {
+        //     const view = this.views[i]
+        //     const anchor = this.anchors[i]
+        //     const anchorBbox = anchor.getBoundingClientRect()
+        //     const viewBbox = view.renderer.element.getBoundingClientRect()
+        //     // Put view in right position
+        //     view.state.transform.position.x = lerp(view.state.transform.position.x, anchorBbox.x, t)
+        //     view.state.transform.position.y = lerp(view.state.transform.position.y, anchorBbox.y, t)
+        //     // view.state.transform.scaleMultiplier =
+        //     //     this.parent.state.transform.scale
+        //     // Update width and height of anchor
+        //     anchor.style.width = `${viewBbox.width}px`
+        //     anchor.style.height = `${viewBbox.height}px`
+        // }
     }
 
     getAbstractionSelection(originId: string = null) {

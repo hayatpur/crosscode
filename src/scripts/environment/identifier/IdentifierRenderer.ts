@@ -3,6 +3,8 @@ import { PrototypicalIdentifierState } from '../EnvironmentState'
 
 export class IdentifierRenderer {
     element: HTMLElement
+    reference: HTMLElement
+    environmentReference: HTMLElement
 
     constructor() {
         this.element = document.createElement('div')
@@ -24,15 +26,27 @@ export class IdentifierRenderer {
     ) {
         this.element.innerHTML = `${state.name}`
 
-        const dataBbox = data.element.getBoundingClientRect()
-        const environmentBbox = environmentElement.getBoundingClientRect()
+        this.reference = data.element
+        this.environmentReference = environmentElement
+    }
+
+    tick(dt: number) {
+        if (this.reference == null) {
+            return
+        }
+
+        const dataBbox = this.reference.getBoundingClientRect()
+        const environmentBbox = this.environmentReference.getBoundingClientRect()
 
         // this.element.style.top = `${dataBbox.y - 22 - environmentBbox.y}px`
+        const delta = dataBbox.x - environmentBbox.x
+        const zoom = 1 // Executor.instance.rootView.panningArea.panzoom.getTransform().scale
         this.element.style.top = `${18}px`
-        this.element.style.left = `${dataBbox.x - environmentBbox.x}px`
+        this.element.style.left = `${(1 / zoom) * delta}px`
     }
 
     destroy() {
         this.element.remove()
+        this.reference = null
     }
 }

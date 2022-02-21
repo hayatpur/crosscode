@@ -22,7 +22,7 @@ export function Program(
             ...context,
             controlOutput,
         })
-        addVertex(graph, animation, { nodeData: getNodeData(statement) })
+        addVertex(graph, animation, { nodeData: getNodeData(statement, 'statement') })
     }
 
     graph.postcondition = clone(environment)

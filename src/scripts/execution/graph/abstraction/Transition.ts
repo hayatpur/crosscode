@@ -10,7 +10,12 @@ import { transitionCreateVariable } from '../../primitive/Transition/Operations/
 import { transitionMove } from '../../primitive/Transition/Operations/MoveTransitionAnimation'
 import { transitionPlace } from '../../primitive/Transition/Operations/PlaceTransitionAnimation'
 import { DataInfo, ExecutionGraph } from '../ExecutionGraph'
-import { AnimationTraceChain, AnimationTraceOperator, getChunkTrace } from '../graph'
+import {
+    AnimationTraceChain,
+    AnimationTraceOperator,
+    AnimationTraceOperatorType,
+    getTrace,
+} from '../graph'
 
 export interface TransitionAnimationNode extends AnimationNode {
     applyInvariant: (
@@ -38,7 +43,7 @@ export function createTransition(node: ExecutionNode | ExecutionGraph): Animatio
         return transition
     }
 
-    const trace = getChunkTrace(node)
+    const trace = getTrace(node)
     const transitions = getTransitionsFromTrace(trace)
 
     // Add all the transitions
@@ -78,7 +83,7 @@ function getTransitionsFromTrace(trace: AnimationTraceChain[]): TransitionAnimat
             // Create a new animation w.r.t the action that's there
             const transition = createTransitionAnimation(
                 chain.value,
-                operations[operations.length - 1],
+                operations[operations.length - 1].type,
                 leaves.map((leaf) => leaf.value)
             )
 
@@ -86,7 +91,7 @@ function getTransitionsFromTrace(trace: AnimationTraceChain[]): TransitionAnimat
         } else {
             const create = createTransitionAnimation(
                 chain.value,
-                AnimationTraceOperator.CreateLiteral,
+                AnimationTraceOperatorType.CreateLiteral,
                 leaves.map((leaf) => leaf.value)
             )
 
@@ -197,18 +202,18 @@ export function getAllOperationsAndLeaves(
 
 function createTransitionAnimation(
     output: DataInfo,
-    operation: AnimationTraceOperator,
+    operation: AnimationTraceOperatorType,
     origins: DataInfo[]
 ): TransitionAnimationNode {
     const mapping = {
-        [AnimationTraceOperator.MoveAndPlace]: transitionMove,
-        [AnimationTraceOperator.CopyLiteral]: transitionMove,
-        [AnimationTraceOperator.CreateLiteral]: transitionCreate,
-        [AnimationTraceOperator.CreateArray]: transitionCreateArray,
-        [AnimationTraceOperator.CreateReference]: transitionCreateReference,
-        [AnimationTraceOperator.CreateVariable]: transitionCreateVariable,
-        [AnimationTraceOperator.Place]: transitionPlace,
-        [AnimationTraceOperator.UpdateOperation]: transitionMove,
+        [AnimationTraceOperatorType.MoveAndPlace]: transitionMove,
+        [AnimationTraceOperatorType.CopyLiteral]: transitionMove,
+        [AnimationTraceOperatorType.CreateLiteral]: transitionCreate,
+        [AnimationTraceOperatorType.CreateArray]: transitionCreateArray,
+        [AnimationTraceOperatorType.CreateReference]: transitionCreateReference,
+        [AnimationTraceOperatorType.CreateVariable]: transitionCreateVariable,
+        [AnimationTraceOperatorType.Place]: transitionPlace,
+        [AnimationTraceOperatorType.UpdateOperation]: transitionMove,
     }
 
     // Create the transition animation

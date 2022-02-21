@@ -6,6 +6,7 @@ import { DataInfo } from '../graph/ExecutionGraph'
 export interface NodeData {
     location: ESTree.SourceLocation
     type: string
+    preLabel: string
 }
 
 export interface ChunkNodeData extends NodeData {}
@@ -62,6 +63,7 @@ export function createExecutionNode(
     nodeData: NodeData = {
         location: null,
         type: null,
+        preLabel: null,
     }
 ): ExecutionNode {
     Easing.cubic

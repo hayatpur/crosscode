@@ -25,8 +25,8 @@ import { Program } from './Statements/Program'
 import { VariableDeclaration } from './Statements/VariableDeclaration'
 import { VariableDeclarator } from './Statements/VariableDeclarator'
 
-export function getNodeData(node: ESTree.Node): NodeData {
-    return { location: node.loc, type: node.type }
+export function getNodeData(node: ESTree.Node, preLabel: string = null): NodeData {
+    return { location: node.loc, type: node.type, preLabel }
 }
 
 export class Compiler {

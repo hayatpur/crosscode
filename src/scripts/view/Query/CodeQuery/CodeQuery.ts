@@ -66,7 +66,8 @@ export class CodeQuery {
         this.updateCodeSelection()
 
         // Update connection
-        this.updateConnection()
+
+        // console.log(factor)
 
         // Update opacity
         this.opacity = Math.max(Math.min(this.opacity, 1), 0)
@@ -81,6 +82,16 @@ export class CodeQuery {
             this.incomingConnection.classList.remove('fade-out')
             this.outgoingConnection.classList.remove('fade-out')
             this.element.classList.remove('fade-out')
+        }
+
+        // Scale
+        const dy = this.updateConnection() / 1000.0
+        const factor = Math.exp(-(dy * dy))
+        if (
+            this.selectedView.renderer?.element != null &&
+            !this.selectedView.renderer?.element.parentElement.classList.contains('panning-area')
+        ) {
+            this.selectedView.state.transform.scale = factor
         }
 
         this.codeSelectionElement.style.opacity = this.opacity.toString()
@@ -136,6 +147,8 @@ export class CodeQuery {
 
         const d = catmullRomSolve(points, 0.8) // SVGCatmullRomSpline.toPath(points, 4, true)
         this.incomingConnection.setAttribute('d', d)
+
+        return Math.abs(points[1] - points[points.length - 1])
         // this.perfectArrows()
     }
 
@@ -165,12 +178,11 @@ export class CodeQuery {
 
         // Find delta
         if (pan) {
-            const indicatorBbox = this.indicatorElement.getBoundingClientRect()
+            const codeBbox = this.codeSelectionElement.getBoundingClientRect()
             const viewBbox = this.selectedView.state.isShowingSteps
                 ? this.selectedView.renderer.stepsContainer.getBoundingClientRect()
                 : this.selectedView.renderer.viewBody.getBoundingClientRect()
-            const delta =
-                indicatorBbox.y + indicatorBbox.height / 2 - (viewBbox.y + viewBbox.height / 2)
+            const delta = codeBbox.y + codeBbox.height / 2 - (viewBbox.y + viewBbox.height / 2)
 
             Executor.instance.rootView.parentView.state.transform.position.y += delta
         }

@@ -65,6 +65,16 @@ export class ViewController {
             renderer.traceToggle.classList.toggle('active')
         })
 
+        renderer.separateToggle.addEventListener('click', () => {
+            if (!state.isSeparated) {
+                this.separate()
+            } else {
+                this.unSeparate()
+            }
+
+            renderer.separateToggle.classList.toggle('active')
+        })
+
         renderer.animationToggle.addEventListener('click', () => {
             if (!state.isPlayingAnimation) {
                 this.playAnimation()
@@ -74,6 +84,16 @@ export class ViewController {
         })
 
         this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
+    }
+
+    separate() {
+        this.view.state.isSeparated = true
+        this.view.renderer.animationRenderer?.separate()
+    }
+
+    unSeparate() {
+        this.view.state.isSeparated = false
+        this.view.renderer.animationRenderer?.unSeparate(!this.view.state.isShowingTrace)
     }
 
     playAnimation() {
@@ -149,16 +169,19 @@ export class ViewController {
         if (instanceOfExecutionGraph(this.view.originalExecution)) {
             const children = this.queryChildren()
 
+            let first = true
+
             for (const child of children) {
-                const start = performance.now()
-                console.log(child)
                 const step = Executor.instance.rootView.createView(child, {
                     expand: expanded,
                 })
                 this.view.stepsTimeline.addView(step)
-                console.log(
-                    `Created step for ${child.nodeData.type} in ${performance.now() - start}ms`
-                )
+
+                // if (first) {
+                //     step.controller.temporaryCodeQuery.select(true)
+                // }
+
+                first = false
             }
         }
 
@@ -246,7 +269,7 @@ export class ViewController {
         if (state.isShowingSteps) {
             renderer.globalTrace.hide()
         } else {
-            renderer.animationRenderer?.hideTrace()
+            renderer.animationRenderer?.hideTrace(!state.isSeparated)
             renderer.trace.hide()
         }
     }
@@ -414,8 +437,6 @@ export class ViewController {
         renderer.controlElement.classList.remove('disabled')
 
         renderer.stepsContainer.classList.add('expanded')
-
-        console.log(this.view.originalExecution.nodeData)
         renderer.animationRenderer.update()
     }
 

@@ -8,7 +8,7 @@
 }
 
 .view {
-    position: absolute;
+    // position: absolute;
     top: 0;
     left: 0;
     display: flex;
@@ -88,7 +88,12 @@
     opacity: 0.5;
 }
 
-.view-label {
+.view.showing-steps .view-header .pre-view-label {
+    opacity: 0.3;
+}
+
+.view-label,
+.pre-view-label {
     color: #cbcbcb9c;
     width: fit-content;
 
@@ -101,6 +106,10 @@
     font-weight: 300;
 
     transition: 0.5s;
+}
+
+.pre-view-label {
+    opacity: 0.5;
 }
 
 .view.showing-steps.attached:not(.expanded) > .view-header {
@@ -155,10 +164,20 @@
 
 .animation-renderers-pre {
     display: none;
+    position: absolute;
+    top: 0px;
+    opacity: 0;
+    transition: 0.2s;
 }
 
 .animation-renderers-pre.visible {
     display: inherit;
+}
+
+.animation-renderers-pre.visible.separated {
+    position: inherit;
+    top: inherit;
+    opacity: 1;
 }
 
 .view-steps-container {
@@ -299,10 +318,14 @@
     cursor: grabbing !important;
 }
 
+.panning-area > .view {
+    position: absolute;
+}
+
 .panning-area > div {
-    // transition-property: transform;
-    // transition-duration: 0.2s;
-    // transform: translate(0px, 0px);
+    transition-property: transform;
+    transition-duration: 0.2s;
+    transform: translate(0px, 0px);
 }
 
 .panning-area.dragging > div {
@@ -311,4 +334,10 @@
 
 .view.hidden {
     display: none;
+}
+
+.panning-area-view {
+    position: absolute;
+    top: 0 px;
+    left: 0px;
 }

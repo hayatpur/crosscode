@@ -4,6 +4,7 @@ import { Pane } from 'tweakpane'
 import { Editor } from '../editor/Editor'
 import { createPrototypicalEnvironment } from '../environment/environment'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { animationToString } from '../execution/graph/graph'
 import { Compiler } from '../transpiler/Compiler'
 import { Ticker } from '../utilities/Ticker'
 import { CodeQueryCreator } from '../view/Query/CodeQuery/CodeQueryCreator'
@@ -69,6 +70,8 @@ export class Executor {
 
     reset() {
         this.execution = undefined
+        this.rootView?.destroy()
+        this.rootView = undefined
     }
 
     compile() {
@@ -102,13 +105,13 @@ export class Executor {
         console.log('\tAnimation', this.execution)
         console.log('\tEnvironment', env)
 
-        // const [output, url] = animationToString(
-        //     this.animation,
-        //     0,
-        //     { first: false },
-        //     true
-        // )
-        // console.log(url)
+        const [output, url] = animationToString(
+            this.execution.vertices[0],
+            0,
+            { first: false },
+            true
+        )
+        console.log(url)
         this.rootView = new RootView()
 
         this.rootView.createView(this.execution, {

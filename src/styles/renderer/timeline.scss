@@ -1,13 +1,9 @@
 .timeline {
-    position: absolute;
+    position: relative;
     min-width: 10px;
     min-height: 10px;
     display: flex;
     flex-direction: column;
-}
-
-.timeline.selected > .timeline-anchor-container {
-    box-shadow: inset 0 0 0px 1px var(--s-color-4);
 }
 
 .timeline-anchor-container {
@@ -20,10 +16,7 @@
     border-radius: 5px;
     // backdrop-filter: blur(5px);
     background: #ffffff02;
-}
-
-.timeline-anchor-container.source-code > .timeline-anchor {
-    position: absolute;
+    width: fit-content;
 }
 
 .timeline-anchor {
@@ -31,99 +24,4 @@
     min-height: 2px;
     width: fit-content;
     margin-bottom: 15px;
-}
-
-.timeline-connection {
-    fill: transparent;
-    stroke: var(--color-2);
-    stroke-width: 1px;
-    z-index: -1;
-}
-
-.timeline-anchor ion-icon {
-    color: var(--color-2);
-    font-size: 11px;
-    transition: 0.2s;
-}
-
-.timeline-anchor.start {
-    cursor: pointer;
-    transition: 0.2s;
-    transform: scale(1);
-}
-
-.timeline-anchor.start,
-.timeline-anchor.end {
-    // background: var(--color-2);
-    background: #2c2c3400;
-}
-
-.timeline-anchor.start:hover {
-    transform: scale(1.2);
-    background: var(--color-3);
-}
-
-.timeline-label {
-    font-size: 14px;
-    color: var(--color-3);
-    user-select: none;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.timeline.dragging > .timeline-label {
-    color: var(--s-color-4);
-}
-
-.timeline.dragging .timeline-anchor ion-icon {
-    color: var(--s-color-4);
-}
-
-.timeline-label:hover {
-    color: var(--color-4);
-}
-
-.timeline-control-button {
-    width: 10px;
-    height: 10px;
-    font-size: 12px;
-    transform: scale(1);
-    transition: 0.2s;
-    color: rgba(255, 255, 255, 0.144);
-    cursor: pointer;
-    margin-left: 5px;
-    margin-top: -2px;
-}
-
-.timeline-control-button:hover {
-    color: white;
-    transform: scale(1.2);
-}
-
-.timeline-control-button:active,
-.timeline-control-button.active {
-    transform: scale(1);
-    color: white;
-}
-
-.timeline-header {
-    width: fit-content;
-    margin-left: -5px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-    user-select: none;
-    cursor: pointer;
-    display: flex;
-    transition: 0.2s;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.timeline:hover .timeline-header {
-    opacity: 1;
-    pointer-events: inherit;
-}
-
-.timeline.anchored {
-    position: relative;
 }

@@ -29,7 +29,7 @@ export function IfStatement(
         ...context,
         outputRegister: testRegister,
     })
-    addVertex(graph, test, { nodeData: getNodeData(ast.test) })
+    addVertex(graph, test, { nodeData: getNodeData(ast.test, 'test') })
 
     // @TODO: Add a probe test animation
     const testData = resolvePath(environment, testRegister, null) as PrototypicalDataState
@@ -49,14 +49,14 @@ export function IfStatement(
             ...context,
             controlOutput,
         })
-        addVertex(graph, body, { nodeData: getNodeData(ast.consequent) })
+        addVertex(graph, body, { nodeData: getNodeData(ast.consequent, 'consequent') })
     } else if (ast.alternate != null) {
         // Execute the alternate (if any)
         const alternate = Compiler.compile(ast.alternate, environment, {
             ...context,
             controlOutput,
         })
-        addVertex(graph, alternate, { nodeData: getNodeData(ast.alternate) })
+        addVertex(graph, alternate, { nodeData: getNodeData(ast.alternate, 'alternate') })
     }
 
     context.controlOutput.output = controlOutput.output

@@ -16,4 +16,8 @@ export class RootViewSeparator {
         this.element.style.left = `${maxWidth + padding}px`
         // this.element.style.top = `${Mouse.instance.position.y}px`
     }
+
+    destroy() {
+        this.element.remove()
+    }
 }

@@ -1,3 +1,4 @@
+import { PanZoom } from 'panzoom'
 import { Keyboard } from '../../utilities/Keyboard'
 import { View } from '../View'
 
@@ -6,6 +7,7 @@ export class PanningArea {
     isDragging: boolean = false
     previousMouse: { x: number; y: number }
     view: View
+    panzoom: PanZoom
 
     constructor() {
         this.element = document.createElement('div')
@@ -13,6 +15,18 @@ export class PanningArea {
         document.body.appendChild(this.element)
 
         this.bindMouseEvents()
+        // panzoom.pan(10, 10)
+        // panzoom.zoom(2, { animate: true })
+    }
+
+    addRoot(view: View) {
+        this.view = view
+        this.element.appendChild(view.renderer.element)
+
+        // const elem = document.getElementById('panzoom-element')
+        // this.panzoom = createPanZoom(view.renderer.element, {
+        //     maxZoom: 5,
+        // })
     }
 
     bindMouseEvents() {
@@ -31,14 +45,13 @@ export class PanningArea {
 
     wheel(e: WheelEvent) {
         // Apply scale transform
-        this.view.state.transform.scale += e.deltaY * -0.01
+        // this.view.state.transform.scale += e.deltaY * -0.01
     }
 
     mousedown(e: MouseEvent) {
         if (Keyboard.instance.isPressed('Shift') || true) {
             this.isDragging = true
             this.previousMouse = { x: e.clientX, y: e.clientY }
-
             this.element.classList.add('dragging')
         }
     }

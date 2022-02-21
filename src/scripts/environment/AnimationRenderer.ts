@@ -111,10 +111,6 @@ export class AnimationRenderer {
                 this.view.originalExecution.postcondition,
                 this.representation
             )
-
-            const bbox = this.postRendererElement.getBoundingClientRect()
-            this.element.style.minWidth = `${bbox.width}px`
-            this.element.style.minHeight = `${bbox.height - 10}px`
         }
 
         if (this.showingPreRenderer) {
@@ -155,6 +151,20 @@ export class AnimationRenderer {
         }
     }
 
+    separate() {
+        this.preRendererElement.classList.add('visible')
+        this.showingPreRenderer = true
+        this.preRendererElement.classList.add('separated')
+    }
+
+    unSeparate(hidePreRenderer: boolean) {
+        this.preRendererElement.classList.remove('separated')
+
+        if (hidePreRenderer) {
+            this.showingPreRenderer = false
+        }
+    }
+
     showTrace() {
         this.preRendererElement.classList.add('visible')
         this.showingPreRenderer = true
@@ -162,14 +172,27 @@ export class AnimationRenderer {
         this.update()
     }
 
-    hideTrace() {
-        this.preRendererElement.classList.remove('visible')
-        this.showingPreRenderer = false
+    hideTrace(hidePreRenderer: boolean) {
+        if (hidePreRenderer) {
+            this.preRendererElement.classList.remove('visible')
+            this.showingPreRenderer = false
+        }
 
         this.update()
     }
 
-    tick(dt: number) {}
+    tick(dt: number) {
+        this.preEnvironmentRenderer.tick(dt)
+        this.environmentRenderer.tick(dt)
+        this.postEnvironmentRenderer.tick(dt)
+
+        // Update the post environment
+        if (this.showingPostRenderer) {
+            const bbox = this.postRendererElement.getBoundingClientRect()
+            // this.element.style.minWidth = `${bbox.width}px`
+            // this.element.style.minHeight = `${bbox.height - 10}px`
+        }
+    }
 
     propagatePath(
         path: ConcretePath,

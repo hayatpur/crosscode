@@ -26,7 +26,7 @@ export function ForStatement(
 
     // Create a scope
     const createScope = createScopeAnimation()
-    addVertex(graph, createScope, { nodeData: getNodeData(ast) })
+    addVertex(graph, createScope, { nodeData: getNodeData(ast, 'create scope') })
     applyExecutionNode(createScope, environment)
 
     let iteration = createExecutionGraph({
@@ -37,7 +37,7 @@ export function ForStatement(
 
     // Init
     const init = Compiler.compile(ast.init, environment, context)
-    addVertex(iteration, init, { nodeData: getNodeData(ast.init) })
+    addVertex(iteration, init, { nodeData: getNodeData(ast.init, 'init') })
 
     // Points to the result of test
 
@@ -50,7 +50,7 @@ export function ForStatement(
             ...context,
             outputRegister: testRegister,
         })
-        addVertex(iteration, test, { nodeData: getNodeData(ast.test) })
+        addVertex(iteration, test, { nodeData: getNodeData(ast.test, 'test') })
 
         const testData = resolvePath(environment, testRegister, null) as PrototypicalDataState
         const testValue = testData.value as boolean
@@ -78,7 +78,7 @@ export function ForStatement(
             controlOutput: controlOutput,
         })
 
-        addVertex(iteration, body, { nodeData: getNodeData(ast.body) })
+        addVertex(iteration, body, { nodeData: getNodeData(ast.body, 'body') })
 
         if (controlOutput.output == ControlOutput.Break) {
             context.controlOutput.output = ControlOutput.None
@@ -95,13 +95,13 @@ export function ForStatement(
             ...context,
             outputRegister: null,
         })
-        addVertex(iteration, update, { nodeData: getNodeData(ast.update) })
+        addVertex(iteration, update, { nodeData: getNodeData(ast.update, 'update') })
 
         // Add iteration to the graph
         iteration.postcondition = clone(environment)
         addVertex(graph, iteration, {
             nodeData: {
-                ...getNodeData(ast),
+                ...getNodeData(ast, `iter ${_i}`),
                 type: 'ForStatementIteration',
             },
         })
@@ -121,7 +121,7 @@ export function ForStatement(
 
     // Pop scope
     const popScope = popScopeAnimation()
-    addVertex(graph, popScope, { nodeData: getNodeData(ast) })
+    addVertex(graph, popScope, { nodeData: getNodeData(ast, 'pop scope') })
     applyExecutionNode(popScope, environment)
 
     graph.postcondition = clone(environment)
