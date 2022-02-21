@@ -1,7 +1,6 @@
 import { resolvePath } from '../../environment/environment'
 import { EnvironmentRenderer } from '../../environment/EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
-import { remap } from '../../utilities/math'
 import { ConcretePath, createConcretePath } from '../path'
 import { PrototypicalCreatePath } from '../prototypical/PrototypicalCreatePath'
 
@@ -18,7 +17,8 @@ function onBegin(
     console.log('Beginning create for ' + dataPrototype.id)
     const element = renderer.getAllChildRenderers()[dataPrototype.id].element
     element.style.opacity = `${0}`
-    element.style.transform = `translate(5x, -5px)`
+    // element.style.transform = `translate(5x, -5px)`
+    element.style.transform = `scale(0)`
 }
 
 function onSeek(
@@ -32,13 +32,8 @@ function onSeek(
 
     const element = renderer.getAllChildRenderers()[dataPrototype.id].element
     element.style.opacity = `${2 * t}`
-    element.style.transform = `translate(${remap(t, 0, 1, 5, 0)}px, ${remap(
-        t,
-        0,
-        1,
-        -5,
-        0
-    )}px)`
+    // element.style.transform = `translate(${remap(t, 0, 1, 5, 0)}px, ${remap(t, 0, 1, -5, 0)}px)`
+    element.style.transform = `scale(${t})`
 }
 
 function onEnd(
@@ -52,7 +47,8 @@ function onEnd(
     console.log('Ending create for ' + dataPrototype.id)
     const element = renderer.getAllChildRenderers()[dataPrototype.id].element
     element.style.opacity = `${1}`
-    element.style.transform = `translate(0px, 0px)`
+    // element.style.transform = `translate(0px, 0px)`
+    element.style.transform = `scale(${1})`
 }
 
 /**
@@ -61,9 +57,7 @@ function onEnd(
  * @param to if is an environment state, then moves data to the next free spot
  * @param id
  */
-export function createConcreteCreatePath(
-    prototype: PrototypicalCreatePath
-): ConcreteCreatePath {
+export function createConcreteCreatePath(prototype: PrototypicalCreatePath): ConcreteCreatePath {
     return {
         ...createConcretePath(prototype),
 

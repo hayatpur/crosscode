@@ -18,11 +18,11 @@ export class GlobalTrace {
         this.globalTrace = getGlobalTraces(this.parent)
         console.log(this.globalTrace)
 
-        console.log(
-            this.parent.stepsTimeline.views.map((v) =>
-                v.renderer.animationRenderer.environmentRenderer.getAllChildRenderers()
-            )
-        )
+        // console.log(
+        //     this.parent.stepsTimeline.views.map((v) =>
+        //         v.renderer.animationRenderer.environmentRenderer.getAllChildRenderers()
+        //     )
+        // )
 
         for (const trace of this.globalTrace) {
             let end = trace
@@ -92,10 +92,10 @@ export class GlobalTrace {
             const secondBbox = second.getBoundingClientRect()
 
             const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getArrow(
-                firstBbox.x + firstBbox.width / 2,
-                firstBbox.y + firstBbox.height,
                 secondBbox.x + secondBbox.width / 2,
                 secondBbox.y + secondBbox.height / 2,
+                firstBbox.x + firstBbox.width / 2,
+                firstBbox.y + firstBbox.height,
                 {
                     padEnd: 0,
                     padStart: 0,

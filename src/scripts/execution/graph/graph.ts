@@ -718,8 +718,12 @@ export interface AnimationTraceOperator {
     executionId: string
 }
 
+export interface AugmentedDataInfo extends DataInfo {
+    executionId: string
+}
+
 export interface AnimationTraceChain {
-    value: DataInfo
+    value: AugmentedDataInfo
     children?: [operator: AnimationTraceOperator, child: AnimationTraceChain][]
 }
 
@@ -730,19 +734,37 @@ export interface GlobalAnimationTraceChain {
 
 export function getGlobalTrace(parent: View, leaves: View[], index: number) {
     const parentTrace = getTrace(parent.originalExecution)
+    traceChainsToString(parentTrace, true)
     let globalTraces: GlobalAnimationTraceChain[] = []
 
-    const contains = (view: View, traceChain: AnimationTraceChain) => {
+    const contains = (view: View, traceChain: AnimationTraceChain, log = false) => {
         const representation = Object.keys(
             view.renderer.animationRenderer.environmentRenderer.getAllChildRenderers()
         )
+        if (traceChain.value == null) return false
 
-        const operation = traceChain.children[0][0]
+        const operation = traceChain.children?.[0]?.[0]
+        // const executionId = operation?.executionId ?? traceChain.value.executionId
 
         const a =
-            queryExecutionGraph(view.originalExecution, (e) => e.id == operation?.executionId) !=
-            null
+            operation != null
+                ? queryExecutionGraph(
+                      view.originalExecution,
+                      (e) => e.id == operation?.executionId
+                  ) != null
+                : true
         const b = representation.includes(traceChain.value.id)
+
+        if (log) {
+            console.log(
+                a,
+                operation?.executionId,
+                traceChain.value.executionId,
+                view.originalExecution.id
+            )
+            console.log(b, traceChain.value.id, representation)
+            console.log('\n')
+        }
 
         return a && b
     }
@@ -755,7 +777,7 @@ export function getGlobalTrace(parent: View, leaves: View[], index: number) {
             let currIndex = index
 
             // Find representation that includes data
-            while (currIndex >= 0 && !contains(leaves[currIndex], branchPointer)) {
+            while (currIndex >= 0 && !contains(leaves[currIndex], branchPointer, null)) {
                 currIndex--
             }
             if (currIndex < 0) continue
@@ -782,12 +804,12 @@ export function getGlobalTrace(parent: View, leaves: View[], index: number) {
             currIndex -= 1
 
             // While there are more children
-            while (branchPointer.children?.length > 0) {
+            while (branchPointer != null) {
                 // Try to find a view which contains that node
                 for (let i = currIndex; i >= 0; i--) {
                     const view = leaves[i]
 
-                    if (contains(view, branchPointer)) {
+                    if (contains(view, branchPointer, true)) {
                         // Decrement current view
                         currIndex = i - 1
 
@@ -818,7 +840,11 @@ export function getGlobalTrace(parent: View, leaves: View[], index: number) {
                     }
                 }
 
-                branchPointer = branchPointer.children[0][1]
+                if (branchPointer.children == null || branch.children.length == 0) {
+                    branchPointer = null
+                } else {
+                    branchPointer = branchPointer.children[0][1]
+                }
             }
 
             globalTraces.push(globalTrace)
@@ -837,120 +863,10 @@ export function getGlobalTraces(parent: View): GlobalAnimationTraceChain[] {
     let globalTraces: GlobalAnimationTraceChain[] = []
 
     // Create trace from target to other leaves
-    for (let i = leaves.length - 1; i >= 0; i--) {
+    for (let i = leaves.length - 1; i >= 1; i--) {
         const targetTrace = getGlobalTrace(parent, leaves, i)
         globalTraces = [...globalTraces, ...targetTrace]
     }
-
-    // Initialize trace
-    // for (const trace of traces) {
-    //     let branches = getAllBranches(trace)
-
-    //     for (const branch of branches) {
-    //         let branchPointer = branch
-
-    //         // Find representation that includes data
-    //         if (!currRepresentation.include.includes(branch.value.id)) {
-    //             continue
-    //         }
-
-    //         let currIndex = leaves.length - 1
-    //         let currView = leaves[currIndex]
-    //         let currRepresentation = currView.renderer.animationRenderer?.representation
-
-    //         let globalTrace: GlobalAnimationTraceChain = {
-    //             value: {
-    //                 location: { viewId: currView.id, localLocation: branch.value.location },
-    //                 id: branch.value.id,
-    //             },
-    //             children: [],
-    //         }
-
-    //         if (branchPointer.children == null || branch.children.length == 0) {
-    //             globalTraces.push(globalTrace)
-    //             continue
-    //         }
-
-    //         branchPointer = branchPointer.children[0][1]
-    //         currIndex -= 1
-
-    //         while (branchPointer.children?.length > 0) {
-    //             for (let i = currIndex; i >= 0; i--) {
-    //                 const view = leaves[i]
-    //                 const representation = view.renderer.animationRenderer?.representation
-
-    //                 if (representation.include.includes(branchPointer.value.id)) {
-    //                     currView = view
-    //                     currRepresentation = representation
-    //                     currIndex = i - 1
-
-    //                     // Add to end of chain
-    //                     let end = globalTrace
-    //                     while (end.children.length > 0) {
-    //                         end = end.children[0][1]
-    //                     }
-
-    //                     const node = {
-    //                         value: {
-    //                             location: {
-    //                                 viewId: currView.id,
-    //                                 localLocation: branchPointer.value.location,
-    //                             },
-    //                             id: branchPointer.value.id,
-    //                         },
-    //                         children: [],
-    //                     }
-
-    //                     const operator = {
-    //                         type: AnimationTraceOperatorType.Unknown,
-    //                         executionId: null,
-    //                     }
-
-    //                     end.children.push([operator, node])
-    //                     break
-    //                 }
-    //             }
-
-    //             branchPointer = branchPointer.children[0][1]
-    //         }
-
-    //         globalTraces.push(globalTrace)
-    //     }
-    // }
-
-    // for (const id of filter) {
-    //     const chain = { value: { id, location: null }, children: [] }
-    //     traces.push(chain)
-    // }
-
-    // // Go through each leaf and append to trace
-    // for (const leaf of leaves) {
-    //     const representation = leaf.renderer.animationRenderer?.representation
-    //     if (representation == null || representation.include == null) continue
-
-    //     for (const trace of traces) {
-    //         if (representation.include.includes(trace.value.id)) {
-    //             const node: GlobalAnimationTraceChain = {
-    //                 value: {
-    //                     id: trace.value.id,
-    //                     location: {
-    //                         viewId: leaf.id,
-    //                         localLocation: [{ type: AccessorType.ID, value: trace.value.id }],
-    //                     },
-    //                 },
-    //                 children: [],
-    //             }
-
-    //             // Add to end of chain
-    //             let end = trace
-    //             while (end.children.length > 0) {
-    //                 end = end.children[0][1]
-    //             }
-
-    //             end.children.push([AnimationTraceOperator.Unknown, node])
-    //         }
-    //     }
-    // }
 
     return globalTraces
 }
@@ -1040,6 +956,7 @@ export function getTrace(
                 value: {
                     id: data.id,
                     location: getMemoryLocation(environment, data).foundLocation,
+                    executionId: animation.id,
                 },
             })
         }
@@ -1051,6 +968,7 @@ export function getTrace(
                     value: {
                         id: identifier.name,
                         location: identifier.location,
+                        executionId: animation.id,
                     },
                 })
             }
@@ -1109,6 +1027,7 @@ export function getChunkTrace(
                 value: {
                     id: data.id,
                     location: getMemoryLocation(environment, data).foundLocation,
+                    executionId: nodes[nodes.length - 1].id,
                 },
             })
         }
@@ -1120,6 +1039,7 @@ export function getChunkTrace(
                     value: {
                         id: identifier.name,
                         location: identifier.location,
+                        executionId: nodes[nodes.length - 1].id,
                     },
                 })
             }
@@ -1158,8 +1078,8 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
     // Direct movements (to <-- from)
     let traces: AnimationTraceChain[] = []
 
-    const rs = reads(animation)
-    const ws = writes(animation)
+    const rs = reads(animation).map((r) => ({ ...r, executionId: animation.id }))
+    const ws = writes(animation).map((w) => ({ ...w, executionId: animation.id }))
 
     switch (animation._name) {
         case 'MoveAndPlaceAnimation':

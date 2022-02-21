@@ -6,7 +6,7 @@ import { View } from '../View'
 export class AnimationPlayer {
     // Animation time
     time: number = 0
-    speed: number = 1 / 128
+    speed: number = 1 / 256
     isPaused: boolean = true
     hasEnded: boolean = false
 

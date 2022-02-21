@@ -9,7 +9,7 @@
 
 @keyframes showStroke {
     from {
-        stroke-dashoffset: 1000;
+        stroke-dashoffset: 200;
     }
     to {
         stroke-dashoffset: 0;
@@ -27,12 +27,12 @@
 
 .trace-connection {
     fill: #0000;
-    stroke: #2c2c344d;
-    stroke-width: 15px;
+    stroke: var(--color-2);
+    stroke-width: 2px;
     z-index: -1;
-    stroke-dasharray: 1000;
+    stroke-dasharray: 10 4;
     stroke-dashoffset: 0;
-    animation: showStroke 5s;
+    animation: showStroke 10s;
 }
 
 .trace-start-circle {
@@ -76,6 +76,8 @@
     cursor: pointer;
     width: 5px;
     height: 5px;
+    margin-left: -2.5px;
+    margin-top: -2.5px;
     position: absolute;
     border-radius: 50%;
     opacity: 0.5;
@@ -83,8 +85,9 @@
     transition-property: transform, opacity;
     transition-duration: 0.2s;
     z-index: 20;
-    background: var(--color-4);
     animation: scaleUp 0.2s;
+
+    background: #e879f961;
 }
 
 .trace-interactable:hover {
@@ -141,10 +144,10 @@
 
 .global-trace-connection {
     fill: #0000;
-    stroke: #2c2c344d;
-    stroke-width: 15px;
+    stroke: var(--color-2);
+    stroke-width: 2px;
     z-index: -1;
-    stroke-dasharray: 1000;
+    stroke-dasharray: 10 4;
     stroke-dashoffset: 0;
-    animation: showStroke 5s;
+    animation: showStroke 10s;
 }

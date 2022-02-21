@@ -1,4 +1,3 @@
-import { getArrow } from 'curved-arrows'
 import { LiteralRenderer } from '../../environment/data/literal/LiteralRenderer'
 import {
     getAllBranches,
@@ -80,6 +79,24 @@ export class Trace {
             const startBbox = this.startElement.getBoundingClientRect()
             const endBbox = this.endElement.getBoundingClientRect()
 
+            let start = {
+                x: startBbox.x + startBbox.width / 2,
+                y: startBbox.y + startBbox.height / 2,
+            }
+            let end = {
+                x: endBbox.x + endBbox.width / 2,
+                y: endBbox.y + endBbox.height / 2,
+            }
+            let mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 }
+
+            // Convex
+            let convex = start.x < end.x
+            mid.y += (convex ? 1 : -1) * Math.abs(end.x - start.x) * 0.5
+            this.connection.setAttribute(
+                'd',
+                `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`
+            )
+
             // const points = [
             //     endBbox.x + endBbox.width / 2,
             //     endBbox.y + endBbox.height / 2,
@@ -87,20 +104,20 @@ export class Trace {
             //     startBbox.x + startBbox.width / 2,
             //     startBbox.y + startBbox.height / 2,
             // ]
-            const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getArrow(
-                startBbox.x + startBbox.width / 2,
-                startBbox.y + startBbox.height / 2,
-                endBbox.x + endBbox.width / 2,
-                endBbox.y + endBbox.height / 2,
-                {
-                    padEnd: 0,
-                    padStart: 0,
-                }
-            )
-            this.connection.setAttribute(
-                'd',
-                `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
-            )
+            // const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getArrow(
+            //     startBbox.x + startBbox.width / 2,
+            //     startBbox.y + startBbox.height / 2,
+            //     endBbox.x + endBbox.width / 2,
+            //     endBbox.y + endBbox.height / 2,
+            //     {
+            //         padEnd: 0,
+            //         padStart: 0,
+            //     }
+            // )
+            // this.connection.setAttribute(
+            //     'd',
+            //     `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
+            // )
             // this.endArrow.setAttribute(
             //     'transform',
             //     `translate(${ex}, ${ey}) rotate(${ae})`
@@ -149,7 +166,8 @@ export class Trace {
         }
 
         // Environment data
-        const environmentRenderers = animationRenderer.environmentRenderer.getAllChildRenderers()
+        const environmentRenderers =
+            animationRenderer.postEnvironmentRenderer.getAllChildRenderers()
         for (const id of Object.keys(environmentRenderers)) {
             if (!(environmentRenderers[id] instanceof LiteralRenderer)) {
                 delete environmentRenderers[id]
