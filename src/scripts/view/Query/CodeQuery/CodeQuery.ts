@@ -16,11 +16,13 @@ export class CodeQuery {
     outgoingConnection: SVGPathElement
 
     isSelected: boolean = false
+    isTemporary: boolean = false
 
     opacity: number = 1
 
-    constructor(selectedView: View) {
+    constructor(selectedView: View, isTemporary: boolean = false) {
         this.selectedView = selectedView
+        this.isTemporary = isTemporary
 
         // Create element
         this.element = document.createElement('div')
@@ -85,7 +87,7 @@ export class CodeQuery {
         }
 
         // Scale
-        const dy = this.updateConnection() / 1000.0
+        const dy = this.updateConnection() / 100.0
         const factor = Math.exp(-(dy * dy))
         if (
             this.selectedView.renderer?.element != null &&

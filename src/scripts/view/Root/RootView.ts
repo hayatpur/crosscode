@@ -95,8 +95,8 @@ export class RootView {
         return queryGroup
     }
 
-    createCodeQuery(selectedView: View) {
-        const query = new CodeQuery(selectedView)
+    createCodeQuery(selectedView: View, isTemporary: boolean = false) {
+        const query = new CodeQuery(selectedView, isTemporary)
         this.codeQueries.push(query)
         return query
     }

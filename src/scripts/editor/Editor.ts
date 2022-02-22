@@ -165,10 +165,14 @@ export class Editor {
         const max_x = Math.max(start.x + start.width, end.x + end.width)
 
         let y = min_y
+        // let x = min_x + Math.min(location.start.column, location.end.column) * charWidth
         let x = min_x + Math.min(location.start.column, location.end.column) * charWidth
 
         let height = end.y + end.height - start.y
-        let width = (location.end.column - location.start.column) * charWidth
+        let width =
+            (Math.max(location.start.column, location.end.column) -
+                Math.min(location.start.column, location.end.column)) *
+            charWidth
 
         for (let line = location.start.line; line < location.end.line; line++) {
             const lineBbox = Editor.instance.computeBoundingBox(line)

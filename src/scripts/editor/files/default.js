@@ -1,11 +1,12 @@
-const arr = [5, 6, 4, 5, 6, 2, 2, 5]
+let list = []
+let n = 4
 
-for (let i = 0; i < arr.length; i++) {
-    for (let j = 0; j < arr.length - i - 1; j++) {
-        if (arr[j] > arr[j + 1]) {
-            let temp = arr[j]
-            arr[j] = arr[j + 1]
-            arr[j + 1] = temp
-        }
-    }
+for (let i = 0; i < n; i++) {
+    list.push(i)
+}
+
+for (let i = 0; i < n / 2; i++) {
+    let temp = list[i]
+    list[i] = list[n - 1 - i]
+    list[n - 1 - i] = temp
 }

@@ -1,3 +1,4 @@
+import { getArrow } from 'curved-arrows'
 import { DataRenderer } from '../../environment/data/DataRenderer'
 import { resolvePath } from '../../environment/environment'
 import { EnvironmentRenderer } from '../../environment/EnvironmentRenderer'
@@ -37,18 +38,45 @@ function onBegin(
         //     x: fromBbox.x - toBbox.x,
         //     y: fromBbox.y - toBbox.y,
         // }
-
         let start = { x: fromBbox.x - toBbox.x, y: fromBbox.y - toBbox.y }
         let end = { x: 0, y: 0 }
+
+        if (renderer.separated) {
+            const offset =
+                renderer.preRenderer
+                    .getAllChildRenderers()
+                    [fromPrototype.id].element.getBoundingClientRect().y - fromBbox.y
+
+            console.log('Offsetting...', offset)
+            start.y += offset
+        }
+
         let mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 }
 
         // Convex
-        let convex = start.x < end.x
-        mid.y += (convex ? 1 : -1) * Math.abs(end.x - start.x) * 0.5
-        path.movement.setAttribute(
-            'd',
-            `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`
-        )
+        if (renderer.separated) {
+            const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getArrow(
+                start.x,
+                start.y,
+                end.x,
+                end.y,
+                {
+                    padEnd: 0,
+                    padStart: 0,
+                }
+            )
+            path.movement.setAttribute(
+                'd',
+                `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
+            )
+        } else {
+            let convex = start.x < end.x
+            mid.y += (convex ? 1 : -1) * Math.abs(end.x - start.x) * 0.5
+            path.movement.setAttribute(
+                'd',
+                `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`
+            )
+        }
     }
 }
 

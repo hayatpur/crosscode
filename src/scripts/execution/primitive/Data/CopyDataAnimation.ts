@@ -67,7 +67,8 @@ export function copyDataAnimation(
         ...createExecutionNode(null),
         _name: 'CopyDataAnimation',
 
-        name: `Copy ${accessorsToString(dataSpecifier)} to ${accessorsToString(outputRegister)}`,
+        // name: `Copy ${accessorsToString(dataSpecifier)} to ${accessorsToString(outputRegister)}`,
+        name: `Copy ${accessorsToString(dataSpecifier)}`,
 
         // Attributes
         dataSpecifier,

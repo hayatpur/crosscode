@@ -91,8 +91,9 @@
 }
 
 .trace-interactable:hover {
-    opacity: 1;
-    transform: scale(1.2);
+    opacity: 1 !important;
+    transform: scale(1.5) !important;
+    background-color: var(--s-color-1);
 }
 
 .trace-interactable .trace-tooltip-text {

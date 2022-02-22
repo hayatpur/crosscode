@@ -6,11 +6,7 @@ import {
     getMemoryLocation,
     resolvePath,
 } from '../../../environment/environment'
-import {
-    Accessor,
-    accessorsToString,
-    PrototypicalEnvironmentState,
-} from '../../../environment/EnvironmentState'
+import { Accessor, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -72,9 +68,10 @@ export function bindAnimation(
         ...createExecutionNode(null),
         _name: 'BindAnimation',
 
-        name: `Bind Variable (${identifier}), with data at ${accessorsToString(
-            existingMemorySpecifier ?? []
-        )}`,
+        // name: `Bind Variable (${identifier}), with data at ${accessorsToString(
+        //     existingMemorySpecifier ?? []
+        // )}`,
+        name: `Bind Variable (${identifier})`,
 
         // Attributes
         identifier,

@@ -8,6 +8,7 @@
     "dependencies": {
         "@types/acorn": "^4.0.6",
         "@types/estree": "0.0.50",
+        "@types/object-hash": "^2.2.1",
         "acorn": "^8.4.1",
         "acorn-walk": "^8.1.1",
         "astring": "^1.7.5",
@@ -18,6 +19,7 @@
         "javascript-lp-solver": "^0.4.24",
         "monaco-editor": "^0.25.2",
         "nomnoml": "^1.4.0",
+        "object-hash": "^3.0.0",
         "panzoom": "^9.4.2",
         "patch-package": "^6.4.7",
         "perfect-arrows": "^0.3.7",

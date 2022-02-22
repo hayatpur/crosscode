@@ -185,20 +185,21 @@ export class Timeline {
     updateAnchorPositions() {}
 
     updateViewPositions(t = 0.4) {
-        // for (let i = 0; i < this.views.length; i++) {
-        //     const view = this.views[i]
-        //     const anchor = this.anchors[i]
-        //     const anchorBbox = anchor.getBoundingClientRect()
-        //     const viewBbox = view.renderer.element.getBoundingClientRect()
-        //     // Put view in right position
-        //     view.state.transform.position.x = lerp(view.state.transform.position.x, anchorBbox.x, t)
-        //     view.state.transform.position.y = lerp(view.state.transform.position.y, anchorBbox.y, t)
-        //     // view.state.transform.scaleMultiplier =
-        //     //     this.parent.state.transform.scale
-        //     // Update width and height of anchor
-        //     anchor.style.width = `${viewBbox.width}px`
-        //     anchor.style.height = `${viewBbox.height}px`
-        // }
+        for (let i = 0; i < this.views.length; i++) {
+            const view = this.views[i]
+            const anchor = this.anchors[i]
+            // const anchorBbox = anchor.getBoundingClientRect()
+            const viewBbox = view.renderer.element.getBoundingClientRect()
+            // Put view in right position
+            // view.state.transform.position.x = lerp(view.state.transform.position.x, anchorBbox.x, t)
+            // view.state.transform.position.y = lerp(view.state.transform.position.y, anchorBbox.y, t)
+            // // view.state.transform.scaleMultiplier =
+            // //     this.parent.state.transform.scale
+            // // Update width and height of anchor
+            // anchor.style.width = `${viewBbox.width}px`
+            // anchor.style.height = `${viewBbox.height}px`
+            anchor.style.maxHeight = `${viewBbox.height}px`
+        }
     }
 
     getAbstractionSelection(originId: string = null) {

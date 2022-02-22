@@ -68,6 +68,9 @@ export class AnimationRenderer {
         this.view = view
         this.environment = this.view.originalExecution.postcondition
 
+        this.environmentRenderer.preRenderer = this.preEnvironmentRenderer
+        this.environmentRenderer.postRenderer = this.postEnvironmentRenderer
+
         // Create representations
         this.updateRepresentation()
     }
@@ -155,10 +158,15 @@ export class AnimationRenderer {
         this.preRendererElement.classList.add('visible')
         this.showingPreRenderer = true
         this.preRendererElement.classList.add('separated')
+
+        this.environmentRenderer.separated = true
+
+        this.update()
     }
 
     unSeparate(hidePreRenderer: boolean) {
         this.preRendererElement.classList.remove('separated')
+        this.environmentRenderer.separated = false
 
         if (hidePreRenderer) {
             this.showingPreRenderer = false

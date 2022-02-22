@@ -24,6 +24,7 @@ function apply(animation: ArrayPushAnimation, environment: PrototypicalEnvironme
     const objectValue = object.value as PrototypicalDataState[]
 
     // TODO: Copy data
+    let originalLength = objectValue.length
     for (let i = 0; i < args.length; i++) {
         objectValue[objectValue.length] = clonePrototypicalData(
             args[i],
@@ -43,13 +44,25 @@ function apply(animation: ArrayPushAnimation, environment: PrototypicalEnvironme
                 location: getMemoryLocation(environment, arg).foundLocation,
                 id: arg.id,
             }
+        }),
+        args.map((arg, i) => {
+            const element = objectValue[originalLength + i]
+            return {
+                location: getMemoryLocation(environment, element).foundLocation,
+                id: element.id,
+            }
         })
     )
 }
 
-function computeReadAndWrites(animation: ArrayPushAnimation, object: DataInfo, args: DataInfo[]) {
+function computeReadAndWrites(
+    animation: ArrayPushAnimation,
+    object: DataInfo,
+    args: DataInfo[],
+    elements: DataInfo[]
+) {
     animation._reads = [...args]
-    animation._writes = [object]
+    animation._writes = [object, ...elements]
 }
 
 export function ArrayPushAnimation(object: Accessor[], args: Accessor[][]): ArrayPushAnimation {

@@ -96,8 +96,8 @@ export class ViewRenderer {
         this.controlElement.classList.add('view-controls')
         this.element.appendChild(this.controlElement)
         this.setupTraceToggle()
-        this.setupAnimationToggle()
         this.setupSeparateToggle()
+        this.setupAnimationToggle()
     }
 
     setupTraceToggle() {
@@ -164,16 +164,19 @@ export class ViewRenderer {
         this.element.style.top = `${top}px`
 
         // Update scale
-        // if (!this.element.parentElement.classList.contains('panning-area')) {
-        //     const scale = lerp(
-        //         getNumericalValueOfStyle(this.element.style.transform.substring(6), 1),
-        //         this.view.state.transform.scale,
-        //         t * 0.1
-        //     )
-        //     this.element.style.transform = `scale(${
-        //         scale * this.view.state.transform.scaleMultiplier
-        //     })`
-        // }
+        if (!this.element.parentElement.classList.contains('panning-area')) {
+            const scale = lerp(
+                getNumericalValueOfStyle(this.element.style.transform.substring(6), 1),
+                this.view.state.transform.scale,
+                t * 0.1
+            )
+            this.element.style.transform = `scale(${
+                scale * this.view.state.transform.scaleMultiplier
+            })`
+
+            this.element.style.opacity = (scale * scale + 0.2).toString()
+        }
+
         this.updateConnection()
     }
 

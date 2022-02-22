@@ -28,6 +28,10 @@ export class EnvironmentRenderer {
     dataRenderers: { [id: string]: DataRenderer } = {}
     identifierRenderers: { [id: string]: IdentifierRenderer } = {}
 
+    preRenderer?: EnvironmentRenderer
+    postRenderer?: EnvironmentRenderer
+    separated?: boolean = false
+
     private memoryCache: string = ''
 
     selection: Set<string> = new Set()

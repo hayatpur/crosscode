@@ -12,6 +12,10 @@ export function VariableDeclaration(
     environment: PrototypicalEnvironmentState,
     context: ExecutionContext
 ) {
+    if (ast.declarations.length == 1) {
+        return VariableDeclarator(ast.declarations[0], environment, context)
+    }
+
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
     graph.precondition = clone(environment)
 

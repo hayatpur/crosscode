@@ -1,4 +1,5 @@
 import * as ESTree from 'estree'
+import { sha1 } from 'object-hash'
 import { DataType } from '../../environment/data/DataState'
 import { flattenedEnvironmentMemory, getMemoryLocation } from '../../environment/environment'
 import { clone } from '../../utilities/objects'
@@ -798,18 +799,21 @@ export function getGlobalTrace(parent: View, leaves: View[], index: number) {
             }
 
             // Next child in branch
+            let operation = branchPointer.children?.[0]?.[0]
             branchPointer = branchPointer.children[0][1]
 
             // Look for next child in previous view
             currIndex -= 1
 
             // While there are more children
-            while (branchPointer != null) {
-                // Try to find a view which contains that node
+            while (branchPointer != null && branchPointer.value != null) {
+                let assignedNode = false
+
+                // Try to find a view which contains that node;
                 for (let i = currIndex; i >= 0; i--) {
                     const view = leaves[i]
 
-                    if (contains(view, branchPointer, true)) {
+                    if (contains(view, branchPointer, false)) {
                         // Decrement current view
                         currIndex = i - 1
 
@@ -830,19 +834,48 @@ export function getGlobalTrace(parent: View, leaves: View[], index: number) {
                             children: [],
                         }
 
-                        const operator = {
+                        const operator = operation ?? {
                             type: AnimationTraceOperatorType.Unknown,
                             executionId: null,
                         }
 
                         end.children.push([operator, node])
+                        assignedNode = true
                         break
                     }
                 }
 
+                if (!assignedNode) {
+                    // It becomes an operation, add to end of chain
+                    let end = globalTrace
+                    while (end.children.length > 0) {
+                        end = end.children[0][1]
+                    }
+
+                    const node = {
+                        value: {
+                            location: {
+                                viewId: null,
+                                localLocation: branchPointer.value.location,
+                            },
+                            id: branchPointer.value.id,
+                        },
+                        children: [],
+                    }
+
+                    const operator = operation ?? {
+                        type: AnimationTraceOperatorType.Unknown,
+                        executionId: null,
+                    }
+
+                    end.children.push([operator, node])
+                }
+
                 if (branchPointer.children == null || branch.children.length == 0) {
+                    operation = null
                     branchPointer = null
                 } else {
+                    operation = branchPointer.children?.[0]?.[0]
                     branchPointer = branchPointer.children[0][1]
                 }
             }
@@ -862,10 +895,18 @@ export function getGlobalTraces(parent: View): GlobalAnimationTraceChain[] {
     const leaves = getLeavesOfView(parent)
     let globalTraces: GlobalAnimationTraceChain[] = []
 
+    const cache: Set<string> = new Set<string>()
+
     // Create trace from target to other leaves
     for (let i = leaves.length - 1; i >= 1; i--) {
-        const targetTrace = getGlobalTrace(parent, leaves, i)
-        globalTraces = [...globalTraces, ...targetTrace]
+        for (const trace of getGlobalTrace(parent, leaves, i)) {
+            const hash = sha1(trace)
+            if (cache.has(hash)) continue
+
+            globalTraces.push(trace)
+
+            cache.add(hash)
+        }
     }
 
     return globalTraces
@@ -1249,7 +1290,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                 ],
             })
             break
-        case 'UpdateExpression':
+        case 'UpdateAnimation':
             traces.push({
                 value: ws[0],
                 children: [
@@ -1325,7 +1366,7 @@ export function traceChainToString(chain: AnimationTraceChain) {
         const { box: childBox, output: childString } = traceChainToString(childChain)
 
         rest += `\n${childString}`
-        rest += `\n${box}-->${operator.executionId.toString()}${childBox}`
+        rest += `\n${box}-->${operator.type.toString()}${childBox}`
     }
 
     const output = `${box}\n${rest}`

@@ -67,7 +67,7 @@ export function CallExpression(
         feed: true,
         outputRegister: lookupRegister,
     })
-    addVertex(graph, lookup, { nodeData: getNodeData(ast.callee) })
+    // addVertex(graph, lookup, { nodeData: getNodeData(ast.callee) })
 
     const lookupData = resolvePath(environment, lookupRegister, null) as PrototypicalDataState
     const lookupDataValue = lookupData.value as Function

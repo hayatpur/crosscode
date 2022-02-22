@@ -26,7 +26,7 @@ export function ReturnStatement(
     // Make sure the memory this register is pointing at doesn't get destroyed
     // when popping scopes
     const ret = returnStatementAnimation(context.returnData)
-    addVertex(graph, ret, { nodeData: getNodeData(ast) })
+    // addVertex(graph, ret, { nodeData: getNodeData(ast) })
     applyExecutionNode(ret, environment)
 
     // TODO: Does this need a move and place?

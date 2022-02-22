@@ -83,7 +83,7 @@ export class ViewController {
             renderer.animationToggle.classList.add('active')
         })
 
-        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
+        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view, true)
     }
 
     separate() {
@@ -177,9 +177,15 @@ export class ViewController {
                 })
                 this.view.stepsTimeline.addView(step)
 
-                // if (first) {
-                //     step.controller.temporaryCodeQuery.select(true)
-                // }
+                if (first) {
+                    setTimeout(() => {
+                        step?.controller?.temporaryCodeQuery?.select(true)
+                    }, 100)
+
+                    setTimeout(() => {
+                        step?.controller?.temporaryCodeQuery?.deselect()
+                    }, 1000)
+                }
 
                 first = false
             }
@@ -397,7 +403,9 @@ export class ViewController {
 
         // this.temporaryCodeQuery?.destroy()
 
+        // if (instanceOfExecutionGraph(this.view.originalExecution)) {
         this.temporaryCodeQuery?.select(false)
+        // }
     }
 
     mouseout(e: MouseEvent) {
@@ -405,6 +413,8 @@ export class ViewController {
     }
 
     click() {
+        if (!instanceOfExecutionGraph(this.view.originalExecution)) return
+
         const { renderer, state } = this.view
         if (state.isShowingSteps) {
             this.destroySteps()

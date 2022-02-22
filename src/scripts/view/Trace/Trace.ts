@@ -1,3 +1,4 @@
+import { getArrow } from 'curved-arrows'
 import { LiteralRenderer } from '../../environment/data/literal/LiteralRenderer'
 import {
     getAllBranches,
@@ -87,49 +88,38 @@ export class Trace {
                 x: endBbox.x + endBbox.width / 2,
                 y: endBbox.y + endBbox.height / 2,
             }
+
+            if (this.view.state.isSeparated) {
+                start.y += startBbox.height / 2
+                end.y -= endBbox.height / 2
+            }
+
             let mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 }
 
-            // Convex
-            let convex = start.x < end.x
-            mid.y += (convex ? 1 : -1) * Math.abs(end.x - start.x) * 0.5
-            this.connection.setAttribute(
-                'd',
-                `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`
-            )
-
-            // const points = [
-            //     endBbox.x + endBbox.width / 2,
-            //     endBbox.y + endBbox.height / 2,
-
-            //     startBbox.x + startBbox.width / 2,
-            //     startBbox.y + startBbox.height / 2,
-            // ]
-            // const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getArrow(
-            //     startBbox.x + startBbox.width / 2,
-            //     startBbox.y + startBbox.height / 2,
-            //     endBbox.x + endBbox.width / 2,
-            //     endBbox.y + endBbox.height / 2,
-            //     {
-            //         padEnd: 0,
-            //         padStart: 0,
-            //     }
-            // )
-            // this.connection.setAttribute(
-            //     'd',
-            //     `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
-            // )
-            // this.endArrow.setAttribute(
-            //     'transform',
-            //     `translate(${ex}, ${ey}) rotate(${ae})`
-            // )
-
-            // this.connection.setAttribute(
-            //     'd',
-            //     catmullRomSolve(points, Executor.instance.PARAMS.a * 10)
-            // )
-
-            // this.traceIndicator.style.left = `${points[0]}px`
-            // this.traceIndicator.style.top = `${points[1]}px`
+            if (this.view.state.isSeparated) {
+                const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getArrow(
+                    start.x,
+                    start.y,
+                    end.x,
+                    end.y,
+                    {
+                        padEnd: 0,
+                        padStart: 0,
+                    }
+                )
+                this.connection.setAttribute(
+                    'd',
+                    `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
+                )
+            } else {
+                // Convex
+                let convex = start.x < end.x
+                mid.y += (convex ? 1 : -1) * Math.abs(end.x - start.x) * 0.5
+                this.connection.setAttribute(
+                    'd',
+                    `M ${start.x} ${start.y} Q ${mid.x} ${mid.y} ${end.x} ${end.y}`
+                )
+            }
 
             for (let i = 0; i < this.operationElements.length; i++) {
                 const operationElement = this.operationElements[i]
@@ -199,7 +189,7 @@ export class Trace {
                 const branch = branches[0]
                 const start = leaves[0].value
 
-                if (start != null) {
+                if (start != null && preEnvironmentRenderers[start.id] != null) {
                     this.startElement = preEnvironmentRenderers[start.id].element
                 } else {
                     this.startElement = null
