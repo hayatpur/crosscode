@@ -32,13 +32,11 @@ export interface DataTransform {
     classList: string[]
 }
 
-export interface DataState {
-    _type: 'DataState'
-
+export interface PrimitiveDataState {
+    _type: 'PrimitiveDataState'
     type: DataType
-    hints: DataTransform
 
-    value: string | boolean | number | DataState[] | Accessor[] | Function
+    value: string | number | boolean | null | Accessor[] | Function
 
     // Binding frame
     frame: number
@@ -46,6 +44,32 @@ export interface DataState {
     id: string
 }
 
+export interface ObjectDataState {
+    _type: 'ObjectDataState'
+    value: object
+
+    // Binding frame
+    frame: number
+
+    id: string
+}
+
+export type DataState = PrimitiveDataState | ObjectDataState
+
 export function instanceOfData(data: any): data is DataState {
-    return data != null && data['_type'] === 'DataState'
+    return (
+        data != null &&
+        (data['_type'] === 'PrimitiveDataState' || data['_type'] === 'ObjectDataState')
+    )
+}
+
+export function instanceOfPrimitiveData(data: any): data is DataState {
+    return (
+        data != null &&
+        (data['_type'] === 'PrimitiveDataState' || data['_type'] === 'ObjectDataState')
+    )
+}
+
+export function instanceOfObjectData(data: any): data is ObjectDataState {
+    return data != null && data['_type'] === 'ObjectDataState'
 }

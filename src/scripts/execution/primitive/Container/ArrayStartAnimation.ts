@@ -1,4 +1,8 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
+import {
+    createObjectData,
+    createPrimitiveData,
+    replaceDataWith,
+} from '../../../environment/data/data'
 import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, resolvePath } from '../../../environment/environment'
 import {
@@ -15,7 +19,7 @@ export interface ArrayStartAnimation extends ExecutionNode {
 
 function apply(animation: ArrayStartAnimation, environment: EnvironmentState) {
     // Create a new array somewhere in memory
-    const data = createData(DataType.Array, [], `${animation.id}_CreateArray`)
+    const data = createObjectData([], `${animation.id}_CreateArray`)
 
     const loc = addDataAt(environment, data, [], null)
 
@@ -32,7 +36,7 @@ function apply(animation: ArrayStartAnimation, environment: EnvironmentState) {
     ) as DataState
     replaceDataWith(
         outputRegister,
-        createData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
+        createPrimitiveData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
     )
 }
 

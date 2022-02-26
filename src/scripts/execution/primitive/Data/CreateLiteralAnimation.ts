@@ -1,4 +1,4 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
 import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, resolvePath } from '../../../environment/environment'
 import {
@@ -22,7 +22,7 @@ export interface CreateLiteralAnimation extends ExecutionNode {
  * @param options
  */
 function apply(animation: CreateLiteralAnimation, environment: EnvironmentState) {
-    const data = createData(
+    const data = createPrimitiveData(
         DataType.Literal,
         animation.value as number | string | boolean,
         `${animation.id}_Create`
@@ -44,7 +44,7 @@ function apply(animation: CreateLiteralAnimation, environment: EnvironmentState)
     ) as DataState
     replaceDataWith(
         outputRegister,
-        createData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
+        createPrimitiveData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
     )
 }
 

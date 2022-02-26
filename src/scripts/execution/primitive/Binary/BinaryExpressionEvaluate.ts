@@ -1,5 +1,5 @@
 import * as ESTree from 'estree'
-import { createData, replaceDataWith } from '../../../environment/data/data'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
 import { DataState, DataType } from '../../../environment/data/DataState'
 import {
     addDataAt,
@@ -34,7 +34,7 @@ function apply(animation: BinaryExpressionEvaluate, environment: EnvironmentStat
     ) as DataState
 
     // Evaluated
-    const evaluated = createData(
+    const evaluated = createPrimitiveData(
         DataType.Literal,
         computeBinaryExpression(left.value, right.value, animation.operator),
         `${animation.id}_EvaluatedData`
@@ -64,7 +64,10 @@ function apply(animation: BinaryExpressionEvaluate, environment: EnvironmentStat
             animation.outputRegister,
             `${animation.id}_Floating`
         ) as DataState
-        replaceDataWith(output, createData(DataType.ID, evaluated.id, `${animation.id}_Placed`))
+        replaceDataWith(
+            output,
+            createPrimitiveData(DataType.ID, evaluated.id, `${animation.id}_Placed`)
+        )
     } else {
         removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
     }

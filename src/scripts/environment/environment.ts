@@ -1,7 +1,13 @@
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { clone } from '../utilities/objects'
-import { createData } from './data/data'
-import { DataState, DataType, instanceOfData } from './data/DataState'
+import { createPrimitiveData } from './data/data'
+import {
+    DataState,
+    DataType,
+    instanceOfData,
+    instanceOfObjectData,
+    PrimitiveDataState,
+} from './data/DataState'
 import {
     Accessor,
     AccessorType,
@@ -173,8 +179,12 @@ export function flattenedEnvironmentMemory(environment: EnvironmentState): DataS
         if (data == null) continue
         flattened.push(data)
 
-        if (data.type == DataType.Array) {
-            search.push(...(data.value as DataState[]))
+        if (instanceOfObjectData(data)) {
+            if (Array.isArray(data.value)) {
+                search.push(...(data.value as DataState[]))
+            } else if (data.constructor == Object) {
+                search.push(...Object.values(data.value as DataState[]))
+            }
         }
     }
 
@@ -197,10 +207,10 @@ export function resolve(
     if (accessor.type == AccessorType.Register) {
         // Registers are always located in the root
         if (root.registers[accessor.value] == null) {
-            root.registers[accessor.value] = createData(DataType.Register, null, srcId)
+            root.registers[accessor.value] = createPrimitiveData(DataType.Register, null, srcId)
         }
 
-        const registerData = root.registers[accessor.value]
+        const registerData = root.registers[accessor.value] as PrimitiveDataState
 
         if (registerData.type == DataType.ID) {
             return resolvePath(
@@ -242,8 +252,12 @@ export function resolve(
                     null,
                     options
                 )
-            } else if (data.type == DataType.Array) {
-                search.push(...(data.value as DataState[]))
+            } else if (instanceOfObjectData(data)) {
+                if (Array.isArray(data.value)) {
+                    search.push(...(data.value as DataState[]))
+                } else if (data.constructor == Object) {
+                    search.push(...Object.values(data.value as DataState[]))
+                }
             }
         }
 
@@ -253,11 +267,13 @@ export function resolve(
         const accessors = lookupVariable(root, accessor.value as string)
         return resolvePath(root, accessors, srcId, null, options)
     } else if (accessor.type == AccessorType.Index) {
-        if (instanceOfData(parent) && parent.type == DataType.Array) {
-            const value = parent.value as DataState[]
-            if (parseInt(accessor.value) >= value.length) {
-                value[accessor.value] = createData(DataType.Literal, null, srcId)
-                value[accessor.value].frame = parent.frame
+        if (instanceOfObjectData(parent)) {
+            if (Array.isArray(parent.value)) {
+                const value = parent.value as DataState[]
+                if (parseInt(accessor.value) >= value.length) {
+                    value[accessor.value] = createPrimitiveData(DataType.Literal, null, srcId)
+                    value[accessor.value].frame = parent.frame
+                }
             }
         }
 
@@ -322,12 +338,16 @@ export function addDataAt(
     }
 
     if (instanceOfData(origin)) {
-        if (origin.type != DataType.Array)
-            console.error('[Data] Invalid addAt, trying to add to a non-addable type')
+        if (!instanceOfObjectData(origin))
+            throw new Error('[Data] Invalid addAt, trying to add to a non-addable type')
 
         // No path specified, push it into memory
         if (path.length == 0) {
-            ;(origin.value as DataState[]).push(data)
+            if (Array.isArray(origin.value)) {
+                origin.value.push(data)
+            } else {
+                throw new Error('[Data] Invalid addAt with no path')
+            }
             return
         }
 
@@ -375,8 +395,8 @@ export function getMemoryLocation(
     let search: { [id: string]: DataState } | { [id: number]: DataState } = {}
     let isArray =
         parent != null &&
-        instanceOfData(parent) &&
-        parent.type == DataType.Array &&
+        instanceOfObjectData(parent) &&
+        Array.isArray(parent.value) &&
         parent.frame >= 0
 
     if (isArray) {
@@ -417,7 +437,7 @@ export function getMemoryLocation(
 // Converts register IDs to memory counter-parts
 export function getTrueId(environment: EnvironmentState, id: string) {
     const register = environment.registers[id]
-    if (register == null) return id
+    if (register == null || instanceOfObjectData(register)) return id
 
     if (register.type == DataType.ID) {
         return getTrueId(environment, register.value as string)

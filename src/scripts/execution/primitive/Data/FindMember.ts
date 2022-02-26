@@ -1,5 +1,10 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType, instanceOfData } from '../../../environment/data/DataState'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
+import {
+    DataState,
+    DataType,
+    instanceOfData,
+    instanceOfObjectData,
+} from '../../../environment/data/DataState'
 import {
     addDataAt,
     getMemoryLocation,
@@ -24,7 +29,10 @@ function apply(animation: FindMember, environment: EnvironmentState) {
         animation.objectRegister,
         `${animation.id}_Object`
     ) as DataState
-    console.assert(object.type === DataType.Array, `${animation.id}_Object is not an object`)
+    if (!instanceOfObjectData(object)) {
+        throw new Error(`${animation.id}_Object is not an object`)
+    }
+
     const objectLocation = getMemoryLocation(environment, object).foundLocation
 
     // Get property
@@ -45,13 +53,13 @@ function apply(animation: FindMember, environment: EnvironmentState) {
     let originalModified = false
 
     if (!instanceOfData(original)) {
-        original = createData(DataType.Literal, original, `${animation.id}_MemberFunction`)
+        original = createPrimitiveData(DataType.Literal, original, `${animation.id}_MemberFunction`)
         addDataAt(environment, original, [], null)
         originalModified = true
     }
 
     if (original == undefined && property.value != null) {
-        original = createData(DataType.Literal, undefined, `${animation.id}_Undefined`)
+        original = createPrimitiveData(DataType.Literal, undefined, `${animation.id}_Undefined`)
 
         // Create property
         object.value[property.value as number] = original
@@ -104,7 +112,7 @@ function apply(animation: FindMember, environment: EnvironmentState) {
     ) as DataState
     replaceDataWith(
         outputRegister,
-        createData(DataType.ID, original.id, `${animation.id}_OutputRegister`)
+        createPrimitiveData(DataType.ID, original.id, `${animation.id}_OutputRegister`)
     )
 }
 

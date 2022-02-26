@@ -1,4 +1,4 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
 import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
 import {
@@ -20,7 +20,7 @@ function apply(animation: CopyReferenceAnimation, environment: EnvironmentState)
         animation.dataSpecifier,
         `${animation.id}_Data`
     ) as DataState
-    const reference = createData(
+    const reference = createPrimitiveData(
         DataType.Reference,
         getMemoryLocation(environment, data).foundLocation,
         `${animation.id}_Reference`
@@ -42,7 +42,10 @@ function apply(animation: CopyReferenceAnimation, environment: EnvironmentState)
         animation.outputRegister,
         `${animation.id}_FloatingRegister`
     ) as DataState
-    replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
+    replaceDataWith(
+        register,
+        createPrimitiveData(DataType.ID, reference.id, `${animation.id}_Floating`)
+    )
 }
 
 function computeReadAndWrites(

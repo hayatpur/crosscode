@@ -1,7 +1,14 @@
 import * as ESTree from 'estree'
 import { clone } from '../../utilities/objects'
 import { Accessor } from '../EnvironmentState'
-import { DataState, DataTransform, DataType, Transform } from './DataState'
+import {
+    DataState,
+    DataType,
+    instanceOfObjectData,
+    ObjectDataState,
+    PrimitiveDataState,
+    Transform,
+} from './DataState'
 
 export function createTransform(): Transform {
     return {
@@ -17,19 +24,24 @@ export function createTransform(): Transform {
     }
 }
 
-export function createData(
+export function createPrimitiveData(
     type: DataType,
-    value: string | boolean | number | DataState[] | Accessor[] | Function,
+    value: string | boolean | number | Accessor[] | Function | null,
     id: string,
-    hints: DataTransform = null,
     frame: number = -1
-): DataState {
+): PrimitiveDataState {
     return {
-        _type: 'DataState',
+        _type: 'PrimitiveDataState',
         type: type,
-        hints: hints ?? {
-            classList: ['data-i', ...getDataClassNames(type)],
-        },
+        value: value,
+        id: id,
+        frame: frame,
+    }
+}
+
+export function createObjectData(value: object, id: string, frame: number = -1): ObjectDataState {
+    return {
+        _type: 'ObjectDataState',
         value: value,
         id: id,
         frame: frame,
@@ -66,10 +78,8 @@ export function replaceDataWith(
     if (!mask.frame) original.frame = copy.frame
 
     original.value = copy.value
-    original.type = copy.type
-    original.hints = copy.hints
 
-    if (mask.frame && copy.type == DataType.Array) {
+    if (mask.frame && instanceOfObjectData(copy) && Array.isArray(copy.value)) {
         ;(original.value as DataState[]).forEach((el) => (el.frame = original.frame))
     }
 }

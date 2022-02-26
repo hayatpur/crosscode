@@ -1,4 +1,4 @@
-import { createData } from '../../../environment/data/data'
+import { createPrimitiveData } from '../../../environment/data/data'
 import { DataState, DataType } from '../../../environment/data/DataState'
 import {
     addDataAt,
@@ -20,7 +20,7 @@ function apply(animation: BindAnimation, environment: EnvironmentState) {
     let location = null
 
     // Create a reference for variable
-    const reference = createData(DataType.Reference, [], `${animation.id}_Reference`)
+    const reference = createPrimitiveData(DataType.Reference, [], `${animation.id}_Reference`)
     const loc = addDataAt(environment, reference, [], `${animation.id}_Add`)
 
     if (animation.existingMemorySpecifier != null) {
@@ -31,7 +31,7 @@ function apply(animation: BindAnimation, environment: EnvironmentState) {
         ) as DataState
         location = getMemoryLocation(environment, data).foundLocation
     } else {
-        data = createData(DataType.Literal, undefined, `${animation.id}_BindNew`)
+        data = createPrimitiveData(DataType.Literal, undefined, `${animation.id}_BindNew`)
         location = addDataAt(environment, data, [], null)
     }
 

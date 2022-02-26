@@ -1,6 +1,6 @@
 import * as ESTree from 'estree'
 import { sha1 } from 'object-hash'
-import { DataType } from '../../environment/data/DataState'
+import { DataType, PrimitiveDataState } from '../../environment/data/DataState'
 import { flattenedEnvironmentMemory, getMemoryLocation } from '../../environment/environment'
 import { clone } from '../../utilities/objects'
 import { View } from '../../view/View'
@@ -1108,7 +1108,7 @@ export function getTrace(
         // Only render literals and arrays
         const endMemory = flattenedEnvironmentMemory(environment)
             .filter((m) => m != null)
-            .filter((data) => data.type != DataType.ID)
+            .filter((data) => (data as PrimitiveDataState).type != DataType.ID)
 
         // Add each memory ID as start to flow
         for (const data of endMemory) {
@@ -1179,7 +1179,7 @@ export function getChunkTrace(
         // Don't render registers
         const endMemory = flattenedEnvironmentMemory(environment)
             .filter((m) => m != null)
-            .filter((data) => data.type != DataType.ID)
+            .filter((data) => (data as PrimitiveDataState).type != DataType.ID)
 
         // Add each memory ID as start to flow
         for (const data of endMemory) {

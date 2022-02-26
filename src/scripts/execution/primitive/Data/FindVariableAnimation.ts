@@ -1,4 +1,4 @@
-import { createData, replaceDataWith } from '../../../environment/data/data'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
 import { DataState, DataType } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
 import { Accessor, AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
@@ -25,7 +25,10 @@ function apply(animation: FindVariableAnimation, environment: EnvironmentState) 
         `${animation.id}_FloatingRegister`
     ) as DataState
 
-    replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
+    replaceDataWith(
+        register,
+        createPrimitiveData(DataType.ID, reference.id, `${animation.id}_Floating`)
+    )
 
     computeReadAndWrites(animation)
 }

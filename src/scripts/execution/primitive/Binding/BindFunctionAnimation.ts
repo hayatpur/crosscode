@@ -1,5 +1,5 @@
 import * as ESTree from 'estree'
-import { createData } from '../../../environment/data/data'
+import { createPrimitiveData } from '../../../environment/data/data'
 import { DataType } from '../../../environment/data/DataState'
 import { addDataAt, declareVariable } from '../../../environment/environment'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
@@ -13,10 +13,14 @@ export interface BindFunctionAnimation extends ExecutionNode {
 
 function apply(animation: BindFunctionAnimation, environment: EnvironmentState) {
     // Create a reference for variable
-    const reference = createData(DataType.Reference, [], `${animation.id}_ReferenceFunction`)
+    const reference = createPrimitiveData(
+        DataType.Reference,
+        [],
+        `${animation.id}_ReferenceFunction`
+    )
     const referenceLocation = addDataAt(environment, reference, [], `${animation.id}_AddFunction`)
 
-    const data = createData(
+    const data = createPrimitiveData(
         DataType.Function,
         JSON.stringify(animation.ast),
         `${animation.id}_BindFunctionNew`

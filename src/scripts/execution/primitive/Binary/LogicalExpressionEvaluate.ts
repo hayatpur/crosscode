@@ -1,6 +1,6 @@
 import * as ESTree from 'estree'
-import { createData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType, PrimitiveDataState } from '../../../environment/data/DataState'
 import {
     addDataAt,
     getMemoryLocation,
@@ -34,7 +34,11 @@ function apply(animation: LogicalExpressionEvaluate, environment: EnvironmentSta
     let evaluated: DataState, right: DataState
 
     if (animation.shortCircuit) {
-        evaluated = createData(DataType.Literal, left.value, `${animation.id}_EvaluatedData`)
+        evaluated = createPrimitiveData(
+            DataType.Literal,
+            (left as PrimitiveDataState).value,
+            `${animation.id}_EvaluatedData`
+        )
         addDataAt(environment, evaluated, [], null)
     } else {
         // Find right data
@@ -44,7 +48,7 @@ function apply(animation: LogicalExpressionEvaluate, environment: EnvironmentSta
             `${animation.id}_Right`
         ) as DataState
 
-        evaluated = createData(
+        evaluated = createPrimitiveData(
             DataType.Literal,
             eval(`${left.value}${animation.operator}${right.value}`),
             `${animation.id}_EvaluatedData`
@@ -79,7 +83,10 @@ function apply(animation: LogicalExpressionEvaluate, environment: EnvironmentSta
             animation.outputRegister,
             `${animation.id}_Floating`
         ) as DataState
-        replaceDataWith(output, createData(DataType.ID, evaluated.id, `${animation.id}_Placed`))
+        replaceDataWith(
+            output,
+            createPrimitiveData(DataType.ID, evaluated.id, `${animation.id}_Placed`)
+        )
     } else {
         removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
     }

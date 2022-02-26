@@ -1,4 +1,4 @@
-import { cloneData, createData, replaceDataWith } from '../../../environment/data/data'
+import { cloneData, createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
 import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
 import {
@@ -30,7 +30,7 @@ function apply(animation: CopyDataAnimation, environment: EnvironmentState) {
         animation.outputRegister,
         `${animation.id}_Floating`
     ) as DataState
-    replaceDataWith(register, createData(DataType.ID, copy.id, `${animation.id}_Floating`))
+    replaceDataWith(register, createPrimitiveData(DataType.ID, copy.id, `${animation.id}_Floating`))
 
     if (animation.hardCopy) {
         data.value = undefined

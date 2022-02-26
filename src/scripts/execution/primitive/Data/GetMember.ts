@@ -1,4 +1,4 @@
-import { cloneData, createData, replaceDataWith } from '../../../environment/data/data'
+import { cloneData, createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
 import { DataState, DataType, instanceOfData } from '../../../environment/data/DataState'
 import {
     addDataAt,
@@ -42,7 +42,7 @@ function apply(animation: GetMember, environment: EnvironmentState) {
         copy = cloneData(original, false, `${animation.id}_Copy`)
     } else {
         // Create a new data
-        copy = createData(DataType.Literal, original, `${animation.id}_Copy`)
+        copy = createPrimitiveData(DataType.Literal, original, `${animation.id}_Copy`)
     }
 
     const location = addDataAt(environment, copy, [], null)
@@ -95,7 +95,7 @@ function apply(animation: GetMember, environment: EnvironmentState) {
     ) as DataState
     replaceDataWith(
         outputRegister,
-        createData(DataType.ID, copy.id, `${animation.id}_OutputRegister`)
+        createPrimitiveData(DataType.ID, copy.id, `${animation.id}_OutputRegister`)
     )
 }
 

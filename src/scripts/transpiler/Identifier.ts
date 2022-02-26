@@ -1,5 +1,5 @@
 import * as ESTree from 'estree'
-import { DataState, DataType } from '../environment/data/DataState'
+import { DataState, instanceOfObjectData } from '../environment/data/DataState'
 import { resolvePath } from '../environment/environment'
 import { AccessorType, EnvironmentState } from '../environment/EnvironmentState'
 import { applyExecutionNode } from '../execution/execution'
@@ -32,7 +32,7 @@ export function Identifier(
             null
         ) as DataState
 
-        if (data.type == DataType.Array) {
+        if (instanceOfObjectData(data)) {
             // Create a reference to it
             const copyReference = copyReferenceAnimation(
                 [{ type: AccessorType.Symbol, value: ast.name }],
@@ -40,7 +40,7 @@ export function Identifier(
             )
             addVertex(graph, copyReference, { nodeData: getNodeData(ast) })
             applyExecutionNode(copyReference, environment)
-        } else if (data.type == DataType.Literal) {
+        } else {
             // Create a copy of it
             const copy = copyDataAnimation(
                 [{ type: AccessorType.Symbol, value: ast.name }],
