@@ -40,9 +40,13 @@ export class IdentifierRenderer {
 
         // this.element.style.top = `${dataBbox.y - 22 - environmentBbox.y}px`
         const delta = dataBbox.x - environmentBbox.x
-        const zoom = 1 // Executor.instance.rootView.panningArea.panzoom.getTransform().scale
+
+        let ratio = 1
+        // if (this.environmentReference.children.length > 0) {
+        // ratio = dataBbox.height / 30
+        // }
         this.element.style.top = `${18}px`
-        this.element.style.left = `${(1 / zoom) * delta}px`
+        this.element.style.left = `${(1 / ratio) * delta}px`
     }
 
     destroy() {

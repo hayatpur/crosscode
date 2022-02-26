@@ -35,6 +35,16 @@
     animation: showStroke 10s;
 }
 
+.control-flow-connection {
+    fill: #0000;
+    stroke: var(--s-color-0);
+    stroke-width: 1px;
+    z-index: -1;
+    stroke-dasharray: 10 4;
+    stroke-dashoffset: 0;
+    animation: showStroke 10s;
+}
+
 .trace-start-circle {
     fill: var(--color-3);
     stroke: none;
@@ -92,12 +102,12 @@
 
 .trace-interactable:hover {
     opacity: 1 !important;
-    transform: scale(1.5) !important;
+    transform: scale(2) !important;
     background-color: var(--s-color-1);
 }
 
 .trace-interactable .trace-tooltip-text {
-    color: #cbcbcb9c;
+    color: #cbcbcb00;
     width: fit-content;
     user-select: none;
     margin-right: 5px;

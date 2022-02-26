@@ -1,20 +1,24 @@
-import { Vector } from '../../../utilities/math';
-
 export class IndexRenderer {
-    element: HTMLDivElement;
+    element: HTMLDivElement
 
     constructor() {
-        this.element = document.createElement('div');
-        this.element.classList.add('data-array-index');
+        this.element = document.createElement('div')
+        this.element.classList.add('data-array-index')
     }
 
-    setState(index: number, location: Vector) {
-        this.element.innerText = `${index}`;
-        this.element.style.left = `${location.x}px`;
-        this.element.style.top = `${location.y}px`;
+    setState(index: number, dataElement: HTMLElement, environmentElement: HTMLElement) {
+        this.element.innerText = `${index}`
+
+        const dataBbox = dataElement.getBoundingClientRect()
+        const environmentBbox = environmentElement.getBoundingClientRect()
+        const delta = dataBbox.x - environmentBbox.x
+
+        let ratio = 1
+        this.element.style.top = `${18}px`
+        this.element.style.left = `${(1 / ratio) * delta}px`
     }
 
     destroy() {
-        this.element.remove();
+        this.element.remove()
     }
 }

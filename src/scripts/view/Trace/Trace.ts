@@ -5,9 +5,9 @@ import {
     getAllOperationsAndLeaves,
 } from '../../execution/graph/abstraction/Transition'
 import { AnimationTraceChain, queryExecutionGraph } from '../../execution/graph/graph'
-import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
 import { View } from '../View'
+import { TraceOperator } from './TraceOperator'
 
 // A single trace
 export class Trace {
@@ -22,7 +22,7 @@ export class Trace {
     traceIndicator: HTMLElement
     endArrow: SVGPolygonElement
 
-    operationElements: HTMLElement[] = []
+    operations: TraceOperator[] = []
 
     arrowHeadSize = 3
 
@@ -121,9 +121,10 @@ export class Trace {
                 )
             }
 
-            for (let i = 0; i < this.operationElements.length; i++) {
-                const operationElement = this.operationElements[i]
-                const deviation = i - this.operationElements.length / 2 + 0.5
+            for (let i = 0; i < this.operations.length; i++) {
+                this.operations[i].tick(dt)
+                const operationElement = this.operations[i].element
+                const deviation = i - this.operations.length / 2 + 0.5
 
                 const pt = this.connection.getPointAtLength(
                     this.connection.getTotalLength() -
@@ -166,7 +167,7 @@ export class Trace {
 
         const [operations, leaves] = getAllOperationsAndLeaves(this.chain)
 
-        console.log(this.chain)
+        // console.log(this.chain)
 
         // Set end element
         const end = this.chain.value
@@ -201,32 +202,25 @@ export class Trace {
 
         // Create operations
         operations.reverse()
+
+        // Group nodes into chunks
+        // const chunkedOperations = getDeepestChunks(
+        //     Executor.instance.execution,
+        //     new Set(operations.map((o) => o.executionId))
+        // )
+        // console.log(new Set(operations.map((o) => o.executionId)))
+
+        // for (const op of chunkedOperations) {
+        //     this.operations.push(new TraceOperator(op))
+        // }
+        // this.animationSelection = this.animationSelection.map((chunk) => stripChunk(chunk))
+
         for (const op of operations) {
-            const opTooltip = document.createElement('div')
-            opTooltip.classList.add('trace-interactable')
             const executionNode = queryExecutionGraph(
                 this.view.originalExecution,
                 (e) => e.id == op.executionId
             )
-            let label = ''
-
-            if (executionNode != null) {
-                // label = `${executionNode.nodeData.preLabel ?? 'pre'} |`
-                label += (
-                    instanceOfExecutionNode(executionNode)
-                        ? executionNode.name
-                        : executionNode.nodeData.type
-                )
-                    .replace(/([A-Z])/g, ' $1')
-                    .trim()
-            } else {
-                label = 'Unknown'
-            }
-
-            opTooltip.innerHTML = `<span class="trace-tooltip-text">${label}</span>`
-            this.operationElements.push(opTooltip)
-
-            document.body.append(opTooltip)
+            this.operations.push(new TraceOperator(executionNode))
         }
     }
 
@@ -240,9 +234,9 @@ export class Trace {
         this.traceIndicator.remove()
         this.endArrow.remove()
 
-        for (const op of this.operationElements) {
-            op.remove()
+        for (const op of this.operations) {
+            op.destroy()
         }
-        this.operationElements = []
+        this.operations = []
     }
 }

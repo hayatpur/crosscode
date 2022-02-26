@@ -28,4 +28,8 @@ export class DataRenderer {
     deselect() {
         this.element.classList.remove('selected')
     }
+
+    fadeOut() {
+        this.element.style.opacity = '0.5'
+    }
 }

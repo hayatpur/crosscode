@@ -957,6 +957,43 @@ export function queryExecutionGraph(
     return null
 }
 
+export function queryExecutionGraphPath(
+    animation: ExecutionGraph | ExecutionNode,
+    query: (animation: ExecutionGraph | ExecutionNode) => boolean
+): ExecutionGraph[] {
+    if (query(animation)) {
+        return []
+    }
+
+    if (instanceOfExecutionGraph(animation)) {
+        for (const vertex of animation.vertices) {
+            const ret = queryExecutionGraphPath(vertex, query)
+            if (ret != null) {
+                return [animation, ...ret]
+            }
+        }
+    }
+
+    return null
+}
+
+export function queryView(animation: View, query: (animation: View) => boolean): View {
+    if (query(animation)) {
+        return animation
+    }
+
+    if (animation.state.isShowingSteps) {
+        for (const vertex of animation.stepsTimeline.views) {
+            const ret = queryView(vertex, query)
+            if (ret != null) {
+                return ret
+            }
+        }
+    }
+
+    return null
+}
+
 export function queryAllExecutionGraph(
     animation: ExecutionGraph | ExecutionNode,
     query: (animation: ExecutionGraph | ExecutionNode) => boolean
@@ -974,6 +1011,88 @@ export function queryAllExecutionGraph(
     }
 
     return acc
+}
+
+export function queryAllView(
+    animation: View,
+    query: (animation: View) => boolean
+): (ExecutionGraph | ExecutionNode)[] {
+    const acc = []
+
+    if (query(animation)) {
+        acc.push(animation)
+    }
+
+    if (animation.state.isShowingSteps) {
+        for (const vertex of animation.stepsTimeline.views) {
+            acc.push(...queryAllView(vertex, query))
+        }
+    }
+
+    return acc
+}
+
+export function getDepthOfExecution(
+    target: ExecutionGraph | ExecutionNode,
+    root: ExecutionGraph
+): number {
+    let depth = 0
+    let parent = root
+
+    while (true) {
+        let next = null
+        depth += 1
+        for (const vertex of parent.vertices) {
+            if (vertex.id == target.id) {
+                return depth
+            }
+
+            if (
+                instanceOfExecutionGraph(vertex) &&
+                queryExecutionGraph(vertex, (a) => a.id == target.id)
+            ) {
+                next = vertex
+                break
+            }
+        }
+
+        if (next == null) {
+            return -1
+        } else {
+            parent = next
+        }
+    }
+}
+
+export function getDepthOfView(target: View, root: View): number {
+    let depth = 0
+    let parent = root
+
+    if (!parent.state.isShowingSteps) return 0
+
+    while (true) {
+        let next = null
+        depth += 1
+        for (const vertex of parent.stepsTimeline.views) {
+            if (vertex.id == target.id) {
+                return depth
+            }
+
+            if (
+                vertex.state.isShowingSteps &&
+                queryView(vertex, (a) => a.id == target.id) != null
+            ) {
+                next = vertex
+                break
+            }
+        }
+
+        if (next == null) {
+            return -1
+        } else {
+            parent = next
+        }
+    }
 }
 
 export function getTrace(

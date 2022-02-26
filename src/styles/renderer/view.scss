@@ -13,7 +13,7 @@
     left: 0;
     display: flex;
     flex-direction: column;
-    // animation: fadein 0.2s;
+    animation: fadein 0.2s;
     transform-origin: top left;
 }
 
@@ -340,4 +340,18 @@
     position: absolute;
     top: 0 px;
     left: 0px;
+}
+
+.view.showing-steps > .view-body {
+    margin-top: 20px;
+}
+
+.view.temporary {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+.view.temporary > .view-body {
+    backdrop-filter: blur(10px);
 }

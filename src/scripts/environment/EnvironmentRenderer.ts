@@ -1,3 +1,4 @@
+import { includes } from '../utilities/math'
 import { AnimationRendererRepresentation } from './AnimationRenderer'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
@@ -47,8 +48,8 @@ export class EnvironmentRenderer {
     ) {
         if (representation == null) {
             representation = {
-                exclude: null,
-                include: null,
+                reads: [],
+                writes: [],
             }
         }
 
@@ -121,11 +122,12 @@ export class EnvironmentRenderer {
                 }
             })
 
-        // Filter
-        if (representation.include != null) {
-            memory = memory.filter((data) => representation.include.some((r) => includes(data, r)))
-        } else if (representation.exclude != null) {
-        }
+        // Fade out values that are not in reads or writes
+        memory = memory.filter(
+            (data) =>
+                representation.reads.some((r) => includes(data, r)) ||
+                representation.writes.some((r) => includes(data, r))
+        )
 
         // Sort
         // memory.sort()
@@ -147,6 +149,11 @@ export class EnvironmentRenderer {
             // this.element.append(this.dataRenderers[data.id].element)
             hits.add(data.id)
             this.dataRenderers[data.id].setState(data)
+
+            // Fade out reads
+            // if (!representation.writes.some((w) => includes(data, w))) {
+            //     this.dataRenderers[data.id].fadeOut()
+            // }
         }
 
         // Remove data that are no longer in the view
@@ -265,19 +272,5 @@ export class EnvironmentRenderer {
         }
 
         return renderers
-    }
-}
-
-/**
- * @returns true iff query is included in data or is data itself
- */
-function includes(data: PrototypicalDataState, query: string) {
-    if (data.type != DataType.Array) {
-        return data.id == query
-    } else {
-        return (
-            data.id == query ||
-            (data.value as PrototypicalDataState[]).some((d) => includes(d, query))
-        )
     }
 }

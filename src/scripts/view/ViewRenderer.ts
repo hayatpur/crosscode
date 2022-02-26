@@ -21,6 +21,7 @@ export class ViewRenderer {
     controlElement: HTMLDivElement
     animationToggle: HTMLDivElement
     traceToggle: HTMLDivElement
+    controlFlowToggle: HTMLDivElement
     separateToggle: HTMLDivElement
 
     // Body
@@ -96,6 +97,7 @@ export class ViewRenderer {
         this.controlElement.classList.add('view-controls')
         this.element.appendChild(this.controlElement)
         this.setupTraceToggle()
+        this.setupControlFlowToggle()
         this.setupSeparateToggle()
         this.setupAnimationToggle()
     }
@@ -119,6 +121,13 @@ export class ViewRenderer {
         this.animationToggle.classList.add('view-control-button')
         this.animationToggle.innerHTML = '<ion-icon name="videocam-outline"></ion-icon>'
         this.header.appendChild(this.animationToggle)
+    }
+
+    setupControlFlowToggle() {
+        this.controlFlowToggle = document.createElement('div')
+        this.controlFlowToggle.classList.add('view-control-button')
+        this.controlFlowToggle.innerHTML = '<ion-icon name="git-pull-request-outline"></ion-icon>'
+        this.header.appendChild(this.controlFlowToggle)
     }
 
     updateConnection() {
@@ -145,6 +154,10 @@ export class ViewRenderer {
     }
 
     updatePosition(t = 0.8) {
+        if (this.view.isRoot) {
+            t = 0.2
+        }
+
         // Update left
         const left = lerp(
             getNumericalValueOfStyle(this.element.style.left),

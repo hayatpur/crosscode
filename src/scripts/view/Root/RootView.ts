@@ -4,7 +4,11 @@ import { getNumericalValueOfStyle } from '../../utilities/math'
 import { createView, CreateViewOptions } from '../../utilities/view'
 import { Cursor } from '../Cursor/Cursor'
 import { CodeQuery } from '../Query/CodeQuery/CodeQuery'
-import { CodeQueryGroup, CodeQueryGroupState } from '../Query/CodeQuery/CodeQueryGroup'
+import {
+    CodeQueryGroup,
+    CodeQueryGroupState,
+    ViewSelection,
+} from '../Query/CodeQuery/CodeQueryGroup'
 import { View } from '../View'
 import { PanningArea } from './PanningArea'
 import { RootViewSeparator } from './RootViewSeparator'
@@ -26,6 +30,7 @@ export class RootView {
 
     // Parent animation
     parentView: View = null
+    currentDepth = 0
 
     constructor() {
         // this.rootTimeline = new Timeline()
@@ -85,7 +90,7 @@ export class RootView {
         }
 
         this.viewLookup[view.id] = view
-
+        this.currentDepth = this.parentView?.getDepth()
         return view
     }
 
@@ -95,7 +100,7 @@ export class RootView {
         return queryGroup
     }
 
-    createCodeQuery(selectedView: View, isTemporary: boolean = false) {
+    createCodeQuery(selectedView: ViewSelection, isTemporary: boolean = false) {
         const query = new CodeQuery(selectedView, isTemporary)
         this.codeQueries.push(query)
         return query

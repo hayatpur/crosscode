@@ -6,7 +6,7 @@ export class Editor {
     static instance: Editor
 
     monaco: monaco.editor.IStandaloneCodeEditor
-    onSelectionUpdate: Set<() => void>
+    onSelectionUpdate: Set<(e: monaco.editor.ICursorSelectionChangedEvent) => void>
     onChangeContent: Set<() => void>
     spacings: WeakMap<object, any>
     parent: HTMLElement
@@ -89,6 +89,11 @@ export class Editor {
                     editor.onChangeContent.forEach((callback) => callback())
                     editor.monaco.updateOptions({ codeLens: false })
                     editor.monaco.updateOptions({ codeLens: true })
+                })
+
+                editor.monaco.onDidChangeCursorSelection((e) => {
+                    editor.onSelectionUpdate.forEach((callback) => callback(e))
+                    // console.log('Selection', e.selection)
                 })
 
                 editor.onChangeContent.forEach((callback) => callback())

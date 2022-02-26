@@ -2,10 +2,14 @@ import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { reads, writes } from '../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { getDepthOfView } from '../execution/graph/graph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
+import { lerp } from '../utilities/math'
 import { AnimationPlayer } from './Animation/AnimationPlayer'
+import { ControlFlow } from './Control Flow/ControlFlow'
 import { CodeQuery } from './Query/CodeQuery/CodeQuery'
+import { ViewSelectionType } from './Query/CodeQuery/CodeQueryGroup'
 import { Timeline } from './Timeline/Timeline'
 import { View } from './View'
 
@@ -18,6 +22,10 @@ export class ViewController {
 
     temporaryCodeQuery: CodeQuery
     animationPlayer: AnimationPlayer
+
+    attachedTo: HTMLElement = null
+
+    controlFlow: ControlFlow
 
     constructor(view: View) {
         this.view = view
@@ -65,6 +73,16 @@ export class ViewController {
             renderer.traceToggle.classList.toggle('active')
         })
 
+        renderer.controlFlowToggle.addEventListener('click', () => {
+            if (!state.isShowingControlFlow) {
+                this.showControlFlow()
+            } else {
+                this.hideControlFlow()
+            }
+
+            renderer.controlFlowToggle.classList.toggle('active')
+        })
+
         renderer.separateToggle.addEventListener('click', () => {
             if (!state.isSeparated) {
                 this.separate()
@@ -83,7 +101,27 @@ export class ViewController {
             renderer.animationToggle.classList.add('active')
         })
 
-        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view, true)
+        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(
+            {
+                view: this.view,
+                type: ViewSelectionType.CodeToView,
+            },
+            true
+        )
+    }
+
+    showControlFlow() {
+        this.controlFlow?.destroy()
+        this.controlFlow = new ControlFlow(this.view)
+
+        this.view.state.isShowingControlFlow = true
+    }
+
+    hideControlFlow() {
+        this.controlFlow?.destroy()
+        this.controlFlow = null
+
+        this.view.state.isShowingControlFlow = false
     }
 
     separate() {
@@ -130,7 +168,10 @@ export class ViewController {
         this.view.renderer.show()
 
         this.temporaryCodeQuery?.destroy()
-        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
+        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery({
+            view: this.view,
+            type: ViewSelectionType.CodeToView,
+        })
     }
 
     select() {
@@ -155,9 +196,7 @@ export class ViewController {
         this.view.state.isSelected = false
     }
 
-    createSteps(expanded: boolean = false) {
-        let start = performance.now()
-
+    createStepsEmptySteps() {
         const { state, renderer } = this.view
         state.isShowingSteps = true
 
@@ -165,6 +204,18 @@ export class ViewController {
 
         this.view.stepsTimeline = new Timeline(this.view)
         this.view.stepsTimeline.anchorToView(this.view)
+
+        this.collapse()
+
+        renderer.element.classList.add('showing-steps')
+    }
+
+    createSteps(expanded: boolean = false) {
+        let start = performance.now()
+
+        const { state, renderer } = this.view
+
+        this.createStepsEmptySteps()
 
         if (instanceOfExecutionGraph(this.view.originalExecution)) {
             const children = this.queryChildren()
@@ -177,35 +228,25 @@ export class ViewController {
                 })
                 this.view.stepsTimeline.addView(step)
 
-                if (first) {
-                    setTimeout(() => {
-                        step?.controller?.temporaryCodeQuery?.select(true)
-                    }, 100)
+                // if (first) {
+                //     setTimeout(() => {
+                //         step?.controller?.temporaryCodeQuery?.select(true)
+                //     }, 100)
 
-                    setTimeout(() => {
-                        step?.controller?.temporaryCodeQuery?.deselect()
-                    }, 1000)
-                }
+                //     setTimeout(() => {
+                //         step?.controller?.temporaryCodeQuery?.deselect()
+                //     }, 1000)
+                // }
 
                 first = false
             }
         }
 
-        // this.view.stepsTimeline.resetAnimation([])
-        // this.view.stepsTimeline.beginAnimation([])
-        // this.view.stepsTimeline.seekAnimation(this.view.stepsTimeline.getDuration(), [])
-        // this.view.stepsTimeline.endAnimation([])
-
-        // this.resetAnimation([])
-        this.collapse()
-
-        renderer.element.classList.add('showing-steps')
-
         console.log(`Created steps in ${performance.now() - start}ms`)
 
         // this.temporaryCodeQuery.opacity -= 0.8
-        this.temporaryCodeQuery.destroy()
-        this.temporaryCodeQuery = null
+        // this.temporaryCodeQuery.destroy()
+        // this.temporaryCodeQuery = null
 
         if (state.isSelected) {
             this.view.stepsTimeline.select()
@@ -243,7 +284,7 @@ export class ViewController {
 
         renderer.stepsContainer.classList.add('hidden')
 
-        this.view.stepsTimeline.destroy()
+        this.view.stepsTimeline?.destroy()
         this.view.stepsTimeline = null
         this.expand()
 
@@ -252,8 +293,36 @@ export class ViewController {
         this.view.renderer.stepsContainer.innerHTML = ''
         renderer.element.classList.remove('showing-steps')
 
-        this.temporaryCodeQuery?.destroy()
-        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
+        // this.temporaryCodeQuery?.destroy()
+        // this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
+    }
+
+    updateDepth() {
+        if (Executor.instance.rootView.parentView == null) {
+            return
+        }
+
+        const delta = Math.abs(
+            getDepthOfView(this.view, Executor.instance.rootView.parentView) -
+                Executor.instance.rootView.currentDepth
+        )
+
+        if (delta < 2) {
+            // Should exist but can be faded out
+            if (this.view.controller.temporaryCodeQuery == null) {
+                this.view.controller.temporaryCodeQuery =
+                    Executor.instance.rootView.createCodeQuery({
+                        view: this.view,
+                        type: ViewSelectionType.CodeToView,
+                    })
+            }
+        } else {
+            // Should not exist
+            if (this.view.controller.temporaryCodeQuery != null) {
+                this.view.controller.temporaryCodeQuery.destroy()
+                this.view.controller.temporaryCodeQuery = null
+            }
+        }
     }
 
     showTrace() {
@@ -293,6 +362,8 @@ export class ViewController {
             this.stopAnimation()
         }
 
+        this.controlFlow?.tick(dt)
+
         // renderer.animationRenderer?.tick(dt)
 
         // if (this.view.isRoot) {
@@ -318,6 +389,58 @@ export class ViewController {
         //     state.abstractionSelection = abstractionSelection
         //     this.resetAnimation([])
         // }
+
+        // Update w.r.t. depth
+        this.updateDepth()
+
+        // Update attachment
+        if (this.attachedTo != null && document.body.contains(this.attachedTo)) {
+            const attachBbox = this.attachedTo.getBoundingClientRect()
+            const bbox = this.view.renderer.element.getBoundingClientRect()
+
+            state.transform.position.x = lerp(
+                state.transform.position.x,
+                attachBbox.left + attachBbox.width + 40,
+                0.2
+            )
+            state.transform.position.y = lerp(
+                state.transform.position.y,
+                attachBbox.top + attachBbox.height / 2 - bbox.height / 2,
+                0.2
+            )
+        }
+    }
+
+    attachTo(element: HTMLElement, instantTransform = true) {
+        const { state, renderer } = this.view
+
+        this.attachedTo = element
+
+        const attachBbox = this.attachedTo.getBoundingClientRect()
+        const bbox = this.view.renderer.element.getBoundingClientRect()
+
+        if (instantTransform) {
+            state.transform.position.x = attachBbox.left + attachBbox.width + 40
+            state.transform.position.y = attachBbox.top + attachBbox.height / 2 - bbox.height / 2
+        }
+    }
+
+    detach() {
+        this.attachTo = null
+    }
+
+    makeTemporary() {
+        const { state, renderer } = this.view
+        state.isTemporary = true
+
+        renderer.element.classList.add('temporary')
+    }
+
+    makeFixed() {
+        const { state, renderer } = this.view
+        state.isTemporary = false
+
+        renderer.element.classList.remove('temporary')
     }
 
     bindMouseEvents() {
@@ -438,6 +561,11 @@ export class ViewController {
     expand() {
         const { state, renderer } = this.view
 
+        if (!state.isCollapsed) {
+            console.warn("Trying to expand a node that's not collapsed")
+            return
+        }
+
         state.isCollapsed = false
 
         renderer.animationRenderer = new AnimationRenderer(this.view)
@@ -452,6 +580,11 @@ export class ViewController {
 
     collapse() {
         const { state, renderer } = this.view
+
+        if (state.isCollapsed) {
+            console.warn("Trying to collapse a node that's already collapsed")
+            return
+        }
 
         state.isCollapsed = true
 

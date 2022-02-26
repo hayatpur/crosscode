@@ -5,9 +5,9 @@ import {
     GlobalAnimationTraceChain,
     queryExecutionGraph,
 } from '../../execution/graph/graph'
-import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
 import { View } from '../View'
+import { TraceOperator } from './TraceOperator'
 
 export class GlobalTrace {
     parent: View
@@ -15,7 +15,7 @@ export class GlobalTrace {
     connectionReferences: { first: HTMLElement; second: HTMLElement }[] = []
 
     globalTrace: GlobalAnimationTraceChain[]
-    operationElements: { [connectionIndex: number]: HTMLElement[] } = {}
+    operations: { [connectionIndex: number]: TraceOperator[] } = {}
 
     constructor(parent: View) {
         this.parent = parent
@@ -23,7 +23,6 @@ export class GlobalTrace {
 
     show() {
         this.globalTrace = getGlobalTraces(this.parent)
-        console.log('Showing...', this.globalTrace)
 
         // console.log(
         //     this.parent.stepsTimeline.views.map((v) =>
@@ -38,6 +37,8 @@ export class GlobalTrace {
 
             let operation: AnimationTraceOperator = null
             let operationStack: AnimationTraceOperator[] = []
+
+            const hits: Set<string> = new Set()
 
             // const connections: { first: HTMLElement; second: HTMLElement }[] = []
             while (end != null) {
@@ -110,39 +111,34 @@ export class GlobalTrace {
                     end = null
                 }
 
-                this.operationElements[this.connections.length - 1] = []
+                this.operations[this.connections.length - 1] = []
 
                 console.log('==========================')
 
                 // Empty operations stack
+                // const chunkedOperations = getDeepestChunks(
+                //     Executor.instance.execution,
+                //     new Set(operationStack.map((o) => o.executionId))
+                // )
+
+                // Empty operations stack
                 while (operationStack.length > 0) {
                     const op = operationStack.shift()
-                    console.log(op)
-                    const opTooltip = document.createElement('div')
-                    opTooltip.classList.add('trace-interactable')
+
+                    if (hits.has(op.executionId)) {
+                        continue
+                    }
+
                     const executionNode = queryExecutionGraph(
                         this.parent.originalExecution,
                         (e) => e.id == op.executionId
                     )
-                    let label = ''
 
-                    if (executionNode != null) {
-                        // label = `${executionNode.nodeData.preLabel ?? 'pre'} |`
-                        label += (
-                            instanceOfExecutionNode(executionNode)
-                                ? executionNode.name
-                                : executionNode.nodeData.type
-                        )
-                            .replace(/([A-Z])/g, ' $1')
-                            .trim()
-                    } else {
-                        label = 'Unknown'
-                    }
+                    this.operations[this.connections.length - 1].push(
+                        new TraceOperator(executionNode)
+                    )
 
-                    opTooltip.innerHTML = `<span class="trace-tooltip-text">${label}</span>`
-
-                    this.operationElements[this.connections.length - 1].push(opTooltip)
-                    document.body.append(opTooltip)
+                    hits.add(op.executionId)
                 }
             }
         }
@@ -151,9 +147,23 @@ export class GlobalTrace {
     tick(dt: number) {
         if (this.globalTrace == null) return
 
-        for (let i = 0; i < this.connections.length; i++) {
+        for (let i = this.connections.length - 1; i >= 0; i--) {
             const connection = this.connections[i]
             const { first, second } = this.connectionReferences[i]
+
+            if (!document.body.contains(first) || !document.body.contains(second)) {
+                connection.remove()
+                this.connections.splice(i, 1)
+                this.connectionReferences.splice(i, 1)
+
+                for (let j = 0; j < this.operations[i].length; j++) {
+                    this.operations[i][j].destroy()
+                }
+                delete this.operations[i]
+
+                continue
+            }
+
             const firstBbox = first.getBoundingClientRect()
             const secondBbox = second.getBoundingClientRect()
 
@@ -174,12 +184,13 @@ export class GlobalTrace {
         }
 
         // Iterate operations
-        for (const [key, ops] of Object.entries(this.operationElements)) {
+        for (const [key, ops] of Object.entries(this.operations)) {
             const connectionIndex = parseInt(key)
             const connection = this.connections[connectionIndex]
 
             for (let i = 0; i < ops.length; i++) {
-                const operationElement = ops[i]
+                ops[i].tick(dt)
+                const operationElement = ops[i].element
                 const deviation = i - ops.length / 2 + 0.5
 
                 const pt = connection.getPointAtLength(
@@ -205,13 +216,13 @@ export class GlobalTrace {
             connection.remove()
         }
 
-        for (const [key, ops] of Object.entries(this.operationElements)) {
+        for (const [key, ops] of Object.entries(this.operations)) {
             for (const operationElement of ops) {
-                operationElement.remove()
+                operationElement.destroy()
             }
         }
 
-        this.operationElements = {}
+        this.operations = {}
 
         this.connectionReferences = []
         this.connections = []

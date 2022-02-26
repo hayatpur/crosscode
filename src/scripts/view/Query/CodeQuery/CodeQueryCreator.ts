@@ -1,10 +1,9 @@
-import { ExecutionGraph, instanceOfExecutionGraph } from '../../../execution/graph/ExecutionGraph'
-import { queryExecutionGraph } from '../../../execution/graph/graph'
-import { ExecutionNode, instanceOfExecutionNode } from '../../../execution/primitive/ExecutionNode'
+import * as monaco from 'monaco-editor'
+import { Editor } from '../../../editor/Editor'
 import { Executor } from '../../../executor/Executor'
 import { Mouse } from '../../../utilities/Mouse'
 import { Ticker } from '../../../utilities/Ticker'
-import { CodeQueryGroupState } from './CodeQueryGroup'
+import { CodeQueryGroup, CodeQueryGroupState } from './CodeQueryGroup'
 
 export enum CodeQueryCreatorState {
     Inactive,
@@ -21,6 +20,8 @@ export class CodeQueryCreator {
     selectionIndicator: HTMLDivElement
     selectionChunks: Set<string> = new Set()
 
+    tempQuery: CodeQueryGroup = null
+
     constructor() {
         this.cursor = document.createElement('div')
         this.cursor.classList.add('abstraction-cursor')
@@ -33,6 +34,8 @@ export class CodeQueryCreator {
         this.state = CodeQueryCreatorState.Inactive
 
         Ticker.instance.registerTick(this.tick.bind(this))
+
+        Editor.instance.onSelectionUpdate.add(this.onSelectionUpdate.bind(this))
 
         document.addEventListener('keydown', (e) => {
             if (e.key != 'Control') return
@@ -87,6 +90,39 @@ export class CodeQueryCreator {
         })
     }
 
+    onSelectionUpdate(e: monaco.editor.ICursorSelectionChangedEvent) {
+        const selectionBbox = Editor.instance.computeBoundingBoxForLoc({
+            start: { line: e.selection.startLineNumber, column: e.selection.startColumn },
+            end: { line: e.selection.endLineNumber, column: e.selection.endColumn },
+        })
+        if (selectionBbox == null) {
+            return
+        }
+
+        const paddingX = 20
+        const paddingY = 10
+
+        selectionBbox.x -= paddingX
+        selectionBbox.y -= paddingY
+        selectionBbox.width += paddingX * 2
+        selectionBbox.height += paddingY * 2
+
+        const state: CodeQueryGroupState = {
+            selection: selectionBbox,
+            executionIds: null,
+        }
+
+        this.tempQuery?.destroy()
+        this.tempQuery = null
+
+        console.log(Editor.instance.getSelectedText())
+
+        if (Editor.instance.getSelectedText().length > 0) {
+            console.log('Creating...')
+            this.tempQuery = Executor.instance.rootView.createCodeQueryGroup(state)
+        }
+    }
+
     tick(dt: number) {
         // Update cursor position
         this.cursor.style.left = `${Mouse.instance.position.x - 5}px`
@@ -109,6 +145,11 @@ export class CodeQueryCreator {
             this.selectionIndicator.style.height = `${bbox.height}px`
             this.selectionIndicator.style.left = `${bbox.x}px`
             this.selectionIndicator.style.top = `${bbox.y}px`
+
+            // List of base nodes
+            // const nodes = queryAllExecutionGraph(Executor.instance.execution, (animation) =>
+            //     instanceOfExecutionNode(animation)
+            // )
         } else {
             this.selectionIndicator.classList.remove('active')
             this.cursor.classList.remove('pressed')
@@ -118,6 +159,7 @@ export class CodeQueryCreator {
     createAbstraction() {
         const state: CodeQueryGroupState = {
             selection: getBoundingBoxOfStartAndEnd(this.selectionBounds),
+            executionIds: null,
         }
         Executor.instance.rootView.createCodeQueryGroup(state)
 
@@ -139,103 +181,4 @@ export function getBoundingBoxOfStartAndEnd(selection: {
     const height = Math.abs(selection.y2 - selection.y1)
 
     return { x, y, width, height }
-}
-
-export function bboxContains(
-    bbox1: {
-        x: number
-        y: number
-        width: number
-        height: number
-    },
-    bbox2: {
-        x: number
-        y: number
-        width: number
-        height: number
-    }
-): boolean {
-    return (
-        bbox1.x <= bbox2.x &&
-        bbox1.y <= bbox2.y &&
-        bbox1.x + bbox1.width >= bbox2.x + bbox2.width &&
-        bbox1.y + bbox1.height >= bbox2.y + bbox2.height
-    )
-}
-
-export function getDeepestChunks(
-    animation: ExecutionGraph | ExecutionNode,
-    selection: Set<string>
-): (ExecutionGraph | ExecutionNode)[] {
-    // Base cases
-    if (selection.size == 0) {
-        return []
-    }
-
-    if (instanceOfExecutionNode(animation)) {
-        if (selection.has(animation.id) && selection.size == 1) {
-            return [animation]
-        } else {
-            return []
-        }
-    }
-
-    if (animation.vertices.length == 0) {
-        return []
-    } else if (animation.vertices.length == 1) {
-        const deepestChunks = getDeepestChunks(animation.vertices[0], selection)
-        if (deepestChunks.length == 1 && deepestChunks[0].id == animation.vertices[0].id) {
-            return [animation]
-        } else {
-            return deepestChunks
-        }
-    }
-
-    const childrenContains: Set<string>[] = []
-
-    for (const child of animation.vertices) {
-        const contains: Set<string> = new Set()
-        for (const id of selection) {
-            if (queryExecutionGraph(child, (node) => node.id == id) != null) {
-                contains.add(id)
-            }
-        }
-
-        if (contains.size == selection.size) {
-            // Found a node that contains the selection, return the deepest chunk
-            // in that node
-            return getDeepestChunks(child, selection)
-        } else {
-            childrenContains.push(contains)
-        }
-    }
-
-    // Selection is contained partially in every animation
-    const allArePartiallyContained = childrenContains.every((set) => set.size > 0)
-
-    // Each of those partial containments are deepest chunks
-    let allAreDeepestChunks = true
-    let allDeepestChunks: (ExecutionGraph | ExecutionNode)[] = []
-    for (let i = 0; i < childrenContains.length; i++) {
-        const deepestChunks = getDeepestChunks(animation.vertices[i], childrenContains[i])
-        allDeepestChunks.push(...deepestChunks)
-
-        if (deepestChunks.length != 1 || deepestChunks[0].id != animation.vertices[i].id) {
-            allAreDeepestChunks = false
-        }
-    }
-
-    if (allArePartiallyContained && allAreDeepestChunks) {
-        return [animation]
-    } else {
-        return allDeepestChunks
-    }
-}
-
-export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
-    if (instanceOfExecutionGraph(chunk) && chunk.vertices.length == 1) {
-        return stripChunk(chunk.vertices[0])
-    }
-
-    return chunk
 }

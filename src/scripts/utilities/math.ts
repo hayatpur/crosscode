@@ -1,3 +1,8 @@
+import { DataType, PrototypicalDataState } from '../environment/data/DataState'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { queryExecutionGraph } from '../execution/graph/graph'
+import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
+import { View } from '../view/View'
 import './glpk'
 
 export interface Vector {
@@ -28,10 +33,7 @@ export function getRelativeLocation(point: Vector, parent: Vector) {
     }
 }
 
-export function getNumericalValueOfStyle(
-    styleValue: string,
-    fallback: number = 0
-): number {
+export function getNumericalValueOfStyle(styleValue: string, fallback: number = 0): number {
     let parsed = parseFloat(styleValue ?? fallback.toString())
 
     if (isNaN(parsed)) {
@@ -80,16 +82,12 @@ export function solveLP(data, mip = true) {
             solver.glp_intopt(lp)
             objective = solver.glp_mip_obj_val(lp)
             for (i = 1; i <= solver.glp_get_num_cols(lp); i++) {
-                result[solver.glp_get_col_name(lp, i)] = solver.glp_mip_col_val(
-                    lp,
-                    i
-                )
+                result[solver.glp_get_col_name(lp, i)] = solver.glp_mip_col_val(lp, i)
             }
         } else {
             objective = solver.glp_get_obj_val(lp)
             for (i = 1; i <= solver.glp_get_num_cols(lp); i++) {
-                result[solver.glp_get_col_name(lp, i)] =
-                    solver.glp_get_col_prim(lp, i)
+                result[solver.glp_get_col_name(lp, i)] = solver.glp_get_col_prim(lp, i)
             }
         }
         lp = null
@@ -139,4 +137,125 @@ export function catmullRomSolve(data: number[], k: number) {
     }
 
     return path
+}
+
+/**
+ * @returns true iff query is included in data or is data itself
+ */
+export function includes(data: PrototypicalDataState, query: string) {
+    if (data.type != DataType.Array) {
+        return data.id == query
+    } else {
+        return (
+            data.id == query ||
+            (data.value as PrototypicalDataState[]).some((d) => includes(d, query))
+        )
+    }
+}
+
+export function bboxContains(
+    bbox1: {
+        x: number
+        y: number
+        width: number
+        height: number
+    },
+    bbox2: {
+        x: number
+        y: number
+        width: number
+        height: number
+    }
+): boolean {
+    return (
+        bbox1.x <= bbox2.x &&
+        bbox1.y <= bbox2.y &&
+        bbox1.x + bbox1.width >= bbox2.x + bbox2.width &&
+        bbox1.y + bbox1.height >= bbox2.y + bbox2.height
+    )
+}
+
+export function getDeepestChunks(
+    animation: ExecutionGraph | ExecutionNode,
+    selection: Set<string>
+): (ExecutionGraph | ExecutionNode)[] {
+    // Base cases
+    if (selection.size == 0) {
+        return []
+    }
+
+    if (instanceOfExecutionNode(animation)) {
+        if (selection.has(animation.id) && selection.size == 1) {
+            return [animation]
+        } else {
+            return []
+        }
+    }
+
+    if (animation.vertices.length == 0) {
+        return []
+    } else if (animation.vertices.length == 1) {
+        const deepestChunks = getDeepestChunks(animation.vertices[0], selection)
+        if (deepestChunks.length == 1 && deepestChunks[0].id == animation.vertices[0].id) {
+            return [animation]
+        } else {
+            return deepestChunks
+        }
+    }
+
+    const childrenContains: Set<string>[] = []
+
+    for (const child of animation.vertices) {
+        const contains: Set<string> = new Set()
+        for (const id of selection) {
+            if (queryExecutionGraph(child, (node) => node.id == id) != null) {
+                contains.add(id)
+            }
+        }
+
+        if (contains.size == selection.size) {
+            // Found a node that contains the selection, return the deepest chunk
+            // in that node
+            return getDeepestChunks(child, selection)
+        } else {
+            childrenContains.push(contains)
+        }
+    }
+
+    // Selection is contained partially in every animation
+    const allArePartiallyContained = childrenContains.every((set) => set.size > 0)
+
+    // Each of those partial containments are deepest chunks
+    let allAreDeepestChunks = true
+    let allDeepestChunks: (ExecutionGraph | ExecutionNode)[] = []
+    for (let i = 0; i < childrenContains.length; i++) {
+        const deepestChunks = getDeepestChunks(animation.vertices[i], childrenContains[i])
+        allDeepestChunks.push(...deepestChunks)
+
+        if (deepestChunks.length != 1 || deepestChunks[0].id != animation.vertices[i].id) {
+            allAreDeepestChunks = false
+        }
+    }
+
+    if (allArePartiallyContained && allAreDeepestChunks) {
+        return [animation]
+    } else {
+        return allDeepestChunks
+    }
+}
+
+export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
+    if (instanceOfExecutionGraph(chunk) && chunk.vertices.length == 1) {
+        return stripChunk(chunk.vertices[0])
+    }
+
+    return chunk
+}
+
+export function getViewElement(view: View): HTMLElement {
+    if (view.state.isShowingSteps) {
+        return view.renderer.stepsContainer
+    } else {
+        return view.renderer.viewBody
+    }
 }

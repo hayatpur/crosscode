@@ -59,6 +59,10 @@ export class View {
             this.controller.expand()
         }
 
+        if (options.temporary) {
+            this.controller.makeTemporary()
+        }
+
         console.log('Expand:', performance.now() - start, 'ms')
         start = performance.now()
 
@@ -90,6 +94,14 @@ export class View {
         }
 
         return this.stepsTimeline.getAbstractionSelection(this.originalExecution.id)
+    }
+
+    getDepth(): number {
+        if (!this.state.isShowingSteps) {
+            return 1
+        } else {
+            return 1 + Math.max(...this.stepsTimeline.views.map((v) => v.getDepth()))
+        }
     }
 
     destroy() {

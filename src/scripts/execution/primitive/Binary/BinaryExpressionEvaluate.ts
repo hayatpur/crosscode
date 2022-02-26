@@ -7,11 +7,7 @@ import {
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import {
-    Accessor,
-    accessorsToString,
-    PrototypicalEnvironmentState,
-} from '../../../environment/EnvironmentState'
+import { Accessor, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -100,9 +96,11 @@ export function binaryExpressionEvaluate(
         ...createExecutionNode(null),
         _name: 'BinaryExpressionEvaluate',
 
-        name: `Binary Evaluate ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(
-            rightSpecifier
-        )} onto ${accessorsToString(outputRegister)}`,
+        // name: `Binary Evaluate ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(
+        //     rightSpecifier
+        // )} onto ${accessorsToString(outputRegister)}`,
+
+        name: `Binary ${operator}`,
 
         // Attributes
         leftSpecifier,

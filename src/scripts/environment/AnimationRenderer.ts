@@ -12,8 +12,10 @@ import { EnvironmentRenderer } from './EnvironmentRenderer'
 import { PrototypicalEnvironmentState } from './EnvironmentState'
 
 export interface AnimationRendererRepresentation {
-    exclude: string[] | null // List of data ids to exclude from the representation, or null to include all
-    include: string[] | null // List of data ids to include in the representation, or null to include all, prioritized over exclude
+    // exclude: string[] | null // List of data ids to exclude from the representation, or null to include all
+    // include: string[] | null // List of data ids to include in the representation, or null to include all, prioritized over exclude
+    reads: string[]
+    writes: string[]
 }
 
 let ANIMATION_RENDERER_ID = 0
@@ -89,9 +91,10 @@ export class AnimationRenderer {
         const rs = reads(this.view.originalExecution)
             .map((r) => r.id)
             .filter((id) => !id.includes('BindFunctionNew'))
+
         this.representation = {
-            exclude: null,
-            include: [...ws, ...rs],
+            reads: rs,
+            writes: ws,
         }
     }
 

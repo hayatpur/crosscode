@@ -105,12 +105,7 @@ export class Executor {
         console.log('\tAnimation', this.execution)
         console.log('\tEnvironment', env)
 
-        const [output, url] = animationToString(
-            this.execution.vertices[0],
-            0,
-            { first: false },
-            true
-        )
+        const [output, url] = animationToString(this.execution, 0, { first: false }, true)
         console.log(url)
         this.rootView = new RootView()
 

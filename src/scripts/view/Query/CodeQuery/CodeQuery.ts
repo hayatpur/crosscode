@@ -1,10 +1,11 @@
 import { Editor } from '../../../editor/Editor'
+import { queryExecutionGraphPath } from '../../../execution/graph/graph'
 import { Executor } from '../../../executor/Executor'
-import { catmullRomSolve } from '../../../utilities/math'
-import { View } from '../../View'
+import { catmullRomSolve, getViewElement } from '../../../utilities/math'
+import { ViewSelection, ViewSelectionType } from './CodeQueryGroup'
 
 export class CodeQuery {
-    selectedView: View
+    selection: ViewSelection
 
     // Rendering
     element: HTMLElement
@@ -12,17 +13,12 @@ export class CodeQuery {
     indicatorElement: HTMLElement
     codeSelectionElement: HTMLElement
 
-    incomingConnection: SVGPathElement
-    outgoingConnection: SVGPathElement
+    connection: SVGPathElement
 
     isSelected: boolean = false
-    isTemporary: boolean = false
 
-    opacity: number = 1
-
-    constructor(selectedView: View, isTemporary: boolean = false) {
-        this.selectedView = selectedView
-        this.isTemporary = isTemporary
+    constructor(selection: ViewSelection, isTemporary: boolean = false) {
+        this.selection = selection
 
         // Create element
         this.element = document.createElement('div')
@@ -37,22 +33,34 @@ export class CodeQuery {
         // Create indicator
         this.indicatorElement = document.createElement('div')
         this.indicatorElement.classList.add('code-query-indicator')
-        this.element.appendChild(this.indicatorElement)
 
+        if (selection.type == ViewSelectionType.CodeToView) {
+            this.element.appendChild(this.indicatorElement)
+        }
         // Create code selection
-        this.codeSelectionElement = document.createElement('div')
-        this.codeSelectionElement.classList.add('code-selection')
-        document.body.appendChild(this.codeSelectionElement)
+        if (this.selection.type == ViewSelectionType.CodeToView) {
+            this.codeSelectionElement = document.createElement('div')
+            this.codeSelectionElement.classList.add('code-selection')
+            document.body.appendChild(this.codeSelectionElement)
+        }
 
-        // Create incoming connection
-        this.incomingConnection = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        this.incomingConnection.classList.add('query-connection')
-        document.getElementById('svg-canvas').append(this.incomingConnection)
+        // TODO: Set label correctly for query
+        if (this.selection.type == ViewSelectionType.ViewToView) {
+            const path = queryExecutionGraphPath(
+                this.selection.referenceView.originalExecution,
+                (e) => e.id == this.selection.view.originalExecution.id
+            )
 
-        // Create outgoing connection
-        this.outgoingConnection = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        this.outgoingConnection.classList.add('query-connection')
-        document.getElementById('svg-canvas').append(this.outgoingConnection)
+            const pathStr = path.map((e) => e.nodeData.type).join(' > ')
+
+            this.selection.view.renderer.label.innerText =
+                pathStr + ' > ' + this.selection.view.renderer.label.innerText
+        }
+
+        // Create connection
+        this.connection = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        this.connection.classList.add('query-connection')
+        document.getElementById('svg-canvas').append(this.connection)
 
         this.element.addEventListener('click', () => {
             if (this.isSelected) {
@@ -65,46 +73,29 @@ export class CodeQuery {
 
     tick(dt: number) {
         // Update code selection
-        this.updateCodeSelection()
+        if (this.codeSelectionElement != null) {
+            this.updateCodeSelection()
+        }
+
+        this.updateConnection()
 
         // Update connection
 
-        // console.log(factor)
-
         // Update opacity
-        this.opacity = Math.max(Math.min(this.opacity, 1), 0)
-
-        if (this.opacity < 0.5) {
-            this.codeSelectionElement.classList.add('fade-out')
-            this.incomingConnection.classList.add('fade-out')
-            this.outgoingConnection.classList.add('fade-out')
-            this.element.classList.add('fade-out')
-        } else {
-            this.codeSelectionElement.classList.remove('fade-out')
-            this.incomingConnection.classList.remove('fade-out')
-            this.outgoingConnection.classList.remove('fade-out')
-            this.element.classList.remove('fade-out')
-        }
-
         // Scale
-        const dy = this.updateConnection() / 100.0
-        const factor = Math.exp(-(dy * dy))
-        if (
-            this.selectedView.renderer?.element != null &&
-            !this.selectedView.renderer?.element.parentElement.classList.contains('panning-area')
-        ) {
-            this.selectedView.state.transform.scale = factor
-        }
-
-        this.codeSelectionElement.style.opacity = this.opacity.toString()
-        this.incomingConnection.style.opacity = this.opacity.toString()
-        this.outgoingConnection.style.opacity = this.opacity.toString()
-        this.element.style.opacity = this.opacity.toString()
+        // const dy = this.updateConnection() / 500.0
+        // const factor = Math.exp(-(dy * dy))
+        // if (
+        //     this.selection.view.renderer?.element != null &&
+        //     !this.selection.view.renderer?.element.parentElement.classList.contains('panning-area')
+        // ) {
+        //     // this.selectedView.state.transform.scale = factor
+        // }
     }
 
     updateCodeSelection() {
         const codeBbox = Editor.instance.computeBoundingBoxForLoc(
-            this.selectedView.originalExecution.nodeData.location
+            this.selection.view.originalExecution.nodeData.location
         )
         const padding = 4
         this.codeSelectionElement.style.left = `${codeBbox.x - padding}px`
@@ -114,12 +105,12 @@ export class CodeQuery {
     }
 
     updateConnection() {
-        const codeSelectionBbox = this.codeSelectionElement.getBoundingClientRect()
+        const start =
+            this.selection.type == ViewSelectionType.CodeToView
+                ? this.codeSelectionElement.getBoundingClientRect()
+                : getViewElement(this.selection.referenceView).getBoundingClientRect()
 
-        const points = [
-            codeSelectionBbox.x + codeSelectionBbox.width,
-            codeSelectionBbox.y + codeSelectionBbox.height / 2,
-        ]
+        const points = [start.x + start.width, start.y + start.height / 2]
 
         if (document.body.contains(this.indicatorElement)) {
             const indicatorBbox = this.indicatorElement.getBoundingClientRect()
@@ -128,30 +119,33 @@ export class CodeQuery {
                 indicatorBbox.y + indicatorBbox.height / 2
             )
         } else {
-            const separatorX =
-                Executor.instance.rootView.separator.element.getBoundingClientRect().x
-            points.push(separatorX, codeSelectionBbox.y + codeSelectionBbox.height / 2)
+            if (this.selection.type == ViewSelectionType.CodeToView) {
+                const separatorX =
+                    Executor.instance.rootView.separator.element.getBoundingClientRect().x
+                points.push(separatorX, start.y + start.height / 2)
+            }
         }
 
-        if (this.selectedView.renderer?.element != null) {
-            if (this.selectedView.state.isShowingSteps) {
-                const viewBbox = this.selectedView.renderer.stepsContainer.getBoundingClientRect()
-                points.push(viewBbox.x, viewBbox.y + (0.5 * viewBbox.height) / 2)
-            } else {
-                const viewBbox = this.selectedView.renderer.viewBody.getBoundingClientRect()
-                points.push(viewBbox.x, viewBbox.y + (0.5 * viewBbox.height) / 2)
-            }
+        if (this.selection.view.renderer?.element != null) {
+            const viewBbox = getViewElement(this.selection.view).getBoundingClientRect()
+            points.push(viewBbox.x, viewBbox.y + (0.5 * viewBbox.height) / 2)
 
-            this.incomingConnection.classList.remove('dashed')
+            this.connection.classList.remove('dashed')
         } else {
-            this.incomingConnection.classList.add('dashed')
+            this.connection.classList.add('dashed')
+        }
+
+        if (this.selection.type == ViewSelectionType.ViewToView) {
+            const bbox = this.selection.view.renderer.element.getBoundingClientRect()
+            // points.push(bbox.x + bbox.width, bbox.y + bbox.height / 1.5)
+            // // points.push(bbox.x + bbox.width + 10, bbox.y + bbox.height + 10)
+            // points.push(start.x + start.width, start.y + start.height / 1.1)
         }
 
         const d = catmullRomSolve(points, 0.8) // SVGCatmullRomSpline.toPath(points, 4, true)
-        this.incomingConnection.setAttribute('d', d)
+        this.connection.setAttribute('d', d)
 
         return Math.abs(points[1] - points[points.length - 1])
-        // this.perfectArrows()
     }
 
     select(pan = true) {
@@ -169,25 +163,21 @@ export class CodeQuery {
         }
 
         this.element.classList.add('selected')
-
-        this.incomingConnection.classList.add('selected')
-        this.outgoingConnection.classList.add('selected')
-
-        if (this.selectedView.controller != null) {
-            this.selectedView.controller.select()
-        }
+        this.connection.classList.add('selected')
         this.codeSelectionElement.classList.add('selected')
 
-        // Find delta
-        if (pan) {
-            const codeBbox = this.codeSelectionElement.getBoundingClientRect()
-            const viewBbox = this.selectedView.state.isShowingSteps
-                ? this.selectedView.renderer.stepsContainer.getBoundingClientRect()
-                : this.selectedView.renderer.viewBody.getBoundingClientRect()
-            const delta = codeBbox.y + codeBbox.height / 2 - (viewBbox.y + viewBbox.height / 2)
+        this.selection.view.controller?.select()
 
-            Executor.instance.rootView.parentView.state.transform.position.y += delta
-        }
+        // Find delta
+        // if (pan) {
+        //     const codeBbox = this.codeSelectionElement.getBoundingClientRect()
+        //     const viewBbox = this.selectedView.state.isShowingSteps
+        //         ? this.selectedView.renderer.stepsContainer.getBoundingClientRect()
+        //         : this.selectedView.renderer.viewBody.getBoundingClientRect()
+        //     const delta = codeBbox.y + codeBbox.height / 2 - (viewBbox.y + viewBbox.height / 2)
+
+        //     Executor.instance.rootView.parentView.state.transform.position.y += delta
+        // }
 
         this.isSelected = true
     }
@@ -199,13 +189,11 @@ export class CodeQuery {
 
         this.element.classList.remove('selected')
 
-        this.incomingConnection.classList.remove('selected')
-        this.outgoingConnection.classList.remove('selected')
-
-        if (this.selectedView.controller != null) {
-            this.selectedView.controller.deselect()
-        }
+        this.connection.classList.remove('selected')
+        this.connection.classList.remove('selected')
         this.codeSelectionElement.classList.remove('selected')
+
+        this.selection.view.controller?.deselect()
         this.isSelected = false
     }
 
@@ -214,9 +202,8 @@ export class CodeQuery {
             this.deselect()
         }
         this.element.remove()
-        this.incomingConnection.remove()
-        this.outgoingConnection.remove()
-        this.codeSelectionElement.remove()
+        this.connection.remove()
+        this.codeSelectionElement?.remove()
 
         Executor.instance.rootView.removeQuery(this)
 

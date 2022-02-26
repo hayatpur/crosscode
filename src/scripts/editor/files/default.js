@@ -1,12 +1,8 @@
-let list = []
-let n = 4
+let x = 5
+let y = 10
 
-for (let i = 0; i < n; i++) {
-    list.push(i)
-}
-
-for (let i = 0; i < n / 2; i++) {
-    let temp = list[i]
-    list[i] = list[n - 1 - i]
-    list[n - 1 - i] = temp
+{
+    x = x + 1
+    y = y + 1
+    x = x + y
 }

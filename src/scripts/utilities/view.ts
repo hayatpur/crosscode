@@ -18,6 +18,8 @@ export interface CreateViewOptions {
     goToEnd?: boolean
     expand?: boolean
     isRoot?: boolean
+    depth?: number
+    temporary?: boolean
 }
 
 export function createViewRenderer(view: View) {

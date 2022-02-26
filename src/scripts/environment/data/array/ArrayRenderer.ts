@@ -48,7 +48,7 @@ export class ArrayRenderer extends DataRenderer {
                 const index = new IndexRenderer()
                 this.dataRenderers[item.id] = { renderer, index }
                 this.element.append(renderer.element)
-                // DataRenderer.getStage().append(index.element)
+                // this.element.append(index.element)
             }
 
             hits.add(item.id)
@@ -61,10 +61,11 @@ export class ArrayRenderer extends DataRenderer {
                 this.dataRenderers[item.id].renderer.deselect()
             }
 
-            // this.dataRenderers[item.id].index.setState(
-            //     i,
-            //     item.transform.rendered
-            // )
+            this.dataRenderers[item.id].index.setState(
+                i,
+                this.dataRenderers[item.id].renderer.element,
+                this.element
+            )
             updateIndexClasses(this.dataRenderers[item.id].renderer.element, i, items.length)
         }
 
