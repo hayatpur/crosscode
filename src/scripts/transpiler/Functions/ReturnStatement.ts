@@ -1,5 +1,5 @@
 import * as ESTree from 'estree'
-import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { EnvironmentState } from '../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../execution/graph/graph'
@@ -10,7 +10,7 @@ import { Compiler, getNodeData } from '../Compiler'
 
 export function ReturnStatement(
     ast: ESTree.ReturnStatement,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))

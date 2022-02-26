@@ -1,12 +1,12 @@
 import { createData } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { DataState, DataType } from '../../../environment/data/DataState'
 import {
     addDataAt,
     declareVariable,
     getMemoryLocation,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -15,7 +15,7 @@ export interface BindAnimation extends ExecutionNode {
     existingMemorySpecifier: Accessor[]
 }
 
-function apply(animation: BindAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: BindAnimation, environment: EnvironmentState) {
     let data = null
     let location = null
 
@@ -28,7 +28,7 @@ function apply(animation: BindAnimation, environment: PrototypicalEnvironmentSta
             environment,
             animation.existingMemorySpecifier,
             `${animation.id}_Existing`
-        ) as PrototypicalDataState
+        ) as DataState
         location = getMemoryLocation(environment, data).foundLocation
     } else {
         data = createData(DataType.Literal, undefined, `${animation.id}_BindNew`)

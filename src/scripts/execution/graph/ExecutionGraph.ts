@@ -1,4 +1,4 @@
-import { Accessor, PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../environment/EnvironmentState'
 import { ExecutionNode, NodeData } from '../primitive/ExecutionNode'
 import { Edge } from './edges/Edge'
 import { getEmptyNodeData } from './graph'
@@ -29,8 +29,8 @@ export interface ExecutionGraph {
     nodeData: NodeData
 
     // General info
-    precondition: PrototypicalEnvironmentState
-    postcondition: PrototypicalEnvironmentState
+    precondition: EnvironmentState
+    postcondition: EnvironmentState
     isGroup: boolean
 
     // Animation info

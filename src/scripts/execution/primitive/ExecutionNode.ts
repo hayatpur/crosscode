@@ -1,6 +1,6 @@
 import { Easing } from 'eaz'
 import * as ESTree from 'estree'
-import { Accessor, PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../environment/EnvironmentState'
 import { DataInfo } from '../graph/ExecutionGraph'
 
 export interface NodeData {
@@ -45,14 +45,14 @@ export interface ExecutionNode {
     name: string // Name of operation
     id: string
 
-    precondition: PrototypicalEnvironmentState
-    postcondition: PrototypicalEnvironmentState
+    precondition: EnvironmentState
+    postcondition: EnvironmentState
 
     _reads: DataInfo[]
     _writes: DataInfo[]
     nodeData: NodeData
 
-    apply: (animation: ExecutionNode, environment: PrototypicalEnvironmentState) => void
+    apply: (animation: ExecutionNode, environment: EnvironmentState) => void
 }
 
 export function instanceOfExecutionNode(animation: any): animation is ExecutionNode {

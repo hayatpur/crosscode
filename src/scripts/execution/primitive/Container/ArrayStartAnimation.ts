@@ -1,10 +1,10 @@
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, resolvePath } from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
-    PrototypicalEnvironmentState,
+    EnvironmentState,
 } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
@@ -13,7 +13,7 @@ export interface ArrayStartAnimation extends ExecutionNode {
     dataSpecifier: Accessor[]
 }
 
-function apply(animation: ArrayStartAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: ArrayStartAnimation, environment: EnvironmentState) {
     // Create a new array somewhere in memory
     const data = createData(DataType.Array, [], `${animation.id}_CreateArray`)
 
@@ -29,8 +29,8 @@ function apply(animation: ArrayStartAnimation, environment: PrototypicalEnvironm
         environment,
         animation.dataSpecifier,
         `${animation.id}_Floating`
-    ) as PrototypicalDataState
-    replacePrototypicalDataWith(
+    ) as DataState
+    replaceDataWith(
         outputRegister,
         createData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
     )

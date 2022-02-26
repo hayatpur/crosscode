@@ -1,6 +1,6 @@
 import { createDataRenderer } from '../../EnvironmentRenderer'
 import { DataRenderer } from '../DataRenderer'
-import { PrototypicalDataState } from '../DataState'
+import { DataState } from '../DataState'
 import { IndexRenderer } from './IndexRenderer'
 
 export class ArrayRenderer extends DataRenderer {
@@ -30,8 +30,8 @@ export class ArrayRenderer extends DataRenderer {
         // this.element.append(this.openingBrace, this.closingBrace)
     }
 
-    setState(data: PrototypicalDataState) {
-        const items = data.value as PrototypicalDataState[]
+    setState(data: DataState) {
+        const items = data.value as DataState[]
 
         this.element.append(this.openingBrace)
 

@@ -1,13 +1,13 @@
 import * as ESTree from 'estree'
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
 import {
     addDataAt,
     getMemoryLocation,
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -18,20 +18,20 @@ export interface BinaryExpressionEvaluate extends ExecutionNode {
     outputRegister: Accessor[]
 }
 
-function apply(animation: BinaryExpressionEvaluate, environment: PrototypicalEnvironmentState) {
+function apply(animation: BinaryExpressionEvaluate, environment: EnvironmentState) {
     // Find left data
     let left = resolvePath(
         environment,
         animation.leftSpecifier,
         `${animation.id}_Left`
-    ) as PrototypicalDataState
+    ) as DataState
 
     // Find right data
     let right = resolvePath(
         environment,
         animation.rightSpecifier,
         `${animation.id}_Right`
-    ) as PrototypicalDataState
+    ) as DataState
 
     // Evaluated
     const evaluated = createData(
@@ -63,11 +63,8 @@ function apply(animation: BinaryExpressionEvaluate, environment: PrototypicalEnv
             environment,
             animation.outputRegister,
             `${animation.id}_Floating`
-        ) as PrototypicalDataState
-        replacePrototypicalDataWith(
-            output,
-            createData(DataType.ID, evaluated.id, `${animation.id}_Placed`)
-        )
+        ) as DataState
+        replaceDataWith(output, createData(DataType.ID, evaluated.id, `${animation.id}_Placed`))
     } else {
         removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
     }

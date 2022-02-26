@@ -1,6 +1,6 @@
-import { PrototypicalDataState } from '../../../environment/data/DataState'
+import { DataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
-import { Accessor, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -8,11 +8,11 @@ export interface ConsumeDataAnimation extends ExecutionNode {
     register: Accessor[]
 }
 
-function apply(animation: ConsumeDataAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: ConsumeDataAnimation, environment: EnvironmentState) {
     // Get data
     const data = resolvePath(environment, animation.register, `${animation.id}_Property`, null, {
         noResolvingReference: true,
-    }) as PrototypicalDataState
+    }) as DataState
 
     const dataLocation = getMemoryLocation(environment, data).foundLocation
 

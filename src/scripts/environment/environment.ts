@@ -1,41 +1,30 @@
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { clone } from '../utilities/objects'
-import { createData, createTransform } from './data/data'
-import { DataType, instanceOfPrototypicalData, PrototypicalDataState } from './data/DataState'
+import { createData } from './data/data'
+import { DataState, DataType, instanceOfData } from './data/DataState'
 import {
     Accessor,
     AccessorType,
-    ConcreteIdentifierState,
-    instanceOfPrototypicalEnvironment,
-    PrototypicalEnvironmentState,
-    PrototypicalIdentifierState,
-    PrototypicalScope,
+    EnvironmentState,
+    IdentifierState,
+    instanceOfEnvironment,
+    Scope,
 } from './EnvironmentState'
 
 let CUR_ENV_ID = 0
 
-export function createPrototypicalEnvironment(): PrototypicalEnvironmentState {
+export function createEnvironment(): EnvironmentState {
     return {
-        _type: 'PrototypicalEnvironmentState',
+        _type: 'EnvironmentState',
         scope: [{ bindings: {}, type: ScopeType.Default }],
         memory: {},
         registers: {},
-        paths: {},
         id: `Env(${++CUR_ENV_ID})`,
     }
 }
 
-export function createIdentifier(name: string, location: Accessor[]): PrototypicalIdentifierState {
+export function createIdentifier(name: string, location: Accessor[]): IdentifierState {
     return { name, location }
-}
-
-export function createConcreteIdentifier(
-    prototype: PrototypicalIdentifierState = null
-): ConcreteIdentifierState {
-    return {
-        prototype,
-        transform: { ...createTransform(), classList: ['identifier-i'] },
-    }
 }
 
 /**
@@ -43,7 +32,7 @@ export function createConcreteIdentifier(
  * @param environment
  */
 export function createScope(
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     scopeType: ScopeType = ScopeType.Default
 ) {
     environment.scope.push({ bindings: {}, type: scopeType })
@@ -54,7 +43,7 @@ export function createScope(
  * @param environment
  * @returns the latest scope
  */
-export function popScope(environment: PrototypicalEnvironmentState): PrototypicalScope {
+export function popScope(environment: EnvironmentState): Scope {
     const frame = environment.scope.length
 
     for (const k of Object.keys(environment.memory)) {
@@ -75,7 +64,7 @@ export function popScope(environment: PrototypicalEnvironmentState): Prototypica
  * @param shouldBeGlobal whether it should be declared in the global scope (TODO)
  */
 export function declareVariable(
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     name: string,
     location: Accessor[],
     shouldBeGlobal = false
@@ -93,10 +82,7 @@ export function declareVariable(
  * @param name name of variable
  * @returns location of stored in the variable
  */
-export function lookupVariable(
-    environment: PrototypicalEnvironmentState,
-    name: string
-): Accessor[] {
+export function lookupVariable(environment: EnvironmentState, name: string): Accessor[] {
     for (let i = environment.scope.length - 1; i >= 0; i--) {
         let scope = environment.scope[i]
 
@@ -116,15 +102,14 @@ export function lookupVariable(
  * @returns Returns a deep clone of the environment
  */
 export function cloneEnvironment(
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     assignNewId: boolean = false
-): PrototypicalEnvironmentState {
+): EnvironmentState {
     return {
-        _type: 'PrototypicalEnvironmentState',
+        _type: 'EnvironmentState',
         scope: clone(environment.scope),
         memory: clone(environment.memory),
         registers: clone(environment.registers),
-        paths: clone(environment.paths),
         id: assignNewId ? `Env(${++CUR_ENV_ID})` : environment.id,
     }
 }
@@ -134,10 +119,7 @@ export function cloneEnvironment(
  * @param current
  * @param newEnv
  */
-export function replaceEnvironmentWith(
-    current: PrototypicalEnvironmentState,
-    newEnv: PrototypicalEnvironmentState
-) {
+export function replaceEnvironmentWith(current: EnvironmentState, newEnv: EnvironmentState) {
     const clone = cloneEnvironment(newEnv)
     current.scope = clone.scope
     current.memory = clone.memory
@@ -150,7 +132,7 @@ export function replaceEnvironmentWith(
  * @param location
  */
 export function removeAt(
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     location: Accessor[],
     options: { noResolvingId?: boolean; noResolvingReference?: boolean } = null
 ) {
@@ -159,9 +141,9 @@ export function removeAt(
 
     const index = location[location.length - 1]
 
-    if (instanceOfPrototypicalData(parent)) {
+    if (instanceOfData(parent)) {
         delete parent.value[index.value]
-    } else if (instanceOfPrototypicalEnvironment(parent)) {
+    } else if (instanceOfEnvironment(parent)) {
         delete parent.memory[index.value]
     } else {
         console.error('Unknown parent type', parent)
@@ -172,7 +154,7 @@ export function removeAt(
  * Logs the current state of the environment.
  * @param environment
  */
-export function logEnvironment(environment: PrototypicalEnvironmentState) {
+export function logEnvironment(environment: EnvironmentState) {
     console.table(environment.scope)
     console.table(environment.memory)
 }
@@ -182,11 +164,9 @@ export function logEnvironment(environment: PrototypicalEnvironmentState) {
  * @param environment
  * @returns
  */
-export function flattenedEnvironmentMemory(
-    environment: PrototypicalEnvironmentState
-): PrototypicalDataState[] {
+export function flattenedEnvironmentMemory(environment: EnvironmentState): DataState[] {
     const search = [...Object.values(environment.memory)]
-    const flattened: PrototypicalDataState[] = []
+    const flattened: DataState[] = []
 
     while (search.length > 0) {
         const data = search.shift()
@@ -194,7 +174,7 @@ export function flattenedEnvironmentMemory(
         flattened.push(data)
 
         if (data.type == DataType.Array) {
-            search.push(...(data.value as PrototypicalDataState[]))
+            search.push(...(data.value as DataState[]))
         }
     }
 
@@ -202,12 +182,12 @@ export function flattenedEnvironmentMemory(
 }
 
 export function resolve(
-    root: PrototypicalEnvironmentState,
+    root: EnvironmentState,
     accessor: Accessor,
     srcId: string,
-    parent: PrototypicalDataState | PrototypicalEnvironmentState | null = null,
+    parent: DataState | EnvironmentState | null = null,
     options: { noResolvingId?: boolean; noResolvingReference?: boolean } = {}
-): PrototypicalDataState | PrototypicalEnvironmentState {
+): DataState | EnvironmentState {
     // By default, make focus the overall environment if none is specified
     if (parent == null) {
         parent = root
@@ -245,8 +225,8 @@ export function resolve(
         }
     } else if (accessor.type == AccessorType.ID) {
         const search = [
-            ...(instanceOfPrototypicalData(parent)
-                ? (parent.value as PrototypicalDataState[])
+            ...(instanceOfData(parent)
+                ? (parent.value as DataState[])
                 : Object.values(parent.memory)),
         ]
 
@@ -263,7 +243,7 @@ export function resolve(
                     options
                 )
             } else if (data.type == DataType.Array) {
-                search.push(...(data.value as PrototypicalDataState[]))
+                search.push(...(data.value as DataState[]))
             }
         }
 
@@ -273,19 +253,17 @@ export function resolve(
         const accessors = lookupVariable(root, accessor.value as string)
         return resolvePath(root, accessors, srcId, null, options)
     } else if (accessor.type == AccessorType.Index) {
-        if (instanceOfPrototypicalData(parent) && parent.type == DataType.Array) {
-            const value = parent.value as PrototypicalDataState[]
+        if (instanceOfData(parent) && parent.type == DataType.Array) {
+            const value = parent.value as DataState[]
             if (parseInt(accessor.value) >= value.length) {
                 value[accessor.value] = createData(DataType.Literal, null, srcId)
                 value[accessor.value].frame = parent.frame
             }
         }
 
-        let data = (
-            instanceOfPrototypicalData(parent)
-                ? (parent.value as PrototypicalDataState[])
-                : parent.memory
-        )[accessor.value]
+        let data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[
+            accessor.value
+        ]
 
         if (data.type == DataType.ID) {
             if (options.noResolvingId) {
@@ -315,12 +293,12 @@ export function resolve(
 }
 
 export function resolvePath(
-    root: PrototypicalEnvironmentState,
+    root: EnvironmentState,
     path: Accessor[],
     srcId: string,
-    parent: PrototypicalDataState | PrototypicalEnvironmentState | null = null,
+    parent: DataState | EnvironmentState | null = null,
     options: { noResolvingId?: boolean; noResolvingReference?: boolean } = {}
-): PrototypicalDataState | PrototypicalEnvironmentState {
+): DataState | EnvironmentState {
     if (path.length == 0) {
         return parent ?? root
     }
@@ -332,24 +310,24 @@ export function resolvePath(
 }
 
 export function addDataAt(
-    root: PrototypicalEnvironmentState,
-    data: PrototypicalDataState,
+    root: EnvironmentState,
+    data: DataState,
     path: Accessor[],
     srcId: string,
-    origin: PrototypicalDataState | PrototypicalEnvironmentState | null = null
+    origin: DataState | EnvironmentState | null = null
 ): Accessor[] {
     // By default, make focus the overall environment if none is specified
     if (origin == null) {
         origin = root
     }
 
-    if (instanceOfPrototypicalData(origin)) {
+    if (instanceOfData(origin)) {
         if (origin.type != DataType.Array)
             console.error('[Data] Invalid addAt, trying to add to a non-addable type')
 
         // No path specified, push it into memory
         if (path.length == 0) {
-            ;(origin.value as PrototypicalDataState[]).push(data)
+            ;(origin.value as DataState[]).push(data)
             return
         }
 
@@ -389,22 +367,21 @@ export function addDataAt(
 }
 
 export function getMemoryLocation(
-    root: PrototypicalEnvironmentState,
-    data: PrototypicalDataState,
+    root: EnvironmentState,
+    data: DataState,
     location: Accessor[] = [],
-    parent: PrototypicalDataState | PrototypicalEnvironmentState | null = null
+    parent: DataState | EnvironmentState | null = null
 ): { found: boolean; foundLocation: Accessor[] } {
-    let search: { [id: string]: PrototypicalDataState } | { [id: number]: PrototypicalDataState } =
-        {}
+    let search: { [id: string]: DataState } | { [id: number]: DataState } = {}
     let isArray =
         parent != null &&
-        instanceOfPrototypicalData(parent) &&
+        instanceOfData(parent) &&
         parent.type == DataType.Array &&
         parent.frame >= 0
 
     if (isArray) {
         // Array
-        search = (parent as PrototypicalDataState).value as PrototypicalDataState[]
+        search = (parent as DataState).value as DataState[]
     } else if (parent == null) {
         // Whole memory
         search = root.memory
@@ -438,7 +415,7 @@ export function getMemoryLocation(
 }
 
 // Converts register IDs to memory counter-parts
-export function getTrueId(environment: PrototypicalEnvironmentState, id: string) {
+export function getTrueId(environment: EnvironmentState, id: string) {
     const register = environment.registers[id]
     if (register == null) return id
 
@@ -447,11 +424,11 @@ export function getTrueId(environment: PrototypicalEnvironmentState, id: string)
     }
 }
 
-export function cleanUpRegister(environment: PrototypicalEnvironmentState, registerName: string) {
+export function cleanUpRegister(environment: EnvironmentState, registerName: string) {
     delete environment.registers[registerName]
 }
 
-// export function getEmptyPosition(environment: PrototypicalEnvironmentState, id: string) {
+// export function getEmptyPosition(environment: EnvironmentState, id: string) {
 //     // Then it doesn't have a place yet
 //     // Find an empty space and put it there
 //     const placeholder = createData(DataType.Literal, '', `${id}_Placeholder`)

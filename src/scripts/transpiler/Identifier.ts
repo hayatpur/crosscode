@@ -1,7 +1,7 @@
 import * as ESTree from 'estree'
-import { DataType, PrototypicalDataState } from '../environment/data/DataState'
+import { DataState, DataType } from '../environment/data/DataState'
 import { resolvePath } from '../environment/environment'
-import { AccessorType, PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { AccessorType, EnvironmentState } from '../environment/EnvironmentState'
 import { applyExecutionNode } from '../execution/execution'
 import { createExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { addVertex } from '../execution/graph/graph'
@@ -14,7 +14,7 @@ import { getNodeData } from './Compiler'
 
 export function Identifier(
     ast: ESTree.Identifier,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     const graph = createExecutionGraph(getNodeData(ast))
@@ -30,7 +30,7 @@ export function Identifier(
             environment,
             [{ type: AccessorType.Symbol, value: ast.name }],
             null
-        ) as PrototypicalDataState
+        ) as DataState
 
         if (data.type == DataType.Array) {
             // Create a reference to it

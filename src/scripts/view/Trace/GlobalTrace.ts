@@ -123,7 +123,7 @@ export class GlobalTrace {
 
                 // Empty operations stack
                 while (operationStack.length > 0) {
-                    const op = operationStack.shift()
+                    const op = operationStack.pop()
 
                     if (hits.has(op.executionId)) {
                         continue

@@ -1,12 +1,8 @@
 import acorn = require('acorn')
 import * as ESTree from 'estree'
-import { PrototypicalDataState } from '../../environment/data/DataState'
+import { DataState } from '../../environment/data/DataState'
 import { cleanUpRegister, resolvePath } from '../../environment/environment'
-import {
-    Accessor,
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../environment/EnvironmentState'
+import { Accessor, AccessorType, EnvironmentState } from '../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../execution/graph/graph'
@@ -23,7 +19,7 @@ import { FunctionCall } from '../Functions/FunctionCall'
 
 export function CallExpression(
     ast: ESTree.CallExpression,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
@@ -69,7 +65,7 @@ export function CallExpression(
     })
     // addVertex(graph, lookup, { nodeData: getNodeData(ast.callee) })
 
-    const lookupData = resolvePath(environment, lookupRegister, null) as PrototypicalDataState
+    const lookupData = resolvePath(environment, lookupRegister, null) as DataState
     const lookupDataValue = lookupData.value as Function
 
     if (lookupDataValue.toString().includes('[native code]')) {
@@ -108,7 +104,7 @@ export function CallExpression(
         //         view,
         //         getMemoryLocation(
         //             view,
-        //             resolvePath(view, object, null) as PrototypicalDataState
+        //             resolvePath(view, object, null) as DataState
         //         ).foundLocation,
         //         {
         //             noResolvingReference: true,

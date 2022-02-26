@@ -1,6 +1,6 @@
-import { PrototypicalDataState } from '../../../environment/data/DataState'
+import { DataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode, ReturnData } from '../ExecutionNode'
 
@@ -8,12 +8,12 @@ export interface ReturnStatementAnimation extends ExecutionNode {
     returnData: ReturnData
 }
 
-function apply(animation: ReturnStatementAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: ReturnStatementAnimation, environment: EnvironmentState) {
     const data = resolvePath(
         environment,
         animation.returnData.register,
         `${animation.id}_Data`
-    ) as PrototypicalDataState
+    ) as DataState
     data.frame = animation.returnData.frame
 
     computeReadAndWrites(animation, {

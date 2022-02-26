@@ -1,5 +1,5 @@
 import { DataRenderer } from '../DataRenderer'
-import { PrototypicalDataState, TransformStyles } from '../DataState'
+import { DataState, TransformStyles } from '../DataState'
 
 export class LiteralRenderer extends DataRenderer {
     prevRenderStyles: TransformStyles
@@ -9,7 +9,7 @@ export class LiteralRenderer extends DataRenderer {
         this.element.classList.add('data-literal')
     }
 
-    setState(data: PrototypicalDataState) {
+    setState(data: DataState) {
         this.element.innerText = data.value?.toString() ?? 'null'
 
         if (typeof data.value == 'string') {

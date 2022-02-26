@@ -2,14 +2,14 @@ import { includes } from '../utilities/math'
 import { AnimationRendererRepresentation } from './AnimationRenderer'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
-import { DataType, PrototypicalDataState } from './data/DataState'
+import { DataState, DataType } from './data/DataState'
 import { LiteralRenderer } from './data/literal/LiteralRenderer'
 import { FunctionRenderer } from './data/reference/FunctionRenderer'
 import { resolvePath } from './environment'
-import { AccessorType, PrototypicalEnvironmentState } from './EnvironmentState'
+import { AccessorType, EnvironmentState } from './EnvironmentState'
 import { IdentifierRenderer } from './identifier/IdentifierRenderer'
 
-export function createDataRenderer(data: PrototypicalDataState) {
+export function createDataRenderer(data: DataState) {
     const mapping = {
         [DataType.Literal]: LiteralRenderer,
         [DataType.Array]: ArrayRenderer,
@@ -42,10 +42,7 @@ export class EnvironmentRenderer {
         this.element.classList.add('environment')
     }
 
-    setState(
-        state: PrototypicalEnvironmentState,
-        representation: AnimationRendererRepresentation = null
-    ) {
+    setState(state: EnvironmentState, representation: AnimationRendererRepresentation = null) {
         if (representation == null) {
             representation = {
                 reads: [],
@@ -92,16 +89,15 @@ export class EnvironmentRenderer {
         }
     }
 
-    renderMemory(
-        state: PrototypicalEnvironmentState,
-        representation: AnimationRendererRepresentation
-    ) {
+    renderMemory(state: EnvironmentState, representation: AnimationRendererRepresentation) {
         // Cached
-        if (JSON.stringify(state) === this.memoryCache) {
+        if (
+            JSON.stringify(Object.assign({}, state, { renderer: undefined })) === this.memoryCache
+        ) {
             return
         }
 
-        this.memoryCache = JSON.stringify(state)
+        this.memoryCache = JSON.stringify(Object.assign({}, state, { renderer: undefined }))
 
         // Hit test
         const hits = new Set()
@@ -167,10 +163,7 @@ export class EnvironmentRenderer {
         }
     }
 
-    renderIdentifiers(
-        state: PrototypicalEnvironmentState,
-        representation: AnimationRendererRepresentation
-    ) {
+    renderIdentifiers(state: EnvironmentState, representation: AnimationRendererRepresentation) {
         // Hit test
         const hits = new Set()
         const dataHits = new Set()

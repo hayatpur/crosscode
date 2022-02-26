@@ -1,6 +1,6 @@
-import { PrototypicalDataState } from '../../../environment/data/DataState'
+import { DataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { Accessor, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -8,8 +8,8 @@ export interface FloatAnimation extends ExecutionNode {
     dataSpecifier: Accessor[]
 }
 
-function apply(animation: FloatAnimation, environment: PrototypicalEnvironmentState) {
-    const data = resolvePath(environment, animation.dataSpecifier, null) as PrototypicalDataState
+function apply(animation: FloatAnimation, environment: EnvironmentState) {
+    const data = resolvePath(environment, animation.dataSpecifier, null) as DataState
 
     computeReadAndWrites(animation, {
         location: getMemoryLocation(environment, data).foundLocation,

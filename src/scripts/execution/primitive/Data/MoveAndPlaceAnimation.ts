@@ -1,14 +1,11 @@
-import { replacePrototypicalDataWith } from '../../../environment/data/data'
-import {
-    instanceOfPrototypicalData,
-    PrototypicalDataState,
-} from '../../../environment/data/DataState'
+import { replaceDataWith } from '../../../environment/data/data'
+import { DataState, instanceOfData } from '../../../environment/data/DataState'
 import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
-    instanceOfPrototypicalEnvironment,
-    PrototypicalEnvironmentState,
+    EnvironmentState,
+    instanceOfEnvironment,
 } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
@@ -22,10 +19,10 @@ export interface MoveAndPlaceAnimation extends ExecutionNode {
     outputSpecifier: Accessor[]
 }
 
-function apply(animation: MoveAndPlaceAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: MoveAndPlaceAnimation, environment: EnvironmentState) {
     const from = resolvePath(environment, animation.inputSpecifier, null, null, {
         noResolvingReference: true,
-    }) as PrototypicalDataState
+    }) as DataState
 
     const to = resolvePath(
         environment,
@@ -38,7 +35,7 @@ function apply(animation: MoveAndPlaceAnimation, environment: PrototypicalEnviro
         id: from.id,
     }
 
-    if (instanceOfPrototypicalEnvironment(to)) {
+    if (instanceOfEnvironment(to)) {
         computeReadAndWrites(animation, fromData, null)
     } else {
         computeReadAndWrites(animation, fromData, {
@@ -47,9 +44,9 @@ function apply(animation: MoveAndPlaceAnimation, environment: PrototypicalEnviro
         })
     }
 
-    if (instanceOfPrototypicalData(to)) {
+    if (instanceOfData(to)) {
         removeAt(environment, getMemoryLocation(environment, from).foundLocation)
-        replacePrototypicalDataWith(to, from, { frame: true, id: true })
+        replaceDataWith(to, from, { frame: true, id: true })
     }
 }
 

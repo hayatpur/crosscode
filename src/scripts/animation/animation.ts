@@ -1,4 +1,4 @@
-import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { EnvironmentState } from '../environment/EnvironmentState'
 import { TransitionAnimationNode } from '../execution/graph/abstraction/Transition'
 
 export enum AnimationPlayback {
@@ -35,9 +35,9 @@ export interface AnimationNode extends PlayableAnimation {
 
     baseDuration: number
 
-    onBegin: (animation: AnimationNode, view: PrototypicalEnvironmentState) => void
-    onSeek: (animation: AnimationNode, view: PrototypicalEnvironmentState, time: number) => void
-    onEnd: (animation: AnimationNode, view: PrototypicalEnvironmentState) => void
+    onBegin: (animation: AnimationNode, view: EnvironmentState) => void
+    onSeek: (animation: AnimationNode, view: EnvironmentState, time: number) => void
+    onEnd: (animation: AnimationNode, view: EnvironmentState) => void
 }
 
 export interface AnimationGraph extends PlayableAnimation {
@@ -143,10 +143,7 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
  * @param animation - Animation to start
  * @param view - View to apply the animation on
  */
-export function begin(
-    animation: AnimationGraph | AnimationNode,
-    environment: PrototypicalEnvironmentState
-) {
+export function begin(animation: AnimationGraph | AnimationNode, environment: EnvironmentState) {
     if (instanceOfAnimationNode(animation)) {
         animation.onBegin(animation, environment)
     }
@@ -158,10 +155,7 @@ export function begin(
  * @param view - View to apply the animation on
  * @param options - Mostly used for setting flags to bake animation
  */
-export function end(
-    animation: AnimationGraph | AnimationNode,
-    environment: PrototypicalEnvironmentState
-) {
+export function end(animation: AnimationGraph | AnimationNode, environment: EnvironmentState) {
     if (instanceOfAnimationNode(animation)) {
         animation.onEnd(animation, environment)
     } else {
@@ -184,7 +178,7 @@ export function end(
  */
 export function seek(
     animation: AnimationGraph | AnimationNode,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     time: number
 ) {
     if (instanceOfAnimationNode(animation)) {
@@ -290,10 +284,7 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     }
 }
 
-export function apply(
-    animation: AnimationGraph | AnimationNode,
-    environment: PrototypicalEnvironmentState
-) {
+export function apply(animation: AnimationGraph | AnimationNode, environment: EnvironmentState) {
     begin(animation, environment)
     animation.isPlaying = true
 

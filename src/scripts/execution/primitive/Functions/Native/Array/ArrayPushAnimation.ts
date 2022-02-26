@@ -1,7 +1,7 @@
-import { clonePrototypicalData } from '../../../../../environment/data/data'
-import { PrototypicalDataState } from '../../../../../environment/data/DataState'
+import { cloneData } from '../../../../../environment/data/data'
+import { DataState } from '../../../../../environment/data/DataState'
 import { getMemoryLocation, resolvePath } from '../../../../../environment/environment'
-import { Accessor, PrototypicalEnvironmentState } from '../../../../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../../../../environment/EnvironmentState'
 import { DataInfo } from '../../../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../../../ExecutionNode'
 
@@ -10,27 +10,19 @@ export interface ArrayPushAnimation extends ExecutionNode {
     args: Accessor[][]
 }
 
-function apply(animation: ArrayPushAnimation, environment: PrototypicalEnvironmentState) {
-    const object = resolvePath(
-        environment,
-        animation.object,
-        `${animation.id}_Data`
-    ) as PrototypicalDataState
+function apply(animation: ArrayPushAnimation, environment: EnvironmentState) {
+    const object = resolvePath(environment, animation.object, `${animation.id}_Data`) as DataState
 
     const args = animation.args.map(
-        (arg) => resolvePath(environment, arg, `${animation.id}_Data`) as PrototypicalDataState
+        (arg) => resolvePath(environment, arg, `${animation.id}_Data`) as DataState
     )
 
-    const objectValue = object.value as PrototypicalDataState[]
+    const objectValue = object.value as DataState[]
 
     // TODO: Copy data
     let originalLength = objectValue.length
     for (let i = 0; i < args.length; i++) {
-        objectValue[objectValue.length] = clonePrototypicalData(
-            args[i],
-            false,
-            `${animation.id}_Arg${i}`
-        )
+        objectValue[objectValue.length] = cloneData(args[i], false, `${animation.id}_Arg${i}`)
     }
 
     computeReadAndWrites(

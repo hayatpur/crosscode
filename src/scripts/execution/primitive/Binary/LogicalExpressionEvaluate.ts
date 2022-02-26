@@ -1,6 +1,6 @@
 import * as ESTree from 'estree'
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
 import {
     addDataAt,
     getMemoryLocation,
@@ -10,7 +10,7 @@ import {
 import {
     Accessor,
     accessorsToString,
-    PrototypicalEnvironmentState,
+    EnvironmentState,
 } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
@@ -23,15 +23,15 @@ export interface LogicalExpressionEvaluate extends ExecutionNode {
     outputRegister: Accessor[]
 }
 
-function apply(animation: LogicalExpressionEvaluate, environment: PrototypicalEnvironmentState) {
+function apply(animation: LogicalExpressionEvaluate, environment: EnvironmentState) {
     // Find left data
     let left = resolvePath(
         environment,
         animation.leftSpecifier,
         `${animation.id}_Left`
-    ) as PrototypicalDataState
+    ) as DataState
 
-    let evaluated: PrototypicalDataState, right: PrototypicalDataState
+    let evaluated: DataState, right: DataState
 
     if (animation.shortCircuit) {
         evaluated = createData(DataType.Literal, left.value, `${animation.id}_EvaluatedData`)
@@ -42,7 +42,7 @@ function apply(animation: LogicalExpressionEvaluate, environment: PrototypicalEn
             environment,
             animation.rightSpecifier,
             `${animation.id}_Right`
-        ) as PrototypicalDataState
+        ) as DataState
 
         evaluated = createData(
             DataType.Literal,
@@ -78,11 +78,8 @@ function apply(animation: LogicalExpressionEvaluate, environment: PrototypicalEn
             environment,
             animation.outputRegister,
             `${animation.id}_Floating`
-        ) as PrototypicalDataState
-        replacePrototypicalDataWith(
-            output,
-            createData(DataType.ID, evaluated.id, `${animation.id}_Placed`)
-        )
+        ) as DataState
+        replaceDataWith(output, createData(DataType.ID, evaluated.id, `${animation.id}_Placed`))
     } else {
         removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
     }

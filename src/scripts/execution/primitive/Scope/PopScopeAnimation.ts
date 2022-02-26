@@ -1,10 +1,10 @@
 import { popScope } from '../../../environment/environment'
-import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
 export interface PopScopeAnimation extends ExecutionNode {}
 
-function apply(animation: PopScopeAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: PopScopeAnimation, environment: EnvironmentState) {
     popScope(environment)
 
     computeReadAndWrites(animation)

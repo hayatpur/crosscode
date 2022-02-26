@@ -1,15 +1,8 @@
 import { reads, writes } from '../execution/execution'
-import {
-    beginConcretePath,
-    ConcretePath,
-    createConcretePath,
-    endConcretePath,
-    seekConcretePath,
-} from '../path/path'
-import { getPathFromEnvironmentRepresentation } from '../representation/representation'
+import { clone } from '../utilities/objects'
 import { View } from '../view/View'
 import { EnvironmentRenderer } from './EnvironmentRenderer'
-import { PrototypicalEnvironmentState } from './EnvironmentState'
+import { EnvironmentState } from './EnvironmentState'
 
 export interface AnimationRendererRepresentation {
     // exclude: string[] | null // List of data ids to exclude from the representation, or null to include all
@@ -26,14 +19,12 @@ export class AnimationRenderer {
     // State
     view: View
 
-    paths: { [id: string]: ConcretePath } = {}
-
     // Rendering
     preEnvironmentRenderer: EnvironmentRenderer
     environmentRenderer: EnvironmentRenderer
     postEnvironmentRenderer: EnvironmentRenderer
 
-    environment: PrototypicalEnvironmentState = null
+    environment: EnvironmentState = null
     element: HTMLDivElement = null
 
     preRendererElement: HTMLDivElement = null
@@ -68,7 +59,8 @@ export class AnimationRenderer {
         this.preRendererElement.appendChild(this.preEnvironmentRenderer.element)
 
         this.view = view
-        this.environment = this.view.originalExecution.postcondition
+        this.environment = clone(this.view.originalExecution.postcondition)
+        this.environment.renderer = this.environmentRenderer
 
         this.environmentRenderer.preRenderer = this.preEnvironmentRenderer
         this.environmentRenderer.postRenderer = this.postEnvironmentRenderer
@@ -108,8 +100,8 @@ export class AnimationRenderer {
     update() {
         // Update the environment
         this.environmentRenderer.setState(this.environment, this.representation)
-        this.propagateEnvironmentPaths(this.environment, this.environmentRenderer)
-        this.environmentRenderer.setState(this.environment, this.representation)
+        // this.propagateEnvironmentPaths(this.environment, this.environmentRenderer)
+        // this.environmentRenderer.setState(this.environment, this.representation)
 
         // Update the post environment
         if (this.showingPostRenderer) {
@@ -124,36 +116,6 @@ export class AnimationRenderer {
                 this.view.originalExecution.precondition,
                 this.representation
             )
-        }
-    }
-
-    propagateEnvironmentPaths(
-        environment: PrototypicalEnvironmentState,
-        renderer: EnvironmentRenderer
-    ) {
-        // Hit test
-        const hits = new Set()
-
-        for (const id of Object.keys(environment.paths)) {
-            const prototype = environment.paths[id]
-            let concrete = this.paths[id]
-
-            if (concrete == null) {
-                // Need to create a path in the concrete environment
-                concrete = createConcretePath(prototype)
-                this.paths[id] = concrete
-            }
-
-            hits.add(id)
-            this.propagatePath(concrete, environment, renderer)
-        }
-
-        // Remove paths that are no longer in the view
-        for (const id of Object.keys(this.paths)) {
-            if (!hits.has(id)) {
-                endConcretePath(this.paths[id], environment, renderer)
-                delete this.paths[id]
-            }
         }
     }
 
@@ -202,31 +164,6 @@ export class AnimationRenderer {
             const bbox = this.postRendererElement.getBoundingClientRect()
             // this.element.style.minWidth = `${bbox.width}px`
             // this.element.style.minHeight = `${bbox.height - 10}px`
-        }
-    }
-
-    propagatePath(
-        path: ConcretePath,
-        environment: PrototypicalEnvironmentState,
-        renderer: EnvironmentRenderer
-    ) {
-        const representation = getPathFromEnvironmentRepresentation(null, path.prototype)
-
-        path.onBegin = representation.onBegin
-        path.onEnd = representation.onEnd
-        path.onSeek = representation.onSeek
-
-        // Sync the timings of prototype path and concrete path
-        if (!path.meta.isPlaying && path.prototype.meta.isPlaying) {
-            beginConcretePath(path, environment, renderer)
-            path.meta.isPlaying = true
-        } else if (path.prototype.meta.isPlaying) {
-            seekConcretePath(path, environment, renderer, path.prototype.meta.t)
-        }
-
-        if (!path.meta.hasPlayed && path.prototype.meta.hasPlayed) {
-            endConcretePath(path, environment, renderer)
-            path.meta.hasPlayed = true
         }
     }
 }

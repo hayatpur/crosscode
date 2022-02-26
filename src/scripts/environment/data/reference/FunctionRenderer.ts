@@ -1,5 +1,5 @@
 import { DataRenderer } from '../DataRenderer'
-import { PrototypicalDataState, TransformStyles } from '../DataState'
+import { DataState, TransformStyles } from '../DataState'
 
 export class FunctionRenderer extends DataRenderer {
     prevRenderStyles: TransformStyles
@@ -9,7 +9,7 @@ export class FunctionRenderer extends DataRenderer {
         this.element.classList.add('data-function')
     }
 
-    setState(data: PrototypicalDataState) {
+    setState(data: DataState) {
         this.element.innerText = 'function'
     }
 }

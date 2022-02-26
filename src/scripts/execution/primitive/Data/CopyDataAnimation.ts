@@ -1,14 +1,10 @@
-import {
-    clonePrototypicalData,
-    createData,
-    replacePrototypicalDataWith,
-} from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { cloneData, createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
-    PrototypicalEnvironmentState,
+    EnvironmentState,
 } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
@@ -19,13 +15,13 @@ export interface CopyDataAnimation extends ExecutionNode {
     hardCopy: boolean
 }
 
-function apply(animation: CopyDataAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: CopyDataAnimation, environment: EnvironmentState) {
     const data = resolvePath(
         environment,
         animation.dataSpecifier,
         `${animation.id}_Data`
-    ) as PrototypicalDataState
-    const copy = clonePrototypicalData(data, false, `${animation.id}_Copy`)
+    ) as DataState
+    const copy = cloneData(data, false, `${animation.id}_Copy`)
     const location = addDataAt(environment, copy, [], null)
 
     // Put it in the floating stack
@@ -33,11 +29,8 @@ function apply(animation: CopyDataAnimation, environment: PrototypicalEnvironmen
         environment,
         animation.outputRegister,
         `${animation.id}_Floating`
-    ) as PrototypicalDataState
-    replacePrototypicalDataWith(
-        register,
-        createData(DataType.ID, copy.id, `${animation.id}_Floating`)
-    )
+    ) as DataState
+    replaceDataWith(register, createData(DataType.ID, copy.id, `${animation.id}_Floating`))
 
     if (animation.hardCopy) {
         data.value = undefined

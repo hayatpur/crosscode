@@ -1,10 +1,10 @@
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
-    PrototypicalEnvironmentState,
+    EnvironmentState,
 } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
@@ -14,12 +14,12 @@ export interface CopyReferenceAnimation extends ExecutionNode {
     outputRegister: Accessor[]
 }
 
-function apply(animation: CopyReferenceAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: CopyReferenceAnimation, environment: EnvironmentState) {
     const data = resolvePath(
         environment,
         animation.dataSpecifier,
         `${animation.id}_Data`
-    ) as PrototypicalDataState
+    ) as DataState
     const reference = createData(
         DataType.Reference,
         getMemoryLocation(environment, data).foundLocation,
@@ -41,11 +41,8 @@ function apply(animation: CopyReferenceAnimation, environment: PrototypicalEnvir
         environment,
         animation.outputRegister,
         `${animation.id}_FloatingRegister`
-    ) as PrototypicalDataState
-    replacePrototypicalDataWith(
-        register,
-        createData(DataType.ID, reference.id, `${animation.id}_Floating`)
-    )
+    ) as DataState
+    replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
 }
 
 function computeReadAndWrites(

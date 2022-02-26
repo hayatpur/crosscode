@@ -1,5 +1,5 @@
 import * as ESTree from 'estree'
-import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { EnvironmentState } from '../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../execution/graph/graph'
@@ -28,7 +28,7 @@ export enum ScopeType {
  */
 export function BlockStatement(
     ast: ESTree.BlockStatement,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext,
     scopeType: ScopeType = ScopeType.Default
 ): ExecutionGraph {

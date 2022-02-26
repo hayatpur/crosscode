@@ -1,6 +1,6 @@
 import * as ESTree from 'estree'
 import { cleanUpRegister } from '../../environment/environment'
-import { AccessorType, PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { AccessorType, EnvironmentState } from '../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../execution/graph/graph'
@@ -11,7 +11,7 @@ import { Compiler, getNodeData } from '../Compiler'
 
 export function VariableDeclarator(
     ast: ESTree.VariableDeclarator,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))

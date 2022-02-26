@@ -82,6 +82,8 @@ export class AnimationPlayer {
         }
 
         reset(this.view.transitionAnimation)
+        const renderer = animationRenderer.environment.renderer
         animationRenderer.environment = clone(this.view.originalExecution.postcondition)
+        animationRenderer.environment.renderer = renderer
     }
 }

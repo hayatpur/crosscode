@@ -1,5 +1,5 @@
 import * as ESTree from 'estree'
-import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { EnvironmentState } from '../../environment/EnvironmentState'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../execution/graph/graph'
 import { ExecutionContext } from '../../execution/primitive/ExecutionNode'
@@ -9,7 +9,7 @@ import { VariableDeclarator } from './VariableDeclarator'
 
 export function VariableDeclaration(
     ast: ESTree.VariableDeclaration,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     if (ast.declarations.length == 1) {

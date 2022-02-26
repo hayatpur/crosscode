@@ -1,5 +1,5 @@
 import * as ESTree from 'estree'
-import { PrototypicalEnvironmentState } from '../../environment/EnvironmentState'
+import { EnvironmentState } from '../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../execution/graph/graph'
@@ -10,7 +10,7 @@ import { getNodeData } from '../Compiler'
 
 export function FunctionDeclaration(
     ast: ESTree.FunctionDeclaration,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
@@ -21,7 +21,7 @@ export function FunctionDeclaration(
     addVertex(graph, bind, { nodeData: getNodeData(ast.id) })
     applyExecutionNode(bind, environment)
 
-    // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, environment: PrototypicalEnvironmentState, context: ExecutionContext) => {
+    // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, environment: EnvironmentState, context: ExecutionContext) => {
     //     const subScope = createScopeAnimation();
 
     //     for (let i = 0; i < params.length; i++) {

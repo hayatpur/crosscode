@@ -1,20 +1,12 @@
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import {
-    DataType,
-    instanceOfPrototypicalData,
-    PrototypicalDataState,
-} from '../../../environment/data/DataState'
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType, instanceOfData } from '../../../environment/data/DataState'
 import {
     addDataAt,
     getMemoryLocation,
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import {
-    Accessor,
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../environment/EnvironmentState'
+import { Accessor, AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 import { GetMember } from './GetMember'
@@ -25,13 +17,13 @@ export interface FindMember extends ExecutionNode {
     outputRegister: Accessor[]
 }
 
-function apply(animation: FindMember, environment: PrototypicalEnvironmentState) {
+function apply(animation: FindMember, environment: EnvironmentState) {
     // Get object
     const object = resolvePath(
         environment,
         animation.objectRegister,
         `${animation.id}_Object`
-    ) as PrototypicalDataState
+    ) as DataState
     console.assert(object.type === DataType.Array, `${animation.id}_Object is not an object`)
     const objectLocation = getMemoryLocation(environment, object).foundLocation
 
@@ -40,7 +32,7 @@ function apply(animation: FindMember, environment: PrototypicalEnvironmentState)
         environment,
         animation.propertyRegister,
         `${animation.id}_Property`
-    ) as PrototypicalDataState
+    ) as DataState
     const propertyLocation = getMemoryLocation(environment, property).foundLocation
 
     // Get original data
@@ -48,11 +40,11 @@ function apply(animation: FindMember, environment: PrototypicalEnvironmentState)
         environment,
         [...objectLocation, { type: AccessorType.Index, value: property.value as string }],
         `${animation.id}_MemberFunction`
-    ) as PrototypicalDataState | Function
+    ) as DataState | Function
 
     let originalModified = false
 
-    if (!instanceOfPrototypicalData(original)) {
+    if (!instanceOfData(original)) {
         original = createData(DataType.Literal, original, `${animation.id}_MemberFunction`)
         addDataAt(environment, original, [], null)
         originalModified = true
@@ -79,7 +71,7 @@ function apply(animation: FindMember, environment: PrototypicalEnvironmentState)
         {
             noResolvingReference: true,
         }
-    ) as PrototypicalDataState
+    ) as DataState
     const objectReferenceLocation = getMemoryLocation(environment, objectReference).foundLocation
     removeAt(environment, getMemoryLocation(environment, objectReference).foundLocation, {
         noResolvingReference: true,
@@ -109,8 +101,8 @@ function apply(animation: FindMember, environment: PrototypicalEnvironmentState)
         environment,
         animation.outputRegister,
         `${animation.id}_Floating`
-    ) as PrototypicalDataState
-    replacePrototypicalDataWith(
+    ) as DataState
+    replaceDataWith(
         outputRegister,
         createData(DataType.ID, original.id, `${animation.id}_OutputRegister`)
     )

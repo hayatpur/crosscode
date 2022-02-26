@@ -1,5 +1,5 @@
 import { createScope } from '../../../environment/environment'
-import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -7,7 +7,7 @@ export interface CreateScopeAnimation extends ExecutionNode {
     type: ScopeType
 }
 
-function apply(animation: CreateScopeAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: CreateScopeAnimation, environment: EnvironmentState) {
     createScope(environment, animation.type)
 
     computeReadAndWrites(animation)

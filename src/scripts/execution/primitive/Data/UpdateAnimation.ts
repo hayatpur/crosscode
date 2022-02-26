@@ -1,7 +1,7 @@
 import * as ESTree from 'estree'
-import { PrototypicalDataState } from '../../../environment/data/DataState'
+import { DataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { Accessor, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -10,12 +10,12 @@ export interface UpdateAnimation extends ExecutionNode {
     operator: ESTree.UpdateOperator
 }
 
-function apply(animation: UpdateAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: UpdateAnimation, environment: EnvironmentState) {
     const data = resolvePath(
         environment,
         animation.dataSpecifier,
         `${animation.id}_Data`
-    ) as PrototypicalDataState
+    ) as DataState
 
     switch (animation.operator) {
         case '++':

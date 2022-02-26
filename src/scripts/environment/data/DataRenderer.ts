@@ -1,4 +1,4 @@
-import { PrototypicalDataState } from './DataState'
+import { DataState } from './DataState'
 
 export class DataRenderer {
     element: HTMLDivElement
@@ -9,7 +9,7 @@ export class DataRenderer {
         this.element.classList.add('data')
     }
 
-    setState(data: PrototypicalDataState) {
+    setState(data: DataState) {
         console.warn('No fallback for', data)
     }
 

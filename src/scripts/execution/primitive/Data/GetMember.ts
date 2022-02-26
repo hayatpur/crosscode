@@ -1,20 +1,12 @@
-import {
-    clonePrototypicalData,
-    createData,
-    replacePrototypicalDataWith,
-} from '../../../environment/data/data'
-import {
-    DataType,
-    instanceOfPrototypicalData,
-    PrototypicalDataState,
-} from '../../../environment/data/DataState'
+import { cloneData, createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType, instanceOfData } from '../../../environment/data/DataState'
 import {
     addDataAt,
     getMemoryLocation,
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -24,30 +16,30 @@ export interface GetMember extends ExecutionNode {
     outputRegister: Accessor[]
 }
 
-function apply(animation: GetMember, environment: PrototypicalEnvironmentState) {
+function apply(animation: GetMember, environment: EnvironmentState) {
     // Get object
     const object = resolvePath(
         environment,
         animation.objectRegister,
         `${animation.id}_Object`
-    ) as PrototypicalDataState
+    ) as DataState
 
     // Get property
     const property = resolvePath(
         environment,
         animation.propertyRegister,
         `${animation.id}_Property`
-    ) as PrototypicalDataState
+    ) as DataState
     const propertyLocation = getMemoryLocation(environment, property).foundLocation
 
     // Index into it
-    const original = (object.value as PrototypicalDataState[])[property.value as number | string]
+    const original = (object.value as DataState[])[property.value as number | string]
 
-    let copy: PrototypicalDataState
+    let copy: DataState
 
-    if (instanceOfPrototypicalData(original)) {
+    if (instanceOfData(original)) {
         // Create a copy of data
-        copy = clonePrototypicalData(original, false, `${animation.id}_Copy`)
+        copy = cloneData(original, false, `${animation.id}_Copy`)
     } else {
         // Create a new data
         copy = createData(DataType.Literal, original, `${animation.id}_Copy`)
@@ -67,7 +59,7 @@ function apply(animation: GetMember, environment: PrototypicalEnvironmentState) 
         {
             noResolvingReference: true,
         }
-    ) as PrototypicalDataState
+    ) as DataState
     const objectLocation = getMemoryLocation(environment, objectReference).foundLocation
 
     removeAt(environment, getMemoryLocation(environment, objectReference).foundLocation, {
@@ -86,7 +78,7 @@ function apply(animation: GetMember, environment: PrototypicalEnvironmentState) 
 
     const copyData = { location, id: copy.id }
 
-    if (instanceOfPrototypicalData(original)) {
+    if (instanceOfData(original)) {
         computeReadAndWrites(animation, objectData, propertyData, copyData, {
             location: getMemoryLocation(environment, original).foundLocation,
             id: original.id,
@@ -100,8 +92,8 @@ function apply(animation: GetMember, environment: PrototypicalEnvironmentState) 
         environment,
         animation.outputRegister,
         `${animation.id}_Floating`
-    ) as PrototypicalDataState
-    replacePrototypicalDataWith(
+    ) as DataState
+    replaceDataWith(
         outputRegister,
         createData(DataType.ID, copy.id, `${animation.id}_OutputRegister`)
     )

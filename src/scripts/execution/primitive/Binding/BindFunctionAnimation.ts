@@ -2,7 +2,7 @@ import * as ESTree from 'estree'
 import { createData } from '../../../environment/data/data'
 import { DataType } from '../../../environment/data/DataState'
 import { addDataAt, declareVariable } from '../../../environment/environment'
-import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -11,7 +11,7 @@ export interface BindFunctionAnimation extends ExecutionNode {
     ast: ESTree.FunctionDeclaration
 }
 
-function apply(animation: BindFunctionAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: BindFunctionAnimation, environment: EnvironmentState) {
     // Create a reference for variable
     const reference = createData(DataType.Reference, [], `${animation.id}_ReferenceFunction`)
     const referenceLocation = addDataAt(environment, reference, [], `${animation.id}_AddFunction`)

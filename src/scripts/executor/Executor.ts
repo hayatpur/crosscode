@@ -2,7 +2,7 @@ import acorn = require('acorn')
 import * as ESTree from 'estree'
 import { Pane } from 'tweakpane'
 import { Editor } from '../editor/Editor'
-import { createPrototypicalEnvironment } from '../environment/environment'
+import { createEnvironment } from '../environment/environment'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { animationToString } from '../execution/graph/graph'
 import { Compiler } from '../transpiler/Compiler'
@@ -92,7 +92,7 @@ export class Executor {
         }
 
         // Create animation from user code
-        const env = createPrototypicalEnvironment()
+        const env = createEnvironment()
         this.execution = Compiler.compile(ast, env, {
             outputRegister: [],
             locationHint: [],

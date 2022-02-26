@@ -1,79 +1,41 @@
 import { AnimationOptions, createAnimationNode, duration } from '../../../../animation/animation'
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../../environment/EnvironmentState'
-import {
-    addPrototypicalPath,
-    beginPrototypicalPath,
-    endPrototypicalPath,
-    lookupPrototypicalPathById,
-    removePrototypicalPath,
-    seekPrototypicalPath,
-} from '../../../../path/path'
-import {
-    createPrototypicalCreatePath,
-    PrototypicalCreatePath,
-} from '../../../../path/prototypical/PrototypicalCreatePath'
+import { EnvironmentState } from '../../../../environment/EnvironmentState'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
 import { DataInfo } from '../../../graph/ExecutionGraph'
 
 export interface TransitionCreate extends TransitionAnimationNode {}
 
-function onBegin(animation: TransitionCreate, environment: PrototypicalEnvironmentState) {
-    let create = lookupPrototypicalPathById(
-        environment,
-        `Create${animation.id}`
-    ) as PrototypicalCreatePath
-
-    if (create == null) {
-        create = createPrototypicalCreatePath(
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            `Create${animation.id}`
-        )
-        addPrototypicalPath(environment, create)
-        beginPrototypicalPath(create, environment)
+function onBegin(animation: TransitionCreate, environment: EnvironmentState) {
+    if (environment.renderer != null) {
+        const element = environment.renderer.getAllChildRenderers()[animation.output.id].element
+        element.style.opacity = `${0}`
+        element.style.transform = `scale(0)`
     }
 }
 
-function onSeek(
-    animation: TransitionCreate,
-    environment: PrototypicalEnvironmentState,
-    time: number
-) {
+function onSeek(animation: TransitionCreate, environment: EnvironmentState, time: number) {
     let t = animation.ease(time / duration(animation))
 
-    const create = lookupPrototypicalPathById(
-        environment,
-        `Create${animation.id}`
-    ) as PrototypicalCreatePath
-    seekPrototypicalPath(create, environment, t)
+    if (environment.renderer != null) {
+        const element = environment.renderer.getAllChildRenderers()[animation.output.id].element
+        element.style.opacity = `${t}`
+        element.style.transform = `scale(${t})`
+    }
 }
 
-function onEnd(animation: TransitionCreate, environment: PrototypicalEnvironmentState) {
-    const create = lookupPrototypicalPathById(
-        environment,
-        `Create${animation.id}`
-    ) as PrototypicalCreatePath
-    endPrototypicalPath(create, environment)
-    removePrototypicalPath(environment, `Create${animation.id}`)
+function onEnd(animation: TransitionCreate, environment: EnvironmentState) {
+    if (environment.renderer != null) {
+        const element = environment.renderer.getAllChildRenderers()[animation.output.id].element
+        element.style.opacity = `${1}`
+        element.style.transform = `scale(${1})`
+    }
 }
 
-function applyInvariant(animation: TransitionCreate, environment: PrototypicalEnvironmentState) {
-    let create = lookupPrototypicalPathById(
-        environment,
-        `Create${animation.id}`
-    ) as PrototypicalCreatePath
-
-    if (create == null) {
-        create = createPrototypicalCreatePath(
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            [{ type: AccessorType.ID, value: animation.output.id }],
-            `Create${animation.id}`
-        )
-        addPrototypicalPath(environment, create)
-        beginPrototypicalPath(create, environment)
+function applyInvariant(animation: TransitionCreate, environment: EnvironmentState) {
+    if (environment.renderer != null && !animation.isPlaying) {
+        const element = environment.renderer.getAllChildRenderers()[animation.output.id].element
+        element.style.opacity = `${0}`
+        element.style.transform = `scale(0)`
     }
 }
 

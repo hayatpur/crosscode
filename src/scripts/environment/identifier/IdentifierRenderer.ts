@@ -1,5 +1,5 @@
 import { DataRenderer } from '../data/DataRenderer'
-import { PrototypicalIdentifierState } from '../EnvironmentState'
+import { IdentifierState } from '../EnvironmentState'
 
 export class IdentifierRenderer {
     element: HTMLElement
@@ -19,11 +19,7 @@ export class IdentifierRenderer {
         this.element.classList.remove('selected')
     }
 
-    setState(
-        state: PrototypicalIdentifierState,
-        data: DataRenderer,
-        environmentElement: HTMLElement
-    ) {
+    setState(state: IdentifierState, data: DataRenderer, environmentElement: HTMLElement) {
         this.element.innerHTML = `${state.name}`
 
         this.reference = data.element

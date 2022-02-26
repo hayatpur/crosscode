@@ -1,5 +1,4 @@
 import * as CSS from 'csstype'
-import { PrototypicalPath } from '../../path/path'
 import { Accessor } from '../EnvironmentState'
 
 export enum DataType {
@@ -29,20 +28,17 @@ export interface Transform {
     classList: string[]
 }
 
-export interface ConcreteDataTransform extends Transform {}
-
-export interface PrototypicalDataTransform {
+export interface DataTransform {
     classList: string[]
-    paths: PrototypicalPath[]
 }
 
-export interface PrototypicalDataState {
-    _type: 'PrototypicalDataState'
+export interface DataState {
+    _type: 'DataState'
 
     type: DataType
-    hints: PrototypicalDataTransform
+    hints: DataTransform
 
-    value: string | boolean | number | PrototypicalDataState[] | Accessor[] | Function
+    value: string | boolean | number | DataState[] | Accessor[] | Function
 
     // Binding frame
     frame: number
@@ -50,18 +46,6 @@ export interface PrototypicalDataState {
     id: string
 }
 
-export interface ConcreteDataState {
-    _type: 'ConcreteDataState'
-
-    prototype: PrototypicalDataState
-    transform: ConcreteDataTransform
-    value: string | boolean | number | ConcreteDataState[] | Accessor[]
-}
-
-export function instanceOfPrototypicalData(data: any): data is PrototypicalDataState {
-    return data != null && data['_type'] === 'PrototypicalDataState'
-}
-
-export function instanceOfConcreteData(data: any): data is ConcreteDataState {
-    return data['_type'] === 'ConcreteDataState'
+export function instanceOfData(data: any): data is DataState {
+    return data != null && data['_type'] === 'DataState'
 }

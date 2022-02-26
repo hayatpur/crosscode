@@ -1,80 +1,55 @@
 import { AnimationOptions, createAnimationNode, duration } from '../../../../animation/animation'
-import { PrototypicalEnvironmentState } from '../../../../environment/EnvironmentState'
-import {
-    addPrototypicalPath,
-    beginPrototypicalPath,
-    endPrototypicalPath,
-    lookupPrototypicalPathById,
-    removePrototypicalPath,
-    seekPrototypicalPath,
-} from '../../../../path/path'
-import {
-    createPrototypicalCreateVariablePath,
-    PrototypicalCreateVariablePath,
-} from '../../../../path/prototypical/PrototypicalCreateVariablePath'
+import { EnvironmentState } from '../../../../environment/EnvironmentState'
+import { IdentifierRenderer } from '../../../../environment/identifier/IdentifierRenderer'
 import { TransitionAnimationNode } from '../../../graph/abstraction/Transition'
 import { DataInfo } from '../../../graph/ExecutionGraph'
 
 export interface TransitionCreateVariable extends TransitionAnimationNode {}
 
-function onBegin(animation: TransitionCreateVariable, environment: PrototypicalEnvironmentState) {
-    let create = lookupPrototypicalPathById(
-        environment,
-        `CreateVariable${animation.id}`
-    ) as PrototypicalCreateVariablePath
-
-    if (create == null) {
-        create = createPrototypicalCreateVariablePath(
-            animation.output.id,
-            animation.output.location,
-            `CreateVariable${animation.id}`
-        )
-        addPrototypicalPath(environment, create)
-        beginPrototypicalPath(create, environment)
+function onBegin(animation: TransitionCreateVariable, environment: EnvironmentState) {
+    const renderer = environment.renderer
+    if (renderer == null) {
+        return
     }
+
+    const children = renderer.getAllChildRenderers()
+    const identifier = children[animation.output.id] as IdentifierRenderer
+    identifier.element.style.opacity = `${0}`
 }
 
-function onSeek(
-    animation: TransitionCreateVariable,
-    environment: PrototypicalEnvironmentState,
-    time: number
-) {
+function onSeek(animation: TransitionCreateVariable, environment: EnvironmentState, time: number) {
     let t = animation.ease(time / duration(animation))
 
-    const create = lookupPrototypicalPathById(
-        environment,
-        `CreateVariable${animation.id}`
-    ) as PrototypicalCreateVariablePath
-    seekPrototypicalPath(create, environment, t)
-}
-
-function onEnd(animation: TransitionCreateVariable, environment: PrototypicalEnvironmentState) {
-    const create = lookupPrototypicalPathById(
-        environment,
-        `CreateVariable${animation.id}`
-    ) as PrototypicalCreateVariablePath
-    endPrototypicalPath(create, environment)
-    removePrototypicalPath(environment, `CreateVariable${animation.id}`)
-}
-
-function applyInvariant(
-    animation: TransitionCreateVariable,
-    environment: PrototypicalEnvironmentState
-) {
-    let create = lookupPrototypicalPathById(
-        environment,
-        `CreateVariable${animation.id}`
-    ) as PrototypicalCreateVariablePath
-
-    if (create == null) {
-        create = createPrototypicalCreateVariablePath(
-            animation.output.id,
-            animation.output.location,
-            `CreateVariable${animation.id}`
-        )
-        addPrototypicalPath(environment, create)
-        beginPrototypicalPath(create, environment)
+    const renderer = environment.renderer
+    if (renderer == null) {
+        return
     }
+
+    const children = renderer.getAllChildRenderers()
+    const identifier = children[animation.output.id] as IdentifierRenderer
+    identifier.element.style.opacity = `${t}`
+}
+
+function onEnd(animation: TransitionCreateVariable, environment: EnvironmentState) {
+    const renderer = environment.renderer
+    if (renderer == null) {
+        return
+    }
+
+    const children = renderer.getAllChildRenderers()
+    const identifier = children[animation.output.id] as IdentifierRenderer
+    identifier.element.style.opacity = `${1}`
+}
+
+function applyInvariant(animation: TransitionCreateVariable, environment: EnvironmentState) {
+    const renderer = environment.renderer
+    if (renderer == null || animation.isPlaying) {
+        return
+    }
+
+    const children = renderer.getAllChildRenderers()
+    const identifier = children[animation.output.id] as IdentifierRenderer
+    identifier.element.style.opacity = `${0}`
 }
 
 export function transitionCreateVariable(

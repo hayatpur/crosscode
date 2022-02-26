@@ -1,10 +1,10 @@
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
 import { addDataAt, resolvePath } from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
-    PrototypicalEnvironmentState,
+    EnvironmentState,
 } from '../../../environment/EnvironmentState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
@@ -21,7 +21,7 @@ export interface CreateLiteralAnimation extends ExecutionNode {
  * @param view
  * @param options
  */
-function apply(animation: CreateLiteralAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: CreateLiteralAnimation, environment: EnvironmentState) {
     const data = createData(
         DataType.Literal,
         animation.value as number | string | boolean,
@@ -41,8 +41,8 @@ function apply(animation: CreateLiteralAnimation, environment: PrototypicalEnvir
         environment,
         animation.outputRegister,
         `${animation.id}_Floating`
-    ) as PrototypicalDataState
-    replacePrototypicalDataWith(
+    ) as DataState
+    replaceDataWith(
         outputRegister,
         createData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
     )

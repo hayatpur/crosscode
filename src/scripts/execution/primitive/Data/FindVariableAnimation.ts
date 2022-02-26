@@ -1,11 +1,7 @@
-import { createData, replacePrototypicalDataWith } from '../../../environment/data/data'
-import { DataType, PrototypicalDataState } from '../../../environment/data/DataState'
+import { createData, replaceDataWith } from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
 import { resolvePath } from '../../../environment/environment'
-import {
-    Accessor,
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../environment/EnvironmentState'
+import { Accessor, AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
 export interface FindVariableAnimation extends ExecutionNode {
@@ -13,7 +9,7 @@ export interface FindVariableAnimation extends ExecutionNode {
     outputRegister: Accessor[]
 }
 
-function apply(animation: FindVariableAnimation, environment: PrototypicalEnvironmentState) {
+function apply(animation: FindVariableAnimation, environment: EnvironmentState) {
     const reference = resolvePath(
         environment,
         [{ type: AccessorType.Symbol, value: animation.identifier }],
@@ -27,12 +23,9 @@ function apply(animation: FindVariableAnimation, environment: PrototypicalEnviro
         environment,
         animation.outputRegister,
         `${animation.id}_FloatingRegister`
-    ) as PrototypicalDataState
+    ) as DataState
 
-    replacePrototypicalDataWith(
-        register,
-        createData(DataType.ID, reference.id, `${animation.id}_Floating`)
-    )
+    replaceDataWith(register, createData(DataType.ID, reference.id, `${animation.id}_Floating`))
 
     computeReadAndWrites(animation)
 }

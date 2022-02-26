@@ -1,7 +1,7 @@
-import { PrototypicalPath } from '../path/path'
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { stringHashCode } from '../utilities/string'
-import { PrototypicalDataState, Transform } from './data/DataState'
+import { DataState, Transform } from './data/DataState'
+import { EnvironmentRenderer } from './EnvironmentRenderer'
 
 export enum AccessorType {
     ID = 'ID',
@@ -28,23 +28,13 @@ export function accessorsToString(accessors: Accessor[]): string {
     return `${accessors.map((acc) => accessorToString(acc)).join(' > ')}`
 }
 
-export interface PrototypicalIdentifierState {
+export interface IdentifierState {
     name: string
     location: Accessor[]
 }
 
-export interface ConcreteIdentifierState {
-    prototype: PrototypicalIdentifierState
-    transform: Transform
-}
-
-export interface PrototypicalScope {
-    bindings: { [name: string]: PrototypicalIdentifierState }
-    type: ScopeType
-}
-
-export interface ConcreteScope {
-    bindings: { [name: string]: ConcreteIdentifierState }
+export interface Scope {
+    bindings: { [name: string]: IdentifierState }
     type: ScopeType
 }
 
@@ -53,22 +43,22 @@ export interface EnvironmentTransform extends Transform {
     positionModifiers: EnvironmentPositionModifier[]
 }
 
-export interface PrototypicalEnvironmentState {
-    _type: 'PrototypicalEnvironmentState'
+export interface EnvironmentState {
+    _type: 'EnvironmentState'
 
     // Variable name bindings
-    scope: PrototypicalScope[]
-
-    // Paths
-    paths: { [id: string]: PrototypicalPath }
+    scope: Scope[]
 
     // Storage data
-    memory: { [id: string]: PrototypicalDataState }
+    memory: { [id: string]: DataState }
 
     // Temporary data
-    registers: { [name: string]: PrototypicalDataState }
+    registers: { [name: string]: DataState }
 
     id: string
+
+    // Optional
+    renderer?: EnvironmentRenderer
 }
 
 export interface EnvironmentPositionModifier {
@@ -82,8 +72,6 @@ export enum EnvironmentPositionModifierType {
     BelowView = 'BelowView',
 }
 
-export function instanceOfPrototypicalEnvironment(
-    environment: any
-): environment is PrototypicalEnvironmentState {
-    return environment['_type'] === 'PrototypicalEnvironmentState'
+export function instanceOfEnvironment(environment: any): environment is EnvironmentState {
+    return environment['_type'] === 'EnvironmentState'
 }

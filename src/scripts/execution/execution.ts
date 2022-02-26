@@ -1,4 +1,4 @@
-import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { EnvironmentState } from '../environment/EnvironmentState'
 import { clone } from '../utilities/objects'
 import { Edge } from './graph/edges/Edge'
 import { DataInfo, ExecutionGraph } from './graph/ExecutionGraph'
@@ -38,10 +38,7 @@ export function addEdge(graph: ExecutionGraph, edge: Edge) {
     graph.edges.push(edge)
 }
 
-export function applyExecutionNode(
-    execution: ExecutionNode,
-    environment: PrototypicalEnvironmentState
-) {
+export function applyExecutionNode(execution: ExecutionNode, environment: EnvironmentState) {
     execution.precondition = clone(environment)
     execution.apply(execution, environment)
     execution.postcondition = clone(environment)

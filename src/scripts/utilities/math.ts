@@ -1,4 +1,4 @@
-import { DataType, PrototypicalDataState } from '../environment/data/DataState'
+import { DataState, DataType } from '../environment/data/DataState'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { queryExecutionGraph } from '../execution/graph/graph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
@@ -142,14 +142,11 @@ export function catmullRomSolve(data: number[], k: number) {
 /**
  * @returns true iff query is included in data or is data itself
  */
-export function includes(data: PrototypicalDataState, query: string) {
+export function includes(data: DataState, query: string) {
     if (data.type != DataType.Array) {
         return data.id == query
     } else {
-        return (
-            data.id == query ||
-            (data.value as PrototypicalDataState[]).some((d) => includes(d, query))
-        )
+        return data.id == query || (data.value as DataState[]).some((d) => includes(d, query))
     }
 }
 

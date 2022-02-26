@@ -1,14 +1,7 @@
 import * as ESTree from 'estree'
 import { clone } from '../../utilities/objects'
 import { Accessor } from '../EnvironmentState'
-import {
-    ConcreteDataState,
-    ConcreteDataTransform,
-    DataType,
-    PrototypicalDataState,
-    PrototypicalDataTransform,
-    Transform,
-} from './DataState'
+import { DataState, DataTransform, DataType, Transform } from './DataState'
 
 export function createTransform(): Transform {
     return {
@@ -26,47 +19,20 @@ export function createTransform(): Transform {
 
 export function createData(
     type: DataType,
-    value:
-        | string
-        | boolean
-        | number
-        | PrototypicalDataState[]
-        | Accessor[]
-        | Function,
+    value: string | boolean | number | DataState[] | Accessor[] | Function,
     id: string,
-    hints: PrototypicalDataTransform = null,
+    hints: DataTransform = null,
     frame: number = -1
-): PrototypicalDataState {
+): DataState {
     return {
-        _type: 'PrototypicalDataState',
+        _type: 'DataState',
         type: type,
         hints: hints ?? {
-            paths: [],
             classList: ['data-i', ...getDataClassNames(type)],
         },
         value: value,
         id: id,
         frame: frame,
-    }
-}
-
-export function createConcreteData(
-    prototype: PrototypicalDataState,
-    value: string | boolean | number | ConcreteDataState[] | Accessor[] = null,
-    transform: ConcreteDataTransform = null
-): ConcreteDataState {
-    return {
-        _type: 'ConcreteDataState',
-        prototype,
-        transform: transform ?? {
-            ...createTransform(),
-            styles: {},
-            classList: [
-                'data-i',
-                ...(prototype ? getDataClassNames(prototype.type) : []),
-            ],
-        },
-        value: value,
     }
 }
 
@@ -79,32 +45,22 @@ export function getDataClassNames(type: DataType): string[] {
     return mapping[type] ?? []
 }
 
-export function clonePrototypicalData(
-    data: PrototypicalDataState,
+export function cloneData(
+    data: DataState,
     copyId: boolean = true,
     srcId: string = null
-): PrototypicalDataState {
+): DataState {
     const copy = clone(data)
     copy.id = copyId ? data.id : srcId
     return copy
 }
 
-export function cloneConcreteData(
-    data: ConcreteDataState,
-    copyId: boolean = true,
-    srcId: string = null
-): ConcreteDataState {
-    const copy = clone(data)
-    copy.prototype.id = copyId ? data.prototype.id : srcId
-    return copy
-}
-
-export function replacePrototypicalDataWith(
-    original: PrototypicalDataState,
-    data: PrototypicalDataState,
+export function replaceDataWith(
+    original: DataState,
+    data: DataState,
     mask: { id?: boolean; frame?: boolean } = { id: false, frame: false }
 ) {
-    const copy = clonePrototypicalData(data)
+    const copy = cloneData(data)
 
     if (!mask.id) original.id = copy.id
     if (!mask.frame) original.frame = copy.frame
@@ -114,15 +70,11 @@ export function replacePrototypicalDataWith(
     original.hints = copy.hints
 
     if (mask.frame && copy.type == DataType.Array) {
-        ;(original.value as PrototypicalDataState[]).forEach(
-            (el) => (el.frame = original.frame)
-        )
+        ;(original.value as DataState[]).forEach((el) => (el.frame = original.frame))
     }
 }
 
-export function convertIdentifierToLiteral(
-    data: ESTree.Identifier
-): ESTree.Literal {
+export function convertIdentifierToLiteral(data: ESTree.Identifier): ESTree.Literal {
     return {
         ...data,
         type: 'Literal',

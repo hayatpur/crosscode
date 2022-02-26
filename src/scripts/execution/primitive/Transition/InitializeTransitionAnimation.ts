@@ -1,31 +1,25 @@
 import { AnimationNode, AnimationOptions, createAnimationNode } from '../../../animation/animation'
 import { replaceEnvironmentWith } from '../../../environment/environment'
-import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 
 export interface InitializeTransitionAnimation extends AnimationNode {
-    transitionCondition: PrototypicalEnvironmentState
+    transitionCondition: EnvironmentState
 }
 
-function onBegin(
-    animation: InitializeTransitionAnimation,
-    environment: PrototypicalEnvironmentState
-) {
+function onBegin(animation: InitializeTransitionAnimation, environment: EnvironmentState) {
     replaceEnvironmentWith(environment, animation.transitionCondition)
 }
 
 function onSeek(
     animation: InitializeTransitionAnimation,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     time: number
 ) {}
 
-function onEnd(
-    animation: InitializeTransitionAnimation,
-    environment: PrototypicalEnvironmentState
-) {}
+function onEnd(animation: InitializeTransitionAnimation, environment: EnvironmentState) {}
 
 export function initializeTransitionAnimation(
-    transitionCondition: PrototypicalEnvironmentState,
+    transitionCondition: EnvironmentState,
     options: AnimationOptions = {}
 ): InitializeTransitionAnimation {
     return {

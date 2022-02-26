@@ -1,7 +1,7 @@
 import * as ESTree from 'estree'
-import { PrototypicalDataState } from '../../../environment/data/DataState'
+import { DataState } from '../../../environment/data/DataState'
 import { cleanUpRegister, resolvePath } from '../../../environment/environment'
-import { AccessorType, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../../execution/graph/graph'
@@ -16,7 +16,7 @@ import { Compiler, getNodeData } from '../../Compiler'
 
 export function IfStatement(
     ast: ESTree.IfStatement,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
@@ -32,7 +32,7 @@ export function IfStatement(
     addVertex(graph, test, { nodeData: getNodeData(ast.test, 'test') })
 
     // @TODO: Add a probe test animation
-    const testData = resolvePath(environment, testRegister, null) as PrototypicalDataState
+    const testData = resolvePath(environment, testRegister, null) as DataState
     const testValue = testData.value as boolean
 
     // Consume testData

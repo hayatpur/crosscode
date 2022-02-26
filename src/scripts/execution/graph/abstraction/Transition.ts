@@ -1,5 +1,5 @@
 import { AnimationGraph, AnimationNode, createAnimationGraph } from '../../../animation/animation'
-import { PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { clone } from '../../../utilities/objects'
 import { ExecutionNode, instanceOfExecutionNode } from '../../primitive/ExecutionNode'
 import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
@@ -18,10 +18,7 @@ import {
 } from '../graph'
 
 export interface TransitionAnimationNode extends AnimationNode {
-    applyInvariant: (
-        animation: TransitionAnimationNode,
-        environment: PrototypicalEnvironmentState
-    ) => void
+    applyInvariant: (animation: TransitionAnimationNode, environment: EnvironmentState) => void
     output: DataInfo
     origins: DataInfo[]
 }

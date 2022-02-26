@@ -1,9 +1,6 @@
 import * as ESTree from 'estree'
 import { cleanUpRegister } from '../../../../environment/environment'
-import {
-    AccessorType,
-    PrototypicalEnvironmentState,
-} from '../../../../environment/EnvironmentState'
+import { AccessorType, EnvironmentState } from '../../../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../../../execution/execution'
 import { createExecutionGraph } from '../../../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../../../execution/graph/graph'
@@ -14,7 +11,7 @@ import { Compiler, getNodeData } from '../../../Compiler'
 
 export function BinaryExpression(
     ast: ESTree.BinaryExpression,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     const graph = createExecutionGraph(getNodeData(ast))

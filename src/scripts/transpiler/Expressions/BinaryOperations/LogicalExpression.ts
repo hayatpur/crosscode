@@ -1,7 +1,7 @@
 import * as ESTree from 'estree'
-import { PrototypicalDataState } from '../../../environment/data/DataState'
+import { DataState } from '../../../environment/data/DataState'
 import { cleanUpRegister, resolvePath } from '../../../environment/environment'
-import { AccessorType, PrototypicalEnvironmentState } from '../../../environment/EnvironmentState'
+import { AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import { applyExecutionNode } from '../../../execution/execution'
 import { createExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { addVertex } from '../../../execution/graph/graph'
@@ -12,7 +12,7 @@ import { Compiler, getNodeData } from '../../Compiler'
 
 export function LogicalExpression(
     ast: ESTree.LogicalExpression,
-    environment: PrototypicalEnvironmentState,
+    environment: EnvironmentState,
     context: ExecutionContext
 ) {
     const graph = createExecutionGraph(getNodeData(ast))
@@ -31,7 +31,7 @@ export function LogicalExpression(
     })
     addVertex(graph, left, { nodeData: getNodeData(ast) })
 
-    const leftValue = resolvePath(environment, leftRegister, null) as PrototypicalDataState
+    const leftValue = resolvePath(environment, leftRegister, null) as DataState
 
     let shortCircuit = false
 

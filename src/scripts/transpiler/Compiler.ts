@@ -1,7 +1,7 @@
 //@ts-check
 
 import * as ESTree from 'estree'
-import { PrototypicalEnvironmentState } from '../environment/EnvironmentState'
+import { EnvironmentState } from '../environment/EnvironmentState'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionContext, NodeData } from '../execution/primitive/ExecutionNode'
 import { ArrayExpression } from './Expressions/Array/ArrayExpression'
@@ -32,7 +32,7 @@ export function getNodeData(node: ESTree.Node, preLabel: string = null): NodeDat
 export class Compiler {
     static compile(
         ast: ESTree.Node,
-        environment: PrototypicalEnvironmentState,
+        environment: EnvironmentState,
         context: ExecutionContext
     ): ExecutionGraph {
         const mapping = {
