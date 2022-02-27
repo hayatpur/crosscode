@@ -63,11 +63,8 @@ export function instanceOfData(data: any): data is DataState {
     )
 }
 
-export function instanceOfPrimitiveData(data: any): data is DataState {
-    return (
-        data != null &&
-        (data['_type'] === 'PrimitiveDataState' || data['_type'] === 'ObjectDataState')
-    )
+export function instanceOfPrimitiveData(data: any): data is PrimitiveDataState {
+    return data != null && data['_type'] === 'PrimitiveDataState'
 }
 
 export function instanceOfObjectData(data: any): data is ObjectDataState {

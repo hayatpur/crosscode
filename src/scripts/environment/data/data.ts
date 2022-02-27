@@ -72,15 +72,22 @@ export function replaceDataWith(
     data: DataState,
     mask: { id?: boolean; frame?: boolean } = { id: false, frame: false }
 ) {
-    const copy = cloneData(data)
+    const originalCopy = cloneData(original)
 
-    if (!mask.id) original.id = copy.id
-    if (!mask.frame) original.frame = copy.frame
+    Object.assign(original, clone(data))
 
-    original.value = copy.value
+    if (mask.id) original.id = originalCopy.id
 
-    if (mask.frame && instanceOfObjectData(copy) && Array.isArray(copy.value)) {
-        ;(original.value as DataState[]).forEach((el) => (el.frame = original.frame))
+    if (mask.frame) {
+        original.frame = originalCopy.frame
+
+        if (instanceOfObjectData(original)) {
+            if (Array.isArray(original.value)) {
+                original.value.forEach((el) => (el.frame = original.frame))
+            } else {
+                Object.values(original.value).forEach((el) => (el.frame = original.frame))
+            }
+        }
     }
 }
 

@@ -1,0 +1,62 @@
+import {
+    createObjectData,
+    createPrimitiveData,
+    replaceDataWith,
+} from '../../../environment/data/data'
+import { DataState, DataType } from '../../../environment/data/DataState'
+import { addDataAt, resolvePath } from '../../../environment/environment'
+import {
+    Accessor,
+    accessorsToString,
+    EnvironmentState,
+} from '../../../environment/EnvironmentState'
+import { DataInfo } from '../../graph/ExecutionGraph'
+import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
+
+export interface ObjectStartAnimation extends ExecutionNode {
+    dataSpecifier: Accessor[]
+}
+
+function apply(animation: ObjectStartAnimation, environment: EnvironmentState) {
+    // Create a new array somewhere in memory
+    const data = createObjectData({}, `${animation.id}_CreateObject`)
+
+    const loc = addDataAt(environment, data, [], null)
+
+    computeReadAndWrites(animation, {
+        location: loc,
+        id: data.id,
+    })
+
+    // Point the output register to the newly created data
+    const outputRegister = resolvePath(
+        environment,
+        animation.dataSpecifier,
+        `${animation.id}_Floating`
+    ) as DataState
+    replaceDataWith(
+        outputRegister,
+        createPrimitiveData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
+    )
+}
+
+function computeReadAndWrites(animation: ObjectStartAnimation, data: DataInfo) {
+    animation._reads = [data]
+    animation._writes = [data]
+}
+
+export function objectStartAnimation(dataSpecifier: Accessor[]): ObjectStartAnimation {
+    return {
+        ...createExecutionNode(null),
+
+        _name: 'ObjectStartAnimation',
+
+        name: `Initialize object at ${accessorsToString(dataSpecifier)}`,
+
+        // Attributes
+        dataSpecifier,
+
+        // Callbacks
+        apply,
+    }
+}

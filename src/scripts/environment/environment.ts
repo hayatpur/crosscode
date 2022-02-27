@@ -1,6 +1,6 @@
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { clone } from '../utilities/objects'
-import { createPrimitiveData } from './data/data'
+import { createObjectData, createPrimitiveData } from './data/data'
 import {
     DataState,
     DataType,
@@ -22,8 +22,23 @@ let CUR_ENV_ID = 0
 export function createEnvironment(): EnvironmentState {
     return {
         _type: 'EnvironmentState',
-        scope: [{ bindings: {}, type: ScopeType.Default }],
-        memory: {},
+        scope: [
+            {
+                bindings: {
+                    Math: {
+                        location: [{ type: AccessorType.Index, value: 'MathREF' }],
+                        name: 'Math',
+                    },
+                },
+                type: ScopeType.Default,
+            },
+        ],
+        memory: {
+            MathREF: createObjectData(
+                { PI: createPrimitiveData(DataType.Literal, Math.PI, 'Math.PI') },
+                'Math'
+            ),
+        },
         registers: {},
         id: `Env(${++CUR_ENV_ID})`,
     }
@@ -274,6 +289,12 @@ export function resolve(
                     value[accessor.value] = createPrimitiveData(DataType.Literal, null, srcId)
                     value[accessor.value].frame = parent.frame
                 }
+            } else if (parent.constructor == Object) {
+                const value = parent.value as { [key: string]: DataState }
+                if (value[accessor.value] == null) {
+                    value[accessor.value] = createPrimitiveData(DataType.Literal, null, srcId)
+                    value[accessor.value].frame = parent.frame
+                }
             }
         }
 
@@ -319,8 +340,12 @@ export function resolvePath(
         return parent ?? root
     }
 
+    // console.log(`${' '.repeat(path.length)}`, clone(path), clone(parent ?? root))
+
     let resolution = resolve(root, path[0], srcId, parent, options)
     let ret = resolvePath(root, path.slice(1), srcId, resolution, options)
+
+    // console.log(`${' '.repeat(path.length)}`, clone(ret))
 
     return ret
 }

@@ -41,3 +41,25 @@
 [ ] Unexecuted control flow.
 [ ] Maintaining continuity with traces when changing structure.
 [ ] Specialized representations.
+
+{
+"\_type": "PrimitiveDataState",
+"type": "Register",
+"value": "AN(1)\_Create",
+"id": "AN(1)\_OutputRegister",
+"frame": -1
+}
+
+{
+"\_type": "DataState",
+"type": "Literal",
+"hints": {
+"classList": [
+"data-i",
+"data-literal-i"
+]
+},
+"value": 5,
+"id": "AN(1)\_Create",
+"frame": 1
+}

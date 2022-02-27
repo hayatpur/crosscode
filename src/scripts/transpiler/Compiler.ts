@@ -10,6 +10,7 @@ import { BinaryExpression } from './Expressions/BinaryOperations/BinaryExpressio
 import { LogicalExpression } from './Expressions/BinaryOperations/LogicalExpression'
 import { MemberExpression } from './Expressions/BinaryOperations/MemberExpression'
 import { CallExpression } from './Expressions/CallExpression'
+import { ObjectExpression } from './Expressions/ObjectExpression'
 import { UpdateExpression } from './Expressions/UnaryOperations/UpdateExpression'
 import { FunctionCall } from './Functions/FunctionCall'
 import { FunctionDeclaration } from './Functions/FunctionDeclaration'
@@ -40,6 +41,7 @@ export class Compiler {
 
             BinaryExpression,
             ArrayExpression,
+            ObjectExpression,
             MemberExpression,
             ExpressionStatement,
             VariableDeclaration,

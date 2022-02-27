@@ -1,26 +1,41 @@
 import { includes } from '../utilities/math'
+import { clone } from '../utilities/objects'
 import { AnimationRendererRepresentation } from './AnimationRenderer'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
-import { DataState, DataType } from './data/DataState'
+import {
+    DataState,
+    DataType,
+    instanceOfObjectData,
+    instanceOfPrimitiveData,
+} from './data/DataState'
 import { LiteralRenderer } from './data/literal/LiteralRenderer'
+import { ObjectRenderer } from './data/object/ObjectRenderer'
 import { FunctionRenderer } from './data/reference/FunctionRenderer'
 import { resolvePath } from './environment'
 import { AccessorType, EnvironmentState } from './EnvironmentState'
 import { IdentifierRenderer } from './identifier/IdentifierRenderer'
 
 export function createDataRenderer(data: DataState) {
-    const mapping = {
-        [DataType.Literal]: LiteralRenderer,
-        [DataType.Array]: ArrayRenderer,
-        [DataType.Function]: FunctionRenderer,
-    }
+    console.log(clone(data))
+    if (instanceOfPrimitiveData(data)) {
+        const mapping = {
+            [DataType.Literal]: LiteralRenderer,
+            [DataType.Function]: FunctionRenderer,
+        }
 
-    if (!(data.type in mapping)) {
-        console.error('No renderer for', data.type)
-    }
+        if (!(data.type in mapping)) {
+            console.error('No primitive renderer for', data.type)
+        }
 
-    return new mapping[data.type]()
+        return new mapping[data.type]()
+    } else {
+        if (Array.isArray(data.value)) {
+            return new ArrayRenderer()
+        } else if (data.constructor === Object) {
+            return new ObjectRenderer()
+        }
+    }
 }
 
 export class EnvironmentRenderer {
@@ -106,6 +121,7 @@ export class EnvironmentRenderer {
             .filter((m) => m != null)
             .filter(
                 (data) =>
+                    instanceOfObjectData(data) ||
                     data.type == DataType.Literal ||
                     data.type == DataType.Array ||
                     data.type == DataType.Function

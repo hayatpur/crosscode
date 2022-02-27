@@ -262,7 +262,7 @@ export class ViewController {
             'ConsumeDataAnimation',
             'PopScopeAnimation',
             'CreateScopeAnimation',
-            'MoveAndPlaceAnimation',
+            // 'MoveAndPlaceAnimation',
         ])
 
         for (const child of this.view.originalExecution.vertices) {

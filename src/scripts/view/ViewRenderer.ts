@@ -1,3 +1,4 @@
+import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { getNumericalValueOfStyle, lerp } from '../utilities/math'
@@ -72,6 +73,21 @@ export class ViewRenderer {
         )
             .replace(/([A-Z])/g, ' $1')
             .trim()
+
+        const range = view.originalExecution.nodeData.location
+        const label = Editor.instance.monaco.getModel().getValueInRange({
+            startLineNumber: range.start.line,
+            startColumn: range.start.column,
+            endLineNumber: range.end.line,
+            endColumn: range.end.column + 1,
+        })
+
+        // Editor.instance.monaco.getModel().colorizeElement(document.getElementById('code'))
+        // monaco.editor
+        //     .colorize(label, 'javascript', {})
+        //     .then((result) => (this.label.innerHTML = result))
+
+        // monaco.editor.colorizeElement(this.label, {})
 
         this.setupControls()
 

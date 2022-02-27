@@ -12,7 +12,7 @@
         "@types/object-hash": "^2.2.1",
         "acorn": "^8.4.1",
         "acorn-walk": "^8.1.1",
-        "astring": "^1.7.5",
+        "astring": "^1.8.1",
         "csstype": "^3.0.9",
         "curved-arrows": "^0.1.0",
         "eaz": "^1.0.2",
@@ -25,6 +25,7 @@
         "patch-package": "^6.4.7",
         "perfect-arrows": "^0.3.7",
         "recursive-diff": "^1.0.8",
+        "stream": "0.0.2",
         "svg-catmull-rom-spline": "^0.0.1",
         "tweakpane": "^3.0.7"
     },
