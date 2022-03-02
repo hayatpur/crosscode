@@ -36,7 +36,7 @@ export function FunctionCall(
 
     // Call function
     const body = BlockStatement(ast.body, environment, { ...context, args: null }, ScopeType.None)
-    addVertex(graph, body, { nodeData: getNodeData(ast) })
+    addVertex(graph, body, { nodeData: getNodeData(ast.body) })
 
     // Pop scope
     const popScope = popScopeAnimation()

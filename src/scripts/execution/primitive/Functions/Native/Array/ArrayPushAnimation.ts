@@ -62,7 +62,7 @@ export function ArrayPushAnimation(object: Accessor[], args: Accessor[][]): Arra
         ...createExecutionNode(null),
         _name: 'ArrayPushAnimation',
 
-        name: 'Array Push Animation',
+        name: 'ArrayPushAnimation',
         object,
         args,
 

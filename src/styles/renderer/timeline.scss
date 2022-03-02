@@ -23,5 +23,12 @@
     min-width: 10px;
     min-height: 2px;
     width: fit-content;
-    margin-bottom: 15px;
+}
+
+.timeline-anchor:not(:last-child) {
+    margin-bottom: 35px;
+}
+
+.timeline-anchor:first-child {
+    margin-top: 10px;
 }

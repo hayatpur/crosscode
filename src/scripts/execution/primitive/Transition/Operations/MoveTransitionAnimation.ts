@@ -16,8 +16,9 @@ function onBegin(animation: TransitionMove, environment: EnvironmentState) {
         return
     }
 
-    animation.movement?.remove()
-    animation.movement = createPath(animation, renderer)
+    if (animation.movement == null) {
+        animation.movement = createPath(animation, renderer)
+    }
 }
 
 function onSeek(animation: TransitionMove, environment: EnvironmentState, time: number) {
@@ -29,8 +30,10 @@ function onSeek(animation: TransitionMove, environment: EnvironmentState, time: 
     }
 
     const to = renderer.getAllChildRenderers()[animation.output.id] as DataRenderer
-    const { x, y } = animation.movement.getPointAtLength(t * this.movement.getTotalLength())
+    const { x, y } = animation.movement.getPointAtLength(t * animation.movement.getTotalLength())
     to.element.style.transform = `translate(${x}px, ${y}px)`
+
+    console.log('moving...', t, x)
 }
 
 function onEnd(animation: TransitionMove, environment: EnvironmentState) {
@@ -39,6 +42,7 @@ function onEnd(animation: TransitionMove, environment: EnvironmentState) {
         return
     }
 
+    console.log('Ending...')
     const to = renderer.getAllChildRenderers()[animation.output.id] as DataRenderer
     to.element.style.transform = `translate(0px, 0px)`
     animation.movement?.remove()
@@ -58,6 +62,8 @@ function applyInvariant(animation: TransitionMove, environment: EnvironmentState
     const to = renderer.getAllChildRenderers()[animation.output.id] as DataRenderer
     const { x, y } = animation.movement.getPointAtLength(0)
     to.element.style.transform = `translate(${x}px, ${y}px)`
+
+    console.log("Invariant'ing")
 }
 
 export function transitionMove(
@@ -109,7 +115,6 @@ function createPath(animation: TransitionMove, renderer: EnvironmentRenderer) {
                 .getAllChildRenderers()
                 [animation.origins[0].id].element.getBoundingClientRect().y - fromBbox.y
 
-        console.log('Offsetting...', offset)
         start.y += offset
     }
 

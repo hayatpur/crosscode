@@ -1,1 +1,2 @@
-let x = Math.PI
+let x = 5
+let y = x

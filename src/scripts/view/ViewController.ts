@@ -1,12 +1,13 @@
 import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
+import { ArrayRenderer } from '../environment/data/array/ArrayRenderer'
+import { ObjectRenderer } from '../environment/data/object/ObjectRenderer'
 import { reads, writes } from '../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
-import { getDepthOfView } from '../execution/graph/graph'
+import { getDepthOfView, getLeavesOfView } from '../execution/graph/graph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
 import { lerp } from '../utilities/math'
-import { AnimationPlayer } from './Animation/AnimationPlayer'
 import { ControlFlow } from './Control Flow/ControlFlow'
 import { CodeQuery } from './Query/CodeQuery/CodeQuery'
 import { ViewSelectionType } from './Query/CodeQuery/CodeQueryGroup'
@@ -21,11 +22,12 @@ export class ViewController {
     startMouse: { x: number; y: number }
 
     temporaryCodeQuery: CodeQuery
-    animationPlayer: AnimationPlayer
 
     attachedTo: HTMLElement = null
 
     controlFlow: ControlFlow
+
+    toAnimate: { id: string; el: HTMLElement }[] = []
 
     constructor(view: View) {
         this.view = view
@@ -34,7 +36,6 @@ export class ViewController {
         this.bindMouseEvents()
 
         const { state, renderer } = this.view
-
         // Setup click behavior
 
         // this.viewBody.addEventListener('mouseenter', (e) => {
@@ -135,15 +136,13 @@ export class ViewController {
     }
 
     playAnimation() {
-        this.animationPlayer = new AnimationPlayer(this.view)
-        this.animationPlayer.restart()
+        this.view.animationPlayer.restart()
 
         this.view.state.isPlayingAnimation = true
     }
 
     stopAnimation() {
-        this.animationPlayer.destroy()
-        this.animationPlayer = null
+        this.view.animationPlayer.pause()
 
         this.view.state.isPlayingAnimation = false
         this.view.renderer.animationToggle.classList.remove('active')
@@ -210,10 +209,140 @@ export class ViewController {
         renderer.element.classList.add('showing-steps')
     }
 
-    createSteps(expanded: boolean = false) {
+    detachForAnimation() {
+        const envRenderer = this.view.renderer.animationRenderer.environmentRenderer
+        const dataRenderers = envRenderer.getAllChildRenderers()
+
+        for (const [id, renderer] of Object.entries(dataRenderers)) {
+            if (renderer instanceof ArrayRenderer || renderer instanceof ObjectRenderer) {
+                continue
+            }
+
+            const copy = renderer.element.cloneNode(true) as HTMLElement
+            const bbox = renderer.element.getBoundingClientRect()
+            copy.classList.remove('selected')
+            copy.style.position = 'absolute'
+            copy.style.left = `${bbox.left}px`
+            copy.style.top = `${bbox.top}px`
+
+            document.body.appendChild(copy)
+
+            this.toAnimate.push({
+                id,
+                el: copy,
+            })
+        }
+
+        // const copy = envRenderer.element.cloneNode(true) as HTMLElement
+
+        // document.body.appendChild(copy)
+        // copy.style.position = 'absolute'
+        // copy.style.left = `${bbox.left}px`
+        // copy.style.top = `${bbox.top}px`
+
+        // Play: animate the final element from its first bounds
+        // to its last bounds (which is no transform)
+        //     elm.animate(
+        //         [
+        //             {
+        //                 transformOrigin: 'top left',
+        //                 transform: `
+        //   translate(${deltaX}px, ${deltaY}px)
+        //   scale(${deltaW}, ${deltaH})
+        // `,
+        //             },
+        //             {
+        //                 transformOrigin: 'top left',
+        //                 transform: 'none',
+        //             },
+        //         ],
+        //         {
+        //             duration: 300,
+        //             easing: 'ease-in-out',
+        //             fill: 'both',
+        //         }
+        //     )
+    }
+
+    performAnimation() {
+        const leaves = getLeavesOfView(this.view)
+
+        for (let i = leaves.length - 1; i >= 0; i--) {
+            const envRenderer = leaves[i].renderer.animationRenderer.environmentRenderer
+            const dataRenderers = envRenderer.getAllChildRenderers()
+
+            for (let j = this.toAnimate.length - 1; j >= 0; j--) {
+                const animate = this.toAnimate[j]
+                if (dataRenderers[animate.id] != null) {
+                    const target = dataRenderers[animate.id].element.getBoundingClientRect()
+                    const current = animate.el.getBoundingClientRect()
+                    dataRenderers[animate.id].element.classList.add('hidden')
+
+                    setInterval(() => {
+                        dataRenderers[animate.id].element.classList.remove('hidden')
+                        animate.el.remove()
+                    }, 400)
+
+                    const deltaX = target.left - current.left
+                    const deltaY = target.top - current.top
+
+                    animate.el.animate(
+                        [
+                            {
+                                transformOrigin: 'top left',
+                                transform: 'none',
+                            },
+                            {
+                                transformOrigin: 'top left',
+                                transform: `translate(${deltaX}px, ${deltaY}px)`,
+                            },
+                        ],
+                        {
+                            duration: 300,
+                            easing: 'ease-in-out',
+                            fill: 'both',
+                        }
+                    )
+                    // setInterval(() => {
+                    //     animate.el.remove()
+                    // }, 300)
+
+                    this.toAnimate.splice(j, 1)
+                }
+            }
+        }
+
+        for (const animate of this.toAnimate) {
+            animate.el.animate(
+                [
+                    {
+                        opacity: '1',
+                    },
+                    {
+                        opacity: '0',
+                    },
+                ],
+                {
+                    duration: 300,
+                    easing: 'ease-in-out',
+                    fill: 'both',
+                }
+            )
+            setInterval(() => {
+                // dataRenderers[animate.id].element.classList.remove('hidden')
+                // animate.el.remove()
+            }, 300)
+        }
+    }
+
+    createSteps(expanded: boolean = false, animate = false) {
         let start = performance.now()
 
         const { state, renderer } = this.view
+
+        if (animate) {
+            this.detachForAnimation()
+        }
 
         this.createStepsEmptySteps()
 
@@ -240,6 +369,10 @@ export class ViewController {
 
                 first = false
             }
+        }
+
+        if (animate) {
+            setTimeout(() => this.performAnimation(), 100)
         }
 
         console.log(`Created steps in ${performance.now() - start}ms`)
@@ -352,12 +485,12 @@ export class ViewController {
     tick(dt: number) {
         const { state, renderer } = this.view
 
-        this.animationPlayer?.tick(dt)
+        this.view.animationPlayer?.tick(dt)
 
         if (
-            this.animationPlayer != null &&
+            this.view.animationPlayer != null &&
             state.isPlayingAnimation &&
-            this.animationPlayer.hasEnded
+            this.view.animationPlayer.hasEnded
         ) {
             this.stopAnimation()
         }
@@ -542,7 +675,7 @@ export class ViewController {
         if (state.isShowingSteps) {
             this.destroySteps()
         } else {
-            this.createSteps(!state.isCollapsed)
+            this.createSteps(!state.isCollapsed, false)
         }
     }
 

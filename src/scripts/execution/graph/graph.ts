@@ -1423,8 +1423,42 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                 ],
             })
             break
+        case 'ArrayPushAnimation':
+            // For each argument into push
+            for (let i = 0; i < rs.length; i++) {
+                traces.push({
+                    value: ws[i + 1],
+                    children: [
+                        [
+                            {
+                                type: AnimationTraceOperatorType.MoveAndPlace,
+                                executionId: animation.id,
+                            },
+                            { value: rs[i] },
+                        ],
+                    ],
+                })
+            }
+            break
+        case 'ArrayConcatAnimation':
+            // For each argument into concat
+            for (let i = 1; i < rs.length; i++) {
+                traces.push({
+                    value: ws[i],
+                    children: [
+                        [
+                            {
+                                type: AnimationTraceOperatorType.MoveAndPlace,
+                                executionId: animation.id,
+                            },
+                            { value: rs[i] },
+                        ],
+                    ],
+                })
+            }
+            break
         default:
-        // console.warn('Trace not found for', animation._name, animation)
+            console.warn('Trace not found for', animation._name, animation)
     }
 
     return traces

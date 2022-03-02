@@ -1,5 +1,9 @@
 [X] Global traces
 [X] Animations
+[ ] Build tree structure for recursive call
+[ ] User interactions for what they want to see
+[ ] Two different models: look at data, look at events, looking at source code
+[ ] Live programming
 [ ] Hover to show trace
 [ ] Animations for trace
 [ ] Source code as label
@@ -21,6 +25,7 @@
 [ ] Temporary queries from code
 [ ] Fix normal queries
 [ ] Traces for control flow
+[ ] Different types of trace: additions, deletions of data
 [ ] Polish animations
 [ ] Polish traces
 [ ] Methods
@@ -41,25 +46,4 @@
 [ ] Unexecuted control flow.
 [ ] Maintaining continuity with traces when changing structure.
 [ ] Specialized representations.
-
-{
-"\_type": "PrimitiveDataState",
-"type": "Register",
-"value": "AN(1)\_Create",
-"id": "AN(1)\_OutputRegister",
-"frame": -1
-}
-
-{
-"\_type": "DataState",
-"type": "Literal",
-"hints": {
-"classList": [
-"data-i",
-"data-literal-i"
-]
-},
-"value": 5,
-"id": "AN(1)\_Create",
-"frame": 1
-}
+[ ] Out not at correct place if multiple temporary values

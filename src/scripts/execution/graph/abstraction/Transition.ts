@@ -1,6 +1,8 @@
 import { AnimationGraph, AnimationNode, createAnimationGraph } from '../../../animation/animation'
+import { AnimationRendererRepresentation } from '../../../environment/AnimationRenderer'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { clone } from '../../../utilities/objects'
+import { reads, writes } from '../../execution'
 import { ExecutionNode, instanceOfExecutionNode } from '../../primitive/ExecutionNode'
 import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
 import { transitionCreateArray } from '../../primitive/Transition/Operations/CreateArrayTransitionAnimation'
@@ -28,12 +30,29 @@ export interface TransitionAnimationNode extends AnimationNode {
  * @param node
  * @returns
  */
-export function createTransition(node: ExecutionNode | ExecutionGraph): AnimationGraph {
+export function createTransition(
+    node: ExecutionNode | ExecutionGraph,
+    representation: AnimationRendererRepresentation = null
+): AnimationGraph {
     const transition = createAnimationGraph()
     transition.id = `Transition(${node.id})`
 
     // Initialize to the post condition
-    const init = initializeTransitionAnimation(node.postcondition)
+    if (representation == null) {
+        const ws = writes(node).map((w) => w.id)
+        const rs = reads(node)
+            .map((r) => r.id)
+            .filter((id) => !id.includes('BindFunctionNew'))
+
+        representation = {
+            reads: rs,
+            writes: ws,
+        }
+
+        console.warn('Setting default representation...')
+    }
+
+    const init = initializeTransitionAnimation(node.postcondition, representation)
     transition.vertices.push(init)
 
     if (instanceOfExecutionNode(node)) {
@@ -49,8 +68,8 @@ export function createTransition(node: ExecutionNode | ExecutionGraph): Animatio
     }
 
     // Make it parallel
-    transition.isParallel = true
-    transition.parallelStarts = [0, ...transitions.map((_) => 1)]
+    // transition.isParallel = true
+    // transition.parallelStarts = [0, ...transitions.map((_) => 1)]
 
     return transition
 }

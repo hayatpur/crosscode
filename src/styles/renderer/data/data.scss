@@ -9,3 +9,7 @@
 .environment > .data:not(:first-child) {
     margin-left: 25px;
 }
+
+.data.hidden {
+    opacity: 0 !important;
+}

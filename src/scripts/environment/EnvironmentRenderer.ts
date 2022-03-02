@@ -1,5 +1,4 @@
 import { includes } from '../utilities/math'
-import { clone } from '../utilities/objects'
 import { AnimationRendererRepresentation } from './AnimationRenderer'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
@@ -17,7 +16,6 @@ import { AccessorType, EnvironmentState } from './EnvironmentState'
 import { IdentifierRenderer } from './identifier/IdentifierRenderer'
 
 export function createDataRenderer(data: DataState) {
-    console.log(clone(data))
     if (instanceOfPrimitiveData(data)) {
         const mapping = {
             [DataType.Literal]: LiteralRenderer,
@@ -127,8 +125,10 @@ export class EnvironmentRenderer {
                     data.type == DataType.Function
             )
             .filter((data) => {
-                if (data.value != null) {
+                if (instanceOfPrimitiveData(data) && data.type == DataType.Function) {
                     return !data.value.toString().includes('[native code]')
+                } else if (data.builtin) {
+                    return false
                 } else {
                     return true
                 }

@@ -42,6 +42,8 @@ export interface PrimitiveDataState {
     frame: number
 
     id: string
+
+    builtin?: boolean
 }
 
 export interface ObjectDataState {
@@ -52,6 +54,8 @@ export interface ObjectDataState {
     frame: number
 
     id: string
+
+    builtin?: boolean
 }
 
 export type DataState = PrimitiveDataState | ObjectDataState

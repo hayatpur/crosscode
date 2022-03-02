@@ -1,7 +1,10 @@
-import { begin, duration, end, reset, seek } from '../../animation/animation'
+import { begin, createAnimationGraph, duration, end, reset, seek } from '../../animation/animation'
+import { reads, writes } from '../../execution/execution'
 import { createTransition } from '../../execution/graph/abstraction/Transition'
+import { instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { clone } from '../../utilities/objects'
 import { View } from '../View'
+import { AnimationPlayerRenderer } from './AnimationPlayerRenderer'
 
 export class AnimationPlayer {
     // Animation time
@@ -11,13 +14,51 @@ export class AnimationPlayer {
     hasEnded: boolean = false
 
     view: View
+    renderer: AnimationPlayerRenderer
 
     constructor(view: View) {
         this.view = view
 
+        let animations = []
+
         if (this.view.transitionAnimation == null) {
-            this.view.transitionAnimation = createTransition(this.view.originalExecution)
+            const execution = this.view.originalExecution
+            this.view.transitionAnimation = createAnimationGraph()
+
+            if (instanceOfExecutionGraph(execution)) {
+                const ws = writes(execution).map((w) => w.id)
+                const rs = reads(execution)
+                    .map((r) => r.id)
+                    .filter((id) => !id.includes('BindFunctionNew'))
+
+                const representation = {
+                    reads: rs,
+                    writes: ws,
+                }
+
+                for (const vertex of execution.vertices) {
+                    const vertexAnimation = createTransition(vertex, representation)
+                    this.view.transitionAnimation.vertices.push(vertexAnimation)
+                }
+            } else {
+                console.warn('Nodes not supported yet.')
+            }
         }
+
+        this.renderer = new AnimationPlayerRenderer(this)
+
+        this.view.renderer.element.addEventListener('mouseenter', this.mouseenter.bind(this))
+        this.view.renderer.element.addEventListener('mouseleave', this.mouseleave.bind(this))
+    }
+
+    mouseenter(e: MouseEvent) {
+        // console.log('Mousing over...')
+        this.renderer.show()
+    }
+
+    mouseleave(e: MouseEvent) {
+        // console.log('Mousing out...')
+        this.renderer.hide()
     }
 
     tick(dt: number) {
@@ -85,5 +126,7 @@ export class AnimationPlayer {
         const renderer = animationRenderer.environment.renderer
         animationRenderer.environment = clone(this.view.originalExecution.postcondition)
         animationRenderer.environment.renderer = renderer
+
+        this.renderer?.destroy()
     }
 }

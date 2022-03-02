@@ -1,4 +1,3 @@
-import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { getNumericalValueOfStyle, lerp } from '../utilities/math'
@@ -47,14 +46,6 @@ export class ViewRenderer {
         this.header.classList.add('view-header')
         this.element.appendChild(this.header)
 
-        // this.preLabel = document.createElement('div')
-        // this.preLabel.classList.add('pre-view-label')
-        // this.header.appendChild(this.preLabel)
-        // this.preLabel.innerHTML =
-        //     view.originalExecution.nodeData.preLabel != null
-        //         ? `${view.originalExecution.nodeData.preLabel} >`
-        //         : ''
-
         this.label = document.createElement('div')
         this.label.classList.add('view-label')
         this.header.appendChild(this.label)
@@ -75,19 +66,24 @@ export class ViewRenderer {
             .trim()
 
         const range = view.originalExecution.nodeData.location
-        const label = Editor.instance.monaco.getModel().getValueInRange({
-            startLineNumber: range.start.line,
-            startColumn: range.start.column,
-            endLineNumber: range.end.line,
-            endColumn: range.end.column + 1,
-        })
+        // const label = Editor.instance.monaco.getModel().getValueInRange({
+        //     startLineNumber: range.start.line,
+        //     startColumn: range.start.column + 1,
+        //     endLineNumber: range.end.line,
+        //     endColumn: range.end.column + 1,
+        // })
 
-        // Editor.instance.monaco.getModel().colorizeElement(document.getElementById('code'))
         // monaco.editor
         //     .colorize(label, 'javascript', {})
         //     .then((result) => (this.label.innerHTML = result))
 
-        // monaco.editor.colorizeElement(this.label, {})
+        this.preLabel = document.createElement('div')
+        this.preLabel.classList.add('pre-view-label')
+        this.header.appendChild(this.preLabel)
+        this.preLabel.innerHTML =
+            view.originalExecution.nodeData.preLabel != null
+                ? `${view.originalExecution.nodeData.preLabel}`
+                : ''
 
         this.setupControls()
 

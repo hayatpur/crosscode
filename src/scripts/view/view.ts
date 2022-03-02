@@ -4,6 +4,7 @@ import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
 import { createViewController, CreateViewOptions, createViewRenderer } from '../utilities/view'
+import { AnimationPlayer } from './Animation/AnimationPlayer'
 import { Timeline } from './Timeline/Timeline'
 import { ViewController } from './ViewController'
 import { ViewRenderer } from './ViewRenderer'
@@ -24,6 +25,8 @@ export class View {
 
     // Transition animation, used when this view's steps are not shown
     transitionAnimation: AnimationGraph
+
+    animationPlayer: AnimationPlayer
 
     // Timeline
     // timeline: Timeline
@@ -69,6 +72,8 @@ export class View {
         if (options.isRoot) {
             this.isRoot = true
         }
+
+        this.animationPlayer = new AnimationPlayer(this)
     }
 
     tick(dt: number) {
@@ -109,6 +114,8 @@ export class View {
         this.stepsTimeline?.destroy()
         this.controller.temporaryCodeQuery?.destroy()
         this.controller.hideTrace()
+
+        this.animationPlayer?.destroy()
 
         Executor.instance.rootView.removeView(this)
 

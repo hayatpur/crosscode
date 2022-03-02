@@ -28,7 +28,8 @@ export function createPrimitiveData(
     type: DataType,
     value: string | boolean | number | Accessor[] | Function | null,
     id: string,
-    frame: number = -1
+    frame: number = -1,
+    builtin: boolean = false
 ): PrimitiveDataState {
     return {
         _type: 'PrimitiveDataState',
@@ -36,15 +37,22 @@ export function createPrimitiveData(
         value: value,
         id: id,
         frame: frame,
+        builtin,
     }
 }
 
-export function createObjectData(value: object, id: string, frame: number = -1): ObjectDataState {
+export function createObjectData(
+    value: object,
+    id: string,
+    frame: number = -1,
+    builtin: boolean = false
+): ObjectDataState {
     return {
         _type: 'ObjectDataState',
         value: value,
         id: id,
         frame: frame,
+        builtin,
     }
 }
 
@@ -64,6 +72,7 @@ export function cloneData(
 ): DataState {
     const copy = clone(data)
     copy.id = copyId ? data.id : srcId
+    copy.builtin = false
     return copy
 }
 
@@ -89,6 +98,8 @@ export function replaceDataWith(
             }
         }
     }
+
+    original.builtin = false
 }
 
 export function convertIdentifierToLiteral(data: ESTree.Identifier): ESTree.Literal {

@@ -1,6 +1,6 @@
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { clone } from '../utilities/objects'
-import { createObjectData, createPrimitiveData } from './data/data'
+import { createPrimitiveData } from './data/data'
 import {
     DataState,
     DataType,
@@ -24,20 +24,25 @@ export function createEnvironment(): EnvironmentState {
         _type: 'EnvironmentState',
         scope: [
             {
-                bindings: {
-                    Math: {
-                        location: [{ type: AccessorType.Index, value: 'MathREF' }],
-                        name: 'Math',
-                    },
-                },
+                bindings: {},
+                //         Math: {
+                //             location: [{ type: AccessorType.Index, value: 'MathREF' }],
+                //             name: 'Math',
+                //         },
+                //     },
                 type: ScopeType.Default,
             },
         ],
         memory: {
-            MathREF: createObjectData(
-                { PI: createPrimitiveData(DataType.Literal, Math.PI, 'Math.PI') },
-                'Math'
-            ),
+            // MathREF: createObjectData(
+            //     {
+            //         PI: createPrimitiveData(DataType.Literal, Math.PI, 'Math.PI', -1, true),
+            //         cos: createPrimitiveData(DataType.Function, Math.cos, 'Math.cos', -1, true),
+            //     },
+            //     'Math',
+            //     -1,
+            //     true
+            // ),
         },
         registers: {},
         id: `Env(${++CUR_ENV_ID})`,
@@ -348,6 +353,23 @@ export function resolvePath(
     // console.log(`${' '.repeat(path.length)}`, clone(ret))
 
     return ret
+}
+
+export function resolveFullPath(
+    root: EnvironmentState,
+    path: Accessor[],
+    srcId: string,
+    parent: DataState | EnvironmentState | null = null,
+    options: { noResolvingId?: boolean; noResolvingReference?: boolean } = {}
+): (DataState | EnvironmentState)[] {
+    if (path.length == 0) {
+        return [parent ?? root]
+    }
+
+    let resolution = resolve(root, path[0], srcId, parent, options)
+    let ret = resolveFullPath(root, path.slice(1), srcId, resolution, options)
+
+    return [parent ?? root, ...ret]
 }
 
 export function addDataAt(

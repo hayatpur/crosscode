@@ -12,6 +12,7 @@ import {
     ControlOutputData,
     ExecutionContext,
 } from '../../execution/primitive/ExecutionNode'
+import { ArrayConcatAnimation } from '../../execution/primitive/Functions/Native/Array/ArrayConcatAnimation'
 import { ArrayPushAnimation } from '../../execution/primitive/Functions/Native/Array/ArrayPushAnimation'
 import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
@@ -63,8 +64,6 @@ export function CallExpression(
         feed: true,
         outputRegister: lookupRegister,
     })
-    // addVertex(graph, lookup, { nodeData: getNodeData(ast.callee) })
-
     const lookupData = resolvePath(environment, lookupRegister, null) as DataState
     const lookupDataValue = lookupData.value as Function
 
@@ -91,7 +90,8 @@ export function CallExpression(
 
         const nativeFunction = lookupNativeFunctionAnimation(lookupDataValue.name)(
             objectRegister,
-            registers
+            registers,
+            context.outputRegister
         )
         addVertex(graph, nativeFunction, { nodeData: getNodeData(ast) })
         applyExecutionNode(nativeFunction, environment)
@@ -119,19 +119,28 @@ export function CallExpression(
             args: registers,
             outputRegister: [],
             returnData: {
-                register: context.outputRegister,
-                frame: environment.scope.length - 1,
+                register: context.outputRegister.length > 0 ? context.outputRegister : null,
+                frame: environment.scope.length,
                 environmentId: environment.id,
             },
             controlOutput,
         })
-        addVertex(graph, body, { nodeData: getNodeData(ast) })
+        addVertex(graph, body, { nodeData: { ...getNodeData(ast), type: 'Function Call' } })
     }
 
     // Cleanup
     cleanUpRegister(environment, lookupRegister[0].value)
 
+    const ret = resolvePath(environment, context.outputRegister, null) as DataState
+
     for (let i = 0; i < ast.arguments.length; i++) {
+        // Make sure that the things being cleaned up is not a return value
+        const resolve = resolvePath(environment, registers[i], null) as DataState
+
+        if (ret.id == resolve.id) {
+            continue
+        }
+
         const consume = consumeDataAnimation(registers[i])
         // addVertex(graph, consume, { nodeData: getNodeData(ast) })
         applyExecutionNode(consume, environment)
@@ -145,5 +154,6 @@ export function CallExpression(
 export function lookupNativeFunctionAnimation(name: string) {
     return {
         push: ArrayPushAnimation,
+        concat: ArrayConcatAnimation,
     }[name]
 }
