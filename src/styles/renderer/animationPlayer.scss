@@ -7,7 +7,7 @@
     position: absolute;
     left: 0px;
     top: 0px;
-    border-right: 1.5px solid #2c2c3473;
+    // border-right: 1.5px solid #2c2c3473;
 }
 
 .animation-player-timeline {
@@ -18,9 +18,18 @@
 }
 
 .animation-player-event {
-    height: 14px;
+    height: 6px;
     width: 6px;
     background: var(--color-2);
     margin: 5px 0px;
     border-radius: 5px;
+    transition: 0.2s;
+    cursor: pointer;
+    transform: scale(1);
+}
+
+.animation-player-event.playing {
+    transform: scale(1.1);
+    background: var(--s-color-4);
+    height: 14px;
 }

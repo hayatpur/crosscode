@@ -9,20 +9,21 @@ import { AnimationPlayerRenderer } from './AnimationPlayerRenderer'
 export class AnimationPlayer {
     // Animation time
     time: number = 0
-    speed: number = 1 / 256
+    speed: number = 1 / 64
     isPaused: boolean = true
     hasEnded: boolean = false
 
     view: View
     renderer: AnimationPlayerRenderer
 
+    isMouseIn = false
+
     constructor(view: View) {
         this.view = view
 
-        let animations = []
+        const execution = this.view.originalExecution
 
         if (this.view.transitionAnimation == null) {
-            const execution = this.view.originalExecution
             this.view.transitionAnimation = createAnimationGraph()
 
             if (instanceOfExecutionGraph(execution)) {
@@ -45,23 +46,64 @@ export class AnimationPlayer {
             }
         }
 
-        this.renderer = new AnimationPlayerRenderer(this)
+        const animation = this.view.transitionAnimation
 
+        // Setup renderer
+        this.renderer = new AnimationPlayerRenderer(this)
         this.view.renderer.element.addEventListener('mouseenter', this.mouseenter.bind(this))
         this.view.renderer.element.addEventListener('mouseleave', this.mouseleave.bind(this))
+        this.renderer.show()
+
+        // Setup animation controls
+        if (instanceOfExecutionGraph(execution)) {
+            let start = 0
+
+            for (let i = 0; i < execution.vertices.length; i++) {
+                let t = start
+                this.renderer.events[execution.vertices[i].id].element.addEventListener(
+                    'mouseenter',
+                    () => {
+                        if (this.hasEnded) {
+                            reset(this.view.transitionAnimation)
+                            this.hasEnded = false
+                        }
+                        this.isPaused = false
+                        this.time = t
+                    }
+                )
+                start += duration(animation.vertices[i])
+            }
+        }
     }
 
     mouseenter(e: MouseEvent) {
-        // console.log('Mousing over...')
-        this.renderer.show()
+        this.isMouseIn = true
     }
 
     mouseleave(e: MouseEvent) {
-        // console.log('Mousing out...')
-        this.renderer.hide()
+        this.isMouseIn = false
     }
 
     tick(dt: number) {
+        // if ((!this.isPaused || this.isMouseIn) && !this.renderer.isShowing) {
+        //     this.renderer.show()
+        // }
+
+        // if (this.isPaused && !this.isMouseIn && this.renderer.isShowing) {
+        //     this.renderer.hide()
+        // }
+
+        // if (this.renderer.isShowing) {
+        //     for (const vertex of this.view.transitionAnimation.vertices) {
+        //         const renderer = this.renderer.events[vertex.id]
+
+        //         if (renderer == null) {
+        //             // Why is this null?
+        //             continue
+        //         }
+        //     }
+        // }
+
         if (this.isPaused) {
             return
         }
@@ -89,6 +131,8 @@ export class AnimationPlayer {
             seek(this.view.transitionAnimation, animationRenderer.environment, this.time)
             this.time += dt * this.speed
         }
+
+        this.renderer.tick(dt)
 
         animationRenderer.update()
     }

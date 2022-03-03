@@ -68,8 +68,8 @@ export function createTransition(
     }
 
     // Make it parallel
-    // transition.isParallel = true
-    // transition.parallelStarts = [0, ...transitions.map((_) => 1)]
+    transition.isParallel = true
+    transition.parallelStarts = [0, ...transitions.map((_) => 1)]
 
     return transition
 }

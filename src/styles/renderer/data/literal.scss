@@ -50,7 +50,7 @@
 }
 
 .environment > .data:not(:first-child)::before {
-    content: '';
+    // content: '';
     width: 1px;
     height: 14px;
     background: #ffffff17;

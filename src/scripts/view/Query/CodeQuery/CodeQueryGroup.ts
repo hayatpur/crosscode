@@ -122,7 +122,7 @@ export class CodeQueryGroup {
             query.destroy()
         }
         for (const selection of this.viewSelection) {
-            if (selection.type == ViewSelectionType.ViewToView) {
+            if (selection.type == ViewSelectionType.ViewToView && selection.view instanceof View) {
                 selection.view.destroy()
             }
         }

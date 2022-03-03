@@ -14,6 +14,13 @@ import { View } from '../view/View'
 import { ViewController } from '../view/ViewController'
 import { ViewRenderer } from '../view/ViewRenderer'
 
+export interface TempView {
+    originalExecution: ExecutionNode | ExecutionGraph
+    renderer: {
+        element: HTMLElement
+    }
+}
+
 export interface CreateViewOptions {
     goToEnd?: boolean
     expand?: boolean

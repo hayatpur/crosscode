@@ -34,15 +34,10 @@ export class IdentifierRenderer {
         const dataBbox = this.reference.getBoundingClientRect()
         const environmentBbox = this.environmentReference.getBoundingClientRect()
 
-        // this.element.style.top = `${dataBbox.y - 22 - environmentBbox.y}px`
-        const delta = dataBbox.x - environmentBbox.x
+        let delta = dataBbox.x - environmentBbox.x
 
-        let ratio = 1
-        // if (this.environmentReference.children.length > 0) {
-        // ratio = dataBbox.height / 30
-        // }
         this.element.style.top = `${18}px`
-        this.element.style.left = `${(1 / ratio) * delta}px`
+        this.element.style.left = `${delta}px`
     }
 
     destroy() {

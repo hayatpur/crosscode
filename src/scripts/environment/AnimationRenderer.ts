@@ -159,11 +159,11 @@ export class AnimationRenderer {
         this.environmentRenderer.tick(dt)
         this.postEnvironmentRenderer.tick(dt)
 
-        // Update the post environment
+        // Update the post environment 
         if (this.showingPostRenderer) {
             const bbox = this.postRendererElement.getBoundingClientRect()
-            // this.element.style.minWidth = `${bbox.width}px`
-            // this.element.style.minHeight = `${bbox.height - 10}px`
+            this.element.style.minWidth = `${bbox.width}px`
+            this.element.style.minHeight = `${bbox.height - 10}px`
         }
     }
 }

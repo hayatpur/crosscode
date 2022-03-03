@@ -32,8 +32,6 @@ function onSeek(animation: TransitionMove, environment: EnvironmentState, time: 
     const to = renderer.getAllChildRenderers()[animation.output.id] as DataRenderer
     const { x, y } = animation.movement.getPointAtLength(t * animation.movement.getTotalLength())
     to.element.style.transform = `translate(${x}px, ${y}px)`
-
-    console.log('moving...', t, x)
 }
 
 function onEnd(animation: TransitionMove, environment: EnvironmentState) {

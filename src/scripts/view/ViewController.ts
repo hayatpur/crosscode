@@ -8,6 +8,7 @@ import { getDepthOfView, getLeavesOfView } from '../execution/graph/graph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
 import { lerp } from '../utilities/math'
+import { AnimationPlayer } from './Animation/AnimationPlayer'
 import { ControlFlow } from './Control Flow/ControlFlow'
 import { CodeQuery } from './Query/CodeQuery/CodeQuery'
 import { ViewSelectionType } from './Query/CodeQuery/CodeQueryGroup'
@@ -699,6 +700,8 @@ export class ViewController {
             return
         }
 
+        this.view.animationPlayer = new AnimationPlayer(this.view)
+
         state.isCollapsed = false
 
         renderer.animationRenderer = new AnimationRenderer(this.view)
@@ -718,6 +721,8 @@ export class ViewController {
             console.warn("Trying to collapse a node that's already collapsed")
             return
         }
+
+        this.view.animationPlayer.destroy()
 
         state.isCollapsed = true
 
