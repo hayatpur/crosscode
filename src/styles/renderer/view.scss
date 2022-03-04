@@ -13,7 +13,7 @@
     left: 0;
     display: flex;
     flex-direction: column;
-    animation: fadein 1s;
+    // animation: fadein 1s;
     transform-origin: top left;
     cursor: auto;
 }
@@ -108,9 +108,10 @@
     white-space: pre;
 
     font-size: 14px;
+    font-weight: 300;
 
     transition: 0.5s;
-    font-family: 'Fira Code';
+    // font-family: 'Fira Code';
 }
 
 .pre-view-label {
@@ -360,6 +361,10 @@
     opacity: 0;
 }
 
+.view.embedded > .view-header > .view-label {
+    opacity: 0;
+}
+
 .view.embedded > .view-header > .view-control-button {
     width: 0px;
     opacity: 0;
@@ -380,7 +385,6 @@
     height: 6px;
     width: 6px;
     background: var(--color-2);
-    margin: 5px 0px;
     border-radius: 5px;
     transition: 0.2s;
     opacity: 1;
@@ -388,21 +392,54 @@
     cursor: pointer;
 }
 
-.view.embedded > .view-header > .view-label {
+.view.embedded > .view-header > .pre-view-label {
     opacity: 0;
     transform: scale(0.5);
     transform-origin: right center;
+    top: -9px;
+    right: 5px;
 }
 
-.view.embedded.playing > .view-header > .view-label {
-    // opacity: 1;
+.view.embedded.playing > .view-header > .pre-view-label {
+    opacity: 0.5;
     transform: scale(1);
     // color: var(--s-color-4);
 }
 
+.animation-player-anchor-container.revealed > .view.embedded > .view-header > .pre-view-label {
+    opacity: 0.5;
+    transform: scale(1);
+}
+
 .view.embedded.playing > .view-body {
+    // transform: scale(1.7);
+    background: var(--s-color-4);
+    height: 14px;
+    // width: 14px;
+}
+
+.view.embedded > .view-body:hover {
     transform: scale(1.7);
     background: var(--s-color-4);
     // height: 14px;
     // width: 14px;
+}
+
+.view.embedded.embedded-dragging > .view-body {
+    transform: scale(2);
+    background: var(--s-color-4);
+    transition: 0s;
+}
+
+.view.embedded.embedded-dragging > .view-header > .pre-view-label {
+    opacity: 0.5;
+    transform: scale(1);
+}
+
+.view.is-anchored > .view-header > .pre-view-label {
+    transition: 0s;
+}
+
+.view.floating {
+    position: absolute;
 }

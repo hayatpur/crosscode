@@ -117,9 +117,11 @@ export class Timeline {
         view.renderer.updatePosition(1)
     }
 
-    destroy() {
-        for (const view of this.views) {
-            view.destroy()
+    destroy(destroyViews = false) {
+        if (destroyViews) {
+            for (const view of this.views) {
+                view.destroy()
+            }
         }
 
         this.views = []

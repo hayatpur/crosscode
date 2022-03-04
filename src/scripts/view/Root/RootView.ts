@@ -31,6 +31,7 @@ export class RootView {
     // Parent animation
     parentView: View = null
     currentDepth = 0
+    separatorPosition: number
 
     constructor() {
         // this.rootTimeline = new Timeline()
@@ -66,12 +67,12 @@ export class RootView {
             query.tick(dt)
         }
 
-        const separatorPosition = getNumericalValueOfStyle(this.separator.element.style.left, 0)
+        this.separatorPosition = getNumericalValueOfStyle(this.separator.element.style.left, 0)
         this.codeQueryContainer.style.left = `${
-            separatorPosition - this.codeQueryContainer.getBoundingClientRect().width / 2
+            this.separatorPosition - this.codeQueryContainer.getBoundingClientRect().width / 2
         }px`
 
-        this.panningArea.element.style.left = `${separatorPosition}px`
+        this.panningArea.element.style.left = `${this.separatorPosition}px`
         // this.panningArea.element.style.top = `${0}px`
 
         // Render timeline
@@ -84,7 +85,7 @@ export class RootView {
 
         if (options.isRoot) {
             this.parentView = view
-            this.panningArea.addRoot(view)
+            this.panningArea.addView(view)
             view.state.transform.position.x = 100
             view.state.transform.position.y = 100
         }

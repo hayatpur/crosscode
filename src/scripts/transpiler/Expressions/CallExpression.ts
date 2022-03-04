@@ -29,7 +29,7 @@ export function CallExpression(
     const controlOutput: ControlOutputData = { output: ControlOutput.None }
 
     const argGraph = createExecutionGraph({
-        ...getNodeData(ast.arguments),
+        ...getNodeData(ast.arguments, 'Arguments'),
         type: 'Arguments',
     })
     argGraph.precondition = clone(environment)
@@ -125,7 +125,9 @@ export function CallExpression(
             },
             controlOutput,
         })
-        addVertex(graph, body, { nodeData: { ...getNodeData(ast), type: 'Function Call' } })
+        addVertex(graph, body, {
+            nodeData: { ...getNodeData(ast, 'Function Call'), type: 'Function Call' },
+        })
     }
 
     // Cleanup

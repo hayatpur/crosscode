@@ -221,8 +221,10 @@ export class EnvironmentRenderer {
             }
         }
 
-        // Add out label to the RHS of the data
-        for (const id of Object.keys(this.dataRenderers)) {
+        // Add register label to the RHS of the data
+        const keys = Object.keys(this.dataRenderers)
+        keys.reverse() // SO HACKY - FIX
+        for (const id of keys) {
             if (!dataHits.has(id)) {
                 const dataRenderer = this.dataRenderers[id]
                 if (dataRenderer == null) continue

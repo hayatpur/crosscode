@@ -13,6 +13,8 @@ export class AnimationPlayerRenderer {
 
     isShowing = false
 
+    anchors: { [key: string]: HTMLElement } = {}
+
     constructor(player: AnimationPlayer) {
         this.player = player
 
@@ -22,6 +24,23 @@ export class AnimationPlayerRenderer {
         this.timelineElement = document.createElement('div')
         this.timelineElement.classList.add('animation-player-timeline')
         this.element.appendChild(this.timelineElement)
+    }
+
+    anchorView(view: View) {
+        if (!(view.id in this.anchors)) {
+            const anchorContainer = document.createElement('div')
+            anchorContainer.classList.add('animation-player-anchor-container')
+
+            const anchorElement = document.createElement('div')
+            anchorElement.classList.add('animation-player-anchor-element')
+            anchorContainer.appendChild(anchorElement)
+
+            this.timelineElement.appendChild(anchorContainer)
+
+            this.anchors[view.id] = anchorContainer
+        }
+
+        this.anchors[view.id].appendChild(view.renderer.element)
     }
 
     show() {
@@ -43,7 +62,7 @@ export class AnimationPlayerRenderer {
             })
             this.events[executionVertices[i].id] = view
 
-            this.timelineElement.appendChild(view.renderer.element)
+            this.anchorView(view)
         }
 
         this.player.view.renderer.viewBody.classList.add('showing-timeline')

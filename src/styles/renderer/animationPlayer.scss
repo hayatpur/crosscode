@@ -35,3 +35,32 @@
     background: var(--s-color-4);
     height: 14px;
 }
+
+.animation-player-anchor-container {
+    min-height: 6px;
+    min-width: 6px;
+    margin: 5px 0px;
+    transition: 0.2s;
+}
+
+.animation-player-anchor-container.revealed {
+    margin: 8px 0px;
+}
+
+.animation-player-anchor-element {
+    width: 6px;
+    height: 6px;
+    position: absolute;
+    background: #2c2c346b;
+    border-radius: 5px;
+}
+
+.animation-player:hover
+    > .animation-player-timeline
+    > .animation-player-anchor-container
+    > .view.embedded
+    > .view-header
+    > .pre-view-label {
+    opacity: 0.5;
+    transform: scale(1);
+}

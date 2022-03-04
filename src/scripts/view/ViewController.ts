@@ -2,10 +2,11 @@ import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { ArrayRenderer } from '../environment/data/array/ArrayRenderer'
 import { ObjectRenderer } from '../environment/data/object/ObjectRenderer'
-import { getExecutionChildren, reads, writes } from '../execution/execution'
+import { reads, writes } from '../execution/execution'
 import { instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { getDepthOfView, getLeavesOfView } from '../execution/graph/graph'
 import { Executor } from '../executor/Executor'
+import { flipAnimate } from '../utilities/dom'
 import { lerp } from '../utilities/math'
 import { AnimationPlayer } from './Animation/AnimationPlayer'
 import { ControlFlow } from './Control Flow/ControlFlow'
@@ -28,6 +29,9 @@ export class ViewController {
     controlFlow: ControlFlow
 
     toAnimate: { id: string; el: HTMLElement }[] = []
+
+    isDraggingEmbedded = false
+    isAnchored = false
 
     constructor(view: View) {
         this.view = view
@@ -158,19 +162,13 @@ export class ViewController {
             this.view.state.isShowingSteps = false
         }
 
-        this.temporaryCodeQuery?.destroy()
-        this.temporaryCodeQuery = null
+        this.temporaryCodeQuery.hide()
     }
 
     show() {
         this.view.state.isHidden = false
         this.view.renderer.show()
-
-        this.temporaryCodeQuery?.destroy()
-        this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery({
-            view: this.view,
-            type: ViewSelectionType.CodeToView,
-        })
+        this.temporaryCodeQuery.show()
     }
 
     select() {
@@ -187,26 +185,12 @@ export class ViewController {
     }
 
     deselect() {
-        this.view.renderer.animationRenderer?.deselect()
-        this.view.renderer.trace.deselect()
-        this.view.renderer.element.classList.remove('selected')
+        this.view.renderer?.animationRenderer?.deselect()
+        this.view.renderer?.trace.deselect()
+        this.view.renderer?.element.classList.remove('selected')
         this.view.stepsTimeline?.deselect()
 
         this.view.state.isSelected = false
-    }
-
-    createStepsEmptySteps() {
-        const { state, renderer } = this.view
-        state.isShowingSteps = true
-
-        renderer.stepsContainer.classList.remove('hidden')
-
-        this.view.stepsTimeline = new Timeline(this.view)
-        this.view.stepsTimeline.anchorToView(this.view)
-
-        this.collapse()
-
-        renderer.element.classList.add('showing-steps')
     }
 
     detachForAnimation() {
@@ -335,39 +319,58 @@ export class ViewController {
         }
     }
 
+    createStepsEmptySteps() {
+        const { state, renderer } = this.view
+        state.isShowingSteps = true
+
+        renderer.stepsContainer.classList.remove('hidden')
+
+        this.view.stepsTimeline = new Timeline(this.view)
+        this.view.stepsTimeline.anchorToView(this.view)
+
+        renderer.element.classList.add('showing-steps')
+    }
+
     createSteps(expanded: boolean = false, animate = false) {
         let start = performance.now()
 
         const { state, renderer } = this.view
 
         if (animate) {
+            // TODO: Create a lookup table that is used when creating data renderers
             this.detachForAnimation()
         }
+
+        const initBodyBboxes = Object.values(this.view.animationPlayer.renderer.events).map(
+            (view) => view.renderer.viewBody.getBoundingClientRect()
+        )
+
+        const initLabelBboxes = Object.values(this.view.animationPlayer.renderer.events).map(
+            (view) => view.renderer.preLabel.getBoundingClientRect()
+        )
 
         this.createStepsEmptySteps()
 
         if (instanceOfExecutionGraph(this.view.originalExecution)) {
-            const children = getExecutionChildren(this.view.originalExecution)
+            const views = Object.values(this.view.animationPlayer.renderer.events)
 
-            let first = true
+            for (let i = 0; i < views.length; i++) {
+                const view = views[i]
+                view.controller.makeNotEmbedded()
+                view.controller.expand()
 
-            for (const child of children) {
-                const step = Executor.instance.rootView.createView(child, {
-                    expand: expanded,
-                })
-                this.view.stepsTimeline.addView(step)
+                this.view.stepsTimeline.addView(view)
 
-                // if (first) {
-                //     setTimeout(() => {
-                //         step?.controller?.temporaryCodeQuery?.select(true)
-                //     }, 100)
-
-                //     setTimeout(() => {
-                //         step?.controller?.temporaryCodeQuery?.deselect()
-                //     }, 1000)
-                // }
-
-                first = false
+                flipAnimate(
+                    view.renderer.viewBody,
+                    initBodyBboxes[i],
+                    view.renderer.viewBody.getBoundingClientRect()
+                )
+                flipAnimate(
+                    view.renderer.preLabel,
+                    initLabelBboxes[i],
+                    view.renderer.preLabel.getBoundingClientRect()
+                )
             }
         }
 
@@ -375,11 +378,9 @@ export class ViewController {
             setTimeout(() => this.performAnimation(), 100)
         }
 
-        console.log(`Created steps in ${performance.now() - start}ms`)
+        this.collapse()
 
-        // this.temporaryCodeQuery.opacity -= 0.8
-        // this.temporaryCodeQuery.destroy()
-        // this.temporaryCodeQuery = null
+        console.log(`Created steps in ${performance.now() - start}ms`)
 
         if (state.isSelected) {
             this.view.stepsTimeline.select()
@@ -392,17 +393,46 @@ export class ViewController {
 
         renderer.stepsContainer.classList.add('hidden')
 
-        this.view.stepsTimeline?.destroy()
+        this.view.stepsTimeline?.destroy(false)
         this.view.stepsTimeline = null
         this.expand()
 
-        renderer.animationRenderer.update()
+        const initBodyBboxes = Object.values(this.view.animationPlayer.renderer.events).map(
+            (view) => view.renderer.viewBody.getBoundingClientRect()
+        )
+
+        const initLabelBboxes = Object.values(this.view.animationPlayer.renderer.events).map(
+            (view) => view.renderer.preLabel.getBoundingClientRect()
+        )
+
+        // Put the views back to the right spot
+        if (instanceOfExecutionGraph(this.view.originalExecution)) {
+            const views = Object.values(this.view.animationPlayer.renderer.events)
+
+            for (let i = 0; i < views.length; i++) {
+                const view = views[i]
+                view.controller.collapse()
+                view.controller.makeEmbedded()
+
+                this.view.animationPlayer.renderer.anchorView(view)
+
+                // setTimeout(() => {
+                //     flipAnimate(
+                //         view.renderer.viewBody,
+                //         initBodyBboxes[i],
+                //         view.renderer.viewBody.getBoundingClientRect()
+                //     )
+                // }, 100)
+                // flipAnimate(
+                //     view.renderer.preLabel,
+                //     initLabelBboxes[i],
+                //     view.renderer.preLabel.getBoundingClientRect()
+                // )
+            }
+        }
 
         this.view.renderer.stepsContainer.innerHTML = ''
         renderer.element.classList.remove('showing-steps')
-
-        // this.temporaryCodeQuery?.destroy()
-        // this.temporaryCodeQuery = Executor.instance.rootView.createCodeQuery(this.view)
     }
 
     updateDepth() {
@@ -418,28 +448,27 @@ export class ViewController {
         let playingAnimation =
             this.view.state.isEmbedded && this.view.renderer.element.classList.contains('playing')
 
-        if ((delta < 2 && !this.view.state.isEmbedded) || playingAnimation) {
+        if (
+            (delta < 2 && !this.view.state.isEmbedded) ||
+            playingAnimation ||
+            this.isDraggingEmbedded
+        ) {
             // Should exist but can be faded out
-            if (this.view.controller.temporaryCodeQuery == null) {
-                this.view.controller.temporaryCodeQuery =
-                    Executor.instance.rootView.createCodeQuery({
-                        view: this.view,
-                        type: ViewSelectionType.CodeToView,
-                    })
+            if (this.temporaryCodeQuery.isHidden) {
+                this.temporaryCodeQuery.show()
             }
 
             if (this.view.state.isEmbedded) {
                 if (playingAnimation) {
-                    this.view.controller.temporaryCodeQuery.select(false)
+                    this.temporaryCodeQuery.select(false)
                 } else {
-                    this.view.controller.temporaryCodeQuery.deselect()
+                    this.temporaryCodeQuery.deselect()
                 }
             }
         } else {
             // Should not exist
-            if (this.view.controller.temporaryCodeQuery != null) {
-                this.view.controller.temporaryCodeQuery.destroy()
-                this.view.controller.temporaryCodeQuery = null
+            if (!this.temporaryCodeQuery.isHidden) {
+                this.temporaryCodeQuery.hide()
             }
         }
     }
@@ -572,6 +601,36 @@ export class ViewController {
 
         document.body.addEventListener('mouseup', this.mouseup.bind(this))
         document.body.addEventListener('mousemove', this.mousemove.bind(this))
+
+        this.view.renderer.viewBody.addEventListener('mousedown', this.mousedownBody.bind(this))
+    }
+
+    mousedownBody(e: MouseEvent) {
+        const { state, renderer } = this.view
+
+        this.startMouse = {
+            x: e.x,
+            y: e.y,
+        }
+
+        this.previousMouse = {
+            x: e.x,
+            y: e.y,
+        }
+
+        if (this.view.state.isEmbedded) {
+            renderer.element.classList.add('embedded-dragging')
+            this.isDraggingEmbedded = true
+
+            this.setAnchored()
+        }
+    }
+
+    setAnchored() {
+        // Re-route query to anchor
+        this.temporaryCodeQuery.setAnchor(this.view.renderer.element.previousSibling as HTMLElement)
+        this.isAnchored = true
+        this.view.renderer.element.classList.add('is-anchored')
     }
 
     mousedown(e: MouseEvent) {
@@ -606,6 +665,32 @@ export class ViewController {
                 this.click()
             }
         }
+
+        if (this.view.state.isEmbedded && this.isDraggingEmbedded) {
+            renderer?.element.classList.remove('embedded-dragging')
+            this.isDraggingEmbedded = false
+            const bbox = renderer.viewBody.getBoundingClientRect()
+
+            this.makeFloating()
+            this.view.renderer.viewBody.style.transform = 'inherit'
+            this.view.state.transform.position.x =
+                bbox.left - Executor.instance.rootView.separatorPosition - 50
+            this.view.state.transform.position.y = bbox.top - 50
+            this.view.renderer.updatePosition(1)
+            this.makeNotEmbedded()
+            this.expand()
+
+            flipAnimate(
+                this.view.renderer.viewBody,
+                bbox,
+                this.view.renderer.viewBody.getBoundingClientRect()
+            )
+        }
+    }
+
+    makeFloating() {
+        Executor.instance.rootView.panningArea.addView(this.view)
+        this.view.renderer.element.classList.add('floating')
     }
 
     mousemove(e: MouseEvent) {
@@ -623,6 +708,12 @@ export class ViewController {
             x: e.x,
             y: e.y,
         }
+
+        if (this.view.state.isEmbedded && this.isDraggingEmbedded) {
+            this.view.renderer.viewBody.style.transform = `translate(${
+                mouse.x - this.startMouse.x
+            }px, ${mouse.y - this.startMouse.y}px)`
+        }
     }
 
     mouseover(e: MouseEvent) {
@@ -637,21 +728,13 @@ export class ViewController {
         bbox.width += paddingX * 2
         bbox.height += paddingY * 2
 
-        // const test = document.querySelector('#test') as HTMLElement
-        // test.style.left = `${bbox.x}px`
-        // test.style.top = `${bbox.y}px`
-        // test.style.width = `${bbox.width}px`
-        // test.style.height = `${bbox.height}px`
-
-        // this.temporaryCodeQuery?.destroy()
-
-        // if (instanceOfExecutionGraph(this.view.originalExecution)) {
         this.temporaryCodeQuery?.select(false)
-        // }
+        this.view.animationPlayer?.revealLabels()
     }
 
     mouseout(e: MouseEvent) {
         this.temporaryCodeQuery?.deselect()
+        this.view.animationPlayer?.hideLabels()
     }
 
     click() {
@@ -680,28 +763,40 @@ export class ViewController {
     expand() {
         const { state, renderer } = this.view
 
-        if (!state.isCollapsed) {
+        if (state.isCollapsed != null && !state.isCollapsed) {
             console.warn("Trying to expand a node that's not collapsed")
-            return
         }
 
-        this.view.animationPlayer = new AnimationPlayer(this.view)
-
         state.isCollapsed = false
-
-        renderer.animationRenderer = new AnimationRenderer(this.view)
-        renderer.viewBody.appendChild(renderer.animationRenderer.element)
 
         renderer.element.classList.remove('collapsed')
         renderer.controlElement.classList.remove('disabled')
 
         renderer.stepsContainer.classList.add('expanded')
-        renderer.animationRenderer.update()
+
+        this.view.renderer.animationRenderer = new AnimationRenderer(this.view)
+        this.view.renderer.viewBody.appendChild(this.view.renderer.animationRenderer.element)
+
+        this.view.renderer.animationRenderer.update()
     }
 
     makeEmbedded() {
         this.view.renderer.element.classList.add('embedded')
         this.view.state.isEmbedded = true
+
+        this.view.animationPlayer?.destroy()
+        this.view.animationPlayer = null
+
+        console.log('Making embedded', this.view.id)
+    }
+
+    makeNotEmbedded() {
+        this.view.renderer.element.classList.remove('embedded')
+        this.view.state.isEmbedded = false
+
+        this.view.animationPlayer = new AnimationPlayer(this.view)
+
+        this.view.state.isCollapsed = false
     }
 
     onRendererBodyEnter() {}
@@ -713,21 +808,16 @@ export class ViewController {
 
         if (state.isCollapsed) {
             console.warn("Trying to collapse a node that's already collapsed")
-            return
         }
 
-        console.log('Destroying animation renderer', this.view.id)
-        this.view.animationPlayer.destroy()
-        this.view.animationPlayer = null
-
         state.isCollapsed = true
-
-        renderer.animationRenderer?.destroy()
-        renderer.animationRenderer = null
 
         renderer.element.classList.add('collapsed')
         renderer.controlElement.classList.add('disabled')
 
         renderer.stepsContainer.classList.remove('expanded')
+
+        this.view.renderer.animationRenderer?.destroy()
+        this.view.renderer.animationRenderer = null
     }
 }

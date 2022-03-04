@@ -75,20 +75,32 @@ export class AnimationPlayer {
             ? [animation]
             : animation.vertices
 
-        for (let i = 0; i < executionVertices.length; i++) {
-            let t = start
-            const view = this.renderer.events[executionVertices[i].id]
-            view.renderer.viewBody.addEventListener('mouseenter', () => {
-                if (this.hasEnded) {
-                    reset(this.view.transitionAnimation)
-                    this.hasEnded = false
-                }
-                this.isPaused = false
-                this.time = t
-            })
-            start += duration(animation.vertices[i])
-        }
+        // for (let i = 0; i < executionVertices.length; i++) {
+        //     let t = start
+        //     const view = this.renderer.events[executionVertices[i].id]
+        //     view.renderer.viewBody.addEventListener('mouseenter', () => {
+        //         if (this.hasEnded) {
+        //             reset(this.view.transitionAnimation)
+        //             this.hasEnded = false
+        //         }
+        //         this.isPaused = false
+        //         this.time = t
+        //     })
+        //     start += duration(animation.vertices[i])
         // }
+        // }
+    }
+
+    revealLabels() {
+        for (const anchor of Object.values(this.renderer.anchors)) {
+            anchor.classList.add('revealed')
+        }
+    }
+
+    hideLabels() {
+        for (const anchor of Object.values(this.renderer.anchors)) {
+            anchor.classList.remove('revealed')
+        }
     }
 
     mouseenter(e: MouseEvent) {
@@ -122,7 +134,8 @@ export class AnimationPlayer {
             }
         }
 
-        if (this.isPaused) {
+        if (this.isPaused || this.view.state.isCollapsed) {
+            this.renderer.tick(dt)
             return
         }
 
@@ -151,7 +164,6 @@ export class AnimationPlayer {
         }
 
         this.renderer.tick(dt)
-
         animationRenderer.update()
     }
 
@@ -178,16 +190,14 @@ export class AnimationPlayer {
     }
 
     destroy() {
-        const animationRenderer = this.view.renderer.animationRenderer
-        if (animationRenderer == null) {
-            console.warn('Trying to destroy animation without an animation renderer')
-            return
-        }
-
         reset(this.view.transitionAnimation)
-        const renderer = animationRenderer.environment.renderer
-        animationRenderer.environment = clone(this.view.originalExecution.postcondition)
-        animationRenderer.environment.renderer = renderer
+
+        const animationRenderer = this.view.renderer.animationRenderer
+        if (animationRenderer != null) {
+            const renderer = animationRenderer.environment.renderer
+            animationRenderer.environment = clone(this.view.originalExecution.postcondition)
+            animationRenderer.environment.renderer = renderer
+        }
 
         this.renderer?.destroy()
     }

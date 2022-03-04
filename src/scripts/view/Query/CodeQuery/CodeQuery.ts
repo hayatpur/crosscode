@@ -1,6 +1,7 @@
 import { Editor } from '../../../editor/Editor'
 import { queryExecutionGraphPath } from '../../../execution/graph/graph'
 import { Executor } from '../../../executor/Executor'
+import { getCurvedArrow } from '../../../utilities/dom'
 import { catmullRomSolve, getViewElement } from '../../../utilities/math'
 import { View } from '../../View'
 import { ViewSelection, ViewSelectionType } from './CodeQueryGroup'
@@ -19,6 +20,9 @@ export class CodeQuery {
     connection: SVGPathElement
 
     isSelected: boolean = false
+    isHidden: boolean = false
+
+    anchor: HTMLElement = null
 
     constructor(selection: ViewSelection, isTemporary: boolean = false) {
         this.type = selection.type
@@ -74,6 +78,14 @@ export class CodeQuery {
         })
     }
 
+    setAnchor(element: HTMLElement) {
+        this.anchor = element
+    }
+
+    removeAnchor() {
+        this.anchor = null
+    }
+
     tick(dt: number) {
         // Update code selection
         if (this.codeSelectionElement != null) {
@@ -113,7 +125,7 @@ export class CodeQuery {
                 ? this.codeSelectionElement.getBoundingClientRect()
                 : getViewElement(this.referenceView).getBoundingClientRect()
 
-        const points = [start.x + start.width, start.y + start.height / 2]
+        let points = [start.x + start.width, start.y + start.height / 2]
 
         if (document.body.contains(this.indicatorElement)) {
             const indicatorBbox = this.indicatorElement.getBoundingClientRect()
@@ -127,6 +139,11 @@ export class CodeQuery {
                     Executor.instance.rootView.separator.element.getBoundingClientRect().x
                 points.push(separatorX, start.y + start.height / 2)
             }
+        }
+
+        if (this.anchor != null) {
+            const bbox = this.anchor.getBoundingClientRect()
+            points = [bbox.x + bbox.width / 2, bbox.y + bbox.height / 2]
         }
 
         if (this.view.renderer?.element != null) {
@@ -149,8 +166,13 @@ export class CodeQuery {
             // points.push(start.x + start.width, start.y + start.height / 1.1)
         }
 
-        const d = catmullRomSolve(points, 0.8) // SVGCatmullRomSpline.toPath(points, 4, true)
-        this.connection.setAttribute('d', d)
+        if (this.anchor != null) {
+            const d = getCurvedArrow(points[0], points[1], points[2], points[3])
+            this.connection.setAttribute('d', d)
+        } else {
+            const d = catmullRomSolve(points, 0.8) // SVGCatmullRomSpline.toPath(points, 4, true)
+            this.connection.setAttribute('d', d)
+        }
 
         return Math.abs(points[1] - points[points.length - 1])
     }
@@ -206,6 +228,22 @@ export class CodeQuery {
             this.view.controller?.deselect()
         }
         this.isSelected = false
+    }
+
+    hide() {
+        this.element.classList.add('hidden')
+        this.connection.classList.add('hidden')
+        this.codeSelectionElement.classList.add('hidden')
+
+        this.isHidden = true
+    }
+
+    show() {
+        this.element.classList.remove('hidden')
+        this.connection.classList.remove('hidden')
+        this.codeSelectionElement.classList.remove('hidden')
+
+        this.isHidden = false
     }
 
     destroy() {

@@ -56,7 +56,7 @@ export function createViewState(): ViewState {
             scale: 1,
             scaleMultiplier: 1,
         },
-        isCollapsed: true,
+        isCollapsed: null,
         isShowingSteps: false,
         isTemporary: false,
         isEmbedded: false,

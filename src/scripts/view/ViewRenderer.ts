@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor'
+// import * as monaco from 'monaco-editor'
 import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
@@ -75,9 +75,9 @@ export class ViewRenderer {
             endColumn: range.end.column + 1,
         })
 
-        monaco.editor
-            .colorize(label, 'javascript', {})
-            .then((result) => (this.label.innerHTML = result))
+        // monaco.editor
+        //     .colorize(label, 'javascript', {})
+        //     .then((result) => (this.label.innerHTML = result))
 
         this.preLabel = document.createElement('div')
         this.preLabel.classList.add('pre-view-label')
@@ -222,6 +222,18 @@ export class ViewRenderer {
 
         // Update global trace
         this.globalTrace.tick(dt)
+
+        if (this.view.controller.isAnchored) {
+            const connection = this.view.controller.temporaryCodeQuery.connection
+            const mid = connection.getPointAtLength(connection.getTotalLength() / 2)
+
+            const bbox = this.preLabel.getBoundingClientRect()
+
+            const reference = this.header.getBoundingClientRect()
+
+            this.preLabel.style.left = `${mid.x - reference.x - bbox.width / 2}px`
+            this.preLabel.style.top = `${mid.y - reference.y - bbox.height / 2}px`
+        }
     }
 
     updateEndNode() {

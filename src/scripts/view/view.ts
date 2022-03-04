@@ -60,6 +60,8 @@ export class View {
 
         if (options.embedded) {
             this.controller.makeEmbedded()
+        } else {
+            this.controller.makeNotEmbedded()
         }
 
         if (options.expand) {
