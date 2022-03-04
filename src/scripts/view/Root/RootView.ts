@@ -111,6 +111,8 @@ export class RootView {
         if (index === -1) return
         this.views.splice(index, 1)
 
+        // TODO: go through each view and set depth to highest
+
         delete this.viewLookup[view.id]
     }
 

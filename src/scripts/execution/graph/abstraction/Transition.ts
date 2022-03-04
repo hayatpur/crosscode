@@ -3,7 +3,7 @@ import { AnimationRendererRepresentation } from '../../../environment/AnimationR
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { clone } from '../../../utilities/objects'
 import { reads, writes } from '../../execution'
-import { ExecutionNode, instanceOfExecutionNode } from '../../primitive/ExecutionNode'
+import { ExecutionNode } from '../../primitive/ExecutionNode'
 import { initializeTransitionAnimation } from '../../primitive/Transition/InitializeTransitionAnimation'
 import { transitionCreateArray } from '../../primitive/Transition/Operations/CreateArrayTransitionAnimation'
 import { transitionCreateReference } from '../../primitive/Transition/Operations/CreateReferenceTransitionAnimation'
@@ -55,10 +55,11 @@ export function createTransition(
     const init = initializeTransitionAnimation(node.postcondition, representation)
     transition.vertices.push(init)
 
-    if (instanceOfExecutionNode(node)) {
-        return transition
-    }
+    // if (instanceOfExecutionNode(node)) {
+    //     return transition
+    // }
 
+    console.log(clone(node))
     const trace = getTrace(node)
     const transitions = getTransitionsFromTrace(trace)
 

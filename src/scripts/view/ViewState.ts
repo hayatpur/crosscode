@@ -32,6 +32,7 @@ export interface ViewState {
     isPlayingAnimation: boolean
     isSelected: boolean
     isTemporary: boolean
+    isEmbedded: boolean
 
     // Current selection state
     abstractionSelection: string
@@ -58,6 +59,7 @@ export function createViewState(): ViewState {
         isCollapsed: true,
         isShowingSteps: false,
         isTemporary: false,
+        isEmbedded: false,
         isShowingTrace: false,
         isShowingControlFlow: false,
         isSeparated: false,

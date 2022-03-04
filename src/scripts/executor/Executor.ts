@@ -106,7 +106,7 @@ export class Executor {
         console.log('\tEnvironment', env)
 
         const [output, url] = animationToString(this.execution, 0, { first: false }, true)
-        console.log(url)
+        // console.log(url)
         this.rootView = new RootView()
 
         this.rootView.createView(this.execution, {

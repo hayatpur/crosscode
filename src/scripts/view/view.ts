@@ -3,7 +3,6 @@ import { AbstractionSelection } from '../execution/graph/abstraction/Abstractor'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
-import { clone } from '../utilities/objects'
 import { createViewController, CreateViewOptions, createViewRenderer } from '../utilities/view'
 import { AnimationPlayer } from './Animation/AnimationPlayer'
 import { Timeline } from './Timeline/Timeline'
@@ -39,8 +38,6 @@ export class View {
     constructor(originalExecution: ExecutionGraph | ExecutionNode, options: CreateViewOptions) {
         this.id = `View(${++_VIEW_ID})`
 
-        console.log('\n YR', clone(originalExecution))
-
         let start = performance.now()
         // Initial state
         this.state = createViewState()
@@ -48,18 +45,22 @@ export class View {
         // Setup animations
         this.originalExecution = originalExecution
         // this.transitionAnimation = createTransition(originalExecution)
-        console.log('Setup animations:', performance.now() - start, 'ms')
-        start = performance.now()
+        // console.log('Setup animations:', performance.now() - start, 'ms')
+        // start = performance.now()
 
         // Setup renderer
         this.renderer = createViewRenderer(this)
-        console.log('Setup renderer:', performance.now() - start, 'ms')
-        start = performance.now()
+        // console.log('Setup renderer:', performance.now() - start, 'ms')
+        // start = performance.now()
 
         // Setup controller
         this.controller = createViewController(this)
-        console.log('Setup controller:', performance.now() - start, 'ms')
-        start = performance.now()
+        // console.log('Setup controller:', performance.now() - start, 'ms')
+        // start = performance.now()
+
+        if (options.embedded) {
+            this.controller.makeEmbedded()
+        }
 
         if (options.expand) {
             this.controller.expand()
@@ -69,8 +70,8 @@ export class View {
             this.controller.makeTemporary()
         }
 
-        console.log('Expand:', performance.now() - start, 'ms')
-        start = performance.now()
+        // console.log('Expand:', performance.now() - start, 'ms')
+        // start = performance.now()
 
         if (options.isRoot) {
             this.isRoot = true

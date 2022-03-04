@@ -76,3 +76,30 @@ export function writes(animation: ExecutionGraph | ExecutionNode): DataInfo[] {
 
     return result
 }
+
+export function getExecutionChildren(
+    execution: ExecutionGraph | ExecutionNode
+): (ExecutionGraph | ExecutionNode)[] {
+    if (instanceOfExecutionNode(execution)) {
+        return []
+    }
+    const children = []
+    const blacklist: Set<string> = new Set([
+        'ConsumeDataAnimation',
+        'PopScopeAnimation',
+        'CreateScopeAnimation',
+        'MoveAndPlaceAnimation',
+    ])
+
+    for (const child of execution.vertices) {
+        if (instanceOfExecutionNode(child) && blacklist.has(child._name)) {
+            continue
+        } else if (blacklist.has(child.nodeData.type)) {
+            continue
+        }
+
+        children.push(child)
+    }
+
+    return children
+}

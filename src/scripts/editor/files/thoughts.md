@@ -1,5 +1,9 @@
 [X] Global traces
 [X] Animations
+[ ] How to deal with traces that show on the same state but at multiple points in time
+[ ] Animations should be derived from branches not a heuristic
+[ ] Trace should be automatically shown when animation is played (global & local)
+[ ] Traces should fade out over time after playing
 [ ] Build tree structure for recursive call
 [ ] User interactions for what they want to see
 [ ] Two different models: look at data, look at events, looking at source code
@@ -8,6 +12,7 @@
 [ ] Animations for trace
 [ ] Source code as label
 [ ] Tree view
+[ ] Peak into queries
 [ ] Routes
 [ ] Routes should be expandable, collapsible.
 [ ] Collapse (abstract) over space

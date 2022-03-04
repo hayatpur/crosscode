@@ -29,7 +29,7 @@ export function CallExpression(
     const controlOutput: ControlOutputData = { output: ControlOutput.None }
 
     const argGraph = createExecutionGraph({
-        ...getNodeData(ast),
+        ...getNodeData(ast.arguments),
         type: 'Arguments',
     })
     argGraph.precondition = clone(environment)

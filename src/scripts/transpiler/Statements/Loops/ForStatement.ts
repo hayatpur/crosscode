@@ -62,6 +62,7 @@ export function ForStatement(
         cleanUpRegister(environment, testRegister[0].value)
 
         if (!testValue) {
+            iteration.postcondition = clone(environment)
             addVertex(graph, iteration, {
                 nodeData: {
                     ...getNodeData(ast),

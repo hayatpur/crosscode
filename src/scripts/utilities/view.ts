@@ -26,6 +26,7 @@ export interface CreateViewOptions {
     expand?: boolean
     isRoot?: boolean
     depth?: number
+    embedded?: boolean
     temporary?: boolean
 }
 

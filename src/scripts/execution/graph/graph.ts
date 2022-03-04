@@ -1458,7 +1458,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
             }
             break
         default:
-            console.warn('Trace not found for', animation._name, animation)
+        // console.warn('Trace not found for', animation._name, animation)
     }
 
     return traces

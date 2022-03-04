@@ -1,12 +1,14 @@
+import { instanceOfAnimationNode } from '../../animation/animation'
 import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { Executor } from '../../executor/Executor'
+import { View } from '../View'
 import { AnimationPlayer } from './AnimationPlayer'
-import { AnimationPlayerEvent } from './AnimationPlayerEvent'
 
 export class AnimationPlayerRenderer {
     element: HTMLElement // Whole element
     timelineElement: HTMLElement
 
-    events: { [key: string]: AnimationPlayerEvent } = {}
+    events: { [key: string]: View } = {}
     player: AnimationPlayer
 
     isShowing = false
@@ -26,17 +28,22 @@ export class AnimationPlayerRenderer {
         const execution = this.player.view.originalExecution
         const animation = this.player.view.transitionAnimation
 
-        if (instanceOfExecutionNode(execution)) {
-            console.warn("Can't show animation player for animation node")
-            return
-        }
+        const executionVertices = instanceOfExecutionNode(execution)
+            ? [execution]
+            : execution.vertices
 
-        for (let i = 0; i < execution.vertices.length; i++) {
-            this.events[execution.vertices[i].id] = new AnimationPlayerEvent(
-                execution.vertices[i],
-                animation.vertices[i]
-            )
-            this.timelineElement.appendChild(this.events[execution.vertices[i].id].element)
+        const animationVertices = instanceOfAnimationNode(animation)
+            ? [animation]
+            : animation.vertices
+
+        for (let i = 0; i < executionVertices.length; i++) {
+            const view = Executor.instance.rootView.createView(executionVertices[i], {
+                expand: false,
+                embedded: true,
+            })
+            this.events[executionVertices[i].id] = view
+
+            this.timelineElement.appendChild(view.renderer.element)
         }
 
         this.player.view.renderer.viewBody.classList.add('showing-timeline')

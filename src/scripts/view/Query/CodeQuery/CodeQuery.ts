@@ -131,7 +131,11 @@ export class CodeQuery {
 
         if (this.view.renderer?.element != null) {
             const viewBbox = getViewElement(this.view).getBoundingClientRect()
-            points.push(viewBbox.x, viewBbox.y + (0.5 * viewBbox.height) / 2)
+            if (this.view.state.isEmbedded) {
+                points.push(viewBbox.x + viewBbox.width / 2, viewBbox.y + viewBbox.height / 2)
+            } else {
+                points.push(viewBbox.x, viewBbox.y + (0.5 * viewBbox.height) / 2)
+            }
 
             this.connection.classList.remove('dashed')
         } else {

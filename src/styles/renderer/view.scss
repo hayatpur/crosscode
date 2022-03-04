@@ -109,10 +109,8 @@
 
     font-size: 14px;
 
-    font-weight: 300;
-
     transition: 0.5s;
-    // font-family: 'Fira Code';
+    font-family: 'Fira Code';
 }
 
 .pre-view-label {
@@ -124,14 +122,6 @@
 
 .view.showing-steps.attached:not(.expanded) > .view-header {
     margin-left: -18px;
-}
-
-.view.playing.collapsed:not(.showing-steps) > .view-end-node {
-    background: #7dd3fc;
-}
-
-.view.playing:not(.showing-steps) > .view-header > .view-label {
-    color: #7dd3fc;
 }
 
 .view.showing-steps.collapsed.attached > .view-end-node {
@@ -364,4 +354,55 @@
 
 .view.temporary > .view-body {
     backdrop-filter: blur(10px);
+}
+
+.view.embedded > .view-header > .pre-view-label {
+    opacity: 0;
+}
+
+.view.embedded > .view-header > .view-control-button {
+    width: 0px;
+    opacity: 0;
+    margin: 0px;
+    padding: 0px;
+}
+
+.view.embedded > .view-header {
+    position: absolute;
+    // right: 5px;
+    // top: 0px;
+
+    right: 10px;
+    top: 2px;
+}
+
+.view.embedded > .view-body {
+    height: 6px;
+    width: 6px;
+    background: var(--color-2);
+    margin: 5px 0px;
+    border-radius: 5px;
+    transition: 0.2s;
+    opacity: 1;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.view.embedded > .view-header > .view-label {
+    opacity: 0;
+    transform: scale(0.5);
+    transform-origin: right center;
+}
+
+.view.embedded.playing > .view-header > .view-label {
+    // opacity: 1;
+    transform: scale(1);
+    // color: var(--s-color-4);
+}
+
+.view.embedded.playing > .view-body {
+    transform: scale(1.7);
+    background: var(--s-color-4);
+    // height: 14px;
+    // width: 14px;
 }

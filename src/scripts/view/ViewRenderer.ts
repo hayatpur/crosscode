@@ -1,3 +1,5 @@
+import * as monaco from 'monaco-editor'
+import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { getNumericalValueOfStyle, lerp } from '../utilities/math'
@@ -66,16 +68,16 @@ export class ViewRenderer {
             .trim()
 
         const range = view.originalExecution.nodeData.location
-        // const label = Editor.instance.monaco.getModel().getValueInRange({
-        //     startLineNumber: range.start.line,
-        //     startColumn: range.start.column + 1,
-        //     endLineNumber: range.end.line,
-        //     endColumn: range.end.column + 1,
-        // })
+        const label = Editor.instance.monaco.getModel().getValueInRange({
+            startLineNumber: range.start.line,
+            startColumn: range.start.column + 1,
+            endLineNumber: range.end.line,
+            endColumn: range.end.column + 1,
+        })
 
-        // monaco.editor
-        //     .colorize(label, 'javascript', {})
-        //     .then((result) => (this.label.innerHTML = result))
+        monaco.editor
+            .colorize(label, 'javascript', {})
+            .then((result) => (this.label.innerHTML = result))
 
         this.preLabel = document.createElement('div')
         this.preLabel.classList.add('pre-view-label')

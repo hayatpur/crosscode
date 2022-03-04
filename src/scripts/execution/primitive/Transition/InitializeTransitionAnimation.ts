@@ -2,7 +2,6 @@ import { AnimationNode, AnimationOptions, createAnimationNode } from '../../../a
 import { AnimationRendererRepresentation } from '../../../environment/AnimationRenderer'
 import { replaceEnvironmentWith } from '../../../environment/environment'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
-import { clone } from '../../../utilities/objects'
 
 export interface InitializeTransitionAnimation extends AnimationNode {
     transitionCondition: EnvironmentState
@@ -12,7 +11,6 @@ export interface InitializeTransitionAnimation extends AnimationNode {
 function onBegin(animation: InitializeTransitionAnimation, environment: EnvironmentState) {
     replaceEnvironmentWith(environment, animation.transitionCondition)
     environment.renderer?.setState(environment, animation.representation)
-    console.log('Initializing transition...', animation.id, clone(environment))
 }
 
 function onSeek(

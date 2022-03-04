@@ -1,11 +1,3 @@
-function fibonacci(N) {
-    const memo = [0, 1]
-
-    for (let i = 2; i <= N; i++) {
-        memo[i] = memo[i - 1] + memo[i - 2]
-    }
-
-    return memo[N]
-}
-
-let y = fibonacci(7)
+let x = 5
+let y = 10
+let z = x

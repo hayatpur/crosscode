@@ -58,7 +58,7 @@ export function transitionCreateVariable(
     options: AnimationOptions = {}
 ): TransitionCreateVariable {
     return {
-        ...createAnimationNode({ ...options, delay: 0, duration: 100 }),
+        ...createAnimationNode({ ...options, delay: 0 }),
 
         name: 'TransitionCreateVariable',
 

@@ -40,7 +40,7 @@ export function FunctionCall(
 
     // Pop scope
     const popScope = popScopeAnimation()
-    addVertex(graph, popScope, { nodeData: getNodeData(ast) })
+    addVertex(body, popScope, { nodeData: getNodeData(ast) })
     applyExecutionNode(popScope, environment)
 
     graph.postcondition = clone(environment)

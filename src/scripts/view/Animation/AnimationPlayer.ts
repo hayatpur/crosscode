@@ -1,7 +1,16 @@
-import { begin, createAnimationGraph, duration, end, reset, seek } from '../../animation/animation'
-import { reads, writes } from '../../execution/execution'
+import {
+    begin,
+    createAnimationGraph,
+    duration,
+    end,
+    instanceOfAnimationNode,
+    reset,
+    seek,
+} from '../../animation/animation'
+import { getExecutionChildren, reads, writes } from '../../execution/execution'
 import { createTransition } from '../../execution/graph/abstraction/Transition'
 import { instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { clone } from '../../utilities/objects'
 import { View } from '../View'
 import { AnimationPlayerRenderer } from './AnimationPlayerRenderer'
@@ -9,7 +18,7 @@ import { AnimationPlayerRenderer } from './AnimationPlayerRenderer'
 export class AnimationPlayer {
     // Animation time
     time: number = 0
-    speed: number = 1 / 64
+    speed: number = 1 / 128
     isPaused: boolean = true
     hasEnded: boolean = false
 
@@ -26,23 +35,24 @@ export class AnimationPlayer {
         if (this.view.transitionAnimation == null) {
             this.view.transitionAnimation = createAnimationGraph()
 
+            const ws = writes(execution).map((w) => w.id)
+            const rs = reads(execution)
+                .map((r) => r.id)
+                .filter((id) => !id.includes('BindFunctionNew'))
+
+            const representation = {
+                reads: rs,
+                writes: ws,
+            }
+
             if (instanceOfExecutionGraph(execution)) {
-                const ws = writes(execution).map((w) => w.id)
-                const rs = reads(execution)
-                    .map((r) => r.id)
-                    .filter((id) => !id.includes('BindFunctionNew'))
-
-                const representation = {
-                    reads: rs,
-                    writes: ws,
-                }
-
-                for (const vertex of execution.vertices) {
+                for (const vertex of getExecutionChildren(execution)) {
                     const vertexAnimation = createTransition(vertex, representation)
                     this.view.transitionAnimation.vertices.push(vertexAnimation)
                 }
             } else {
-                console.warn('Nodes not supported yet.')
+                const transition = createTransition(execution, representation)
+                this.view.transitionAnimation.vertices.push(transition)
             }
         }
 
@@ -55,25 +65,30 @@ export class AnimationPlayer {
         this.renderer.show()
 
         // Setup animation controls
-        if (instanceOfExecutionGraph(execution)) {
-            let start = 0
+        // if (instanceOfExecutionGraph(execution)) {
+        let start = 0
+        const executionVertices = instanceOfExecutionNode(execution)
+            ? [execution]
+            : getExecutionChildren(execution)
 
-            for (let i = 0; i < execution.vertices.length; i++) {
-                let t = start
-                this.renderer.events[execution.vertices[i].id].element.addEventListener(
-                    'mouseenter',
-                    () => {
-                        if (this.hasEnded) {
-                            reset(this.view.transitionAnimation)
-                            this.hasEnded = false
-                        }
-                        this.isPaused = false
-                        this.time = t
-                    }
-                )
-                start += duration(animation.vertices[i])
-            }
+        const animationVertices = instanceOfAnimationNode(animation)
+            ? [animation]
+            : animation.vertices
+
+        for (let i = 0; i < executionVertices.length; i++) {
+            let t = start
+            const view = this.renderer.events[executionVertices[i].id]
+            view.renderer.viewBody.addEventListener('mouseenter', () => {
+                if (this.hasEnded) {
+                    reset(this.view.transitionAnimation)
+                    this.hasEnded = false
+                }
+                this.isPaused = false
+                this.time = t
+            })
+            start += duration(animation.vertices[i])
         }
+        // }
     }
 
     mouseenter(e: MouseEvent) {
@@ -85,24 +100,27 @@ export class AnimationPlayer {
     }
 
     tick(dt: number) {
-        // if ((!this.isPaused || this.isMouseIn) && !this.renderer.isShowing) {
-        //     this.renderer.show()
-        // }
+        const execution = this.view.originalExecution
+        const animation = this.view.transitionAnimation
 
-        // if (this.isPaused && !this.isMouseIn && this.renderer.isShowing) {
-        //     this.renderer.hide()
-        // }
+        const executionVertices = instanceOfExecutionNode(execution)
+            ? [execution]
+            : getExecutionChildren(execution)
 
-        // if (this.renderer.isShowing) {
-        //     for (const vertex of this.view.transitionAnimation.vertices) {
-        //         const renderer = this.renderer.events[vertex.id]
+        const animationVertices = instanceOfAnimationNode(animation)
+            ? [animation]
+            : animation.vertices
 
-        //         if (renderer == null) {
-        //             // Why is this null?
-        //             continue
-        //         }
-        //     }
-        // }
+        for (let i = 0; i < executionVertices.length; i++) {
+            const view = this.renderer.events[executionVertices[i].id]
+            const anim = animationVertices[i]
+
+            if (anim.isPlaying) {
+                view.renderer.element.classList.add('playing')
+            } else {
+                view.renderer.element.classList.remove('playing')
+            }
+        }
 
         if (this.isPaused) {
             return
@@ -110,7 +128,7 @@ export class AnimationPlayer {
 
         const animationRenderer = this.view.renderer.animationRenderer
         if (animationRenderer == null) {
-            console.warn('Trying to render animation without an animation renderer')
+            console.warn('Trying to render animation without an animation renderer', this.view.id)
             return
         }
 

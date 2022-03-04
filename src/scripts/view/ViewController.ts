@@ -2,10 +2,9 @@ import { Editor } from '../editor/Editor'
 import { AnimationRenderer } from '../environment/AnimationRenderer'
 import { ArrayRenderer } from '../environment/data/array/ArrayRenderer'
 import { ObjectRenderer } from '../environment/data/object/ObjectRenderer'
-import { reads, writes } from '../execution/execution'
-import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { getExecutionChildren, reads, writes } from '../execution/execution'
+import { instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { getDepthOfView, getLeavesOfView } from '../execution/graph/graph'
-import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Executor } from '../executor/Executor'
 import { lerp } from '../utilities/math'
 import { AnimationPlayer } from './Animation/AnimationPlayer'
@@ -348,7 +347,7 @@ export class ViewController {
         this.createStepsEmptySteps()
 
         if (instanceOfExecutionGraph(this.view.originalExecution)) {
-            const children = this.queryChildren()
+            const children = getExecutionChildren(this.view.originalExecution)
 
             let first = true
 
@@ -387,31 +386,6 @@ export class ViewController {
         }
     }
 
-    queryChildren(): (ExecutionGraph | ExecutionNode)[] {
-        if (instanceOfExecutionNode(this.view.originalExecution)) {
-            return []
-        }
-        const children = []
-        const blacklist: Set<string> = new Set([
-            'ConsumeDataAnimation',
-            'PopScopeAnimation',
-            'CreateScopeAnimation',
-            // 'MoveAndPlaceAnimation',
-        ])
-
-        for (const child of this.view.originalExecution.vertices) {
-            if (instanceOfExecutionNode(child) && blacklist.has(child._name)) {
-                continue
-            } else if (blacklist.has(child.nodeData.type)) {
-                continue
-            }
-
-            children.push(child)
-        }
-
-        return children
-    }
-
     destroySteps() {
         const { state, renderer } = this.view
         state.isShowingSteps = false
@@ -436,12 +410,15 @@ export class ViewController {
             return
         }
 
-        const delta = Math.abs(
+        let delta = Math.abs(
             getDepthOfView(this.view, Executor.instance.rootView.parentView) -
                 Executor.instance.rootView.currentDepth
         )
 
-        if (delta < 2) {
+        let playingAnimation =
+            this.view.state.isEmbedded && this.view.renderer.element.classList.contains('playing')
+
+        if ((delta < 2 && !this.view.state.isEmbedded) || playingAnimation) {
             // Should exist but can be faded out
             if (this.view.controller.temporaryCodeQuery == null) {
                 this.view.controller.temporaryCodeQuery =
@@ -449,6 +426,14 @@ export class ViewController {
                         view: this.view,
                         type: ViewSelectionType.CodeToView,
                     })
+            }
+
+            if (this.view.state.isEmbedded) {
+                if (playingAnimation) {
+                    this.view.controller.temporaryCodeQuery.select(false)
+                } else {
+                    this.view.controller.temporaryCodeQuery.deselect()
+                }
             }
         } else {
             // Should not exist
@@ -714,6 +699,15 @@ export class ViewController {
         renderer.animationRenderer.update()
     }
 
+    makeEmbedded() {
+        this.view.renderer.element.classList.add('embedded')
+        this.view.state.isEmbedded = true
+    }
+
+    onRendererBodyEnter() {}
+
+    onRendererBodyLeave() {}
+
     collapse() {
         const { state, renderer } = this.view
 
@@ -722,7 +716,9 @@ export class ViewController {
             return
         }
 
+        console.log('Destroying animation renderer', this.view.id)
         this.view.animationPlayer.destroy()
+        this.view.animationPlayer = null
 
         state.isCollapsed = true
 
