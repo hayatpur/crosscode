@@ -187,7 +187,7 @@ export class ViewController {
     deselect() {
         this.view.renderer?.animationRenderer?.deselect()
         this.view.renderer?.trace.deselect()
-        this.view.renderer?.element.classList.remove('selected')
+        this.view.renderer?.element?.classList.remove('selected')
         this.view.stepsTimeline?.deselect()
 
         this.view.state.isSelected = false
@@ -357,7 +357,7 @@ export class ViewController {
             for (let i = 0; i < views.length; i++) {
                 const view = views[i]
                 view.controller.makeNotEmbedded()
-                view.controller.expand()
+                view.controller.expand(true)
 
                 this.view.stepsTimeline.addView(view)
 
@@ -383,7 +383,7 @@ export class ViewController {
         console.log(`Created steps in ${performance.now() - start}ms`)
 
         if (state.isSelected) {
-            this.view.stepsTimeline.select()
+            // this.view.stepsTimeline.select()
         }
     }
 
@@ -395,15 +395,16 @@ export class ViewController {
 
         this.view.stepsTimeline?.destroy(false)
         this.view.stepsTimeline = null
+
         this.expand()
 
-        const initBodyBboxes = Object.values(this.view.animationPlayer.renderer.events).map(
-            (view) => view.renderer.viewBody.getBoundingClientRect()
-        )
+        // const initBodyBboxes = Object.values(this.view.animationPlayer.renderer.events).map(
+        //     (view) => view.renderer.viewBody.getBoundingClientRect()
+        // )
 
-        const initLabelBboxes = Object.values(this.view.animationPlayer.renderer.events).map(
-            (view) => view.renderer.preLabel.getBoundingClientRect()
-        )
+        // const initLabelBboxes = Object.values(this.view.animationPlayer.renderer.events).map(
+        //     (view) => view.renderer.preLabel.getBoundingClientRect()
+        // )
 
         // Put the views back to the right spot
         if (instanceOfExecutionGraph(this.view.originalExecution)) {
@@ -411,10 +412,22 @@ export class ViewController {
 
             for (let i = 0; i < views.length; i++) {
                 const view = views[i]
+                const bodyBbox = view.renderer.viewBody.getBoundingClientRect()
+                const labelBbox = view.renderer.preLabel.getBoundingClientRect()
                 view.controller.collapse()
                 view.controller.makeEmbedded()
 
                 this.view.animationPlayer.renderer.anchorView(view)
+                // flipAnimate(
+                //     view.renderer.viewBody,
+                //     bodyBbox,
+                //     view.renderer.viewBody.getBoundingClientRect()
+                // )
+                // flipAnimate(
+                //     view.renderer.preLabel,
+                //     labelBbox,
+                //     view.renderer.preLabel.getBoundingClientRect()
+                // )
 
                 // setTimeout(() => {
                 //     flipAnimate(
@@ -678,7 +691,7 @@ export class ViewController {
             this.view.state.transform.position.y = bbox.top - 50
             this.view.renderer.updatePosition(1)
             this.makeNotEmbedded()
-            this.expand()
+            this.expand(true)
 
             flipAnimate(
                 this.view.renderer.viewBody,
@@ -760,11 +773,12 @@ export class ViewController {
     //     document.body.appendChild(this.element)
     // }
 
-    expand() {
+    expand(initial = false) {
         const { state, renderer } = this.view
 
-        if (state.isCollapsed != null && !state.isCollapsed) {
+        if (state.isCollapsed != null && !state.isCollapsed && !initial) {
             console.warn("Trying to expand a node that's not collapsed")
+            return
         }
 
         state.isCollapsed = false
@@ -803,11 +817,12 @@ export class ViewController {
 
     onRendererBodyLeave() {}
 
-    collapse() {
+    collapse(initial = false) {
         const { state, renderer } = this.view
 
-        if (state.isCollapsed) {
+        if (state.isCollapsed && !initial) {
             console.warn("Trying to collapse a node that's already collapsed")
+            return
         }
 
         state.isCollapsed = true

@@ -75,20 +75,19 @@ export class AnimationPlayer {
             ? [animation]
             : animation.vertices
 
-        // for (let i = 0; i < executionVertices.length; i++) {
-        //     let t = start
-        //     const view = this.renderer.events[executionVertices[i].id]
-        //     view.renderer.viewBody.addEventListener('mouseenter', () => {
-        //         if (this.hasEnded) {
-        //             reset(this.view.transitionAnimation)
-        //             this.hasEnded = false
-        //         }
-        //         this.isPaused = false
-        //         this.time = t
-        //     })
-        //     start += duration(animation.vertices[i])
-        // }
-        // }
+        for (let i = 0; i < executionVertices.length; i++) {
+            let t = start
+            const view = this.renderer.events[executionVertices[i].id]
+            view.renderer.viewBody.addEventListener('mouseenter', () => {
+                if (this.hasEnded) {
+                    reset(this.view.transitionAnimation)
+                    this.hasEnded = false
+                }
+                this.isPaused = false
+                this.time = t
+            })
+            start += duration(animation.vertices[i])
+        }
     }
 
     revealLabels() {

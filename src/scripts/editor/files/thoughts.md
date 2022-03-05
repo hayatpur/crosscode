@@ -1,3 +1,4 @@
+**TODO**:
 [X] Global traces
 [X] Animations
 [ ] How to deal with traces that show on the same state but at multiple points in time
@@ -6,7 +7,7 @@
 [ ] Traces should fade out over time after playing
 [ ] Build tree structure for recursive call
 [ ] User interactions for what they want to see
-[ ] Two different models: look at data, look at events, looking at source code
+[ ] Different models: look at data, look at events, looking at source code
 [ ] Live programming
 [ ] Hover to show trace
 [ ] Animations for trace
@@ -40,8 +41,7 @@
 [ ] Search and filter
 [ ] Crossroads
 [ ] Just find the same animation node
-[ ] Fix traces only going from times they were modified
-[ ] Can be done in post
+[ ] Fix traces only going from times they were modified, can be done in post
 [ ] Combine code selections into one
 [ ] Cleanup mouse bindings
 [ ] Hide reads until expanded - global trace should not show extraneous data
@@ -52,3 +52,86 @@
 [ ] Maintaining continuity with traces when changing structure.
 [ ] Specialized representations.
 [ ] Out not at correct place if multiple temporary values
+[ ] Jump to next level if empty
+[ ] Lane analogy
+[ ] Progressively show information
+
+**TODO**
+
+-   Data
+-   Data trace / Data flow
+
+-   Animation
+
+-   Route
+
+-   Query from code
+-   Query from data
+
+-   Search and filter
+
+-   Hierarchical abstraction / control flow
+-   Symmetrical abstraction (e.g., for loop and recursive calls)
+
+-   Event
+
+    -   Aggregation of sequential low level events or a low level event
+
+-   Timeline
+
+    -   Collection of events
+
+-   Lanes
+
+-   Visual encoding
+
+-   Event layout
+    -   Nested
+    -   Branching
+
+**Intro**
+
+-   Inferring abstract relationships from code (aggregate).
+-   Multiple level representation is a key contribution, another is that user select data/code they are interested (filter).
+-   What are interaction techniques to build, how to visualize them, how to interact with the data.
+
+**Related work**
+
+-   Program comprehension / understanding
+-   Notional machine
+-   Conceptual Visualizations in Computer Science
+-   Program / algorithm visualizations
+-   Debugging tools
+-   Visualization techniques / representational techniques that our work is based on
+-   Used somewhere else how we apply concepts in programming
+
+**Formative study**
+
+-   What are the key differences between conceptual diagrams and existing visualizations?
+-   Don't show all information, show _key steps_
+
+**System Design**
+
+-   Two aspects: multiple levels of representation, user interaction.
+
+-   How different levels of abstraction manifest in space and time
+
+    -   Program execution is temporal (higher level representation but lower level representation)
+    -   Nesting, branching
+    -   Data trace
+
+-   Filtering relevant information
+
+    -   Queries
+    -   Searching structure, navigating between levels of abstraction
+
+-   Timeline
+
+**User Study**
+
+-   Extract key features and ask users to use it? Undergraduate CS students? Expert CS students? People with lack of experience.
+-   Usefulness / usability
+
+**Discussion**
+
+-   Conclusion

@@ -65,7 +65,9 @@ export class View {
         }
 
         if (options.expand) {
-            this.controller.expand()
+            this.controller.expand(true)
+        } else {
+            this.controller.collapse(true)
         }
 
         if (options.temporary) {

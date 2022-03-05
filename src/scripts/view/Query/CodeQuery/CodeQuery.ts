@@ -1,8 +1,7 @@
 import { Editor } from '../../../editor/Editor'
 import { queryExecutionGraphPath } from '../../../execution/graph/graph'
 import { Executor } from '../../../executor/Executor'
-import { getCurvedArrow } from '../../../utilities/dom'
-import { catmullRomSolve, getViewElement } from '../../../utilities/math'
+import { getViewElement } from '../../../utilities/math'
 import { View } from '../../View'
 import { ViewSelection, ViewSelectionType } from './CodeQueryGroup'
 
@@ -166,13 +165,13 @@ export class CodeQuery {
             // points.push(start.x + start.width, start.y + start.height / 1.1)
         }
 
-        if (this.anchor != null) {
-            const d = getCurvedArrow(points[0], points[1], points[2], points[3])
-            this.connection.setAttribute('d', d)
-        } else {
-            const d = catmullRomSolve(points, 0.8) // SVGCatmullRomSpline.toPath(points, 4, true)
-            this.connection.setAttribute('d', d)
-        }
+        // if (this.anchor != null) {
+        //     const d = getCurvedArrow(points[0], points[1], points[2], points[3])
+        //     this.connection.setAttribute('d', d)
+        // } else {
+        //     const d = catmullRomSolve(points, 0.8) // SVGCatmullRomSpline.toPath(points, 4, true)
+        //     this.connection.setAttribute('d', d)
+        // }
 
         return Math.abs(points[1] - points[points.length - 1])
     }
