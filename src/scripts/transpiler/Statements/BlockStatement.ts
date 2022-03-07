@@ -1,8 +1,7 @@
 import * as ESTree from 'estree'
 import { EnvironmentState } from '../../environment/EnvironmentState'
-import { applyExecutionNode } from '../../execution/execution'
+import { addVertex, applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { addVertex } from '../../execution/graph/graph'
 import {
     ControlOutput,
     ControlOutputData,

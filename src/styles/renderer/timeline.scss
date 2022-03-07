@@ -1,34 +1,3 @@
-.timeline {
-    position: relative;
-    min-width: 10px;
-    min-height: 10px;
-    display: flex;
-    flex-direction: column;
-}
-
-.timeline-anchor-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-
-    border: 1px solid #5c5c5c2d;
-    padding: 25px;
-    border-radius: 5px;
-    // backdrop-filter: blur(5px);
-    background: #ffffff02;
-    width: fit-content;
-}
-
-.timeline-anchor {
-    min-width: 10px;
-    min-height: 2px;
-    width: fit-content;
-}
-
-.timeline-anchor:not(:last-child) {
-    margin-bottom: 35px;
-}
-
-.timeline-anchor:first-child {
-    margin-top: 10px;
-}
+/* ------------------------------------------------------ */
+/*               Defines styles for timeline              */
+/* ------------------------------------------------------ */

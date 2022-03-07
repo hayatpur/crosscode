@@ -1,5 +1,4 @@
 import { EnvironmentState } from '../environment/EnvironmentState'
-import { TransitionAnimationNode } from '../execution/graph/abstraction/Transition'
 
 export enum AnimationPlayback {
     Normal = 'Normal',
@@ -266,10 +265,10 @@ export function seek(
         }
 
         // Apply invariant if any
-        if (!vertex.hasPlayed && 'applyInvariant' in vertex) {
-            const transition = vertex as TransitionAnimationNode
-            transition.applyInvariant(transition, environment)
-        }
+        // if (!vertex.hasPlayed && 'applyInvariant' in vertex) {
+        //     const transition = vertex as TransitionAnimationNode
+        //     transition.applyInvariant(transition, environment)
+        // }
 
         start += duration(vertex)
     }

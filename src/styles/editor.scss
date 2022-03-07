@@ -1,8 +1,16 @@
+/* ------------------------------------------------------ */
+/*          Defines styles for source code editor         */
+/* ------------------------------------------------------ */
+
+/* ---------------------- Container --------------------- */
+
 #editor {
     width: 100%;
     height: 100%;
     padding: 7rem;
 }
+
+/* ----------------------- Monaco ----------------------- */
 
 .monaco-editor,
 .monaco-editor-background,
@@ -46,7 +54,6 @@
     margin-top: 2px !important;
     transition: 0.4s var(--transition-type);
     transition-property: opacity;
-    /* margin-left: -10px; */
 }
 
 .monaco-editor .line-numbers:hover {
@@ -98,12 +105,6 @@
     box-shadow: none !important;
 }
 
-/*
-.mtk18 {
-    color: #000000 !important;
-    font-weight: bold !important;
-}*/
-
 .lines-content {
     contain: none !important;
     overflow: visible !important;
@@ -128,21 +129,6 @@
     mix-blend-mode: multiply;
 }
 
-#errors {
-    font-family: Fira Mono;
-    border-radius: 10px;
-    padding: 10px;
-    position: absolute;
-    top: 50px;
-    left: 177px;
-    display: none;
-    color: #d86f64;
-}
-
-#errors.active {
-    display: inherit;
-}
-
 .monaco-editor .codelens-decoration {
     color: #999999;
     margin-left: -10px;
@@ -153,16 +139,6 @@
 .monaco-editor .codelens-decoration > span,
 .monaco-editor .codelens-decoration > a {
     font-size: 14px;
-}
-
-.mtk18 {
-    color: var(--color-4) !important;
-    font-weight: bolder;
-}
-
-.mtk7,
-.mtk1 {
-    color: var(--color-5) !important;
 }
 
 .monaco-editor .editor-widget {
@@ -178,7 +154,62 @@
     transform: translate(3px, -3px);
 }
 
+/* -------------------- Syntax colors ------------------- */
+
+.mtk18 {
+    color: var(--color-4) !important;
+    font-weight: bolder;
+}
+
+.mtk7,
+.mtk1 {
+    color: var(--color-5) !important;
+}
+
 .mtkz {
     color: var(--color-3) !important;
     opacity: 0.3;
+}
+
+.mtk1 {
+    color: #ffffff !important;
+}
+
+.mtk12 {
+    color: #6ee7b7 !important;
+}
+
+.mtk6 {
+    color: #e879f9 !important;
+}
+
+.mtk26 {
+    color: #7dd3fc !important;
+}
+
+.mtk13 {
+    color: #a1a1aa !important;
+}
+
+/*
+.mtk18 {
+    color: #000000 !important;
+    font-weight: bold !important;
+}*/
+
+/* ------------------- Error feedback ------------------- */
+
+#errors {
+    font-family: Fira Mono;
+    border-radius: 10px;
+    padding: 10px;
+    position: absolute;
+    top: 50px;
+    left: 177px;
+    display: none;
+    color: #d86f64;
+}
+
+#errors.active {
+    display: inherit;
 }

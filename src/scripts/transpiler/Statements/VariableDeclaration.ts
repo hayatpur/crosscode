@@ -1,7 +1,7 @@
 import * as ESTree from 'estree'
 import { EnvironmentState } from '../../environment/EnvironmentState'
+import { addVertex } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { addVertex } from '../../execution/graph/graph'
 import { ExecutionContext } from '../../execution/primitive/ExecutionNode'
 import { clone } from '../../utilities/objects'
 import { getNodeData } from '../Compiler'

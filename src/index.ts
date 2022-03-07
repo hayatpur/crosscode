@@ -25,19 +25,6 @@ self.MonacoEnvironment = {
 function main() {
     const editor = new Editor()
     const executor = new Executor(editor)
-
-    // // View controller
-    // const view = new ViewController();
-
-    // const keystrokeVisualizer = new KeystrokeVisualizer();
-    // keystrokeVisualizer.enable();
-
-    // Key visualizer
-
-    // Controls
-    // document.getElementById('play-button').addEventListener('click', () => {
-    //     executor.compile();
-    // });
 }
 
 main()

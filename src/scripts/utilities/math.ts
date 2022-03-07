@@ -1,9 +1,7 @@
 import { DataState, instanceOfObjectData } from '../environment/data/DataState'
+import { queryExecutionGraph } from '../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
-import { queryExecutionGraph } from '../execution/graph/graph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
-import { View } from '../renderer/Action/Action'
-import './glpk'
 
 export interface Vector {
     x: number
@@ -261,16 +259,4 @@ export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
     }
 
     return chunk
-}
-
-export function getViewElement(view: View): HTMLElement {
-    // if (!(view instanceof View)) {
-    //     return view.renderer.element
-    // }
-
-    if (view.state.isShowingSteps) {
-        return view.renderer.stepsContainer
-    } else {
-        return view.renderer.viewBody
-    }
 }

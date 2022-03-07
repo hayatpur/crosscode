@@ -3,9 +3,8 @@ import * as ESTree from 'estree'
 import { DataState } from '../../environment/data/DataState'
 import { cleanUpRegister, resolvePath } from '../../environment/environment'
 import { Accessor, AccessorType, EnvironmentState } from '../../environment/EnvironmentState'
-import { applyExecutionNode } from '../../execution/execution'
+import { addVertex, applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { addVertex } from '../../execution/graph/graph'
 import { consumeDataAnimation } from '../../execution/primitive/Data/ConsumeDataAnimation'
 import {
     ControlOutput,

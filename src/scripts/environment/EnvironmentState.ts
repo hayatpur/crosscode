@@ -1,7 +1,7 @@
+import { EnvironmentRenderer } from '../renderer/View/EnvironmentRenderer'
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { stringHashCode } from '../utilities/string'
 import { DataState, Transform } from './data/DataState'
-import { EnvironmentRenderer } from './EnvironmentRenderer'
 
 export enum AccessorType {
     ID = 'ID',
@@ -38,10 +38,7 @@ export interface Scope {
     type: ScopeType
 }
 
-export interface EnvironmentTransform extends Transform {
-    // Anchors to align it to lines of code, or to other views
-    positionModifiers: EnvironmentPositionModifier[]
-}
+export interface EnvironmentTransform extends Transform {}
 
 export interface EnvironmentState {
     _type: 'EnvironmentState'
@@ -59,17 +56,6 @@ export interface EnvironmentState {
 
     // Optional
     renderer?: EnvironmentRenderer
-}
-
-export interface EnvironmentPositionModifier {
-    type: EnvironmentPositionModifierType
-    value: any
-}
-
-export enum EnvironmentPositionModifierType {
-    NextToCode = 'NextToCode',
-    AboveView = 'AboveView',
-    BelowView = 'BelowView',
 }
 
 export function instanceOfEnvironment(environment: any): environment is EnvironmentState {

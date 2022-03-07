@@ -1,7 +1,6 @@
 import { Accessor, EnvironmentState } from '../../environment/EnvironmentState'
+import { getEmptyNodeData } from '../execution'
 import { ExecutionNode, NodeData } from '../primitive/ExecutionNode'
-import { Edge } from './edges/Edge'
-import { getEmptyNodeData } from './graph'
 
 export interface ExecutionRuntimeOptions {
     indent?: number
@@ -17,11 +16,6 @@ export interface GlobalDataInfo {
     id: string
 }
 
-export interface ExecutionGraphPath {
-    node: ExecutionGraph | ExecutionNode
-    edge?: Edge
-}
-
 export interface ExecutionGraph {
     // Meta info
     _type: 'ExecutionGraph'
@@ -35,7 +29,6 @@ export interface ExecutionGraph {
 
     // Animation info
     vertices: (ExecutionGraph | ExecutionNode)[]
-    edges: Edge[]
     isParallel: boolean
     parallelStarts: number[]
 }
@@ -62,7 +55,6 @@ export function createExecutionGraph(
         isGroup: options.isGroup || false,
 
         vertices: [],
-        edges: [],
         isParallel: false,
         parallelStarts: [],
     }

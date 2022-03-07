@@ -5,6 +5,9 @@ import { ExecutionNode, instanceOfExecutionNode } from '../../execution/primitiv
 import { createEl } from '../../utilities/dom'
 import { Action } from './Action'
 
+/* ------------------------------------------------------ */
+/*                     Action Renderer                    */
+/* ------------------------------------------------------ */
 export class ActionRenderer {
     // Parent element
     element: HTMLElement
@@ -17,6 +20,8 @@ export class ActionRenderer {
 
     // Body contains a timeline
     body: HTMLElement
+
+    /* ----------------------- Create ----------------------- */
 
     constructor() {
         // Create dom elements
@@ -36,24 +41,28 @@ export class ActionRenderer {
         this.body = createEl('div', 'action-body', this.element)
     }
 
+    /* ----------------------- Render ----------------------- */
+
     render(action: Action) {
         // Set label
         this.label.innerHTML = getLabelOfExecution(action.execution)
         this.preLabel.innerHTML = action.execution.nodeData.preLabel ?? 'Unknown pre label'
 
         // Set classes
-        action.state.isCollapsed
+        action.timeline.state.isCollapsed
             ? this.element.classList.add('collapsed')
             : this.element.classList.remove('collapsed')
 
-        action.state.isShowingSteps
+        action.timeline.state.isShowingSteps
             ? this.element.classList.add('showing-steps')
             : this.element.classList.remove('showing-steps')
 
-        action.state.isShowingBeforeAndAfter
+        action.timeline.state.isShowingBeforeAndAfter
             ? this.element.classList.add('showing-before-and-after')
             : this.element.classList.remove('showing-before-and-after')
     }
+
+    /* ----------------------- Destroy ---------------------- */
 
     destroy() {
         this.element.remove()
@@ -66,6 +75,10 @@ export class ActionRenderer {
         this.body = null
     }
 }
+
+/* ------------------------------------------------------ */
+/*                         Helpers                        */
+/* ------------------------------------------------------ */
 
 function getLabelOfExecution(execution: ExecutionGraph | ExecutionNode) {
     return (instanceOfExecutionNode(execution) ? execution.name : execution.nodeData.type)

@@ -1,5 +1,8 @@
-// Action state
+/* ------------------------------------------------------ */
+/*                      Action state                      */
+/* ------------------------------------------------------ */
 
+/* --------------------- Definition --------------------- */
 export interface ActionTransform {
     position: {
         x: number
@@ -13,12 +16,9 @@ export interface ActionState {
 
     // Transform
     transform: ActionTransform
-
-    // Status
-    isCollapsed: boolean
-    isShowingSteps: boolean
 }
 
+/* --------------------- Initializer -------------------- */
 let __ACTION_ID = 0
 export function createActionState(): ActionState {
     return {
@@ -30,7 +30,5 @@ export function createActionState(): ActionState {
             },
             scale: 1,
         },
-        isCollapsed: false,
-        isShowingSteps: false,
     }
 }
