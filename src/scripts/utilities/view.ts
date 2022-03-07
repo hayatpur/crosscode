@@ -1,33 +1,25 @@
+import { AbstractionSelection } from '../execution/graph/abstraction/Abstractor'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../execution/primitive/ExecutionNode'
+import { ExecutionRenderer, View } from '../renderer/Action/Action'
 import {
     ForStatementView,
     ForStatementViewController,
     ForStatementViewRenderer,
-} from '../view/ForStatement/ForStatementView'
+} from '../renderer/ForStatement/ForStatementView'
 import {
     ForStatementIterationView,
     ForStatementIterationViewController,
     ForStatementIterationViewRenderer,
-} from '../view/ForStatement/Iteration/ForStatementIterationView'
-import { View } from '../view/View'
-import { ViewController } from '../view/ViewController'
-import { ViewRenderer } from '../view/ViewRenderer'
+} from '../renderer/ForStatement/Iteration/ForStatementIterationView'
+import { ViewController } from '../renderer/ViewController'
+import { ViewRenderer } from '../renderer/ViewRenderer'
 
 export interface TempView {
     originalExecution: ExecutionNode | ExecutionGraph
     renderer: {
         element: HTMLElement
     }
-}
-
-export interface CreateViewOptions {
-    goToEnd?: boolean
-    expand?: boolean
-    isRoot?: boolean
-    depth?: number
-    embedded?: boolean
-    temporary?: boolean
 }
 
 export function createViewRenderer(view: View) {
@@ -58,4 +50,19 @@ export function createView(animation: ExecutionGraph | ExecutionNode, options: C
     } else {
         return new View(animation, options)
     }
+}
+
+/** Any functions to execution renderer that don't modify it */
+
+export function getAbstractionSelection(
+    executionRenderer: ExecutionRenderer
+): AbstractionSelection {
+    if (!executionRenderer.state.isShowingSteps) {
+        return {
+            id: executionRenderer.id,
+            selection: null,
+        }
+    }
+
+    return executionRenderer.timeline.getAbstractionSelection(executionRenderer.execution.id)
 }

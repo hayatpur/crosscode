@@ -1,6 +1,6 @@
 import { reads, writes } from '../execution/execution'
+import { View } from '../renderer/Action/Action'
 import { clone } from '../utilities/objects'
-import { View } from '../view/View'
 import { EnvironmentRenderer } from './EnvironmentRenderer'
 import { EnvironmentState } from './EnvironmentState'
 
@@ -159,7 +159,7 @@ export class AnimationRenderer {
         this.environmentRenderer.tick(dt)
         this.postEnvironmentRenderer.tick(dt)
 
-        // Update the post environment 
+        // Update the post environment
         if (this.showingPostRenderer) {
             const bbox = this.postRendererElement.getBoundingClientRect()
             this.element.style.minWidth = `${bbox.width}px`

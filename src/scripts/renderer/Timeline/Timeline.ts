@@ -1,5 +1,5 @@
 import { AbstractionSelection } from '../../execution/graph/abstraction/Abstractor'
-import { View } from '../View'
+import { View } from '../Action/Action'
 
 export enum TimelineLayoutType {
     Vertical = 'Vertical',

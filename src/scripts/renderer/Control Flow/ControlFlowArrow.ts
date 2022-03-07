@@ -1,5 +1,5 @@
 import { catmullRomSolve, getViewElement } from '../../utilities/math'
-import { View } from '../View'
+import { View } from '../Action/Action'
 
 export class ControlFlowArrow {
     connection: SVGPathElement

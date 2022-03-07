@@ -5,10 +5,10 @@ import { Editor } from '../editor/Editor'
 import { createEnvironment } from '../environment/environment'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { animationToString } from '../execution/graph/graph'
+import { CodeQueryCreator } from '../renderer/Query/CodeQuery/CodeQueryCreator'
+import { RootView } from '../renderer/Root/RootView'
 import { Compiler } from '../transpiler/Compiler'
 import { Ticker } from '../utilities/Ticker'
-import { CodeQueryCreator } from '../view/Query/CodeQuery/CodeQueryCreator'
-import { RootView } from '../view/Root/RootView'
 
 export class Executor {
     static instance: Executor = null

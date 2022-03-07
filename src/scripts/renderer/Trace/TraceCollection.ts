@@ -1,7 +1,7 @@
 import { getAllBranches } from '../../execution/graph/abstraction/Transition'
 import { AnimationTraceChain, getTrace } from '../../execution/graph/graph'
 import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
-import { View } from '../View'
+import { View } from '../Action/Action'
 import { Trace } from './Trace'
 
 // A collection of traces

@@ -4,7 +4,7 @@ import { queryAllExecutionGraph, queryExecutionGraph } from '../../../execution/
 import { ExecutionNode, instanceOfExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { Executor } from '../../../executor/Executor'
 import { bboxContains, getDeepestChunks, stripChunk } from '../../../utilities/math'
-import { View } from '../../View'
+import { View } from '../../Action/Action'
 import { CodeQuery } from './CodeQuery'
 
 export interface CodeQueryGroupState {

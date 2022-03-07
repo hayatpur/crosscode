@@ -10,6 +10,6 @@ export class FunctionRenderer extends DataRenderer {
     }
 
     setState(data: DataState) {
-        this.element.innerText = 'function'
+        this.element.innerText = 'f'
     }
 }

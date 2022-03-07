@@ -55,6 +55,7 @@
 [ ] Jump to next level if empty
 [ ] Lane analogy
 [ ] Progressively show information
+[ ] Long identifiers don't have space
 
 **TODO**
 

@@ -6,7 +6,7 @@ import {
 } from '../../execution/graph/abstraction/Transition'
 import { AnimationTraceChain, queryExecutionGraph } from '../../execution/graph/graph'
 import { Executor } from '../../executor/Executor'
-import { View } from '../View'
+import { View } from '../Action/Action'
 import { TraceOperator } from './TraceOperator'
 
 // A single trace

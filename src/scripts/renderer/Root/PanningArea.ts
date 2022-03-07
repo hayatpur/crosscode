@@ -1,6 +1,6 @@
 import { PanZoom } from 'panzoom'
 import { Keyboard } from '../../utilities/Keyboard'
-import { View } from '../View'
+import { View } from '../Action/Action'
 
 export class PanningArea {
     element: HTMLElement

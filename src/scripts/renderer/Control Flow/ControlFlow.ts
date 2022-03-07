@@ -1,5 +1,5 @@
 import { getLeavesOfView } from '../../execution/graph/graph'
-import { View } from '../View'
+import { View } from '../Action/Action'
 import { ControlFlowArrow } from './ControlFlowArrow'
 
 export class ControlFlow {

@@ -2,7 +2,7 @@ import { DataState, instanceOfObjectData } from '../environment/data/DataState'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { queryExecutionGraph } from '../execution/graph/graph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
-import { View } from '../view/View'
+import { View } from '../renderer/Action/Action'
 import './glpk'
 
 export interface Vector {

@@ -48,3 +48,20 @@ export function getCurvedArrow(x0: number, y0: number, x1: number, y1: number) {
     })
     return `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
 }
+
+export function createEl(
+    tag: string,
+    classes: string[] | string = [],
+    parent: HTMLElement | null = null
+) {
+    const el = document.createElement(tag)
+    if (Array.isArray(classes)) {
+        el.classList.add(...classes)
+    } else {
+        el.classList.add(classes)
+    }
+    if (parent) {
+        parent.appendChild(el)
+    }
+    return el
+}

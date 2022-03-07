@@ -2,7 +2,7 @@ import { Editor } from '../../../editor/Editor'
 import { queryExecutionGraphPath } from '../../../execution/graph/graph'
 import { Executor } from '../../../executor/Executor'
 import { getViewElement } from '../../../utilities/math'
-import { View } from '../../View'
+import { View } from '../../Action/Action'
 import { ViewSelection, ViewSelectionType } from './CodeQueryGroup'
 
 export class CodeQuery {

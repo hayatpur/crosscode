@@ -12,7 +12,7 @@ import { createTransition } from '../../execution/graph/abstraction/Transition'
 import { instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { clone } from '../../utilities/objects'
-import { View } from '../View'
+import { View } from '../Action/Action'
 import { AnimationPlayerRenderer } from './AnimationPlayerRenderer'
 
 export class AnimationPlayer {

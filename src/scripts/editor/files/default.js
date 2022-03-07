@@ -1,4 +1,4 @@
-function quicksort(array) {
+function qs(array) {
     if (array.length <= 1) {
         return array
     }
@@ -16,12 +16,12 @@ function quicksort(array) {
         }
     }
 
-    const l = quicksort(left)
-    const r = quicksort(right)
+    const l = qs(left)
+    const r = qs(right)
     l.push(pivot)
 
     return l.concat(r)
 }
 
 let unsorted = [23, 45, 16, 37, 3, 99, 22]
-let sorted = quicksort(unsorted)
+let sorted = qs(unsorted)

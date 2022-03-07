@@ -2,6 +2,7 @@ import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { getNumericalValueOfStyle } from '../../utilities/math'
 import { createView, CreateViewOptions } from '../../utilities/view'
+import { View } from '../Action/Action'
 import { Cursor } from '../Cursor/Cursor'
 import { CodeQuery } from '../Query/CodeQuery/CodeQuery'
 import {
@@ -9,7 +10,6 @@ import {
     CodeQueryGroupState,
     ViewSelection,
 } from '../Query/CodeQuery/CodeQueryGroup'
-import { View } from '../View'
 import { PanningArea } from './PanningArea'
 import { RootViewSeparator } from './RootViewSeparator'
 

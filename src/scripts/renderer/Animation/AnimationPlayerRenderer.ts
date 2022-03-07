@@ -1,7 +1,7 @@
 import { instanceOfAnimationNode } from '../../animation/animation'
 import { instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
-import { View } from '../View'
+import { View } from '../Action/Action'
 import { AnimationPlayer } from './AnimationPlayer'
 
 export class AnimationPlayerRenderer {
