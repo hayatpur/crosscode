@@ -1,5 +1,4 @@
-import { replaceDataWith } from '../../../environment/data/data'
-import { DataState, instanceOfData } from '../../../environment/data/DataState'
+import { replaceDataWith } from '../../../environment/data'
 import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
 import {
     Accessor,
@@ -7,6 +6,7 @@ import {
     EnvironmentState,
     instanceOfEnvironment,
 } from '../../../environment/EnvironmentState'
+import { DataState, instanceOfData } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 

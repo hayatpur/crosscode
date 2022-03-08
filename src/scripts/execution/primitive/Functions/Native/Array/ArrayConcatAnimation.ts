@@ -1,11 +1,7 @@
-import {
-    cloneData,
-    createPrimitiveData,
-    replaceDataWith,
-} from '../../../../../environment/data/data'
-import { DataState, DataType } from '../../../../../environment/data/DataState'
+import { cloneData, createPrimitiveData, replaceDataWith } from '../../../../../environment/data'
 import { addDataAt, getMemoryLocation, resolvePath } from '../../../../../environment/environment'
 import { Accessor, EnvironmentState } from '../../../../../environment/EnvironmentState'
+import { DataState, DataType } from '../../../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../../../ExecutionNode'
 

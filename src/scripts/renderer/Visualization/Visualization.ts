@@ -1,5 +1,7 @@
+import { Editor } from '../../editor/Editor'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { createEl } from '../../utilities/dom'
+import { Ticker } from '../../utilities/Ticker'
 import { Action } from '../Action/Action'
 import { Camera } from '../Camera/Camera'
 
@@ -12,23 +14,37 @@ export class Visualization {
     root: Action
     camera: Camera
 
+    private _tickerId: string
+
     /* ----------------------- Create ----------------------- */
 
     constructor(execution: ExecutionGraph) {
         this.element = createEl('div', 'visualization', document.body)
 
-        this.root = new Action(execution, { shouldExpand: true })
-        this.element.appendChild(this.root.renderer.element)
+        // Camera
+        this.camera = new Camera()
+        this.element.appendChild(this.camera.element)
 
-        this.camera = new Camera(this.element)
+        // Root action
+        this.root = new Action(execution, { shouldExpand: true })
+        this.camera.add(this.root.renderer.element)
+
+        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
     }
 
     /* ----------------------- Update ----------------------- */
 
-    tick(dt: number) {}
+    tick(dt: number) {
+        const margin = Editor.instance.getMaxWidth() + 100
+        this.element.style.left = `${margin}px`
+    }
 
     /* ----------------------- Destroy ---------------------- */
+
     destroy() {
+        Ticker.instance.removeTickFrom(this._tickerId)
+
+        this.camera.destroy()
         this.element.remove()
         this.root.destroy()
 

@@ -1,4 +1,4 @@
-import { createDataRenderer } from '../../../renderer/View/EnvironmentRenderer'
+import { createDataRenderer } from '../../EnvironmentRenderer'
 import { DataRenderer } from '../DataRenderer'
 import { DataState } from '../DataState'
 import { IndexRenderer } from './IndexRenderer'
@@ -46,6 +46,7 @@ export class ArrayRenderer extends DataRenderer {
             if (!(item.id in this.dataRenderers)) {
                 const renderer = createDataRenderer(item)
                 const index = new IndexRenderer()
+
                 this.dataRenderers[item.id] = { renderer, index }
                 this.element.append(renderer.element)
                 // this.element.append(index.element)

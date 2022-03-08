@@ -19,19 +19,8 @@ export class TimelineController {
 
     expand() {
         this.timeline.state.isCollapsed = false
-        // TODO
-    }
 
-    /* ---------------- Show before and after --------------- */
-
-    showBeforeAndAfter() {
-        this.timeline.state.isShowingBeforeAndAfter = true
-        // TODO
-    }
-
-    hideBeforeAndAfter() {
-        this.timeline.state.isShowingBeforeAndAfter = false
-        // TODO
+        this.timeline.renderer.render(this.timeline)
     }
 
     /* --------------------- Show steps --------------------- */

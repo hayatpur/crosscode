@@ -86,3 +86,19 @@ body {
 .tp-rotv_b {
     background-color: transparent !important;
 }
+
+/* ---------------------- Container --------------------- */
+.visualization {
+    position: absolute;
+    top: 0px;
+    height: 100%;
+    width: 100%;
+    transform: scale(1);
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    border-left: 2px dashed var(--color-2);
+}
+
+.camera {
+}

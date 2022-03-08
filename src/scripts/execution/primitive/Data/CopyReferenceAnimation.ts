@@ -1,11 +1,11 @@
-import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data'
 import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
     EnvironmentState,
 } from '../../../environment/EnvironmentState'
+import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 

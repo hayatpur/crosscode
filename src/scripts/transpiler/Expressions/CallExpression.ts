@@ -1,6 +1,5 @@
 import acorn = require('acorn')
 import * as ESTree from 'estree'
-import { DataState } from '../../environment/data/DataState'
 import { cleanUpRegister, resolvePath } from '../../environment/environment'
 import { Accessor, AccessorType, EnvironmentState } from '../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../execution/execution'
@@ -13,6 +12,7 @@ import {
 } from '../../execution/primitive/ExecutionNode'
 import { ArrayConcatAnimation } from '../../execution/primitive/Functions/Native/Array/ArrayConcatAnimation'
 import { ArrayPushAnimation } from '../../execution/primitive/Functions/Native/Array/ArrayPushAnimation'
+import { DataState } from '../../renderer/View/Environment/data/DataState'
 import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 import { FunctionCall } from '../Functions/FunctionCall'

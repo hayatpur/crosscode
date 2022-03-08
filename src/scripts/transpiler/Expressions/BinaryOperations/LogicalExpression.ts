@@ -1,11 +1,11 @@
 import * as ESTree from 'estree'
-import { DataState } from '../../../environment/data/DataState'
 import { cleanUpRegister, resolvePath } from '../../../environment/environment'
 import { AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../../execution/execution'
 import { createExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { logicalExpressionEvaluate } from '../../../execution/primitive/Binary/LogicalExpressionEvaluate'
 import { ExecutionContext } from '../../../execution/primitive/ExecutionNode'
+import { DataState } from '../../../renderer/View/Environment/data/DataState'
 import { clone } from '../../../utilities/objects'
 import { Compiler, getNodeData } from '../../Compiler'
 

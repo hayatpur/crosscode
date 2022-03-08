@@ -1,7 +1,6 @@
-import { EnvironmentRenderer } from '../renderer/View/EnvironmentRenderer'
+import { DataState, Transform } from '../renderer/View/Environment/data/DataState'
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { stringHashCode } from '../utilities/string'
-import { DataState, Transform } from './data/DataState'
 
 export enum AccessorType {
     ID = 'ID',
@@ -53,9 +52,6 @@ export interface EnvironmentState {
     registers: { [name: string]: DataState }
 
     id: string
-
-    // Optional
-    renderer?: EnvironmentRenderer
 }
 
 export function instanceOfEnvironment(environment: any): environment is EnvironmentState {

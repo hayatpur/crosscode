@@ -1,6 +1,5 @@
 import * as ESTree from 'estree'
-import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType, PrimitiveDataState } from '../../../environment/data/DataState'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data'
 import {
     addDataAt,
     getMemoryLocation,
@@ -12,6 +11,11 @@ import {
     accessorsToString,
     EnvironmentState,
 } from '../../../environment/EnvironmentState'
+import {
+    DataState,
+    DataType,
+    PrimitiveDataState,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 

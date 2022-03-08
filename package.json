@@ -13,6 +13,7 @@
         "acorn": "^8.4.1",
         "acorn-walk": "^8.1.1",
         "astring": "^1.8.1",
+        "CSSMatrix": "^0.1.1",
         "csstype": "^3.0.9",
         "curved-arrows": "^0.1.0",
         "eaz": "^1.0.2",

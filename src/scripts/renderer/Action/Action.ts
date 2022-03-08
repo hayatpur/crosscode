@@ -8,7 +8,6 @@ import { ActionState, createActionState } from './ActionState'
 /* ----------------------- Options ---------------------- */
 export interface CreateActionOptions {
     shouldExpand?: boolean
-    shouldShowBeforeAndAfter?: boolean
     shouldShowSteps?: boolean
 }
 
@@ -36,6 +35,7 @@ export class Action {
         this.controller = new ActionController(this)
 
         this.timeline = new Timeline(this, options)
+        this.renderer.body.appendChild(this.timeline.renderer.element)
 
         this.renderer.render(this)
     }

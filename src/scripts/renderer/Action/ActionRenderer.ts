@@ -56,10 +56,6 @@ export class ActionRenderer {
         action.timeline.state.isShowingSteps
             ? this.element.classList.add('showing-steps')
             : this.element.classList.remove('showing-steps')
-
-        action.timeline.state.isShowingBeforeAndAfter
-            ? this.element.classList.add('showing-before-and-after')
-            : this.element.classList.remove('showing-before-and-after')
     }
 
     /* ----------------------- Destroy ---------------------- */

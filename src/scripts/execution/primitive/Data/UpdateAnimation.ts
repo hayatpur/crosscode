@@ -1,7 +1,7 @@
 import * as ESTree from 'estree'
-import { DataState } from '../../../environment/data/DataState'
 import { getMemoryLocation, resolvePath } from '../../../environment/environment'
 import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
+import { DataState } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 

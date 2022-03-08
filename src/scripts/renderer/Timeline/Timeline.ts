@@ -26,10 +26,6 @@ export class Timeline {
             this.controller.expand()
         }
 
-        if (options.shouldShowBeforeAndAfter) {
-            this.controller.showBeforeAndAfter()
-        }
-
         if (options.shouldShowSteps) {
             this.controller.showSteps()
         }

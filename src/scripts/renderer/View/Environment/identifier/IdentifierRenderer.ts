@@ -1,6 +1,6 @@
-import { getNumericalValueOfStyle } from '../../utilities/math'
+import { IdentifierState } from '../../../../environment/EnvironmentState'
+import { getNumericalValueOfStyle } from '../../../../utilities/math'
 import { DataRenderer } from '../data/DataRenderer'
-import { IdentifierState } from '../EnvironmentState'
 
 export class IdentifierRenderer {
     element: HTMLElement

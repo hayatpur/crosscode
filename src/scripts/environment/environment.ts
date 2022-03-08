@@ -1,13 +1,13 @@
-import { ScopeType } from '../transpiler/Statements/BlockStatement'
-import { clone } from '../utilities/objects'
-import { createPrimitiveData } from './data/data'
 import {
     DataState,
     DataType,
     instanceOfData,
     instanceOfObjectData,
     PrimitiveDataState,
-} from './data/DataState'
+} from '../renderer/View/Environment/data/DataState'
+import { ScopeType } from '../transpiler/Statements/BlockStatement'
+import { clone } from '../utilities/objects'
+import { createPrimitiveData } from './data'
 import {
     Accessor,
     AccessorType,

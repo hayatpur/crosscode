@@ -1,4 +1,4 @@
-import { createDataRenderer } from '../../../renderer/View/EnvironmentRenderer'
+import { createDataRenderer } from '../../EnvironmentRenderer'
 import { DataRenderer } from '../DataRenderer'
 import { DataState } from '../DataState'
 

@@ -1,7 +1,7 @@
-import { DataState, instanceOfObjectData } from '../environment/data/DataState'
 import { queryExecutionGraph } from '../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
+import { DataState, instanceOfObjectData } from '../renderer/View/Environment/data/DataState'
 
 export interface Vector {
     x: number

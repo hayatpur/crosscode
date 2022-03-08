@@ -1,6 +1,4 @@
 import * as ESTree from 'estree'
-import { clone } from '../../utilities/objects'
-import { Accessor } from '../EnvironmentState'
 import {
     DataState,
     DataType,
@@ -8,7 +6,9 @@ import {
     ObjectDataState,
     PrimitiveDataState,
     Transform,
-} from './DataState'
+} from '../renderer/View/Environment/data/DataState'
+import { clone } from '../utilities/objects'
+import { Accessor } from './EnvironmentState'
 
 export function createTransform(): Transform {
     return {

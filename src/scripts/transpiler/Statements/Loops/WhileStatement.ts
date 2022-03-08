@@ -1,5 +1,4 @@
 import * as ESTree from 'estree'
-import { DataState } from '../../../environment/data/DataState'
 import { cleanUpRegister, resolvePath } from '../../../environment/environment'
 import { AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../../execution/execution'
@@ -11,6 +10,7 @@ import {
 } from '../../../execution/primitive/ExecutionNode'
 import { createScopeAnimation } from '../../../execution/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../../execution/primitive/Scope/PopScopeAnimation'
+import { DataState } from '../../../renderer/View/Environment/data/DataState'
 import { clone } from '../../../utilities/objects'
 import { Compiler, getNodeData } from '../../Compiler'
 

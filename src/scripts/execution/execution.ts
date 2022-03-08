@@ -1,6 +1,6 @@
-import { DataType, PrimitiveDataState } from '../environment/data/DataState'
 import { flattenedEnvironmentMemory, getMemoryLocation } from '../environment/environment'
 import { EnvironmentState } from '../environment/EnvironmentState'
+import { DataType, PrimitiveDataState } from '../renderer/View/Environment/data/DataState'
 import { clone } from '../utilities/objects'
 import {
     DataInfo,

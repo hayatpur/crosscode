@@ -1,7 +1,7 @@
-import { createPrimitiveData, replaceDataWith } from '../../../environment/data/data'
-import { DataState, DataType } from '../../../environment/data/DataState'
+import { createPrimitiveData, replaceDataWith } from '../../../environment/data'
 import { resolvePath } from '../../../environment/environment'
 import { Accessor, AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
+import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
 export interface FindVariableAnimation extends ExecutionNode {

@@ -1,3 +1,28 @@
 /* ------------------------------------------------------ */
 /*               Defines styles for actions               */
 /* ------------------------------------------------------ */
+
+.action {
+    display: flex;
+    position: relative;
+}
+
+/* ----------------------- Header ----------------------- */
+
+.action-header {
+    position: relative;
+}
+
+.action-pre-label {
+    position: absolute;
+    top: -22px;
+    white-space: pre;
+    opacity: 0.5;
+}
+
+/* ------------------------ Body ------------------------ */
+
+.action-body {
+    display: flex;
+    align-items: center;
+}

@@ -1,8 +1,8 @@
 import * as ESTree from 'estree'
-import { createPrimitiveData } from '../../../environment/data/data'
-import { DataType } from '../../../environment/data/DataState'
+import { createPrimitiveData } from '../../../environment/data'
 import { addDataAt, declareVariable } from '../../../environment/environment'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
+import { DataType } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 

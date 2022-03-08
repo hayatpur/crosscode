@@ -8,7 +8,6 @@ export interface TimelineState {
 
     isCollapsed: boolean
     isShowingSteps: boolean
-    isShowingBeforeAndAfter: boolean
 }
 
 /* ------------------- Initialization ------------------- */
@@ -18,6 +17,5 @@ export function createTimelineState(): TimelineState {
         id: `Timeline(${++__TIMELINE_ID})`,
         isCollapsed: false,
         isShowingSteps: false,
-        isShowingBeforeAndAfter: false,
     }
 }

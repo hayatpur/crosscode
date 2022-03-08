@@ -1,5 +1,4 @@
 import * as ESTree from 'estree'
-import { DataState, instanceOfObjectData } from '../environment/data/DataState'
 import { resolvePath } from '../environment/environment'
 import { AccessorType, EnvironmentState } from '../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../execution/execution'
@@ -8,6 +7,7 @@ import { copyDataAnimation } from '../execution/primitive/Data/CopyDataAnimation
 import { copyReferenceAnimation } from '../execution/primitive/Data/CopyReferenceAnimation'
 import { findVariableAnimation } from '../execution/primitive/Data/FindVariableAnimation'
 import { ExecutionContext } from '../execution/primitive/ExecutionNode'
+import { DataState, instanceOfObjectData } from '../renderer/View/Environment/data/DataState'
 import { clone } from '../utilities/objects'
 import { getNodeData } from './Compiler'
 

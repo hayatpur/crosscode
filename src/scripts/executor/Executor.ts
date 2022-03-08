@@ -4,7 +4,7 @@ import { Pane } from 'tweakpane'
 import { Editor } from '../editor/Editor'
 import { createEnvironment } from '../environment/environment'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
-import { Visualization } from '../renderer/Root/Visualization'
+import { Visualization } from '../renderer/Visualization/Visualization'
 import { Compiler } from '../transpiler/Compiler'
 import { Ticker } from '../utilities/Ticker'
 
@@ -92,8 +92,6 @@ export class Executor {
 
     tick(dt: number = 10) {
         if (this.execution == null) return
-
-        this.visualization?.tick(dt)
     }
 
     /* --------------------- Parameters --------------------- */

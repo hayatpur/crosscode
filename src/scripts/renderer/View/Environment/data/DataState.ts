@@ -1,5 +1,5 @@
 import * as CSS from 'csstype'
-import { Accessor } from '../EnvironmentState'
+import { Accessor } from '../../../../environment/EnvironmentState'
 
 export enum DataType {
     Literal = 'Literal',

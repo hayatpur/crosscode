@@ -1,3 +1,17 @@
 /* ------------------------------------------------------ */
 /*               Defines styles for timeline              */
 /* ------------------------------------------------------ */
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* ----------------------- Anchor ----------------------- */
+.timeline-anchor {
+    width: 15px;
+    height: 15px;
+    background: #fff;
+    border-radius: 50%;
+}

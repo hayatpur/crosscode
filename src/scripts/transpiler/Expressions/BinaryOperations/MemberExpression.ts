@@ -1,5 +1,5 @@
 import * as ESTree from 'estree'
-import { convertIdentifierToLiteral } from '../../../environment/data/data'
+import { convertIdentifierToLiteral } from '../../../environment/data'
 import { cleanUpRegister } from '../../../environment/environment'
 import { AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../../execution/execution'
