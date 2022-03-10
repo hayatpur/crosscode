@@ -65,3 +65,53 @@ export function createEl(
     }
     return el
 }
+
+export function createPath(
+    classes: string[] | string = [],
+    parent: HTMLElement | null = null
+): {
+    path: SVGPathElement
+    svg: SVGElement
+} {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    if (Array.isArray(classes)) {
+        svg.classList.add(...classes)
+    } else {
+        svg.classList.add(classes)
+    }
+
+    if (parent) {
+        parent.appendChild(svg)
+    }
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    svg.appendChild(path)
+
+    return { path, svg }
+}
+
+export function createGlobalPath(
+    classes: string[] | string = [],
+    layer: 'top' | 'bottom' = 'bottom'
+): SVGPathElement {
+    // const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+
+    // if (parent) {
+    //     parent.appendChild(svg)
+    // }
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    if (Array.isArray(classes)) {
+        path.classList.add(...classes)
+    } else {
+        path.classList.add(classes)
+    }
+
+    const svg =
+        layer == 'top'
+            ? document.querySelector('.svg-canvas.top')
+            : document.querySelector('.svg-canvas.bottom')
+    svg.appendChild(path)
+
+    return path
+}

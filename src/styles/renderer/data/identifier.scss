@@ -11,6 +11,7 @@
     font-family: Fira Code;
     font-weight: 300;
     color: white;
+    top: -3px;
 }
 
 .identifier.selected {
@@ -21,4 +22,12 @@
 .identifier.out {
     color: var(--s-color-4);
     font-weight: bold;
+}
+
+.identifier.trail-create {
+    color: var(--s-color-2);
+}
+
+.identifier.trail-move {
+    color: var(--s-color-3);
 }

@@ -1,5 +1,7 @@
 import { IdentifierState } from '../../../../environment/EnvironmentState'
-import { getNumericalValueOfStyle } from '../../../../utilities/math'
+import { Executor } from '../../../../executor/Executor'
+import { getNumericalValueOfStyle, lerp } from '../../../../utilities/math'
+import { Ticker } from '../../../../utilities/Ticker'
 import { DataRenderer } from '../data/DataRenderer'
 
 export class IdentifierRenderer {
@@ -7,9 +9,13 @@ export class IdentifierRenderer {
     reference: HTMLElement
     environmentReference: HTMLElement
 
+    private _tickerId: string
+
     constructor() {
         this.element = document.createElement('div')
         this.element.classList.add('identifier')
+
+        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
     }
 
     select(selection: Set<string>) {
@@ -36,17 +42,19 @@ export class IdentifierRenderer {
         const environmentBbox = this.environmentReference.getBoundingClientRect()
 
         let delta = dataBbox.x - environmentBbox.x
+        const scale = getNumericalValueOfStyle(
+            Executor.instance.visualization.camera.element.style.transform.substring(6),
+            1
+        )
+        delta /= scale
 
-        if (this.reference.style.transform.startsWith('scale')) {
-            const scale = getNumericalValueOfStyle(this.reference.style.transform.substring(6), 1)
-            delta -= 15 * (1 - scale)
-        }
+        const prevLeft = getNumericalValueOfStyle(this.element.style.left, delta)
 
-        this.element.style.top = `${18}px`
-        this.element.style.left = `${delta}px`
+        this.element.style.left = `${lerp(prevLeft, delta, 0.2)}px`
     }
 
     destroy() {
+        Ticker.instance.removeTickFrom(this._tickerId)
         this.element.remove()
         this.reference = null
     }

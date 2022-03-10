@@ -29,12 +29,12 @@ export function VariableDeclarator(
         ...context,
         outputRegister: register,
     })
-    addVertex(graph, init, { nodeData: getNodeData(ast.init, 'initial') })
+    addVertex(graph, init, { nodeData: getNodeData(ast.init, 'Value') })
 
     // Allocate a place for variable that *points* to the RHS
     // @TODO: support initializations other than identifier
     const bind = bindAnimation((ast.id as ESTree.Identifier).name, register)
-    addVertex(graph, bind, { nodeData: getNodeData(ast.id, 'id') })
+    addVertex(graph, bind, { nodeData: getNodeData(ast.id, 'Name') })
     applyExecutionNode(bind, environment)
     cleanUpRegister(environment, register[0].value)
 

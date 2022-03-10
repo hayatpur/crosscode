@@ -1,5 +1,5 @@
 import { resolvePath } from '../../../environment/environment'
-import { EnvironmentState } from '../../../environment/EnvironmentState'
+import { EnvironmentState, IdentifierState } from '../../../environment/EnvironmentState'
 import { createEl } from '../../../utilities/dom'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
@@ -187,4 +187,36 @@ export function createDataRenderer(data: DataState) {
             return new ObjectRenderer()
         }
     }
+}
+
+export function getRelevantData(state: EnvironmentState) {
+    // Filter out irrelevant memory
+    const data = Object.values(state.memory)
+        .filter((m) => m != null)
+        .filter(
+            (data) =>
+                instanceOfObjectData(data) ||
+                data.type == DataType.Literal ||
+                data.type == DataType.Array ||
+                data.type == DataType.Function
+        )
+        .filter((data) => {
+            if (instanceOfPrimitiveData(data) && data.type == DataType.Function) {
+                return !data.value.toString().includes('[native code]')
+            } else if (data.builtin) {
+                return false
+            } else {
+                return true
+            }
+        })
+
+    const identifiers: IdentifierState[] = []
+
+    for (const scope of state.scope) {
+        for (const name of Object.keys(scope.bindings)) {
+            identifiers.push(scope.bindings[name])
+        }
+    }
+
+    return [...data, ...identifiers]
 }

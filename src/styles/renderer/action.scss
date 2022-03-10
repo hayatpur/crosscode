@@ -7,10 +7,28 @@
     position: relative;
 }
 
+/* ------------------- Expanded rules ------------------- */
+
+.action.expanded:not(.showing-steps) {
+    align-items: center;
+}
+
+.action:not(.expanded) .action-header {
+    margin-top: -1.5px;
+}
+
+/* ------------------ Show steps rules ------------------ */
+
+.action.showing-steps {
+    // align-items: center;
+}
+
 /* ----------------------- Header ----------------------- */
 
 .action-header {
-    position: relative;
+    position: absolute;
+    left: 58px;
+    z-index: 1;
 }
 
 .action-pre-label {
@@ -20,9 +38,79 @@
     opacity: 0.5;
 }
 
+.action.expanded.showing-steps > .action-header {
+    top: 46px;
+    left: 43px;
+}
+
+.action:not(.expanded).showing-steps > .action-header {
+    top: 1px;
+    left: 53px;
+}
+
+/* ------------------------ Label ----------------------- */
+
+.action-pre-label {
+    position: absolute;
+    top: 0.5px;
+    white-space: pre;
+    opacity: 0.5;
+    transform: translate(calc(-100% - 28px), 0px);
+    font-weight: 300;
+    font-size: 15px;
+}
+
+.action-label {
+    font-family: Fira Code;
+}
+
 /* ------------------------ Body ------------------------ */
 
 .action-body {
     display: flex;
     align-items: center;
+}
+
+/* ------------------- Control buttons ------------------ */
+.action-control-button {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.action-header:hover > .action-controls > .action-control-button {
+    opacity: inherit;
+    pointer-events: inherit;
+    opacity: 1;
+}
+
+.action-control-button {
+    width: 10px;
+    height: 10px;
+    font-size: 12px;
+    margin: 3px;
+    transform: scale(1);
+    transition: 0.2s;
+    color: rgba(255, 255, 255, 0.349);
+    cursor: pointer;
+}
+
+.action-control-button:hover {
+    color: white;
+    transform: scale(1.2);
+}
+
+.action-control-button:active,
+.action-control-button.active {
+    transform: scale(1);
+    color: white;
+}
+
+.action-controls {
+    position: absolute;
+    bottom: -27px;
+    display: flex;
+    left: -4px;
+    transition: 0.2s;
+    padding: 10px;
+    padding-left: 2px;
 }

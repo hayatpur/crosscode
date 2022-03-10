@@ -1,3 +1,5 @@
+import { Executor } from '../executor/Executor'
+
 export class Ticker {
     // Singleton
     static instance: Ticker
@@ -16,9 +18,11 @@ export class Ticker {
         const timer = this
 
         function tick(time: number) {
+            Executor.instance.fpsGraph.begin()
             const dt = time - timer.time
             Object.values(timer.callbacks).forEach((callback) => callback(dt))
             timer.time = time
+            Executor.instance.fpsGraph.end()
             requestAnimationFrame(tick)
         }
 

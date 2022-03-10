@@ -1,4 +1,5 @@
 import acorn = require('acorn')
+import * as EssentialsPlugin from '@tweakpane/plugin-essentials'
 import * as ESTree from 'estree'
 import { Pane } from 'tweakpane'
 import { Editor } from '../editor/Editor'
@@ -21,6 +22,7 @@ export class Executor {
 
     // Visualization of execution
     visualization: Visualization
+    fpsGraph: any
 
     constructor(editor: Editor) {
         // Singleton
@@ -84,6 +86,7 @@ export class Executor {
         // const [output, url] = animationToString(this.execution, 0, { first: false }, true)
         // console.log(url)
         this.visualization = new Visualization(this.execution)
+        this.visualization.createRoot(this.execution)
 
         // TODO: Maintain layout from last time
     }
@@ -96,21 +99,33 @@ export class Executor {
 
     /* --------------------- Parameters --------------------- */
 
-    PARAMS: { a: number; b: number; c: number; d: number } = {
+    PARAMS: { a: number; b: number; c: number; d: number; focus: boolean } = {
         a: 0.5,
         b: 0.5,
         c: 0.5,
         d: 0.5,
+        focus: false,
     }
 
     setupParams() {
         const pane = new Pane({
+            title: 'Info',
+            expanded: true,
+        })
+        pane.registerPlugin(EssentialsPlugin)
+
+        this.fpsGraph = pane.addBlade({
+            view: 'fpsgraph',
+            label: 'FPS',
+            lineCount: 2,
+        })
+
+        const folder = pane.addFolder({
             title: 'Parameters',
             expanded: false,
         })
-
         for (const key of Object.keys(this.PARAMS)) {
-            pane.addInput(this.PARAMS, key as any, {
+            folder.addInput(this.PARAMS, key as any, {
                 min: 0,
                 max: 1,
             })

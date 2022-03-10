@@ -1,6 +1,9 @@
 /* ------------------------------------------------------ */
 /*               Defines styles for timeline              */
 /* ------------------------------------------------------ */
+:root {
+    --timeline-indent: 100px;
+}
 
 .timeline {
     display: flex;
@@ -9,9 +12,113 @@
 }
 
 /* ----------------------- Anchor ----------------------- */
+
 .timeline-anchor {
     width: 15px;
     height: 15px;
-    background: #fff;
+    background: var(--color-2);
     border-radius: 50%;
+    margin-left: 28px;
+
+    transform: scale(0.7);
+    transition-property: transform, background;
+    transition-duration: 0.2s;
+
+    box-shadow: 0 0 16px 5px #111114;
+
+    cursor: pointer;
+}
+
+.timeline-anchor:hover {
+    transform: scale(1);
+    background: var(--color-4);
+}
+
+/* ------------- Anchor: start and end rules ------------ */
+
+.timeline-anchor.start {
+    margin-top: 3px;
+    margin-left: calc(var(--timeline-indent) * -1 + 32px);
+}
+
+.timeline-anchor.end {
+    margin-top: 50px;
+    margin-bottom: 0px;
+    margin-left: calc(var(--timeline-indent) * -1 + 32px);
+}
+
+/* -------------------- Expand rules -------------------- */
+
+.timeline.expanded > .timeline-anchor {
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.timeline.expanded:not(.showing-steps) {
+    margin-top: 22px;
+    margin-left: 8px;
+}
+
+.timeline:not(.expanded):not(.showing-steps) {
+    margin-top: 2px;
+    margin-left: 8px;
+}
+
+.timeline.expanded.showing-steps > .timeline-anchor {
+    margin-left: calc(var(--timeline-indent) * -1 + 21px);
+}
+
+.timeline.expanded.showing-steps > .timeline-anchor.end {
+    margin-top: 100px;
+}
+
+.timeline.showing-steps > .timeline-anchor.start {
+    margin-bottom: 50px;
+}
+
+.timeline.showing-steps > .timeline-anchor.end {
+    margin-top: 100px;
+}
+
+/* ----------------- Showing steps rules ---------------- */
+
+.timeline.showing-steps > .timeline-anchor {
+    border: 3px solid var(--color-2);
+    background-color: var(--color-0);
+}
+
+.timeline.showing-steps > .action {
+    margin: 50px 0px;
+}
+
+.timeline.showing-steps {
+    margin-left: var(--timeline-indent);
+}
+
+.timeline.showing-steps > .action.expanded.showing-steps {
+    margin: 100px 0px;
+}
+
+.timeline.showing-steps > .action.showing-steps {
+    margin-left: 5px;
+    margin-top: 48px;
+}
+
+/* ------------------------ Base ------------------------ */
+.timeline-connection {
+    position: absolute;
+    pointer-events: none;
+    user-select: none;
+    z-index: -1;
+}
+
+.timeline-connection > path {
+    fill: transparent;
+    stroke: var(--color-2);
+    stroke-width: 1px;
+    z-index: -1;
+}
+
+.timeline-dashed > path {
+    stroke-dasharray: 5, 5;
 }

@@ -11,7 +11,7 @@ export function Program(
     environment: EnvironmentState,
     context: ExecutionContext
 ) {
-    const graph = createExecutionGraph(getNodeData(ast))
+    const graph = createExecutionGraph(getNodeData(ast, 'Program'))
     graph.precondition = clone(environment)
 
     const controlOutput = { output: ControlOutput.None }
@@ -22,7 +22,7 @@ export function Program(
             ...context,
             controlOutput,
         })
-        addVertex(graph, animation, { nodeData: getNodeData(statement, 'statement') })
+        addVertex(graph, animation, { nodeData: getNodeData(statement, 'Statement') })
     }
 
     graph.postcondition = clone(environment)

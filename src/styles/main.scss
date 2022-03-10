@@ -19,8 +19,9 @@
 @import './renderer/view.scss';
 @import './renderer/timeline.scss';
 @import './renderer/query.scss';
-@import './renderer/trace.scss';
+@import './renderer/trail.scss';
 @import './renderer/action.scss';
+@import './renderer/visualization.scss';
 
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;300;400;600;700&display=swap');
@@ -63,14 +64,6 @@ body {
     color: var(--color-5);
 }
 
-/* ----------------- Root visualization ----------------- */
-
-.visualization {
-    position: absolute;
-    left: 500px;
-    top: 200px;
-}
-
 /* --------------------- Tweak pane --------------------- */
 .tp-dfwv {
     z-index: 10;
@@ -87,18 +80,22 @@ body {
     background-color: transparent !important;
 }
 
-/* ---------------------- Container --------------------- */
-.visualization {
-    position: absolute;
-    top: 0px;
-    height: 100%;
+/* --------------------- SVG canvas --------------------- */
+.svg-canvas {
     width: 100%;
-    transform: scale(1);
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    border-left: 2px dashed var(--color-2);
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    pointer-events: none;
 }
 
-.camera {
+.svg-canvas.bottom {
+    z-index: -1;
+}
+
+.svg-canvas.top {
+    z-index: 100;
 }

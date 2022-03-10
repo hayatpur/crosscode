@@ -7,6 +7,8 @@
         "deploy": "npm run build && gh-pages -d dist"
     },
     "dependencies": {
+        "@panzoom/panzoom": "^4.4.4",
+        "@tweakpane/plugin-essentials": "^0.1.4",
         "@types/acorn": "^4.0.6",
         "@types/estree": "0.0.50",
         "@types/object-hash": "^2.2.1",
@@ -17,17 +19,18 @@
         "csstype": "^3.0.9",
         "curved-arrows": "^0.1.0",
         "eaz": "^1.0.2",
+        "gradient-path": "^2.1.0",
         "immutable": "^4.0.0",
         "javascript-lp-solver": "^0.4.24",
         "monaco-editor": "^0.25.2",
         "nomnoml": "^1.4.0",
         "object-hash": "^3.0.0",
-        "panzoom": "^9.4.2",
         "patch-package": "^6.4.7",
         "perfect-arrows": "^0.3.7",
         "recursive-diff": "^1.0.8",
         "stream": "0.0.2",
         "svg-catmull-rom-spline": "^0.0.1",
+        "tinygradient": "^1.1.5",
         "tweakpane": "^3.0.7"
     },
     "devDependencies": {

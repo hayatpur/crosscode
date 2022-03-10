@@ -31,16 +31,14 @@ export class Action {
 
         this.state = createActionState()
         this.renderer = new ActionRenderer()
+        this.timeline = new Timeline(this, options)
 
         this.controller = new ActionController(this)
 
-        this.timeline = new Timeline(this, options)
         this.renderer.body.appendChild(this.timeline.renderer.element)
 
         this.renderer.render(this)
     }
-
-    tick(dt: number) {}
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {

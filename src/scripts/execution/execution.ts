@@ -534,6 +534,55 @@ export function getChunkTrace(
     return flow
 }
 
+export function getAllBranches(
+    chain: AnimationTraceChain,
+    context: {
+        parent: AnimationTraceChain
+        operator: AnimationTraceOperator
+    } = null
+): AnimationTraceChain[] {
+    // If no children, terminate the tree and return
+    if (chain.children == null) {
+        if (context == null) {
+            return [chain]
+        } else {
+            let parent = clone(context.parent)
+            let end = parent
+
+            while (end.children != null) {
+                end = end.children[0][1]
+            }
+
+            end.children = [[context.operator, { value: chain.value, children: null }]]
+
+            return [parent]
+        }
+    }
+
+    let parent: AnimationTraceChain
+
+    // Otherwise, build the context, first node
+    if (context == null) {
+        parent = { value: chain.value, children: null }
+    } else {
+        parent = clone(context.parent)
+        let end = parent
+
+        while (end.children != null && end.children.length > 0) {
+            end = end.children[0][1]
+        }
+
+        end.children = [[context.operator, { value: chain.value, children: null }]]
+    }
+    const branches: AnimationTraceChain[] = []
+
+    for (const [operator, child] of chain.children) {
+        branches.push(...getAllBranches(child, { parent: parent, operator: operator }))
+    }
+
+    return branches
+}
+
 export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationTraceChain[] {
     // Direct movements (to <-- from)
     let traces: AnimationTraceChain[] = []

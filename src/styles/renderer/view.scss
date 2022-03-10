@@ -6,11 +6,27 @@
     position: relative;
     width: fit-content;
     border-radius: 7px;
-    box-shadow: inset 0 0 0px 1px #5c5c5c63;
-    background: #ffffff03;
-    // backdrop-filter: blur(5px);
+    box-shadow: 0 0 16px 5px #111114;
+    background: #141417;
     transition: 0.2s;
     padding: 20px;
+    border: 1px solid #5c5c5c63;
+}
+
+/* -------------- Start and end view rules -------------- */
+.view.start,
+.view.end {
+    position: absolute;
+}
+
+.view.start {
+    top: -44px;
+    left: calc(0px - var(--timeline-indent));
+}
+
+.view.end {
+    bottom: -55px;
+    left: calc(0px - var(--timeline-indent));
 }
 
 /* --------------------- Environment -------------------- */

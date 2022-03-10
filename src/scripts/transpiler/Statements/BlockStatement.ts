@@ -39,7 +39,7 @@ export function BlockStatement(
     // Create a scope
     if (scopeType == ScopeType.Default) {
         const createScope = createScopeAnimation()
-        addVertex(graph, createScope, { nodeData: getNodeData(ast) })
+        // addVertex(graph, createScope, { nodeData: getNodeData(ast, 'Create Scope') })
         applyExecutionNode(createScope, environment)
     }
 
@@ -51,7 +51,7 @@ export function BlockStatement(
             ...context,
             controlOutput,
         })
-        addVertex(graph, animation, { nodeData: getNodeData(statement) })
+        addVertex(graph, animation, { nodeData: getNodeData(statement, 'Statement') })
 
         if (controlOutput.output == ControlOutput.Break) {
             // Keep propagating 'break' until reaching a ForStatement or WhileStatement
@@ -71,7 +71,7 @@ export function BlockStatement(
     // Pop scope
     if (scopeType == ScopeType.Default) {
         const popScope = popScopeAnimation()
-        addVertex(graph, popScope, { nodeData: getNodeData(ast) })
+        // addVertex(graph, popScope, { nodeData: getNodeData(ast, 'Pop Scope') })
         applyExecutionNode(popScope, environment)
     }
 

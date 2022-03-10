@@ -17,7 +17,33 @@
     </head>
 
     <body>
+        <!-- SVG canvas -->
+        <svg
+            class="svg-canvas bottom"
+            width="190"
+            height="160"
+            preserveAspectRatio="none"
+            xmlns="http://www.w3.org/2000/svg"></svg>
         <div id="editor"></div>
         <div id="errors"></div>
+        <svg
+            class="svg-canvas top"
+            width="190"
+            height="160"
+            preserveAspectRatio="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="grad1">
+                    <stop offset="0%" stop-color="var(--s-color-3)" stop-opacity="0.4" />
+                    <stop offset="50%" stop-color="var(--s-color-3)" />
+                    <stop offset="100%" stop-color="var(--s-color-3)" stop-opacity="0.4" />
+                </linearGradient>
+                <linearGradient id="grad2">
+                    <stop offset="0%" stop-color="var(--s-color-2)" stop-opacity="0.1" />
+                    <stop offset="50%" stop-color="var(--s-color-2)" />
+                    <stop offset="100%" stop-color="var(--s-color-2)" stop-opacity="0.4" />
+                </linearGradient>
+            </defs>
+        </svg>
     </body>
 </html>

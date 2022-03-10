@@ -1,11 +1,11 @@
 /** Literal style used for computing layout **/
 
 .data-literal {
-    background: #ffffff08;
+    background: #ffffff0d;
     border-radius: 7px;
     font-size: 16px;
     font-family: Fira Code;
-    box-shadow: 0px 0px 0px 0.5px #ffffff23 inset;
+    box-shadow: 0px 0px 0px 1px #ffffff21 inset;
     color: #e879f9;
     padding: 0px 8px;
     min-width: 30px;
@@ -28,16 +28,16 @@
 }
 
 .data-function {
-    background: none;
+    background: #ffffff0d;
     border-radius: 7px;
     font-size: 16px;
 
     font-family: Fira Code;
     color: var(--s-color-2);
-    border: 1px dashed rgba(255, 255, 255, 0.116);
     padding: 0px 10px;
     min-width: 30px;
     min-height: 30px;
+    box-shadow: 0px 0px 0px 1px #ffffff21 inset;
 }
 
 .data-function.selected {
@@ -56,4 +56,12 @@
     background: #ffffff17;
     position: absolute;
     left: -13px;
+}
+
+.data-literal.trail-create {
+    box-shadow: 0px 0px 0px 0.8px var(--s-color-2) inset;
+}
+
+.data-literal.trail-move {
+    box-shadow: 0px 0px 0px 0.8px var(--s-color-3) inset;
 }

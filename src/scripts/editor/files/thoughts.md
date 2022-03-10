@@ -56,8 +56,23 @@
 [ ] Lane analogy
 [ ] Progressively show information
 [ ] Long identifiers don't have space
+[ ] Layout of visual should match code (i.e. horizontal vs. vertical)
+[ ] Zooming out tree when navigating by data
 
 **TODO**
+[ ] Trails
+[ ] So basically refractor the existing get global traces and should be good! (currently working on the contain function w/ Environment renderer def of "good" data)
+[ ] Focused navigation
+[ ] Animations between navigation states
+[ ] Navigation from source code on same level of abstraction
+[ ] Navigation from data (using trail?)
+[ ] Navigation from source code on new level of abstraction
+[ ] In-place animations on one level of abstraction lower
+[ ] C/D gain on longer executions / mouse movement proportional to height of the thing navigating
+[ ] There is an "explored" _area_, over which variables can be distributed - not necessarily isolated in panels
+[ ] Single child graphs don't have an outgoing connection
+
+**Concepts**
 
 -   Data
 -   Data trace / Data flow
@@ -73,6 +88,7 @@
 
 -   Hierarchical abstraction / control flow
 -   Symmetrical abstraction (e.g., for loop and recursive calls)
+-   Asymmetrical abstraction (e.g., if statements)
 
 -   Event
 
@@ -130,9 +146,9 @@
 
 **User Study**
 
--   Extract key features and ask users to use it? Undergraduate CS students? Expert CS students? People with lack of experience.
+-   Extract key features and ask users to use it? Undergraduate CS students? Expert CS students? People with lack of experience. (e.g. people who don't know how to use a computer).
 -   Usefulness / usability
 
 **Discussion**
 
--   Conclusion
+**Conclusion**

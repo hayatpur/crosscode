@@ -18,6 +18,8 @@ export class ActionRenderer {
     preLabel: HTMLElement
     controls: HTMLElement
 
+    // Controls
+
     // Body contains a timeline
     body: HTMLElement
 
@@ -37,6 +39,8 @@ export class ActionRenderer {
         this.preLabel = createEl('div', 'action-pre-label', this.header)
         this.controls = createEl('div', 'action-controls', this.header)
 
+        // Controls
+
         // Body
         this.body = createEl('div', 'action-body', this.element)
     }
@@ -45,13 +49,13 @@ export class ActionRenderer {
 
     render(action: Action) {
         // Set label
-        this.label.innerHTML = getLabelOfExecution(action.execution)
-        this.preLabel.innerHTML = action.execution.nodeData.preLabel ?? 'Unknown pre label'
+        this.preLabel.innerHTML = action.execution.nodeData.preLabel ?? ''
+        setSourceCodeOfExecution(action.execution, this.label)
 
         // Set classes
         action.timeline.state.isCollapsed
-            ? this.element.classList.add('collapsed')
-            : this.element.classList.remove('collapsed')
+            ? this.element.classList.remove('expanded')
+            : this.element.classList.add('expanded')
 
         action.timeline.state.isShowingSteps
             ? this.element.classList.add('showing-steps')
@@ -84,12 +88,34 @@ function getLabelOfExecution(execution: ExecutionGraph | ExecutionNode) {
 
 function setSourceCodeOfExecution(execution: ExecutionGraph | ExecutionNode, element: HTMLElement) {
     const range = execution.nodeData.location
-    const label = Editor.instance.monaco.getModel().getValueInRange({
+    let label = Editor.instance.monaco.getModel().getValueInRange({
         startLineNumber: range.start.line,
         startColumn: range.start.column + 1,
         endLineNumber: range.end.line,
         endColumn: range.end.column + 1,
     })
+
+    if (range.end.line - range.start.line > 0) {
+        if (
+            execution.nodeData.type == 'FunctionDeclaration' ||
+            execution.nodeData.type == 'FunctionCall' ||
+            execution.nodeData.type == 'ForStatement' ||
+            execution.nodeData.type == 'WhileStatement' ||
+            execution.nodeData.type == 'IfStatement'
+        ) {
+            let upTill = label.substring(0, label.indexOf('{')).trim()
+            label = `${upTill} { ... }`
+        } else {
+            label = `{ ... }`
+        }
+    } else {
+        label = Editor.instance.monaco.getModel().getValueInRange({
+            startLineNumber: range.start.line,
+            startColumn: range.start.column + 1,
+            endLineNumber: range.end.line,
+            endColumn: range.end.column + 1,
+        })
+    }
 
     monaco.editor.colorize(label, 'javascript', {}).then((result) => (element.innerHTML = result))
 }
