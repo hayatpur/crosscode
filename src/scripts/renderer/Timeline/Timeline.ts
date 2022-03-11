@@ -42,6 +42,10 @@ export class Timeline {
             this.controller.hideSteps()
         }
 
+        if (options.isRoot) {
+            this.controller.makeRoot()
+        }
+
         this.renderer.render(this)
 
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))

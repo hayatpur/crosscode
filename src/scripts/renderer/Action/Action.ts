@@ -9,6 +9,7 @@ import { ActionState, createActionState } from './ActionState'
 export interface CreateActionOptions {
     shouldExpand?: boolean
     shouldShowSteps?: boolean
+    isRoot?: boolean
 }
 
 /* ------------------------------------------------------ */

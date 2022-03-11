@@ -13,7 +13,6 @@
     border: 1px solid #5c5c5c63;
     cursor: pointer;
 }
-
 /* -------------- Start and end view rules -------------- */
 .view.start,
 .view.end {
@@ -36,6 +35,9 @@
     margin-bottom: 0px;
     padding-bottom: 0px;
     padding-top: 0px;
+    background: none;
+    box-shadow: none;
+    border: none;
 }
 
 /* --------------------- Environment -------------------- */
@@ -46,4 +48,8 @@
     min-height: 30px;
     min-width: 30px;
     padding-top: 20px;
+}
+
+.view.hidden > .environment {
+    opacity: 0;
 }

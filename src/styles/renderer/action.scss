@@ -48,6 +48,10 @@
     left: 53px;
 }
 
+.action.root > .action-header {
+    opacity: 0;
+}
+
 /* ------------------------ Label ----------------------- */
 
 .action-pre-label {

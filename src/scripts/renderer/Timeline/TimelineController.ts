@@ -1,6 +1,7 @@
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Action } from '../Action/Action'
+import { TrailGroup } from '../Trail/TrailGroup'
 import { Timeline } from './Timeline'
 
 /* ------------------------------------------------------ */
@@ -11,6 +12,11 @@ export class TimelineController {
 
     constructor(timeline: Timeline) {
         this.timeline = timeline
+    }
+
+    makeRoot() {
+        this.timeline.state.isRoot = true
+        this.timeline.renderer.render(this.timeline)
     }
 
     /* ----------------- Collapse and expand ---------------- */
@@ -45,21 +51,23 @@ export class TimelineController {
         this.timeline.renderer.render(this.timeline)
 
         // Create trail groups
-        // for (let i = 0; i < this.timeline.steps.length; i++) {
-        //     const step = this.timeline.steps[i]
-        //     // console.log(
-        //     //     this.timeline.renderer.views[i].renderer.environmentRenderers[0],
-        //     //     this.timeline.renderer.views[i + 1].renderer.environmentRenderers[0]
-        //     // )
-        //     const startEnvs = this.timeline.renderer.views[i].renderer.environmentRenderers
-        //     const endEnvs = this.timeline.renderer.views[i + 1].renderer.environmentRenderers
-        //     const trails = new TrailGroup(
-        //         step,
-        //         startEnvs[startEnvs.length - 1],
-        //         endEnvs[endEnvs.length - 1]
-        //     )
-        //     this.timeline.trailGroups.push(trails)
-        // }
+        setTimeout(() => {
+            for (let i = 0; i < this.timeline.steps.length; i++) {
+                const step = this.timeline.steps[i]
+                // console.log(
+                //     this.timeline.renderer.views[i].renderer.environmentRenderers[0],
+                //     this.timeline.renderer.views[i + 1].renderer.environmentRenderers[0]
+                // )
+                const startEnvs = this.timeline.renderer.views[i].renderer.environmentRenderers
+                const endEnvs = this.timeline.renderer.views[i + 1].renderer.environmentRenderers
+                const trails = new TrailGroup(
+                    step,
+                    startEnvs[startEnvs.length - 1],
+                    endEnvs[endEnvs.length - 1]
+                )
+                this.timeline.trailGroups.push(trails)
+            }
+        }, 100)
     }
 
     hideSteps() {

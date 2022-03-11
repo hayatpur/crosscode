@@ -80,6 +80,30 @@
     margin-top: 100px;
 }
 
+/* --------------------- Root rules --------------------- */
+.timeline.root {
+    margin-left: 0px;
+}
+
+.timeline.root > .timeline-anchor.start {
+    margin-left: 36px;
+
+    height: 2px;
+    border-radius: 0px;
+    border: none;
+    background: var(--color-2);
+}
+
+.timeline.root > .timeline-anchor.end {
+    margin-left: 36px;
+    margin-top: 50px !important;
+
+    height: 2px;
+    border-radius: 0px;
+    border: none;
+    background: var(--color-2);
+}
+
 /* ----------------- Showing steps rules ---------------- */
 
 .timeline.showing-steps > .timeline-anchor {

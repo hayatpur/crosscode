@@ -1,9 +1,5 @@
-let l = [0, 0, 0]
+let x = 0
+let y = 2
 
-if (l[0] == 1) {
-    l[2] = 1
-    l[0] = 1
-} else {
-    l[2] = 2
-    l[0] = 2
-}
+x = y
+let z = x + y

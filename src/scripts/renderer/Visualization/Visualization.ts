@@ -42,7 +42,11 @@ export class Visualization {
 
     createRoot(execution: ExecutionGraph) {
         // Root action
-        this.root = new Action(execution, { shouldExpand: true, shouldShowSteps: false })
+        this.root = new Action(execution, {
+            shouldExpand: true,
+            shouldShowSteps: true,
+            isRoot: true,
+        })
         this.camera.add(this.root.renderer.element)
     }
 

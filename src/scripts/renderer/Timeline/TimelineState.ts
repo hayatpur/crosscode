@@ -7,6 +7,7 @@ export interface TimelineState {
     id: string
 
     isCollapsed: boolean
+    isRoot: boolean
     isShowingSteps: boolean
 }
 
@@ -17,5 +18,6 @@ export function createTimelineState(): TimelineState {
         id: `Timeline(${++__TIMELINE_ID})`,
         isCollapsed: false,
         isShowingSteps: false,
+        isRoot: false,
     }
 }

@@ -60,6 +60,10 @@ export class ActionRenderer {
         action.timeline.state.isShowingSteps
             ? this.element.classList.add('showing-steps')
             : this.element.classList.remove('showing-steps')
+
+        action.timeline.state.isRoot
+            ? this.element.classList.add('root')
+            : this.element.classList.remove('root')
     }
 
     /* ----------------------- Destroy ---------------------- */

@@ -43,6 +43,13 @@ export class TimelineRenderer {
         this.anchors = []
         this.views = []
 
+        // Root
+        if (timeline.state.isRoot) {
+            this.element.classList.add('root')
+        } else {
+            this.element.classList.remove('root')
+        }
+
         // If collapsed (and not showing steps), then it doesn't have any renderers; only the anchor
         if (timeline.state.isCollapsed && !timeline.state.isShowingSteps) {
             this.element.classList.remove('expanded')
@@ -82,10 +89,12 @@ export class TimelineRenderer {
             this.element.classList.add('showing-steps')
 
             // Create pre-view
-            const pre = this.createView()
-            pre.renderer.element.classList.add('start')
-            pre.renderer.render([timeline.action.execution.precondition])
-            this.views.push(pre)
+            if (!timeline.state.isRoot) {
+                const pre = this.createView()
+                pre.renderer.element.classList.add('start')
+                pre.renderer.render([timeline.action.execution.precondition])
+                this.views.push(pre)
+            }
 
             // Start anchor
             const startAnchor = this.createAnchor()
@@ -104,10 +113,12 @@ export class TimelineRenderer {
             }
 
             // Create post-view
-            const post = this.createView()
-            post.renderer.element.classList.add('end')
-            post.renderer.render([timeline.action.execution.postcondition])
-            this.views.push(post)
+            if (!timeline.state.isRoot) {
+                const post = this.createView()
+                post.renderer.element.classList.add('end')
+                post.renderer.render([timeline.action.execution.postcondition])
+                this.views.push(post)
+            }
 
             // End anchor
             const endAnchor = this.createAnchor()
@@ -170,17 +181,15 @@ export class TimelineRenderer {
 
         // Start
         if (!timeline.state.isCollapsed) {
-            const connection = createPath('timeline-connection', this.element)
-            const preBbox = this.views[0].renderer.element.getBoundingClientRect()
-            const anchorBbox = this.anchors[0].getBoundingClientRect()
-
-            setSVGPath(
-                connection,
-                [anchorBbox.x + anchorBbox.width / 2, preBbox.y + preBbox.height],
-                [anchorBbox.x + anchorBbox.width / 2, anchorBbox.y + anchorBbox.height / 2]
-            )
-
-            this.connections.push(connection)
+            // const connection = createPath('timeline-connection', this.element)
+            // const preBbox = this.views[0].renderer.element.getBoundingClientRect()
+            // const anchorBbox = this.anchors[0].getBoundingClientRect()
+            // setSVGPath(
+            //     connection,
+            //     [anchorBbox.x + anchorBbox.width / 2, preBbox.y + preBbox.height],
+            //     [anchorBbox.x + anchorBbox.width / 2, anchorBbox.y + anchorBbox.height / 2]
+            // )
+            // this.connections.push(connection)
         }
 
         // Connection for each step
@@ -191,7 +200,6 @@ export class TimelineRenderer {
                 let offset = 'straight'
 
                 if (i == 0) {
-                    // continue
                     a = this.anchors[0].getBoundingClientRect()
                     offset = 'curved'
                 } else {
@@ -225,13 +233,20 @@ export class TimelineRenderer {
                 }
 
                 if (i == timeline.steps.length) {
-                    let endIndex = this.views.length - (timeline.state.isCollapsed ? 1 : 2)
+                    // continue
+                    let endIndex =
+                        this.views.length -
+                        (timeline.state.isCollapsed ? 1 : 2) +
+                        (timeline.state.isRoot ? 1 : 0)
+
                     if (endIndex <= 0) continue
+
                     b = this.views[endIndex].renderer.element.getBoundingClientRect()
                     b.x = a.x + a.width / 2
                     b.y = b.y
                     b.width = 0
                     b.height = 0
+                    // b = this.anchors[this.anchors.length - 1].getBoundingClientRect()
                 } else {
                     b = timeline.steps[i].timeline.renderer.anchors[0].getBoundingClientRect()
                 }
@@ -249,58 +264,69 @@ export class TimelineRenderer {
             }
 
             // Last between the last view and the anchor
-            let endIndex = this.views.length - (timeline.state.isCollapsed ? 1 : 2)
+            let endIndex =
+                this.views.length -
+                (timeline.state.isCollapsed ? 1 : 2) +
+                (timeline.state.isRoot ? 1 : 0)
             if (endIndex > 0) {
                 const connection = createPath('timeline-connection', this.element)
 
                 const anchorBbox = this.anchors[this.anchors.length - 1].getBoundingClientRect()
                 const postBbox = this.views[endIndex].renderer.element.getBoundingClientRect()
 
-                setSVGPath(
-                    connection,
-                    [postBbox.x + 52, postBbox.y + postBbox.height],
-                    [anchorBbox.x + anchorBbox.width / 2, anchorBbox.y + anchorBbox.height / 2]
-                )
+                if (timeline.state.isRoot) {
+                    setSVGPath(
+                        connection,
+                        [anchorBbox.x + anchorBbox.width / 2, postBbox.y],
+                        [anchorBbox.x + anchorBbox.width / 2, anchorBbox.y + anchorBbox.height / 2]
+                    )
+                } else {
+                    setSVGPath(
+                        connection,
+                        [postBbox.x + 52, postBbox.y + postBbox.height],
+                        [anchorBbox.x + anchorBbox.width / 2, anchorBbox.y + anchorBbox.height / 2]
+                    )
+                }
 
                 this.connections.push(connection)
             }
         }
 
         // Start -> End
-        if (!timeline.state.isCollapsed && timeline.state.isShowingSteps) {
-            const connection = createPath(['timeline-connection', 'timeline-dashed'], this.element)
-            const preBbox = this.views[0].renderer.element.getBoundingClientRect()
-            const postBbox =
-                this.views[this.views.length - 1].renderer.element.getBoundingClientRect()
+        // if (!timeline.state.isCollapsed && timeline.state.isShowingSteps) {
+        //     const connection = createPath(['timeline-connection', 'timeline-dashed'], this.element)
+        //     const preBbox = this.views[0].renderer.element.getBoundingClientRect()
+        //     const postBbox =
+        //         this.views[this.views.length - 1].renderer.element.getBoundingClientRect()
 
-            setSVGPath(
-                connection,
-                [
-                    preBbox.x + (timeline.state.isShowingSteps ? 29 : 35) * scale,
-                    preBbox.y + preBbox.height,
-                ],
-                [postBbox.x + (timeline.state.isShowingSteps ? 29 : 35) * scale, postBbox.y],
-                'curved'
-            )
+        //     setSVGPath(
+        //         connection,
+        //         [
+        //             preBbox.x + (timeline.state.isShowingSteps ? 29 : 35) * scale,
+        //             preBbox.y + preBbox.height,
+        //         ],
+        //         [postBbox.x + (timeline.state.isShowingSteps ? 29 : 35) * scale, postBbox.y],
+        //         'curved'
+        //     )
 
-            this.connections.push(connection)
-        }
+        //     this.connections.push(connection)
+        // }
 
         // End
-        if (!timeline.state.isCollapsed) {
-            const connection = createPath('timeline-connection', this.element)
-            const postBbox =
-                this.views[this.views.length - 1].renderer.element.getBoundingClientRect()
-            const anchorBbox = this.anchors[this.anchors.length - 1].getBoundingClientRect()
+        // if (!timeline.state.isCollapsed) {
+        //     const connection = createPath('timeline-connection', this.element)
+        //     const postBbox =
+        //         this.views[this.views.length - 1].renderer.element.getBoundingClientRect()
+        //     const anchorBbox = this.anchors[this.anchors.length - 1].getBoundingClientRect()
 
-            setSVGPath(
-                connection,
-                [anchorBbox.x + anchorBbox.width / 2, anchorBbox.y + anchorBbox.height / 2],
-                [anchorBbox.x + anchorBbox.width / 2, postBbox.y + 4]
-            )
+        //     setSVGPath(
+        //         connection,
+        //         [anchorBbox.x + anchorBbox.width / 2, anchorBbox.y + anchorBbox.height / 2],
+        //         [anchorBbox.x + anchorBbox.width / 2, postBbox.y + 4]
+        //     )
 
-            this.connections.push(connection)
-        }
+        //     this.connections.push(connection)
+        // }
     }
 
     /* ----------------------- Destroy ---------------------- */
