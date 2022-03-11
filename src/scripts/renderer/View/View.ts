@@ -17,6 +17,7 @@ export class View {
     }
 
     /* ----------------------- Destroy ---------------------- */
+
     destroy() {
         this.controller.destroy()
         this.renderer.destroy()

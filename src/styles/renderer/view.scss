@@ -11,6 +11,7 @@
     transition: 0.2s;
     padding: 20px;
     border: 1px solid #5c5c5c63;
+    cursor: pointer;
 }
 
 /* -------------- Start and end view rules -------------- */
@@ -27,6 +28,14 @@
 .view.end {
     bottom: -55px;
     left: calc(0px - var(--timeline-indent));
+}
+
+.view.hidden {
+    opacity: 0;
+    height: 0px;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    padding-top: 0px;
 }
 
 /* --------------------- Environment -------------------- */
