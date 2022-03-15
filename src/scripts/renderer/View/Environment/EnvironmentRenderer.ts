@@ -61,6 +61,8 @@ export class EnvironmentRenderer {
                 }
             })
 
+        // memory.reverse()
+
         // Render data
         for (const data of memory) {
             let renderer = this.dataRenderers[data.id]

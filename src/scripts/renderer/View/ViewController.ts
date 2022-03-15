@@ -9,6 +9,8 @@ export class ViewController {
     constructor(view: View) {
         this.view = view
 
+        this.view.renderer.element.classList.toggle('hidden')
+
         this.view.renderer.element.addEventListener('click', () => {
             this.view.renderer.element.classList.toggle('hidden')
             setTimeout(() => Executor.instance.visualization.updateAllConnections(), 200)

@@ -1,7 +1,6 @@
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Action } from '../Action/Action'
-import { TrailGroup } from '../Trail/TrailGroup'
 import { Timeline } from './Timeline'
 
 /* ------------------------------------------------------ */
@@ -51,23 +50,60 @@ export class TimelineController {
         this.timeline.renderer.render(this.timeline)
 
         // Create trail groups
-        setTimeout(() => {
-            for (let i = 0; i < this.timeline.steps.length; i++) {
-                const step = this.timeline.steps[i]
-                // console.log(
-                //     this.timeline.renderer.views[i].renderer.environmentRenderers[0],
-                //     this.timeline.renderer.views[i + 1].renderer.environmentRenderers[0]
-                // )
-                const startEnvs = this.timeline.renderer.views[i].renderer.environmentRenderers
-                const endEnvs = this.timeline.renderer.views[i + 1].renderer.environmentRenderers
-                const trails = new TrailGroup(
-                    step,
-                    startEnvs[startEnvs.length - 1],
-                    endEnvs[endEnvs.length - 1]
-                )
-                this.timeline.trailGroups.push(trails)
-            }
-        }, 100)
+        // setTimeout(() => {
+        //     for (let i = 0; i < this.timeline.steps.length; i++) {
+        //         const step = this.timeline.steps[i]
+        //         // console.log(
+        //         //     this.timeline.renderer.views[i].renderer.environmentRenderers[0],
+        //         //     this.timeline.renderer.views[i + 1].renderer.environmentRenderers[0]
+        //         // )
+        //         const startEnvs = this.timeline.renderer.views[i].renderer.environmentRenderers
+        //         const endEnvs = this.timeline.renderer.views[i + 1].renderer.environmentRenderers
+        //         const trails = new TrailGroup(
+        //             step,
+        //             startEnvs[startEnvs.length - 1],
+        //             endEnvs[endEnvs.length - 1]
+        //         )
+        //         this.timeline.trailGroups.push(trails)
+        //     }
+        // }, 100)
+    }
+
+    showNewSteps() {
+        this.timeline.state.isShowingSteps = true
+        this.timeline.state.isShowingNewSteps = true
+
+        // Create steps
+        // TODO: Deal with execution nodes
+        this.timeline.steps = []
+        this.timeline.trailGroups = []
+
+        for (const step of getExecutionSteps(this.timeline.action.execution)) {
+            const action = new Action(step, { shouldExpand: false, shouldShowSteps: false })
+            this.timeline.steps.push(action)
+        }
+
+        // Render them so they're in the right place
+        this.timeline.renderer.render(this.timeline)
+
+        // Create trail groups
+        // setTimeout(() => {
+        //     for (let i = 0; i < this.timeline.steps.length; i++) {
+        //         const step = this.timeline.steps[i]
+        //         // console.log(
+        //         //     this.timeline.renderer.views[i].renderer.environmentRenderers[0],
+        //         //     this.timeline.renderer.views[i + 1].renderer.environmentRenderers[0]
+        //         // )
+        //         const startEnvs = this.timeline.renderer.views[i].renderer.environmentRenderers
+        //         const endEnvs = this.timeline.renderer.views[i + 1].renderer.environmentRenderers
+        //         const trails = new TrailGroup(
+        //             step,
+        //             startEnvs[startEnvs.length - 1],
+        //             endEnvs[endEnvs.length - 1]
+        //         )
+        //         this.timeline.trailGroups.push(trails)
+        //     }
+        // }, 100)
     }
 
     hideSteps() {

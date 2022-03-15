@@ -1,5 +1,6 @@
 import { Executor } from '../../executor/Executor'
 import { createEl, createPath } from '../../utilities/dom'
+import { Keyboard } from '../../utilities/Keyboard'
 import { View } from '../View/View'
 import { Timeline } from './Timeline'
 
@@ -157,10 +158,14 @@ export class TimelineRenderer {
         // Connections
         this.anchors[0].addEventListener('click', () => {
             const action = timeline.action
-            if (!action.timeline.state.isShowingSteps) {
-                action.timeline.controller.showSteps()
+            if (!timeline.state.isShowingSteps) {
+                if (Keyboard.instance.isPressed('Shift')) {
+                    timeline.controller.showSteps()
+                } else {
+                    timeline.controller.showNewSteps()
+                }
             } else {
-                action.timeline.controller.hideSteps()
+                timeline.controller.hideSteps()
             }
             action.renderer.render(action)
         })

@@ -1,5 +1,4 @@
 import { IdentifierState } from '../../../../environment/EnvironmentState'
-import { Executor } from '../../../../executor/Executor'
 import { getNumericalValueOfStyle, lerp } from '../../../../utilities/math'
 import { Ticker } from '../../../../utilities/Ticker'
 import { DataRenderer } from '../data/DataRenderer'
@@ -42,10 +41,11 @@ export class IdentifierRenderer {
         const environmentBbox = this.environmentReference.getBoundingClientRect()
 
         let delta = dataBbox.x - environmentBbox.x
-        const scale = getNumericalValueOfStyle(
-            Executor.instance.visualization.camera.element.style.transform.substring(6),
-            1
-        )
+        // const scale = getNumericalValueOfStyle(
+        //     Executor.instance.visualization.camera.element.style.transform.substring(6),
+        //     1
+        // )
+        const scale = dataBbox.height / 30
         delta /= scale
 
         const prevLeft = getNumericalValueOfStyle(this.element.style.left, delta)

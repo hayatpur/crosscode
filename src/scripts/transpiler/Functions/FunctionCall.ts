@@ -20,26 +20,32 @@ export function FunctionCall(
 
     // Create a scope @TODO: HARD SCOPE
     const createScope = createScopeAnimation(ScopeType.Hard)
-    addVertex(graph, createScope, { nodeData: getNodeData(ast) })
+    // addVertex(graph, createScope, { nodeData: getNodeData(ast) })
     applyExecutionNode(createScope, environment)
 
     // Bind arguments
+    const args: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    args.precondition = clone(environment)
+
     for (let i = 0; i < ast.params.length; i++) {
         const param = ast.params[i] as ESTree.Identifier
         const argRegister = context.args[i]
 
         const bind = bindAnimation(param.name, argRegister)
-        addVertex(graph, bind, { nodeData: getNodeData(ast.params[i]) })
+        addVertex(args, bind, { nodeData: getNodeData(ast.params[i]) })
         applyExecutionNode(bind, environment)
     }
+    args.postcondition = clone(environment)
+
+    addVertex(graph, args, { nodeData: getNodeData(ast.params, 'Arguments') })
 
     // Call function
     const body = BlockStatement(ast.body, environment, { ...context, args: null }, ScopeType.None)
-    addVertex(graph, body, { nodeData: getNodeData(ast.body) })
+    addVertex(graph, body, { nodeData: getNodeData(ast.body, 'Body') })
 
     // Pop scope
     const popScope = popScopeAnimation()
-    addVertex(body, popScope, { nodeData: getNodeData(ast) })
+    // addVertex(body, popScope, { nodeData: getNodeData(ast) })
     applyExecutionNode(popScope, environment)
 
     graph.postcondition = clone(environment)

@@ -11,6 +11,7 @@ import { LogicalExpression } from './Expressions/BinaryOperations/LogicalExpress
 import { MemberExpression } from './Expressions/BinaryOperations/MemberExpression'
 import { CallExpression } from './Expressions/CallExpression'
 import { ObjectExpression } from './Expressions/ObjectExpression'
+import { UnaryExpression } from './Expressions/UnaryOperations/UnaryExpression'
 import { UpdateExpression } from './Expressions/UnaryOperations/UpdateExpression'
 import { FunctionCall } from './Functions/FunctionCall'
 import { FunctionDeclaration } from './Functions/FunctionDeclaration'
@@ -60,6 +61,8 @@ export class Compiler {
 
             WhileStatement,
             FunctionDeclaration,
+
+            UnaryExpression,
         }
 
         if (mapping[`${ast.type}`] == null) {
@@ -98,6 +101,14 @@ export function getUnionOfLocations(locs: ESTree.SourceLocation[]): ESTree.Sourc
         }
 
         if (loc.end.line > end.line) {
+            end = loc.end
+        }
+
+        if (loc.start.column < start.column) {
+            start = loc.start
+        }
+
+        if (loc.end.column > end.column) {
             end = loc.end
         }
     }

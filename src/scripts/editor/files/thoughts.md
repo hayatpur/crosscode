@@ -71,15 +71,27 @@
 [ ] C/D gain on longer executions / mouse movement proportional to height of the thing navigating
 [ ] There is an "explored" _area_, over which variables can be distributed - not necessarily isolated in panels
 [ ] Single child graphs don't have an outgoing connection
+[ ] Navigation should not be just the current state, but the current state _and_ previous state
 
-**Concepts**
+**TODO** (real)
+_Implementation_
+[ ] Expand horizontally
+[ ] Show exploration map at bottom
+[ ] Hide / show appropriate views
+[ ] Skip exploration by interacting with the code
+[ ] Expand in-place but push-back
 
--   Data
+_Writing_
+[ ] Write, write, write
+
+OMG GREAT IDEA: ANIMATION SHOULD SHOW SIGNIFICANT CHANGES??? KEY EVENT HEURISTIC???
+
+**Mechanisms**
+
 -   Data trace / Data flow
-
 -   Animation
 
--   Route
+-   Route (navigation)
 
 -   Query from code
 -   Query from data
@@ -88,7 +100,6 @@
 
 -   Hierarchical abstraction / control flow
 -   Symmetrical abstraction (e.g., for loop and recursive calls)
--   Asymmetrical abstraction (e.g., if statements)
 
 -   Event
 
@@ -98,13 +109,12 @@
 
     -   Collection of events
 
--   Lanes
-
 -   Visual encoding
 
 -   Event layout
-    -   Nested
-    -   Branching
+    -   Nesting
+    -   Skipping
+    -   Non-linear
 
 **Intro**
 
@@ -129,7 +139,7 @@
 
 **System Design**
 
--   Two aspects: multiple levels of representation, user interaction.
+-   Two aspects: visualize multiple levels of representation, and user interactions to make that possible.
 
 -   How different levels of abstraction manifest in space and time
 
@@ -144,6 +154,8 @@
 
 -   Timeline
 
+-   Reduction from actual execution
+
 **User Study**
 
 -   Extract key features and ask users to use it? Undergraduate CS students? Expert CS students? People with lack of experience. (e.g. people who don't know how to use a computer).
@@ -152,3 +164,5 @@
 **Discussion**
 
 **Conclusion**
+
+**Exam Questions**
