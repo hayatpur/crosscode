@@ -23,7 +23,6 @@ function apply(animation: FloorAnimation, environment: EnvironmentState) {
         `${animation.id}_Floating`
     ) as DataState
     replaceDataWith(register, createPrimitiveData(DataType.ID, copy.id, `${animation.id}_Floating`))
-    console.log(register)
 
     computeReadAndWrites(
         animation,

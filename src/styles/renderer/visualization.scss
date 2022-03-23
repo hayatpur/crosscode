@@ -8,10 +8,11 @@
     height: 100%;
     width: 100%;
     transform: scale(1);
-    transition: 0.2s;
+    // transition: 0.2s;
     display: flex;
     align-items: center;
     border-left: 2px dashed var(--color-2);
+    overflow: hidden;
 }
 
 /* ----------------------- Camera ----------------------- */
@@ -20,40 +21,54 @@
     width: 100%;
     height: 100%;
     transition: 0.2s ease-out !important;
+    position: relative;
 }
 
-.fog-of-war-start {
+.visualization.camera-shift {
+    cursor: move;
+}
+
+.visualization > .minimap {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    right: 40px;
+    bottom: 40px;
+    background: #ffffff03;
+    border-radius: 7px;
+    border: 1px solid var(--color-1);
+    overflow: hidden;
+    // display: none;
+}
+
+.visualization > .minimap-proxy {
+    position: absolute;
+    opacity: 0.5;
+    white-space: pre;
+}
+
+/* --------------------- Fog of war --------------------- */
+
+.fog-of-war {
     position: absolute;
     top: 0px;
     left: 0px;
-
-    width: 100%;
-    height: 40%;
-    background-color: var(--color-0);
+    width: 10%;
+    height: 100%;
     pointer-events: none;
-    opacity: 0.8;
+    opacity: 1;
     z-index: 100;
     transition: 2s;
+    background: linear-gradient(90deg, #111114 0%, rgba(17, 17, 20, 0) 100%);
+    filter: blur(5px);
 }
 
-.fog-of-war-end {
-    position: absolute;
-    top: 60%;
+/* -------------------- Code backdrop ------------------- */
+.code-backdrop {
+    background: var(--color-0);
+    height: 100%;
+    position: fixed;
+    top: 0px;
     left: 0px;
-
-    width: 100%;
-    height: 40%;
-    background-color: var(--color-0);
-    pointer-events: none;
-    opacity: 0.8;
-    z-index: 100;
-    transition: 2s;
-}
-
-.fog-of-war-start.hidden {
-    height: 0%;
-}
-
-.fog-of-war-end.hidden {
-    top: 100%;
+    z-index: -1;
 }

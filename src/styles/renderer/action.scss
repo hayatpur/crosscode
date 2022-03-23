@@ -1,3 +1,12 @@
+// @keyframes fadein {
+//     from {
+//         opacity: 0;
+//     }
+//     to {
+//         opacity: 1;
+//     }
+// }
+
 /* ------------------------------------------------------ */
 /*               Defines styles for actions               */
 /* ------------------------------------------------------ */
@@ -5,16 +14,13 @@
 .action {
     display: flex;
     position: relative;
+    flex-direction: column;
 }
 
 /* ------------------- Expanded rules ------------------- */
 
 .action.expanded:not(.showing-steps) {
     align-items: center;
-}
-
-.action:not(.expanded) .action-header {
-    margin-top: -1.5px;
 }
 
 /* ------------------ Show steps rules ------------------ */
@@ -26,16 +32,8 @@
 /* ----------------------- Header ----------------------- */
 
 .action-header {
-    position: absolute;
-    left: 58px;
-    z-index: 1;
-}
-
-.action-pre-label {
-    position: absolute;
-    top: -22px;
-    white-space: pre;
-    opacity: 0.5;
+    // transition-property: opacity;
+    // transition-duration: 0.2s;
 }
 
 .action.expanded.showing-steps > .action-header {
@@ -48,17 +46,15 @@
     left: 53px;
 }
 
-.action.root > .action-header {
-    opacity: 0;
-}
+// .action.root > .action-header {
+//     opacity: 0;
+// }
 
 /* ------------------------ Label ----------------------- */
-
 .action-pre-label {
     position: absolute;
     top: 0.5px;
     white-space: pre;
-    opacity: 0.5;
     transform: translate(calc(-100% - 28px), 0px);
     font-weight: 300;
     font-size: 15px;
@@ -66,6 +62,8 @@
 
 .action-label {
     font-family: Fira Code;
+    font-size: 18px;
+    letter-spacing: -0.5px;
 }
 
 /* ------------------------ Body ------------------------ */
@@ -93,7 +91,7 @@
     font-size: 12px;
     margin: 3px;
     transform: scale(1);
-    transition: 0.2s;
+    // transition: 0.2s;
     color: rgba(255, 255, 255, 0.349);
     cursor: pointer;
 }
@@ -114,7 +112,139 @@
     bottom: -27px;
     display: flex;
     left: -4px;
-    transition: 0.2s;
+    // transition: 0.2s;
     padding: 10px;
     padding-left: 2px;
+}
+
+/* ------------------------ Root ------------------------ */
+.action.root {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+.action.root.showing-steps > .action-header {
+    // top: -13px;
+    // left: 133px;
+    top: -10px;
+    left: 31px;
+    width: fit-content;
+    display: flex;
+    flex-direction: column-reverse;
+    opacity: 0.4;
+}
+
+.action.root.showing-steps > .action-header > .action-pre-label {
+    opacity: 1;
+}
+
+.action.root > .action-header > .action-pre-label {
+    position: relative;
+    transform: translate(0px, 0px);
+    // transform: translate(-19px, -24px);
+    margin-bottom: 10px;
+}
+
+.action.root {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+.action.root > .action-header {
+}
+
+/* ------------------ Root with borders ----------------- */
+.action.root.showing-steps > .action-header {
+    top: -13px;
+    left: 133px;
+}
+
+.action.root {
+    border: 1px solid #2c2c345e;
+    padding: 0px 25px 25px 0px;
+    border-radius: 7px;
+    // background: var(--color-1);
+}
+
+.action.root > .action-header {
+    top: -72px !important;
+    left: -2px !important;
+}
+
+.action.root > .action-header > .action-pre-label {
+    transform: translate(0px, 0px);
+}
+
+.timeline.root > .timeline-anchor.start {
+    margin-top: 0px !important;
+}
+
+.view {
+    box-shadow: 0 0 16px 5px #1111148f !important;
+}
+
+// /* --------------- Focus with label inside -------------- */
+.action.root > .action-header {
+    top: 18px !important;
+    left: 18px !important;
+}
+
+.timeline.root > .timeline-anchor.start {
+    margin-top: 50px !important;
+}
+
+/* ---------------------- Minimized --------------------- */
+.action.minimized > .action-header {
+    opacity: 0 !important;
+}
+
+.action.minimized {
+    opacity: 0.2;
+    filter: saturate(0);
+}
+
+/* ------------------------ Focus ----------------------- */
+.action > .action-header > .action-pre-label {
+    // transition-property: opacity;
+    // transition-duration: var(--focus-duration);
+}
+
+.action.unfocused > .action-header > .action-pre-label {
+    opacity: 0.2;
+}
+
+.action-label > span > span {
+    // transition-property: opacity, color;
+    // transition-duration: var(--focus-duration);
+}
+
+.action-label > span > span.unfocused {
+    color: white !important;
+    opacity: 0.2 !important;
+}
+
+/* ------------------ Interaction areas ----------------- */
+.action-interaction-area {
+    position: absolute;
+    opacity: 0;
+    border-radius: 7px;
+    background: white;
+}
+
+.action.showing-steps > .action-header > .action-interaction-area {
+    display: none;
+}
+
+.action.is-focused > .action-header > .action-interaction-area {
+    opacity: 0;
+}
+
+/* ----------------------- Origin ----------------------- */
+.action-origin-connection {
+    fill: #0000;
+    stroke: url(#grad3);
+    stroke-width: 1px;
+    z-index: -1;
 }

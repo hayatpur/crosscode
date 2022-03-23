@@ -64,7 +64,7 @@ export function LogicalExpression(
         context.outputRegister
     )
 
-    addVertex(graph, evaluate, { nodeData: getNodeData(ast) })
+    // addVertex(graph, evaluate, { nodeData: getNodeData(ast) })
     applyExecutionNode(evaluate, environment)
 
     cleanUpRegister(environment, leftRegister[0].value)

@@ -1,5 +1,5 @@
-const path = require('path');
-const HtmlWebPackPlugin = require('html-webpack-plugin');
+const path = require('path')
+const HtmlWebPackPlugin = require('html-webpack-plugin')
 
 module.exports = {
     mode: 'development',
@@ -38,16 +38,19 @@ module.exports = {
                 test: /\.ttf$/,
                 use: ['file-loader'],
             },
-            { test: /(\.woff|\.woff2)$/, use: [
-                {
-                    loader: 'url-loader',
-                    options: {
-                        limit: 10240,
-                        mimetype : 'application/font-woff',
-                        name: 'font/[name].[ext]'
-                    }
-                }
-            ] },
+            {
+                test: /(\.woff|\.woff2)$/,
+                use: [
+                    {
+                        loader: 'url-loader',
+                        options: {
+                            limit: 10240,
+                            mimetype: 'application/font-woff',
+                            name: 'font/[name].[ext]',
+                        },
+                    },
+                ],
+            },
         ],
     },
     plugins: [
@@ -58,4 +61,5 @@ module.exports = {
         }),
     ],
     devtool: 'inline-source-map',
-};
+    stats: 'errors-only',
+}

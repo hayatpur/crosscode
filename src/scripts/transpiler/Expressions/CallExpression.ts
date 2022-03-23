@@ -52,7 +52,7 @@ export function CallExpression(
     }
 
     argGraph.postcondition = clone(environment)
-    // addVertex(graph, argGraph, { nodeData: argGraph.nodeData })
+    addVertex(graph, argGraph, { nodeData: argGraph.nodeData })
 
     let lookupDataValue: any
     let lookupRegister: Accessor[] = null
@@ -114,7 +114,7 @@ export function CallExpression(
             context.outputRegister
         )
         bodyGraph = nativeFunction
-        // addVertex(graph, nativeFunction, { nodeData: getNodeData(ast) })
+        addVertex(graph, nativeFunction, { nodeData: getNodeData(ast) })
         applyExecutionNode(nativeFunction, environment)
         if (objectRegister != null) {
             cleanUpRegister(environment, objectRegister[0].value)
@@ -134,9 +134,9 @@ export function CallExpression(
             controlOutput,
         })
         bodyGraph = body
-        // addVertex(graph, body, {
-        //     nodeData: { ...getNodeData(ast, 'Function Call'), type: 'Function Call' },
-        // })
+        addVertex(graph, body, {
+            nodeData: { ...getNodeData(ast, 'Function Call'), type: 'Function Call' },
+        })
     }
 
     // Cleanup
@@ -161,7 +161,9 @@ export function CallExpression(
     }
 
     graph.postcondition = clone(environment)
+    bodyGraph.postcondition = clone(environment)
     return bodyGraph
+    return graph
 }
 
 export function lookupNativeFunctionAnimation(name: string) {

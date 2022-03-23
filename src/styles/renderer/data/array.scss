@@ -4,24 +4,15 @@
     min-height: 30px;
 }
 
-.data-array > *:not(last-child) {
-    margin-right: 7px;
-}
-
-.data-array > * {
-    // margin-left: -1px;
-}
-
 // .data.data-literal.array-item:not(.last-array-item):after {
 //     content: ',';
 //     color: var(--color-3);
 // }
 
 .data-array-brace {
-    opacity: 0.7;
+    color: var(--color-3);
     font-weight: 400;
     font-family: Fira Code;
-    color: #8b8b93;
 }
 
 .data-array-opening-brace {
@@ -55,4 +46,18 @@
     opacity: 0.5;
     margin-left: 8px;
     margin-top: 6px;
+}
+
+.data-array-comma {
+    color: var(--color-3);
+    font-weight: 400;
+    font-family: Fira Code;
+}
+
+.data-array-brace.unfocused {
+    opacity: 0.4;
+}
+
+.data-array-comma.unfocused {
+    opacity: 0.4;
 }

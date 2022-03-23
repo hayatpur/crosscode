@@ -1,61 +1,32 @@
 /** Literal style used for computing layout **/
 
-.data-literal {
-    background: #ffffff0d;
-    border-radius: 7px;
-    font-size: 16px;
+.data-literal,
+.data-function {
+    font-size: 18px;
     font-family: Fira Code;
-    box-shadow: 0px 0px 0px 1px #ffffff21 inset;
     color: #e879f9;
     padding: 0px 8px;
-    min-width: 30px;
     min-height: 30px;
     font-weight: 400;
     position: relative;
-    transition-property: box-shadow, background;
-    transition-duration: 0.2s;
     z-index: 10;
-    backdrop-filter: blur(5px);
-}
-
-.data-literal.selected {
-    box-shadow: inset 0 0 0px 1px var(--s-color-4);
-}
-
-.data-literal:hover {
-    background: #2d2d31;
-    box-shadow: 0px 0px 0px 0.5px #ffffff46 inset;
 }
 
 .data-function {
-    background: #ffffff0d;
-    border-radius: 7px;
-    font-size: 16px;
-
-    font-family: Fira Code;
     color: var(--s-color-2);
-    padding: 0px 10px;
-    min-width: 30px;
-    min-height: 30px;
-    box-shadow: 0px 0px 0px 1px #ffffff21 inset;
+}
+
+.data-literal.selected {
+}
+
+.data-literal:hover {
 }
 
 .data-function.selected {
-    border: 1px dashed rgba(255, 255, 255, 0);
-    box-shadow: inset 0 0 0px 1px var(--s-color-4);
 }
 
 .data-literal-string {
     color: #6ee7b7 !important;
-}
-
-.environment > .data:not(:first-child)::before {
-    // content: '';
-    width: 1px;
-    height: 14px;
-    background: #ffffff17;
-    position: absolute;
-    left: -13px;
 }
 
 .data-literal.trail-create {

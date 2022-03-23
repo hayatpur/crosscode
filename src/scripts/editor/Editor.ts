@@ -44,15 +44,11 @@ export class Editor {
             lineHeight: 34,
             selectOnLineNumbers: false,
             letterSpacing: -0.5,
-            codeLens: true,
+            codeLens: false,
             dragAndDrop: false,
             theme: 'atom',
             fontFamily: 'Fira Code',
-            quickSuggestions: {
-                other: false,
-                comments: false,
-                strings: false,
-            },
+            quickSuggestions: false,
             parameterHints: {
                 enabled: false,
             },
@@ -198,8 +194,17 @@ export class Editor {
         return line.getBoundingClientRect().width / line.innerText.length
     }
 
-    getContainedTokenElements(bbox: { x: number; y: number; width: number; height: number }) {
-        const tokens = [...document.querySelectorAll('.view-line > span > span')]
+    getAllTokens() {
+        return [...document.querySelectorAll('.view-line > span > span')]
+    }
+
+    getContainedTokenElements(
+        bbox: { x: number; y: number; width: number; height: number },
+        tokens: Element[] = null
+    ) {
+        if (tokens == null) {
+            tokens = [...document.querySelectorAll('.view-line > span > span')]
+        }
 
         return tokens.filter((token) => {
             const tokenBbox = token.getBoundingClientRect()

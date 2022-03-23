@@ -2,7 +2,8 @@
 /*               Defines styles for timeline              */
 /* ------------------------------------------------------ */
 :root {
-    --timeline-indent: 100px;
+    --timeline-indent: 0px;
+    --timeline-height: 40px;
 }
 
 .timeline {
@@ -21,8 +22,8 @@
     margin-left: 28px;
 
     transform: scale(0.7);
-    transition-property: transform, background;
-    transition-duration: 0.2s;
+    // transition-property: transform, background;
+    // transition-duration: 0.2s;
 
     box-shadow: 0 0 16px 5px #111114;
 
@@ -42,7 +43,7 @@
 }
 
 .timeline-anchor.end {
-    margin-top: 50px;
+    margin-top: var(--timeline-height);
     margin-bottom: 0px;
     margin-left: calc(var(--timeline-indent) * -1 + 32px);
 }
@@ -50,8 +51,8 @@
 /* -------------------- Expand rules -------------------- */
 
 .timeline.expanded > .timeline-anchor {
-    margin-top: 50px;
-    margin-bottom: 50px;
+    margin-top: var(--timeline-height);
+    margin-bottom: var(--timeline-height);
 }
 
 .timeline.expanded:not(.showing-steps) {
@@ -69,15 +70,19 @@
 }
 
 .timeline.expanded.showing-steps > .timeline-anchor.end {
-    margin-top: 100px;
+    margin-top: calc(2 * var(--timeline-height));
 }
 
 .timeline.showing-steps > .timeline-anchor.start {
-    margin-bottom: 50px;
+    margin-bottom: var(--timeline-height);
 }
 
 .timeline.showing-steps > .timeline-anchor.end {
-    margin-top: 100px;
+    margin-top: calc(2 * var(--timeline-height));
+}
+
+.timeline.root.expanded.showing-steps > .timeline-anchor.end {
+    margin: 0px !important;
 }
 
 /* --------------------- Root rules --------------------- */
@@ -85,8 +90,10 @@
     margin-left: 0px;
 }
 
-.timeline.root > .timeline-anchor.start {
+.timeline.root > .timeline-anchor.start,
+.timeline.root > .timeline-anchor.end {
     margin-left: 36px;
+    opacity: 0;
 
     height: 2px;
     border-radius: 0px;
@@ -94,14 +101,18 @@
     background: var(--color-2);
 }
 
-.timeline.root > .timeline-anchor.end {
-    margin-left: 36px;
-    margin-top: 50px !important;
+.timeline.root > .timeline-anchor.start {
+    margin-bottom: 0px !important;
+    // margin-top: 0px !important;
+    opacity: 0;
+}
 
-    height: 2px;
-    border-radius: 0px;
-    border: none;
-    background: var(--color-2);
+.timeline.root > .timeline-anchor.end {
+    margin-top: var(--timeline-height) !important;
+}
+
+.timeline.showing-steps.root {
+    margin-left: 0px !important;
 }
 
 /* ----------------- Showing steps rules ---------------- */
@@ -109,10 +120,6 @@
 .timeline.showing-steps > .timeline-anchor {
     border: 3px solid var(--color-2);
     background-color: var(--color-0);
-}
-
-.timeline.showing-steps > .action {
-    margin: 50px 0px;
 }
 
 .timeline.showing-steps {
@@ -125,7 +132,7 @@
 
 .timeline.showing-steps > .action.showing-steps {
     margin-left: 5px;
-    margin-top: 48px;
+    margin-bottom: 0px;
 }
 
 /* ------------------------ Base ------------------------ */
@@ -145,4 +152,25 @@
 
 .timeline-dashed > path {
     stroke-dasharray: 5, 5;
+}
+
+.timeline.root > .timeline-connection > path.start {
+    stroke: none;
+}
+
+/* ---------------------- Minimized --------------------- */
+.timeline.minimized > .timeline-connection:last-child {
+    opacity: 0 !important;
+}
+
+.timeline.minimized > .timeline-connection {
+    opacity: 0 !important;
+}
+
+// .timeline.showing-steps > .action {
+//     margin: 10px 0px;
+// }
+
+.timeline.showing-steps > .action {
+    margin: var(--timeline-height) 0px;
 }

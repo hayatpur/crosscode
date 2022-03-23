@@ -1,7 +1,9 @@
-import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { Executor } from '../../executor/Executor'
 import { Timeline } from '../Timeline/Timeline'
 import { ActionController } from './ActionController'
+import { ActionInteractionArea } from './ActionInteractionArea'
 import { ActionRenderer } from './ActionRenderer'
 import { ActionState, createActionState } from './ActionState'
 
@@ -10,6 +12,7 @@ export interface CreateActionOptions {
     shouldExpand?: boolean
     shouldShowSteps?: boolean
     isRoot?: boolean
+    origin?: HTMLElement
 }
 
 /* ------------------------------------------------------ */
@@ -27,8 +30,14 @@ export class Action {
     // Timeline
     timeline: Timeline
 
+    // Interaction areas
+    interactionAreas: ActionInteractionArea[] = []
+
     constructor(execution: ExecutionGraph | ExecutionNode, options: CreateActionOptions) {
         this.execution = execution
+        this.origin = options.origin
+
+        Executor.instance.visualization.focus.actions.add(this)
 
         this.state = createActionState()
         this.renderer = new ActionRenderer()
@@ -39,10 +48,23 @@ export class Action {
         this.renderer.body.appendChild(this.timeline.renderer.element)
 
         this.renderer.render(this)
+
+        // Create interaction areas
+        setTimeout(() => {
+            this.interactionAreas.push(new ActionInteractionArea(this, this.execution))
+
+            if (instanceOfExecutionGraph(execution)) {
+                for (const child of execution.vertices) {
+                    this.interactionAreas.push(new ActionInteractionArea(this, child))
+                }
+            }
+        }, 1000)
     }
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {
+        Executor.instance.visualization.focus.actions.delete(this)
+
         this.controller.destroy()
         this.renderer.destroy()
         this.timeline?.destroy()

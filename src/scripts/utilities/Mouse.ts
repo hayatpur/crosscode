@@ -5,6 +5,8 @@ export class Mouse {
     // List of tick callbacks
     position: { x: number; y: number } = { x: 0, y: 0 }
 
+    held: boolean = false
+
     static _initialize() {
         if (Mouse.instance) return
         Mouse.instance = new Mouse()
@@ -15,6 +17,14 @@ export class Mouse {
 
         document.addEventListener('mousemove', (e) => {
             mouse.position = { x: e.clientX, y: e.clientY }
+        })
+
+        document.addEventListener('mousedown', (e) => {
+            mouse.held = true
+        })
+
+        document.addEventListener('mouseup', (e) => {
+            mouse.held = false
         })
     }
 }

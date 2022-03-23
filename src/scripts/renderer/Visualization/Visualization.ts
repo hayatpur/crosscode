@@ -1,11 +1,12 @@
 import { Editor } from '../../editor/Editor'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { Executor } from '../../executor/Executor'
 import { createEl } from '../../utilities/dom'
 import { Ticker } from '../../utilities/Ticker'
 import { Action } from '../Action/Action'
 import { Camera } from '../Camera/Camera'
 import { Timeline } from '../Timeline/Timeline'
+import { Focus } from './Focus'
+import { Minimap } from './Minimap'
 
 /* ------------------------------------------------------ */
 /*                Visualizes code execution               */
@@ -20,8 +21,13 @@ export class Visualization {
 
     private _tickerId: string
 
-    startFogOfWar: HTMLElement
-    endFogOfWar: HTMLElement
+    // Focus
+    fogOfWar: HTMLElement
+    focus: Focus
+
+    codeBackdrop: HTMLElement
+
+    minimap: Minimap
 
     /* ----------------------- Create ----------------------- */
 
@@ -29,15 +35,21 @@ export class Visualization {
         this.element = createEl('div', 'visualization', document.body)
 
         // Fog of war
-        this.startFogOfWar = createEl('div', 'fog-of-war-start', this.element)
-        this.endFogOfWar = createEl('div', 'fog-of-war-end', this.element)
+        this.fogOfWar = createEl('div', 'fog-of-war', this.element)
+
+        // Code backdrop
+        this.codeBackdrop = createEl('div', 'code-backdrop', document.body)
 
         // Camera
-        this.camera = new Camera()
+        this.camera = new Camera(this)
         this.element.appendChild(this.camera.element)
         this.camera.onAddedToDom()
 
+        this.focus = new Focus()
+
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+
+        this.minimap = new Minimap()
     }
 
     createRoot(execution: ExecutionGraph) {
@@ -48,6 +60,15 @@ export class Visualization {
             isRoot: true,
         })
         this.camera.add(this.root.renderer.element)
+
+        setTimeout(() => {
+            const actionBbox = this.root.renderer.element.getBoundingClientRect()
+            const cameraBbox = this.camera.element.getBoundingClientRect()
+            this.root.state.transform.position.y = cameraBbox.height / 2 - actionBbox.height / 2
+        }, 100)
+        this.root.state.transform.position.x = 200
+
+        this.minimap.addAction(this.root)
     }
 
     /* ----------------------- Update ----------------------- */
@@ -55,16 +76,7 @@ export class Visualization {
     tick(dt: number) {
         const margin = Editor.instance.getMaxWidth() + 100
         this.element.style.left = `${margin}px`
-
-        // this.updateAllConnections()
-
-        if (!Executor.instance.PARAMS.focus) {
-            this.endFogOfWar.classList.add('hidden')
-            this.startFogOfWar.classList.add('hidden')
-        } else {
-            this.endFogOfWar.classList.remove('hidden')
-            this.startFogOfWar.classList.remove('hidden')
-        }
+        this.codeBackdrop.style.width = `${margin}px`
     }
 
     updateAllConnections() {

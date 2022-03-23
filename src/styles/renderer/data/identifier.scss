@@ -11,7 +11,7 @@
     font-family: Fira Code;
     font-weight: 300;
     color: white;
-    top: -3px;
+    top: 12px;
 }
 
 .identifier.selected {
@@ -30,4 +30,21 @@
 
 .identifier.trail-move {
     color: var(--s-color-3);
+}
+
+/* ------------------------ Focus ----------------------- */
+.identifier.unfocused {
+    opacity: 0.2 !important;
+    color: white !important;
+    filter: saturate(0);
+}
+
+.identifier {
+    // transition-property: opacity, color;
+    // transition-duration: var(--focus-duration);
+}
+
+.identifier.secondary-focused {
+    color: var(--s-color-3);
+    opacity: 0.7;
 }

@@ -1,4 +1,6 @@
 import { EnvironmentState } from '../../environment/EnvironmentState'
+import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { createEl } from '../../utilities/dom'
 import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
 
@@ -28,14 +30,14 @@ export class ViewRenderer {
     }
 
     /* ----------------------- Render ----------------------- */
-    render(environments: EnvironmentState[]) {
+    render(environments: EnvironmentState[], parent: ExecutionNode | ExecutionGraph) {
         // Render environments
         for (let i = 0; i < environments.length; i++) {
             if (this.environmentRenderers.length <= i) {
                 this.environmentRenderers.push(this.createEnvironmentRenderer())
             }
 
-            this.environmentRenderers[i].render(environments[i])
+            this.environmentRenderers[i].render(environments[i], parent)
         }
 
         // Cleanup unused renderers

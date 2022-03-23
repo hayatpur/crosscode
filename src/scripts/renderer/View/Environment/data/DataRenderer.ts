@@ -21,15 +21,23 @@ export class DataRenderer {
         return {}
     }
 
-    select(selection: Set<string>) {
-        this.element.classList.add('selected')
+    /* ------------------------ Focus ----------------------- */
+    unfocus() {
+        this.element.classList.add('unfocused')
     }
 
-    deselect() {
-        this.element.classList.remove('selected')
+    secondaryFocus() {
+        this.element.classList.remove('unfocused')
+        this.element.classList.add('secondary-focused')
     }
 
-    fadeOut() {
-        this.element.style.opacity = '0.5'
+    focus() {
+        this.element.classList.remove('unfocused')
+        this.element.classList.remove('secondary-focused')
+    }
+
+    clearFocus() {
+        this.element.classList.remove('unfocused')
+        this.element.classList.remove('secondary-focused')
     }
 }

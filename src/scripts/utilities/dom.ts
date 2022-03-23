@@ -4,6 +4,72 @@ export function reflow(el: HTMLElement) {
     void el?.offsetHeight
 }
 
+export function getBoundingBoxOfStartAndEnd(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number
+): { x: number; y: number; width: number; height: number } {
+    const x = Math.min(x1, x2)
+    const y = Math.min(y1, y2)
+    const width = Math.abs(x2 - x1)
+    const height = Math.abs(y2 - y1)
+
+    return { x, y, width, height }
+}
+
+/**
+ *
+ * @param connection
+ * @param a Canvas space
+ * @param b Canvas space
+ * @param offset
+ */
+export function setSVGPath(
+    connection: { svg: SVGElement; path: SVGPathElement },
+    a: [x: number, y: number],
+    b: [x: number, y: number],
+    type: 'straight' | 'curved' = 'straight'
+) {
+    const parentBbox = connection.svg.getBoundingClientRect()
+
+    const factor = 1 // 1 / Executor.instance.visualization.camera.panzoom.getScale()
+
+    const target = getBoundingBoxOfStartAndEnd(
+        a[0] - parentBbox.x,
+        a[1] - parentBbox.y,
+        b[0] - parentBbox.x,
+        b[1] - parentBbox.y
+    )
+    connection.svg.style.left = `${factor * (target.x - 2.5)}px`
+    connection.svg.style.top = `${factor * (target.y - 2.5)}px`
+
+    const bbox = connection.svg.getBoundingClientRect()
+
+    // TODO: Scaling
+
+    // Will be set to start of SVG
+    const p1 = [factor * (a[0] - bbox.x), factor * (a[1] - bbox.y)]
+    const p2 = [factor * (b[0] - bbox.x), factor * (b[1] - bbox.y)]
+
+    const c1 = [...p1]
+    const c2 = [...p2]
+
+    if (type == 'curved') {
+        c1[1] += (p2[1] - p1[1]) / 2
+        c2[1] -= (p2[1] - p1[1]) / 2
+    }
+
+    connection.path.setAttribute(
+        'd',
+        `M ${p1[0]} ${p1[1]} C ${c1[0]} ${c1[1]} ${c2[0]} ${c2[1]}  ${p2[0]} ${p2[1]}`
+    )
+
+    const pathBbox = connection.path.getBoundingClientRect()
+    connection.svg.style.width = `${pathBbox.width + 5}px`
+    connection.svg.style.height = `${pathBbox.height + 5}px`
+}
+
 export function flipAnimate(
     element: HTMLElement,
     first: DOMRect,

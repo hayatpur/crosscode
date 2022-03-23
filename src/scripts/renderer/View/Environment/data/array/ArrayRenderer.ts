@@ -1,3 +1,4 @@
+import { createEl } from '../../../../../utilities/dom'
 import { createDataRenderer } from '../../EnvironmentRenderer'
 import { DataRenderer } from '../DataRenderer'
 import { DataState } from '../DataState'
@@ -5,12 +6,10 @@ import { IndexRenderer } from './IndexRenderer'
 
 export class ArrayRenderer extends DataRenderer {
     dataRenderers: {
-        [id: string]: { renderer: DataRenderer; index: IndexRenderer }
+        [id: string]: { renderer: DataRenderer; index: IndexRenderer; comma: HTMLElement }
     } = {}
     closingBrace: HTMLDivElement
     openingBrace: HTMLDivElement
-
-    selection: Set<string> = new Set()
 
     constructor() {
         super()
@@ -46,21 +45,18 @@ export class ArrayRenderer extends DataRenderer {
             if (!(item.id in this.dataRenderers)) {
                 const renderer = createDataRenderer(item)
                 const index = new IndexRenderer()
+                const comma = createEl('div', 'data-array-comma')
+                comma.innerText = ','
 
-                this.dataRenderers[item.id] = { renderer, index }
-                this.element.append(renderer.element)
-                // this.element.append(index.element)
+                this.dataRenderers[item.id] = { renderer, index, comma }
             }
 
             hits.add(item.id)
             this.element.append(this.dataRenderers[item.id].renderer.element)
-            this.dataRenderers[item.id].renderer.setState(item)
-
-            if (this.selection.has(item.id)) {
-                this.dataRenderers[item.id].renderer.select(this.selection)
-            } else {
-                this.dataRenderers[item.id].renderer.deselect()
+            if (i < items.length - 1) {
+                this.element.append(this.dataRenderers[item.id].comma)
             }
+            this.dataRenderers[item.id].renderer.setState(item)
 
             this.dataRenderers[item.id].index.setState(
                 i,
@@ -77,6 +73,7 @@ export class ArrayRenderer extends DataRenderer {
                 renderer.renderer.destroy()
                 renderer.renderer.element.remove()
                 renderer.index.element.remove()
+                renderer.comma.remove()
                 delete this.dataRenderers[id]
             }
         }
@@ -85,14 +82,15 @@ export class ArrayRenderer extends DataRenderer {
     }
 
     destroy(): void {
-        // super.destroy()
-        // for (const id of Object.keys(this.dataRenderers)) {
-        //     const renderer = this.dataRenderers[id]
-        //     renderer.renderer.destroy()
-        //     renderer.index.element.remove()
-        //     renderer.renderer.element.remove()
-        // }
-        // this.dataRenderers = {}
+        super.destroy()
+        for (const id of Object.keys(this.dataRenderers)) {
+            const renderer = this.dataRenderers[id]
+            renderer.renderer.destroy()
+            renderer.index.element.remove()
+            renderer.renderer.element.remove()
+            renderer.comma.remove()
+        }
+        this.dataRenderers = {}
     }
 
     getAllChildRenderers() {
@@ -110,21 +108,31 @@ export class ArrayRenderer extends DataRenderer {
         return renderers
     }
 
-    select(selection: Set<string>) {
-        this.selection = new Set([...selection, ...this.selection])
-        for (const id of Object.keys(this.dataRenderers)) {
-            const renderer = this.dataRenderers[id].renderer
+    /* ------------------------ Focus ----------------------- */
+    unfocus() {
+        this.closingBrace.classList.add('unfocused')
+        this.openingBrace.classList.add('unfocused')
 
-            if (this.selection.has(id)) {
-                renderer.select(this.selection)
-            }
+        for (const id of Object.keys(this.dataRenderers)) {
+            this.dataRenderers[id].comma.classList.add('unfocused')
         }
     }
 
-    deselect() {
+    focus() {
+        this.closingBrace.classList.remove('unfocused')
+        this.openingBrace.classList.remove('unfocused')
+
         for (const id of Object.keys(this.dataRenderers)) {
-            const renderer = this.dataRenderers[id].renderer
-            renderer.deselect()
+            this.dataRenderers[id].comma.classList.remove('unfocused')
+        }
+    }
+
+    clearFocus() {
+        this.closingBrace.classList.remove('unfocused')
+        this.openingBrace.classList.remove('unfocused')
+
+        for (const id of Object.keys(this.dataRenderers)) {
+            this.dataRenderers[id].comma.classList.remove('unfocused')
         }
     }
 }

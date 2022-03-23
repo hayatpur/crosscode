@@ -1,5 +1,6 @@
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { Executor } from '../../executor/Executor'
 import { Action } from '../Action/Action'
 import { Timeline } from './Timeline'
 
@@ -49,6 +50,14 @@ export class TimelineController {
         // Render them so they're in the right place
         this.timeline.renderer.render(this.timeline)
 
+        setTimeout(() => {
+            // Hide all views except the last one
+            const views = this.timeline.renderer.views
+            for (let i = 0; i < views.length - 1; i++) {
+                views[i].controller.toggleHidden()
+            }
+        })
+
         // Create trail groups
         // setTimeout(() => {
         //     for (let i = 0; i < this.timeline.steps.length; i++) {
@@ -70,21 +79,38 @@ export class TimelineController {
     }
 
     showNewSteps() {
-        this.timeline.state.isShowingSteps = true
+        // this.timeline.state.isShowingSteps = true
         this.timeline.state.isShowingNewSteps = true
 
+        // Create a new timeline
+        const newAction = new Action(this.timeline.action.execution, {
+            isRoot: true,
+            shouldShowSteps: true,
+            shouldExpand: true,
+        })
+        const camera = Executor.instance.visualization.camera
+        camera.add(newAction.renderer.element)
+
+        const bbox = this.timeline.action.renderer.element.getBoundingClientRect()
+        const vizBbox = Executor.instance.visualization.element.getBoundingClientRect()
+
+        newAction.state.transform.position.x = bbox.x + bbox.width - vizBbox.x
+
+        const newBbox = newAction.renderer.element.getBoundingClientRect()
+        newAction.state.transform.position.y = bbox.y + bbox.height / 2 - newBbox.height / 2
+
         // Create steps
-        // TODO: Deal with execution nodes
-        this.timeline.steps = []
-        this.timeline.trailGroups = []
+        // // TODO: Deal with execution nodes
+        // this.timeline.steps = []
+        // this.timeline.trailGroups = []
 
-        for (const step of getExecutionSteps(this.timeline.action.execution)) {
-            const action = new Action(step, { shouldExpand: false, shouldShowSteps: false })
-            this.timeline.steps.push(action)
-        }
+        // for (const step of getExecutionSteps(this.timeline.action.execution)) {
+        //     const action = new Action(step, { shouldExpand: false, shouldShowSteps: false })
+        //     this.timeline.steps.push(action)
+        // }
 
-        // Render them so they're in the right place
-        this.timeline.renderer.render(this.timeline)
+        // // Render them so they're in the right place
+        // this.timeline.renderer.render(this.timeline)
 
         // Create trail groups
         // setTimeout(() => {

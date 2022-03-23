@@ -15,8 +15,8 @@ export class ActionRenderer {
     // Header
     header: HTMLElement
     label: HTMLElement
-    preLabel: HTMLElement
-    controls: HTMLElement
+    // preLabel: HTMLElement
+    // controls: HTMLElement
 
     // Controls
 
@@ -36,8 +36,8 @@ export class ActionRenderer {
         // Header
         this.header = createEl('div', 'action-header', this.element)
         this.label = createEl('div', 'action-label', this.header)
-        this.preLabel = createEl('div', 'action-pre-label', this.header)
-        this.controls = createEl('div', 'action-controls', this.header)
+        // this.preLabel = createEl('div', 'action-pre-label', this.header)
+        // this.controls = createEl('div', 'action-controls', this.header)
 
         // Controls
 
@@ -49,7 +49,13 @@ export class ActionRenderer {
 
     render(action: Action) {
         // Set label
-        this.preLabel.innerHTML = action.execution.nodeData.preLabel ?? ''
+        // this.preLabel.innerHTML = action.execution.nodeData.preLabel ?? ''
+
+        // if (action.timeline.state.isRoot) {
+        //     // TODO Fix
+        //     this.preLabel.innerHTML = getLabelOfExecution(action.execution)
+        // }
+
         setSourceCodeOfExecution(action.execution, this.label)
 
         // Set classes
@@ -64,6 +70,10 @@ export class ActionRenderer {
         action.timeline.state.isRoot
             ? this.element.classList.add('root')
             : this.element.classList.remove('root')
+
+        action.timeline.state.isShowingNewSteps
+            ? this.element.classList.add('showing-new-steps')
+            : this.element.classList.remove('showing-new-steps')
     }
 
     /* ----------------------- Destroy ---------------------- */
@@ -74,8 +84,8 @@ export class ActionRenderer {
         this.element = null
         this.header = null
         this.label = null
-        this.preLabel = null
-        this.controls = null
+        // this.preLabel = null
+        // this.controls = null
         this.body = null
     }
 }

@@ -3,6 +3,7 @@ import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/
 import {
     Accessor,
     accessorsToString,
+    AccessorType,
     EnvironmentState,
 } from '../../../environment/EnvironmentState'
 import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
@@ -44,6 +45,13 @@ function apply(animation: CopyDataAnimation, environment: EnvironmentState) {
         },
         { location, id: copy.id }
     )
+
+    if (animation.dataSpecifier[0].type == AccessorType.Symbol) {
+        animation._reads.push({
+            id: animation.dataSpecifier[0].value,
+            location: animation.dataSpecifier,
+        })
+    }
 }
 
 function computeReadAndWrites(animation: CopyDataAnimation, original: DataInfo, copy: DataInfo) {

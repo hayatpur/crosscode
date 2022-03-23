@@ -26,34 +26,31 @@ export class TrailRenderer {
 
     render(trail: Trail) {
         if (trail.state.type == TrailType.Create) {
-            const anchor = trail.action.timeline.renderer.anchors[0]
-            const anchorBbox = anchor.getBoundingClientRect()
-
-            const data = trail.endEnvironment.getAllChildRenderers()[trail.state.toDataId].element
-            const dataBbox = data.getBoundingClientRect()
-
-            const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getBoxToBoxArrow(
-                anchorBbox.x,
-                anchorBbox.y,
-                anchorBbox.width,
-                anchorBbox.height,
-                dataBbox.x,
-                dataBbox.y,
-                dataBbox.width,
-                dataBbox.height,
-                {
-                    padEnd: 0,
-                    padStart: 0,
-                }
-            )
-            this.element.setAttribute(
-                'd',
-                `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
-            )
-            this.element.classList.add('trail-create')
-
-            data.classList.add('trail-create')
-            this.affectedData = data
+            // const anchor = trail.action.timeline.renderer.anchors[0]
+            // const anchorBbox = anchor.getBoundingClientRect()
+            // const data = trail.endEnvironment.getAllChildRenderers()[trail.state.toDataId].element
+            // const dataBbox = data.getBoundingClientRect()
+            // const [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = getBoxToBoxArrow(
+            //     anchorBbox.x,
+            //     anchorBbox.y,
+            //     anchorBbox.width,
+            //     anchorBbox.height,
+            //     dataBbox.x,
+            //     dataBbox.y,
+            //     dataBbox.width,
+            //     dataBbox.height,
+            //     {
+            //         padEnd: 0,
+            //         padStart: 0,
+            //     }
+            // )
+            // this.element.setAttribute(
+            //     'd',
+            //     `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
+            // )
+            // this.element.classList.add('trail-create')
+            // data.classList.add('trail-create')
+            // this.affectedData = data
         } else if (trail.state.type == TrailType.Move) {
             const start =
                 trail.startEnvironment.getAllChildRenderers()[trail.state.fromDataId].element

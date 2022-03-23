@@ -80,11 +80,39 @@ _Implementation_
 [ ] Hide / show appropriate views
 [ ] Skip exploration by interacting with the code
 [ ] Expand in-place but push-back
+[ ] Work backwards from a deeper level of abstraction
+[ ] Views should not be destroyed unless timeline is destroyed
+[ ] Children of execution (i.e. if a node contains another) should be highlighted too
+[ ] Replace timeline bullet with number
+[ ] Focus should also find what point in time data is focused at
+[ ] If you hit a hard scope, you can't look past it!
 
 _Writing_
-[ ] Write, write, write
+[ ] Finish related work (ddl: this week)
+[ ] Formative study (ddl: Feb 25)
+[ ] System design (ddl: this week)
+[ ] Draft (ddl: Apr 1)
 
-OMG GREAT IDEA: ANIMATION SHOULD SHOW SIGNIFICANT CHANGES??? KEY EVENT HEURISTIC???
+_Study_
+[ ] Outline of procedure
+[ ] Questionnaire
+[ ] Script
+[ ] Have the study done by end of next week
+
+_Video_
+[ ] After paper outline
+
+**Feedback**
+[ ] Which views to show?
+[ ] What to show in the views?
+[ ] Spatial positioning of layout
+[ ] Connections between origin and steps
+[ ] Punch card blocks
+[ ] Minimap
+[ ] Traces? Animations?
+
+[ ] Call expression: inputs, outputs
+[ ] If statement condition
 
 **Mechanisms**
 

@@ -32,7 +32,7 @@ export function MemberExpression(
         feed: false,
         outputRegister: objectRegister,
     })
-    addVertex(graph, object, { nodeData: getNodeData(ast.object, 'object') })
+    // addVertex(graph, object, { nodeData: getNodeData(ast.object, 'Object') })
 
     // Create a register that'll point to the location of computed property
     const propertyRegister = [{ type: AccessorType.Register, value: `${graph.id}_Property` }]
@@ -47,16 +47,16 @@ export function MemberExpression(
             feed: false,
         }
     )
-    addVertex(graph, property, { nodeData: getNodeData(ast.property, 'property') })
+    addVertex(graph, property, { nodeData: getNodeData(ast.property, 'Property') })
 
     // Compute the result
     if (context.feed) {
         const find = findMember(objectRegister, propertyRegister, context.outputRegister)
-        addVertex(graph, find, { nodeData: getNodeData(ast, 'find member') })
+        addVertex(graph, find, { nodeData: getNodeData(ast, 'Find Member') })
         applyExecutionNode(find, environment)
     } else {
         const member = getMember(objectRegister, propertyRegister, context.outputRegister)
-        addVertex(graph, member, { nodeData: getNodeData(ast, 'get member') })
+        addVertex(graph, member, { nodeData: getNodeData(ast, 'Get Member') })
         applyExecutionNode(member, environment)
     }
 

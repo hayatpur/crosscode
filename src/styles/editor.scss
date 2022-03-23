@@ -52,7 +52,7 @@
     opacity: 0.7;
     font-size: 12px !important;
     margin-top: 2px !important;
-    transition: 0.4s var(--transition-type);
+    // transition: 0.4s var(--transition-type);
     transition-property: opacity;
 }
 
@@ -94,7 +94,7 @@
 .monaco-editor .cursors-layer .cursor {
     // background-color: var(--color-6) !important;
     transition-property: top, left;
-    transition: 0.1s;
+    // transition: 0.1s;
     // opacity: 0.5;
     height: 20px !important;
     margin-top: 6px !important;
@@ -114,13 +114,13 @@
     overflow: visible !important;
 }
 
-.view-line span span {
-    transition: 0.2s var(--transition-type);
-}
+// .view-line span span {
+//     transition: 0.2s var(--transition-type);
+// }
 
-.view-line {
-    transition: 0.2s var(--transition-type);
-}
+// .view-line {
+//     transition: 0.2s var(--transition-type);
+// }
 
 .editor-selection {
     position: absolute;
@@ -152,6 +152,10 @@
 
 .view-line > span > span.highlighted {
     transform: translate(3px, -3px);
+}
+
+.cdr.folded-background {
+    opacity: 0;
 }
 
 /* -------------------- Syntax colors ------------------- */
@@ -212,4 +216,25 @@
 
 #errors.active {
     display: inherit;
+}
+
+.monaco-hover {
+    display: none !important;
+}
+
+/* ------------------------ Focus ----------------------- */
+.view-line > span > span.unfocused {
+    opacity: 0.2 !important;
+    filter: saturate(0);
+    color: white !important;
+}
+
+.view-line > span > span {
+    // transition-property: opacity, color;
+    // transition-duration: var(--focus-duration);
+}
+
+.view-line > span > span.secondary-focus {
+    opacity: 0.6 !important;
+    color: var(--s-color-4) !important;
 }

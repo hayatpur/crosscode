@@ -1,17 +1,17 @@
-function bs(arr, val, low, high) {
+function bs(arr, searchValue, low, high) {
     if (high <= low || arr.length == 0) return -1
 
     const mid = low + Math.floor((high - low) / 2)
 
-    if (arr[mid] == val) {
+    if (arr[mid] === searchValue) {
         return mid
     }
 
-    if (arr[mid] > val) {
-        return bs(arr, val, low, mid - 1)
+    if (arr[mid] > searchValue) {
+        return bs(arr, searchValue, low, mid - 1)
     }
 
-    return bs(arr, val, mid + 1, high)
+    return bs(arr, searchValue, mid + 1, high)
 }
 
 let arr = [2, 5, 7, 8, 13, 18]

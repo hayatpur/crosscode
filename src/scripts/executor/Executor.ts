@@ -99,11 +99,23 @@ export class Executor {
 
     /* --------------------- Parameters --------------------- */
 
-    PARAMS: { a: number; b: number; c: number; d: number; focus: boolean } = {
+    PARAMS: {
+        a: number
+        b: number
+        c: number
+        d: number
+        focus: boolean
+        ms: number
+        mx: number
+        my: number
+    } = {
         a: 0.5,
         b: 0.5,
         c: 0.5,
         d: 0.5,
+        ms: 0.5,
+        mx: 0.5,
+        my: 0.5,
         focus: false,
     }
 
