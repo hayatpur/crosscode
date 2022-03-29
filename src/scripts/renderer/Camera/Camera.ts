@@ -46,6 +46,8 @@ export class Camera {
                 this.isDragging = true
                 this.prevMouse = { x: e.clientX, y: e.clientY }
             }
+
+            e.preventDefault()
         })
 
         vis.element.addEventListener('mousemove', (e) => {
@@ -54,6 +56,8 @@ export class Camera {
                 this.state.position.y += e.y - this.prevMouse.y
             }
             this.prevMouse = { x: e.x, y: e.y }
+
+            e.preventDefault()
         })
 
         document.body.addEventListener('mouseup', () => {
@@ -61,19 +65,7 @@ export class Camera {
         })
     }
 
-    onAddedToDom() {
-        // this.panzoom = Panzoom(this.element, {
-        //     maxScale: 5,
-        //     animate: true,
-        //     canvas: true,
-        // })
-        // setTimeout(() => {
-        //     this.panzoom.pan(500, 400)
-        //     this.panzoom.zoom(1.2)
-        // }, 1000)
-        // panzoom.zoom(2, { animate: false })
-        // this.element.parentElement.addEventListener('wheel', this.panzoom.zoomWithWheel)
-    }
+    onAddedToDom() {}
 
     tick(dt: number) {
         // Apply transform

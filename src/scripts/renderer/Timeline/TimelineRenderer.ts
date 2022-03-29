@@ -1,97 +1,133 @@
-import { Executor } from '../../executor/Executor'
-import { createEl } from '../../utilities/dom'
-import { View } from '../View/View'
-import { Timeline } from './Timeline'
+// import { createEl } from '../../utilities/dom'
+// import { Timeline } from './Timeline'
 
-/* ------------------------------------------------------ */
-/*                    Timeline renderer                   */
-/* ------------------------------------------------------ */
-export class TimelineRenderer {
-    element: HTMLElement
-    views: View[] = []
+// /* ------------------------------------------------------ */
+// /*                    Timeline renderer                   */
+// /* ------------------------------------------------------ */
+// export class TimelineRenderer {
+//     element: HTMLElement
 
-    /* ----------------------- Create ----------------------- */
-    constructor() {
-        this.create()
-    }
+//     baseElement: HTMLElement
+//     // cursorElement: HTMLElement
+//     // movingCursorElement: HTMLElement
 
-    create() {
-        this.element = createEl('div', 'timeline')
-    }
+//     /* ----------------------- Create ----------------------- */
+//     constructor() {
+//         this.create()
+//     }
 
-    createAnchor() {
-        const anchor = createEl('div', 'timeline-anchor', this.element)
-        return anchor
-    }
+//     create() {
+//         this.element = createEl('div', 'timeline')
+//         this.baseElement = createEl('div', 'timeline-base', this.element)
+//         // this.movingCursorElement = createEl('div', 'timeline-moving-cursor', this.element)
+//         // this.cursorElement = createEl('div', 'timeline-cursor', this.element)
+//     }
 
-    createView() {
-        const view = new View()
-        this.element.appendChild(view.renderer.element)
-        return view
-    }
+//     /* ----------------------- Render ----------------------- */
 
-    /* ----------------------- Render ----------------------- */
+//     updateClasses(timeline: Timeline) {
+//         // Root
+//         timeline.state.isRoot
+//             ? this.element.classList.add('root')
+//             : this.element.classList.remove('root')
 
-    updateClasses(timeline: Timeline) {
-        // Root
-        timeline.state.isRoot
-            ? this.element.classList.add('root')
-            : this.element.classList.remove('root')
+//         // Showing steps
+//         timeline.state.isShowingSteps
+//             ? this.element.classList.add('showing-steps')
+//             : this.element.classList.remove('showing-steps')
 
-        // Expanded
-        !timeline.state.isCollapsed
-            ? this.element.classList.add('expanded')
-            : this.element.classList.remove('expanded')
+//         // Cursor
+//         // timeline.state.isShowingSteps
+//         //     ? this.cursorElement.classList.add('showing-steps')
+//         //     : this.cursorElement.classList.remove('showing-steps')
 
-        // Showing steps
-        timeline.state.isShowingSteps
-            ? this.element.classList.add('showing-steps')
-            : this.element.classList.remove('showing-steps')
-    }
+//         // // Moving cursor
+//         // timeline.state.isShowingSteps
+//         //     ? this.movingCursorElement.classList.add('showing-steps')
+//         //     : this.movingCursorElement.classList.remove('showing-steps')
+//     }
 
-    render(timeline: Timeline) {
-        // Reset
-        this.views.forEach((view) => view.destroy())
+//     render(timeline: Timeline) {
+//         // Set position of steps and views
+//         if (timeline.state.isShowingSteps) {
+//             let viewIndex = 0
+//             for (let i = 0; i < timeline.steps.length; i++) {
+//                 if (viewIndex <= timeline.views.length) {
+//                     const viewTime = timeline.viewTimes[viewIndex]
+//                     if (viewTime <= i) {
+//                         const view = timeline.views[viewIndex]
+//                         this.element.appendChild(view.renderer.element)
+//                         viewIndex++
+//                     }
+//                 }
 
-        this.views = []
+//                 const step = timeline.steps[i]
+//                 this.element.appendChild(step.renderer.element)
+//             }
 
-        // Update classes
-        this.updateClasses(timeline)
+//             // Any left-over view
+//             if (viewIndex <= timeline.views.length) {
+//                 const viewTime = timeline.viewTimes[viewIndex]
+//                 if (viewTime <= timeline.steps.length) {
+//                     const view = timeline.views[viewIndex]
+//                     this.element.appendChild(view.renderer.element)
+//                     viewIndex++
+//                 }
+//             }
+//         }
 
-        // If not showing steps, then it doesn't have any renderers; only the anchor
-        if (!timeline.state.isShowingSteps) {
-        }
-        // Else not collapsed and showing steps, then it has a renderer (and anchor) for each step and for pre and post conditions
-        else {
-            // Renderer for each step
-            for (const step of timeline.steps) {
-                // Add step to timeline
-                this.element.appendChild(step.renderer.element)
+//         // Update classes
+//         this.updateClasses(timeline)
 
-                // Add corresponding view to timeline
-                const view = this.createView()
-                view.renderer.render([step.execution.postcondition], timeline.action.execution)
-                this.views.push(view)
-            }
-        }
+//         // Set cursor position
+//         this.renderTime(timeline)
+//     }
 
-        // Update connections
-        Executor.instance.visualization.updateAllConnections()
-        setTimeout(() => {
-            Executor.instance.visualization.updateAllConnections()
-        }, 100)
-    }
+//     renderTime(timeline: Timeline) {
+//         const timelineBbox = this.element.getBoundingClientRect()
 
-    updateConnections(timeline: Timeline) {}
+//         // if (timeline.state.isShowingSteps) {
+//         //     const currentIndex = Math.round(timeline.state.currentTime)
+//         //     const currentStep = timeline.steps[currentIndex]
+//         //     const currentStepBbox = currentStep.renderer.label.getBoundingClientRect()
+//         //     let y = currentStepBbox.y + 16 - timelineBbox.y
+//         //     this.cursorElement.style.top = `${y}px`
 
-    /* ----------------------- Destroy ---------------------- */
-    destroy() {
-        // this.anchors.forEach((anchor) => anchor.remove())
-        // this.connections.forEach((connection) => connection.svg.remove())
-        this.views.forEach((view) => view.destroy())
+//         //     // Move in between steps
+//         //     // const leftOver = timeline.state.currentTime - currentIndex // [-0.5, 0.5]
+//         //     // if (leftOver != 0) {
+//         //     //     let leftOverStep: Action = null
 
-        this.element.remove()
-    }
-}
+//         //     //     if (leftOver > 0) {
+//         //     //         leftOverStep = timeline.steps[currentIndex + 1]
+//         //     //     } else {
+//         //     //         leftOverStep = timeline.steps[currentIndex - 1]
+//         //     //     }
 
-/* ------------------ Helper functions ------------------ */
+//         //     //     const leftOverStepBbox = leftOverStep.renderer.label.getBoundingClientRect()
+//         //     //     y =
+//         //     //         lerp(currentStepBbox.y, leftOverStepBbox.y, Math.abs(leftOver)) +
+//         //     //         16 -
+//         //     //         timelineBbox.y
+//         //     // }
+
+//         //     this.movingCursorElement.style.top = `${y}px`
+//         // } else {
+//         //     this.cursorElement.style.top = '0px'
+//         //     this.movingCursorElement.style.top = '0px'
+//         // }
+
+//         // const baseBbox = this.baseElement.getBoundingClientRect()
+//         // this.cursorElement.style.left = `${baseBbox.x - timelineBbox.x}px`
+//         // this.movingCursorElement.style.left = `${baseBbox.x - timelineBbox.x}px`
+//     }
+
+//     updateConnections(timeline: Timeline) {}
+
+//     /* ----------------------- Destroy ---------------------- */
+//     destroy() {
+//         this.element.remove()
+//     }
+// }
+
+// /* ------------------ Helper functions ------------------ */

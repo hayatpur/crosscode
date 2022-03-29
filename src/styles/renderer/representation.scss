@@ -1,0 +1,9 @@
+.loop-rect {
+    width: #{'eval(100% - 10px)'};
+    height: #{'eval(100% - 10px)'};
+    border-radius: 0px 0px 0px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-left: 0px;
+    border-bottom: 0px;
+    margin-left: 20px;
+}

@@ -4,7 +4,7 @@ import { createEl } from '../../utilities/dom'
 import { Ticker } from '../../utilities/Ticker'
 import { Action } from '../Action/Action'
 import { Camera } from '../Camera/Camera'
-import { Timeline } from '../Timeline/Timeline'
+import { CodeQueryCreator } from '../Queries/CodeQueryCreator'
 import { Focus } from './Focus'
 import { Minimap } from './Minimap'
 
@@ -17,7 +17,7 @@ export class Visualization {
     root: Action
     camera: Camera
 
-    timelines: Timeline[] = []
+    // timelines: Timeline[] = []
 
     private _tickerId: string
 
@@ -28,6 +28,8 @@ export class Visualization {
     codeBackdrop: HTMLElement
 
     minimap: Minimap
+
+    codeQueryCreator: CodeQueryCreator
 
     /* ----------------------- Create ----------------------- */
 
@@ -50,23 +52,27 @@ export class Visualization {
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
 
         this.minimap = new Minimap()
+
+        this.codeQueryCreator = new CodeQueryCreator()
     }
 
     createRoot(execution: ExecutionGraph) {
         // Root action
-        this.root = new Action(execution, {
-            shouldExpand: true,
-            shouldShowSteps: true,
-            isRoot: true,
+        this.root = new Action(execution, null, {
+            inline: false,
         })
+        this.root.controller.createSteps()
+        this.root.controller.createView(this.root.steps.length)
+        this.root.renderer.render(this.root)
+
         this.camera.add(this.root.renderer.element)
 
         setTimeout(() => {
             const actionBbox = this.root.renderer.element.getBoundingClientRect()
             const cameraBbox = this.camera.element.getBoundingClientRect()
-            this.root.state.transform.position.y = cameraBbox.height / 2 - actionBbox.height / 2
-        }, 100)
-        this.root.state.transform.position.x = 200
+            this.root.state.position.y = cameraBbox.height / 2 - actionBbox.height / 2
+        })
+        this.root.state.position.x = 200
 
         this.minimap.addAction(this.root)
     }
@@ -77,12 +83,6 @@ export class Visualization {
         const margin = Editor.instance.getMaxWidth() + 100
         this.element.style.left = `${margin}px`
         this.codeBackdrop.style.width = `${margin}px`
-    }
-
-    updateAllConnections() {
-        this.timelines.forEach((timeline) => {
-            timeline.renderer.updateConnections(timeline)
-        })
     }
 
     /* ----------------------- Destroy ---------------------- */

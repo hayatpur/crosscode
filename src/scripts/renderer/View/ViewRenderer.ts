@@ -1,8 +1,6 @@
-import { EnvironmentState } from '../../environment/EnvironmentState'
-import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { createEl } from '../../utilities/dom'
 import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
+import { View } from './View'
 
 /* ------------------------------------------------------ */
 /*                      View Renderer                     */
@@ -30,18 +28,18 @@ export class ViewRenderer {
     }
 
     /* ----------------------- Render ----------------------- */
-    render(environments: EnvironmentState[], parent: ExecutionNode | ExecutionGraph) {
+    render(view: View, filter?: string[]) {
         // Render environments
-        for (let i = 0; i < environments.length; i++) {
+        for (let i = 0; i < view.environments.length; i++) {
             if (this.environmentRenderers.length <= i) {
                 this.environmentRenderers.push(this.createEnvironmentRenderer())
             }
 
-            this.environmentRenderers[i].render(environments[i], parent)
+            this.environmentRenderers[i].render(view.environments[i], filter)
         }
 
         // Cleanup unused renderers
-        while (this.environmentRenderers.length > environments.length) {
+        while (this.environmentRenderers.length > view.environments.length) {
             const renderer = this.environmentRenderers.pop()
             renderer.destroy()
         }

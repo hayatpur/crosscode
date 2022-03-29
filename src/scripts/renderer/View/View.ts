@@ -1,3 +1,4 @@
+import { EnvironmentState } from '../../environment/EnvironmentState'
 import { ViewController } from './ViewController'
 import { ViewRenderer } from './ViewRenderer'
 import { createViewState, ViewState } from './ViewState'
@@ -9,6 +10,8 @@ export class View {
     state: ViewState
     renderer: ViewRenderer
     controller: ViewController
+
+    environments: EnvironmentState[] = []
 
     constructor() {
         this.state = createViewState()

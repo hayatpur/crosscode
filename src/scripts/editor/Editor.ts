@@ -48,6 +48,7 @@ export class Editor {
             dragAndDrop: false,
             theme: 'atom',
             fontFamily: 'Fira Code',
+            fontLigatures: true,
             quickSuggestions: false,
             parameterHints: {
                 enabled: false,
@@ -89,7 +90,6 @@ export class Editor {
 
                 editor.monaco.onDidChangeCursorSelection((e) => {
                     editor.onSelectionUpdate.forEach((callback) => callback(e))
-                    // console.log('Selection', e.selection)
                 })
 
                 editor.onChangeContent.forEach((callback) => callback())

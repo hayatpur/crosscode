@@ -33,9 +33,11 @@ export class Minimap {
     /* ----------------------- Update ----------------------- */
     tick() {
         for (let i = 0; i < this.actions.length; i++) {
-            this.proxyElements[i].innerText = this.actions[i].renderer.label.innerText
+            if (this.actions[i].renderer == null) return
 
-            const position = this.actions[i].state.transform.position
+            this.proxyElements[i].innerText = this.actions[i].renderer.headerLabel.innerText
+
+            const position = this.actions[i].state.position
             this.proxyElements[i].style.left = `${
                 position.x * Executor.instance.PARAMS.ms * 0.1 + Executor.instance.PARAMS.mx * 100
             }px`

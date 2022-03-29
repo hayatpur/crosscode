@@ -1,18 +1,15 @@
 import { Editor } from '../../editor/Editor'
-import {
-    queryAllExecutionGraph,
-    queryExecutionGraph,
-    reads,
-    writes,
-} from '../../execution/execution'
-import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { ExecutionNode, instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { queryExecutionGraph, reads, writes } from '../../execution/execution'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Action } from '../Action/Action'
 import { View } from '../View/View'
 
 export class Focus {
     actions: Set<Action> = new Set()
     currentFocus: (ExecutionNode | ExecutionGraph)[] = []
+
+    dirty = false
 
     /* ----------------------- Create ----------------------- */
     constructor() {}
@@ -28,27 +25,9 @@ export class Focus {
             console.warn('Trying to clear focus on a node that is not focused')
         }
 
-        this.updateFocus()
+        this.dirty = true
 
-        // for (const action of this.actions) {
-        //     action.controller.clearFocus()
-        // }
-
-        // // Clear focus on all tokens
-        // for (const token of Editor.instance.getAllTokens()) {
-        //     token.classList.remove('unfocused')
-        //     token.classList.remove('secondary-focus')
-        // }
-
-        // let views: View[] = []
-        // for (const action of this.actions) {
-        //     if (action.timeline.state.isShowingSteps) {
-        //         views.push(...action.timeline.renderer.views)
-        //     }
-        // }
-        // for (const view of views) {
-        //     view.controller.clearFocus()
-        // }
+        setTimeout(() => this.updateFocus(), 200)
     }
 
     focusOn(node: ExecutionNode | ExecutionGraph) {
@@ -59,10 +38,20 @@ export class Focus {
 
         this.currentFocus.push(node)
 
-        this.updateFocus()
+        this.dirty = true
+
+        if (this.currentFocus.length > 1) {
+            setTimeout(() => this.updateFocus(), 200)
+        } else {
+            this.updateFocus()
+        }
     }
 
     updateFocus() {
+        if (!this.dirty) return
+
+        // Clear focus
+        let start = performance.now()
         if (this.currentFocus.length == 0) {
             for (const action of this.actions) {
                 action.controller.clearFocus()
@@ -74,8 +63,8 @@ export class Focus {
             }
             let views: View[] = []
             for (const action of this.actions) {
-                if (action.timeline.state.isShowingSteps) {
-                    views.push(...action.timeline.renderer.views)
+                if (action.steps.length > 0) {
+                    views.push(...action.views)
                 }
             }
             for (const view of views) {
@@ -107,26 +96,45 @@ export class Focus {
             token.classList.add('unfocused')
         }
 
-        const secondaryNodes = queryAllExecutionGraph(
-            node,
-            (n) => n.id != node.id && (instanceOfExecutionNode(n) || n.vertices.length < 2)
-        )
+        if (instanceOfExecutionGraph(node)) {
+            const vertices = node.vertices
+            for (const loc of vertices.map((n) => n.nodeData.location)) {
+                const bbox = Editor.instance.computeBoundingBoxForLoc(loc)
+                let padding = 20
+                bbox.x -= padding
+                bbox.y -= padding
+                bbox.width += 2 * padding
+                bbox.height += 2 * padding
 
-        // Secondary focus on tokens
-        for (const loc of secondaryNodes.map((n) => n.nodeData.location)) {
-            const bbox = Editor.instance.computeBoundingBoxForLoc(loc)
-            let padding = 20
-            bbox.x -= padding
-            bbox.y -= padding
-            bbox.width += 2 * padding
-            bbox.height += 2 * padding
-
-            const els = Editor.instance.getContainedTokenElements(bbox)
-            for (const el of els) {
-                el.classList.remove('unfocused')
-                el.classList.add('secondary-focus')
+                const els = Editor.instance.getContainedTokenElements(bbox)
+                for (const el of els) {
+                    el.classList.remove('unfocused')
+                    el.classList.add('secondary-focus')
+                }
             }
         }
+        // const secondaryNodes = queryAllExecutionGraph(
+        //     node,
+        //     (n) => n.id != node.id && (instanceOfExecutionNode(n) || n.vertices.length < 2)
+        // )
+
+        // console.log(secondaryNodes.length)
+
+        // Secondary focus on tokens
+        // for (const loc of secondaryNodes.map((n) => n.nodeData.location)) {
+        //     const bbox = Editor.instance.computeBoundingBoxForLoc(loc)
+        //     let padding = 20
+        //     bbox.x -= padding
+        //     bbox.y -= padding
+        //     bbox.width += 2 * padding
+        //     bbox.height += 2 * padding
+
+        //     const els = Editor.instance.getContainedTokenElements(bbox)
+        //     for (const el of els) {
+        //         el.classList.remove('unfocused')
+        //         el.classList.add('secondary-focus')
+        //     }
+        // }
 
         // Focus on tokens
         const primaryNodes = [node]
@@ -148,8 +156,8 @@ export class Focus {
 
         let views: View[] = []
         for (const action of this.actions) {
-            if (action.timeline.state.isShowingSteps) {
-                views.push(...action.timeline.renderer.views)
+            if (action.steps.length > 0) {
+                views.push(...action.views)
             }
         }
 

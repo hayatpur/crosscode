@@ -75,17 +75,125 @@
 
 **TODO** (real)
 _Implementation_
-[ ] Expand horizontally
-[ ] Show exploration map at bottom
-[ ] Hide / show appropriate views
-[ ] Skip exploration by interacting with the code
-[ ] Expand in-place but push-back
-[ ] Work backwards from a deeper level of abstraction
-[ ] Views should not be destroyed unless timeline is destroyed
-[ ] Children of execution (i.e. if a node contains another) should be highlighted too
-[ ] Replace timeline bullet with number
-[ ] Focus should also find what point in time data is focused at
-[ ] If you hit a hard scope, you can't look past it!
+[~] If you hit a hard scope, don't look past it!
+[ ] Show data renderers that are in scope!
+Use the earliest hard scope from identifiers to get the right frames for data renderers.
+
+[~] Expansion
+
+-   Normally <-- do this first!
+    Inline, just show each sub-step
+    Spatially apart
+    Some steps collapsed, replace those steps with a "..." (1D collapsing)
+-   In-context, shows a single step (not always possible), timeline stems from location of that step
+    Selecting another step opens a stacked timeline, based on the temporal order
+
+[ ] Specialized representations
+If statements
+Function calls
+For statements
+While statements
+
+[ ] Use timeline and execution to determine what goes in the views _and_ when to show views
+Hide / show appropriate views
+
+[ ] Animation and traces
+Environments should exist at a point in time
+
+[ ] Collapse across levels of abstraction (2D collapsing)
+Inline
+Spatially
+Work backwards from a deeper level of abstraction
+
+[ ] Data queries
+
+[ ] Code queries
+
+[ ] Minimap
+
+[ ] "Interest events" should be the only ones that are highlighted and interactable
+
+[ ] Cursor can't exist "at" a node, it has to be before or after
+
+[ ] Traces that indicate which instruction data was modified from AND traces that indicate what data modified it
+Traces between instructions and data
+Traces between data and data
+
+[ ] Expanding for loops?
+
+[ ] Maintaining context when skipping in depth
+
+[ ] Context, the thing that happens before _and_ after
+
+[ ] Add a view button in between the others
+
+[~] Dynamic representations
+
+-   Call Expression:
+
+    -   A: Show Step(call expression)
+    -   B: Show Step(call expression) and View(return value)
+    -   C: Show Step(call expression) and View(return value) and View(arguments)
+
+-   Function Call:
+
+    -   A: Show Step(function call)
+    -   B: Show Step(function call, expanded) and Step(return statement)
+    -   C: Show Step(function call, expanded) and Step(return statement) and Step(block statement)
+
+-   Block Statement:
+
+    -   A: Show Step(block statement)
+    -   B: Show Step(block statement) and View(after)
+    -   C: Show Step(block statement) and View(before) and View(after)
+    -   D: Show Step(block statement, expanded) and for each statement: Step(statement)
+    -   E: Show Step(block statement, expanded) and for each statement: Step(statement), and for chunks: View(statement)
+    -   F: Show Step(block statement, expanded) and for each statement: Step(statement) and View(statement)
+
+-   If Statement:
+    -   A: Show Step(if statement)
+    -   B: Show Step(if statement) and View(conditional, inline)
+    -   C: Show Step(if statement) and View(before) and View(after)
+
+Three big things left to implement:
+
+[~] Dynamic representations
+
+Goals of a dynamic representation:
+
+-   Summarize information at varying levels of abstraction
+-   Interactions for accessing lower levels of abstraction
+
+[~] Collapsing and expanding
+[ ] Incrementally showing information (i.e., tracing part by part)
+
+_Meeting_
+
+-   Dynamic representation:
+    -   For Statement
+    -   If Statement
+    -   Goals
+        -   Summarize information at that level abstraction
+        -   Interactions for accessing the lower level of abstraction
+-   Managing complexity:
+
+    -   Tracing and views
+
+-   Be able to loop at any point in time
+-   Be able to create views at any point in time / move views to any point in time
+    -   Bookmark
+-   Be able to collapse
+-   Be able to expand back (backtrack / add context)
+-   Be able to see if / else if in place
+-   Be able to see traces of data
+-   Be able to see traces of data and instruction
+-   Be able to see traces of source code to dynamic execution
+
+    Views vs. point in time
+
+Animations:
+
+-   Only move if the data is a "move" function of inputs, otherwise just highlight them, raise them or something and create the data
 
 _Writing_
 [ ] Finish related work (ddl: this week)
@@ -118,27 +226,17 @@ _Video_
 
 -   Data trace / Data flow
 -   Animation
-
 -   Route (navigation)
-
 -   Query from code
 -   Query from data
-
 -   Search and filter
-
 -   Hierarchical abstraction / control flow
 -   Symmetrical abstraction (e.g., for loop and recursive calls)
-
 -   Event
-
     -   Aggregation of sequential low level events or a low level event
-
 -   Timeline
-
     -   Collection of events
-
 -   Visual encoding
-
 -   Event layout
     -   Nesting
     -   Skipping
@@ -168,20 +266,14 @@ _Video_
 **System Design**
 
 -   Two aspects: visualize multiple levels of representation, and user interactions to make that possible.
-
 -   How different levels of abstraction manifest in space and time
-
     -   Program execution is temporal (higher level representation but lower level representation)
     -   Nesting, branching
     -   Data trace
-
 -   Filtering relevant information
-
     -   Queries
     -   Searching structure, navigating between levels of abstraction
-
 -   Timeline
-
 -   Reduction from actual execution
 
 **User Study**

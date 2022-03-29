@@ -1,8 +1,13 @@
 import { Editor } from '../../editor/Editor'
-import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { EnvironmentState } from '../../environment/EnvironmentState'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { Executor } from '../../executor/Executor'
 import { Ticker } from '../../utilities/Ticker'
+import { View } from '../View/View'
 import { Action } from './Action'
+import { ActionBundle } from './ActionBundle'
+import { isExpandable } from './ActionRenderer'
 
 /* ------------------------------------------------------ */
 /*           Defines interactions with an Action          */
@@ -19,34 +24,227 @@ export class ActionController {
         this.bindMouseEvents()
 
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+
+        if (isExpandable(action.execution)) {
+            action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
+
+            action.renderer.expandButton.addEventListener('click', () => {
+                // action.state.isExpanded = !action.state.isExpanded
+                action.renderer.expandButton.classList.toggle('pressed')
+                if (action.renderer.expandButton.classList.contains('pressed')) {
+                    action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-down-outline"></ion-icon>`
+                } else {
+                    action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
+                }
+                // this.updateClasses(action)
+            })
+        }
     }
 
     /* ----------------------- Update ----------------------- */
     tick(dt: number) {
         // Update position if root
-        if (this.action.timeline.state.isRoot) {
-            const { x, y } = this.action.state.transform.position
+        if (!this.action.state.inline) {
+            const { x, y } = this.action.state.position
             this.action.renderer.element.style.left = `${x}px`
             this.action.renderer.element.style.top = `${y}px`
         }
+
+        if (this.action.state.isFocusedStep) {
+            const { x, y } = this.action.state.position
+            this.action.renderer.element.style.marginLeft = `${x}px`
+        }
+
+        // Attach line numbers to root
+        if (this.action.state.inline) {
+            const root = this.action.controller.getSpatialRoot()
+            const rootBody = root.renderer.body.getBoundingClientRect()
+            const thisBody = this.action.renderer.element.getBoundingClientRect()
+            const delta = rootBody.x - thisBody.x
+            // console.log(`translateX(${delta}px)`)
+            this.action.renderer.headerPreLabel.style.transform = `translateX(${delta}px)`
+            this.action.renderer.footerPreLabel.style.transform = `translateX(${delta}px)`
+        }
     }
 
-    /* ---------------------- Minimize ---------------------- */
-    minimize() {
-        this.action.renderer.element.classList.add('minimized')
-        this.action.timeline.renderer.element.classList.add('minimized')
+    /* ------------------------ Step ------------------------ */
+    createSteps() {
+        this.action.steps = []
+        this.action.views = []
+        this.action.viewTimes = []
+
+        let steps = getExecutionSteps(this.action.execution)
+
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i]
+
+            // Compute any line difference
+            let delta = 0
+            if (i < steps.length - 1) {
+                let currEnd = step.nodeData.location.end.line
+                let nextStart = steps[i + 1].nodeData.location.start.line
+                delta = Math.min(Math.max(nextStart - currEnd - 1, 0), 1)
+            }
+
+            const action = new Action(step, this.action, {
+                spacingDelta: delta,
+                inline: true,
+            })
+            this.action.steps.push(action)
+        }
+
+        // Add a view if not inline
+        // TODO: Should be based on execution type
+        if (!this.action.state.inline) {
+            //     if (this.action.execution.nodeData.type == 'CallExpression') {
+            //         const args = this.action.steps[0] as Action
+            //         // args.controller.collapse(0)
+            //         const func = this.action.steps[1] as Action
+            //         // View before function call but after arguments that shows the argument
+            //         // values
+            //         const argView = new View()
+            //         argView.controller.setEnvironments(
+            //             [args.execution.postcondition],
+            //             [...writes(args.execution)].map((x) => x.id)
+            //         )
+            //         this.action.views.push(argView)
+            //         this.action.viewTimes.push(1)
+            //         // View after function call
+            //         const funcView = new View()
+            //         funcView.controller.setEnvironments(
+            //             [func.execution.postcondition],
+            //             [...writes(func.execution)].map((x) => x.id)
+            //         )
+            //         this.action.views.push(funcView)
+            //         this.action.viewTimes.push(2)
+            //     } else {
+            //         // View at end
+            // const view = new View()
+            // view.controller.setEnvironments([this.action.execution.postcondition])
+            // this.action.views.push(view)
+            // this.action.viewTimes.push(steps.length)
+            //     }
+        }
+
+        // Render them so they're in the right place
+        this.action.renderer.render(this.action)
     }
 
-    maximize() {
-        this.action.renderer.element.classList.remove('minimized')
-        this.action.timeline.renderer.element.classList.remove('minimized')
+    getRoot() {
+        let root = this.action
+        while (root.parent != null) {
+            root = root.parent
+        }
+        return root
+    }
+
+    getSpatialRoot() {
+        let root = this.action
+        while (root.parent != null && root.state.inline) {
+            root = root.parent
+        }
+        return root
+    }
+
+    createView(timeStep: number) {
+        const view = new View()
+
+        let env: EnvironmentState
+
+        if (timeStep == 0) {
+            env = this.action.execution.precondition
+        } else if (timeStep > this.action.steps.length) {
+            env = this.action.execution.postcondition
+        } else {
+            const step = this.action.steps[timeStep - 1]
+
+            if (step instanceof ActionBundle) {
+                env = step.getPostCondition()
+            } else {
+                env = step.execution.postcondition
+            }
+        }
+
+        view.controller.setEnvironments([env])
+
+        this.action.views.push(view)
+        this.action.viewTimes.push(timeStep)
+
+        return view
+    }
+
+    destroyStepsAndViews() {
+        // Destroy steps
+        this.action.steps?.forEach((step) => step.destroy())
+        this.action.steps = []
+
+        // Destroy views
+        this.action.views?.forEach((view) => view.destroy())
+        this.action.views = []
+        this.action.viewTimes = []
+
+        // Render again
+        this.action.renderer.render(this.action)
+    }
+
+    removeStep(step: Action) {
+        const index = this.action.steps.indexOf(step)
+        console.log(index)
+        if (index > -1) {
+            this.action.steps.splice(index, 1)
+        }
+
+        // Render again
+        this.action.renderer.render(this.action)
+    }
+
+    /* -------------------- Focused steps ------------------- */
+    createFocusedStep(execution: ExecutionGraph | ExecutionNode) {
+        this.destroyStepsAndViews()
+        const step = new Action(execution, this.action, {
+            spacingDelta: 0,
+            inline: true,
+            isFocusedStep: true,
+        })
+        step.controller.createSteps()
+
+        this.action.renderer.element.classList.add('showing-focused-step')
+
+        this.action.steps.push(step)
+        this.action.renderer.render(this.action)
+
+        return step
+    }
+
+    destroyFocusedStep() {
+        this.destroyStepsAndViews()
+    }
+
+    /* ------------------- Outgoing steps ------------------- */
+    createOutgoingStep(execution: ExecutionGraph | ExecutionNode) {
+        const step = new Action(execution, this.action, {
+            spacingDelta: 0,
+            inline: false,
+        })
+        step.controller.createSteps()
+
+        this.action.steps.push(step)
+        this.action.renderer.render(this.action)
+
+        Executor.instance.visualization.camera.add(step.renderer.element)
+
+        return step
+    }
+
+    destroyOutgoingStep(step: Action | ActionBundle) {
+        step.destroy()
+        this.action.steps.splice(this.action.steps.indexOf(step), 1)
+        this.action.renderer.render(this.action)
     }
 
     /* ------------------------ Focus ----------------------- */
     focus(node?: ExecutionGraph | ExecutionNode) {
         this.action.renderer.element.classList.remove('unfocused')
-        this.action.timeline.renderer.element.classList.remove('unfocused')
-
         this.action.renderer.element.classList.add('is-focused')
 
         if (node != null) {
@@ -64,7 +262,7 @@ export class ActionController {
             bbox.width += 2 * padding
             bbox.height += 2 * padding
 
-            const headerBbox = this.action.renderer.header.getBoundingClientRect()
+            const headerBbox = this.action.renderer.headerLabel.getBoundingClientRect()
 
             const tokens = [
                 ...this.action.renderer.header.querySelectorAll('.action-label > span > span'),
@@ -95,7 +293,6 @@ export class ActionController {
 
     unfocus() {
         this.action.renderer.element.classList.add('unfocused')
-        this.action.timeline.renderer.element.classList.add('unfocused')
 
         this.action.renderer.element.classList.add('is-focused')
 
@@ -110,7 +307,6 @@ export class ActionController {
 
     clearFocus() {
         this.action.renderer.element.classList.remove('unfocused')
-        this.action.timeline.renderer.element.classList.remove('unfocused')
         this.action.renderer.element.classList.remove('is-focused')
 
         const tokens = [
@@ -125,14 +321,24 @@ export class ActionController {
 
     bindMouseEvents() {
         // Bind mouse events to label
-        const node = this.action.renderer.label
+        const node = this.action.renderer.headerLabel
 
         node.addEventListener('mousedown', this.mousedown.bind(this))
         node.addEventListener('mouseover', this.mouseover.bind(this))
         node.addEventListener('mouseout', this.mouseout.bind(this))
 
+        node.addEventListener('click', this.click.bind(this))
+
         document.body.addEventListener('mouseup', this.mouseup.bind(this))
         document.body.addEventListener('mousemove', this.mousemove.bind(this))
+    }
+
+    click(e: MouseEvent) {
+        // if (this.action.steps.length == 0) {
+        //     this.createSteps()
+        // } else {
+        //     this.destroySteps()
+        // }
     }
 
     mousedown(event: MouseEvent) {}
@@ -154,4 +360,23 @@ export class ActionController {
             connection.remove()
         })
     }
+}
+
+/* ------------------------------------------------------ */
+/*                    Helper functions                    */
+/* ------------------------------------------------------ */
+// ? Apply blacklist
+export function getExecutionSteps(
+    execution: ExecutionGraph | ExecutionNode
+): (ExecutionGraph | ExecutionNode)[] {
+    if (instanceOfExecutionGraph(execution)) {
+        return execution.vertices
+    } else {
+        return []
+    }
+}
+
+export function functionCallReturns(execution: ExecutionGraph | ExecutionNode) {
+    // TODO
+    return true
 }

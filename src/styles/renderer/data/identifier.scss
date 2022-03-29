@@ -1,17 +1,9 @@
 .identifier {
-    position: absolute;
     font-size: 12px;
-    padding: 0px;
-    padding-left: 2px;
     border-radius: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-bottom: 2px;
     font-family: Fira Code;
     font-weight: 300;
     color: white;
-    top: 12px;
 }
 
 .identifier.selected {
@@ -19,9 +11,9 @@
     font-weight: 500;
 }
 
-.identifier.out {
-    color: var(--s-color-4);
-    font-weight: bold;
+.identifier.ret {
+    color: var(--s-color-3);
+    font-weight: 500;
 }
 
 .identifier.trail-create {
@@ -35,8 +27,8 @@
 /* ------------------------ Focus ----------------------- */
 .identifier.unfocused {
     opacity: 0.2 !important;
-    color: white !important;
-    filter: saturate(0);
+    // color: white !important;
+    // filter: saturate(0);
 }
 
 .identifier {

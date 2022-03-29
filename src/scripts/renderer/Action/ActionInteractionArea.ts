@@ -13,6 +13,8 @@ export class ActionInteractionArea {
 
     temporaryAction: Action = null
 
+    createdSteps: boolean = false
+
     /* ----------------------- Create ----------------------- */
     constructor(parentAction: Action, execution: ExecutionNode | ExecutionGraph) {
         this.parentAction = parentAction
@@ -20,78 +22,63 @@ export class ActionInteractionArea {
 
         this.create()
 
-        let clicked = false
-
-        let timer = 0
-
         // Focus
         this.element.addEventListener('mouseenter', (e) => {
-            if (!clicked) {
-                Executor.instance.visualization.focus.focusOn(this.execution)
-
-                this.temporaryAction = new Action(execution, {
-                    isRoot: true,
-                    shouldShowSteps: true,
-                    shouldExpand: true,
-                    origin: this.parentAction.renderer.label,
-                })
-                const camera = Executor.instance.visualization.camera
-                camera.add(this.temporaryAction.renderer.element)
-
-                const bbox = parentAction.renderer.element.getBoundingClientRect()
-                const vizBbox = Executor.instance.visualization.element.getBoundingClientRect()
-
-                this.temporaryAction.state.transform.position.x =
-                    bbox.x + bbox.width - vizBbox.x - camera.state.position.x + 100
-
-                const newBbox = this.temporaryAction.renderer.element.getBoundingClientRect()
-                this.temporaryAction.state.transform.position.y =
-                    bbox.y + bbox.height / 2 - newBbox.height / 2
-
-                // setTimeout(() => {
-                //     const bbox = parentAction.renderer.element.getBoundingClientRect()
-                //     const newBbox = this.temporaryAction.renderer.element.getBoundingClientRect()
-                //     this.temporaryAction.state.transform.position.y =
-                //         bbox.y + bbox.height / 2 - newBbox.height / 2
-                // }, 500)
-
-                this.temporaryAction.controller.minimize()
-
-                // clicked = true
-                setTimeout(() => {
-                    Executor.instance.visualization.focus.updateFocus()
-                }, 200)
-            }
+            // if (!this.createdSteps) {
+            Executor.instance.visualization.focus.focusOn(this.execution)
+            // }
         })
 
         this.element.addEventListener('mouseleave', (e) => {
-            if (!clicked) {
-                Executor.instance.visualization.focus.clearFocus(this.execution)
-                this.temporaryAction?.destroy()
-            }
+            // if (!this.createdSteps) {
+            Executor.instance.visualization.focus.clearFocus(this.execution)
+            // }
         })
 
         // Click
-        this.element.addEventListener('click', (e) => {
-            const camera = Executor.instance.visualization.camera
-            camera.state.position.x = -this.temporaryAction.state.transform.position.x + 300
-            // camera.state.position.y = -this.temporaryAction.state.transform.position.y + 300
-
-            this.temporaryAction.controller.maximize()
-
-            clicked = true
-            setTimeout(() => {
-                Executor.instance.visualization.focus.updateFocus()
-            }, 200)
-
-            Executor.instance.visualization.minimap.addAction(this.temporaryAction)
-
-            // camera.state.position.y = -(newAction.state.transform.position.y) + 300
+        let timer: number
+        this.element.addEventListener('click', (event) => {
+            if (event.detail === 1) {
+                timer = setTimeout(() => {
+                    this.clicked()
+                }, 200)
+            }
         })
+        this.element.addEventListener('dblclick', (event) => {
+            clearTimeout(timer)
+            this.doubleClicked()
+        })
+    }
+
+    clicked() {
+        if (this.createdSteps) {
+            this.parentAction.controller.destroyStepsAndViews()
+            this.createdSteps = false
+            return
+        }
+
+        if (this.execution.id == this.parentAction.execution.id) {
+            this.parentAction.controller.createSteps()
+        } else {
+            this.temporaryAction = this.parentAction.controller.createFocusedStep(this.execution)
+        }
+
+        this.createdSteps = true
+    }
+
+    doubleClicked() {
+        this.temporaryAction = this.parentAction.controller.createOutgoingStep(this.execution)
+        this.createdSteps = true
     }
 
     create() {
         this.element = createEl('div', 'action-interaction-area')
+
+        // Parent has been destroyed
+        if (this.parentAction.renderer == null) {
+            return
+        }
+
         this.parentAction.renderer.header.appendChild(this.element)
 
         const loc = this.execution.nodeData.location
@@ -101,26 +88,35 @@ export class ActionInteractionArea {
             this.parentAction.execution.nodeData.location
         )
 
+        // Label offset
+        const labelBbox = this.parentAction.renderer.headerLabel.getBoundingClientRect()
+        const headerBbox = this.parentAction.renderer.header.getBoundingClientRect()
+        const labelOffset = labelBbox.x - headerBbox.x
+
         const parentLoc = this.parentAction.execution.nodeData.location
+
+        if (this.execution.id == this.parentAction.execution.id) {
+            this.element.classList.add('itself')
+        }
 
         if (parentLoc.end.line - parentLoc.start.line > 1) {
             if (this.execution.id == this.parentAction.execution.id) {
-                bbox = this.parentAction.renderer.label.getBoundingClientRect()
+                bbox = this.parentAction.renderer.headerLabel.getBoundingClientRect()
                 parentBbox = bbox
             } else {
                 return
             }
         }
 
-        const paddingX = 5
-        const paddingY = 2
+        const paddingX = 0
+        const paddingY = 0
 
         // Set size
         this.element.style.width = `${bbox.width + paddingX * 2}px`
         this.element.style.height = `${bbox.height + paddingY * 2}px`
 
         // Set position relative to parent
-        this.element.style.left = `${bbox.x - parentBbox.x - paddingX}px`
+        this.element.style.left = `${bbox.x - parentBbox.x - paddingX + labelOffset}px`
         this.element.style.top = `${bbox.y - parentBbox.y - paddingY}px`
     }
 

@@ -1,4 +1,4 @@
-import { Executor } from '../../executor/Executor'
+import { EnvironmentState } from '../../environment/EnvironmentState'
 import { View } from './View'
 
 export class ViewController {
@@ -8,17 +8,20 @@ export class ViewController {
 
     constructor(view: View) {
         this.view = view
-        // this.toggleHidden()
 
-        this.view.renderer.element.addEventListener('click', this.toggleHidden.bind(this))
+        // this.view.renderer.element.addEventListener('click', this.toggleHidden.bind(this))
     }
 
     toggleHidden() {
         this.view.renderer.element.classList.toggle('hidden')
-        setTimeout(() => Executor.instance.visualization.updateAllConnections(), 200)
     }
 
     tick(dt: number) {}
+
+    setEnvironments(environments: EnvironmentState[], filter?: string[]) {
+        this.view.environments = environments
+        this.view.renderer.render(this.view, filter)
+    }
 
     /* ------------------------ Focus ----------------------- */
 

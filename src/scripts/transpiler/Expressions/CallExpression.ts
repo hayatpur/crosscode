@@ -3,7 +3,11 @@ import * as ESTree from 'estree'
 import { cleanUpRegister, resolvePath } from '../../environment/environment'
 import { Accessor, AccessorType, EnvironmentState } from '../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../execution/execution'
-import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import {
+    createExecutionGraph,
+    ExecutionGraph,
+    instanceOfExecutionGraph,
+} from '../../execution/graph/ExecutionGraph'
 import { consumeDataAnimation } from '../../execution/primitive/Data/ConsumeDataAnimation'
 import {
     ControlOutput,
@@ -135,7 +139,7 @@ export function CallExpression(
         })
         bodyGraph = body
         addVertex(graph, body, {
-            nodeData: { ...getNodeData(ast, 'Function Call'), type: 'Function Call' },
+            nodeData: { ...getNodeData(funcAST, 'Function Call'), type: 'FunctionCall' },
         })
     }
 
@@ -160,9 +164,13 @@ export function CallExpression(
         cleanUpRegister(environment, registers[i][0].value)
     }
 
+    graph.vertices[0].postcondition =
+        instanceOfExecutionGraph(bodyGraph) && bodyGraph.vertices.length > 1
+            ? clone(bodyGraph.vertices[0].postcondition)
+            : clone(bodyGraph.precondition)
     graph.postcondition = clone(environment)
-    bodyGraph.postcondition = clone(environment)
-    return bodyGraph
+    // bodyGraph.postcondition = clone(environment)
+    // return bodyGraph
     return graph
 }
 

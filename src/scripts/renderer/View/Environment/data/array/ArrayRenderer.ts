@@ -125,6 +125,9 @@ export class ArrayRenderer extends DataRenderer {
         for (const id of Object.keys(this.dataRenderers)) {
             this.dataRenderers[id].comma.classList.remove('unfocused')
         }
+
+        this.element.classList.remove('unfocused')
+        this.element.classList.remove('secondary-focused')
     }
 
     clearFocus() {
@@ -134,6 +137,9 @@ export class ArrayRenderer extends DataRenderer {
         for (const id of Object.keys(this.dataRenderers)) {
             this.dataRenderers[id].comma.classList.remove('unfocused')
         }
+
+        this.element.classList.remove('unfocused')
+        this.element.classList.remove('secondary-focused')
     }
 }
 

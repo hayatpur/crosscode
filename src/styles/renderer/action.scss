@@ -17,63 +17,271 @@
     flex-direction: column;
 }
 
-/* ------------------- Expanded rules ------------------- */
-
-.action.expanded:not(.showing-steps) {
-    align-items: center;
-}
-
 /* ------------------ Show steps rules ------------------ */
 
 .action.showing-steps {
     // align-items: center;
 }
 
-/* ----------------------- Header ----------------------- */
-
-.action-header {
-    // transition-property: opacity;
-    // transition-duration: 0.2s;
-}
-
-.action.expanded.showing-steps > .action-header {
-    top: 46px;
-    left: 43px;
-}
-
-.action:not(.expanded).showing-steps > .action-header {
-    top: 1px;
-    left: 53px;
-}
-
-// .action.root > .action-header {
-//     opacity: 0;
-// }
-
 /* ------------------------ Label ----------------------- */
-.action-pre-label {
-    position: absolute;
-    top: 0.5px;
-    white-space: pre;
-    transform: translate(calc(-100% - 28px), 0px);
-    font-weight: 300;
-    font-size: 15px;
-}
 
 .action-label {
     font-family: Fira Code;
     font-size: 18px;
     letter-spacing: -0.5px;
+    line-height: 34px;
+    position: relative;
+    user-select: none;
+}
+
+.action-label > span {
+    background: var(--color-10);
+    box-shadow: 0px 0px 10px 5px var(--color-10);
 }
 
 /* ------------------------ Body ------------------------ */
 
 .action-body {
     display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.action:not(.showing-steps) > .action-body {
+    display: none;
+}
+
+/* ------------------------ Root ------------------------ */
+.action:not(.inline) {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+
+    border: 1px solid #2c2c345e;
+    padding: 15px;
+    border-radius: 7px;
+    background: var(--color-10);
+}
+
+.action.inline.showing-steps:not(.showing-focused-step):not(.focused-step) > .action-body {
+    margin-left: 40px;
+}
+
+.action.inline.showing-steps > .action-body > .action > .action-header > .action-pre-label,
+.action.inline.showing-steps > .action-body > .action > .action-footer > .action-pre-label {
+    // opacity: 0;
+}
+
+.action.showing-steps:not(.inline):not(.program) > .action-body {
+    // padding-top: 30px;
+}
+
+/* ----------------------- Program ---------------------- */
+.action.program > .action-header,
+.action.program > .action-footer {
+    display: none;
+}
+
+.action.focused-step > .action-header {
+    display: none;
+}
+
+// .action.showing-steps > .action-header {
+//     display: none;
+// }
+
+.action:not(.inline) > .action-header,
+.action:not(.inline) > .action-footer {
+    top: -7px;
+    left: -16px;
     align-items: center;
 }
 
-/* ------------------- Control buttons ------------------ */
+.action:not(.inline) > .action-header > .action-label,
+.action:not(.inline) > .action-footer > .action-label {
+    opacity: 0.2;
+}
+
+/* ----------------------- Header ----------------------- */
+.action-header,
+.action-footer {
+    display: flex;
+    position: relative;
+}
+
+.action.showing-steps:not(.inline) > .action-header > .action-pre-label,
+.action.showing-steps:not(.inline) > .action-footer > .action-pre-label {
+    margin-right: 0px;
+    opacity: 0;
+}
+
+.action:not(.inline) > .action-header::before {
+    content: '';
+    width: 10px;
+    height: 13px;
+    background: var(--color-2);
+    border-radius: 0px 50% 50% 0px;
+    border: 1px solid var(--color-2);
+    border-left: 0px;
+}
+
+/* ---------------------- Prelabel ---------------------- */
+.action-pre-label {
+    font-family: Fira Code;
+    letter-spacing: -0.5px;
+    line-height: 34px;
+    color: #858585;
+    opacity: 0.6;
+    font-size: 10px !important;
+    margin-right: 22px;
+    width: 10px;
+    user-select: none;
+}
+
+/* ------------------ Root with borders ----------------- */
+
+.view {
+    box-shadow: 0 0 16px 5px #151517 !important;
+}
+
+/* ------------------------ Focus ----------------------- */
+
+.action-label > span > span.unfocused {
+    // color: white !important;
+    opacity: 0.2 !important;
+}
+
+/* ------------------ Interaction areas ----------------- */
+.action-interaction-area {
+    position: absolute;
+    opacity: 0.08;
+    border-radius: 0px;
+    background: white;
+    margin-top: 4px;
+    opacity: 0;
+}
+
+.action-interaction-area:hover {
+    opacity: 0.2;
+}
+
+.action-interaction-area.itself {
+    opacity: 0;
+}
+
+// .action.showing-steps > .action-header > .action-interaction-area {
+//     display: none;
+// }
+
+.action.is-focused > .action-header > .action-interaction-area {
+    background: rgba(255, 255, 255, 0.342);
+}
+
+/* ----------------------- Origin ----------------------- */
+.action-origin-connection {
+    fill: #0000;
+    stroke: url(#grad3);
+    stroke-width: 1px;
+    z-index: -1;
+}
+
+/* ------------------------ Base ------------------------ */
+.action-base {
+    width: 1px;
+    background: #ffffff17;
+    height: calc(100% - 10px);
+    position: absolute;
+    left: 37px;
+    top: 0px;
+    margin-top: 10px;
+}
+
+.action:not(.showing-steps) > .action-base {
+    display: none;
+}
+
+/* ----------------------- Bundle ----------------------- */
+.action-bundle {
+    background: #26262f;
+    border-radius: 7px;
+    padding: 0px 5px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-left: -4px;
+    color: var(--s-color-2);
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    margin: 9px;
+    margin-left: 34px;
+    width: fit-content;
+    font-family: Fira Code;
+}
+
+/* -------------------- Focused step -------------------- */
+.action.focused-step > .action-body {
+    padding-top: 30px;
+    padding-bottom: 0px;
+    /* margin-left: 110px; */
+}
+
+.action.showing-focused-step > .action-body > .action-base {
+    display: none;
+}
+
+.action.focused-step:last-child > .action-body > .action-base {
+    height: calc(100% + 20px);
+}
+
+.action-cursor {
+    width: 5px;
+    height: 15px;
+    border-radius: 7px;
+    position: absolute;
+    background: var(--color-2);
+    top: 10px;
+    z-index: 1;
+    left: -18px;
+    display: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.action-cursor:hover {
+    background: var(--color-3);
+}
+
+.action-cursor.active {
+    background: var(--s-color-3);
+}
+
+.action:not(.inline) > .action-body > .action-cursor {
+    display: inherit;
+}
+
+/* -------------------- Expand button ------------------- */
+.action-expand-button {
+    position: absolute;
+    left: 14px;
+    top: 9px;
+    font-size: 14px;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.action-header:hover > .action-expand-button {
+    opacity: 0.8;
+}
+
+.action-expand-button:hover {
+    opacity: 1 !important;
+}
+
+.action-expand-button.pressed {
+    opacity: 0.5;
+}
+
+/* ---------------------- Controls ---------------------- */
 .action-control-button {
     opacity: 0;
     pointer-events: none;
@@ -96,6 +304,10 @@
     cursor: pointer;
 }
 
+.action-control-button.hidden {
+    display: none;
+}
+
 .action-control-button:hover {
     color: white;
     transform: scale(1.2);
@@ -105,146 +317,17 @@
 .action-control-button.active {
     transform: scale(1);
     color: white;
+    opacity: 1;
 }
 
 .action-controls {
     position: absolute;
-    bottom: -27px;
+    top: -4px;
     display: flex;
-    left: -4px;
-    // transition: 0.2s;
+    left: -70px;
     padding: 10px;
     padding-left: 2px;
-}
-
-/* ------------------------ Root ------------------------ */
-.action.root {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-}
-
-.action.root.showing-steps > .action-header {
-    // top: -13px;
-    // left: 133px;
-    top: -10px;
-    left: 31px;
-    width: fit-content;
-    display: flex;
-    flex-direction: column-reverse;
-    opacity: 0.4;
-}
-
-.action.root.showing-steps > .action-header > .action-pre-label {
-    opacity: 1;
-}
-
-.action.root > .action-header > .action-pre-label {
-    position: relative;
-    transform: translate(0px, 0px);
-    // transform: translate(-19px, -24px);
-    margin-bottom: 10px;
-}
-
-.action.root {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-}
-
-.action.root > .action-header {
-}
-
-/* ------------------ Root with borders ----------------- */
-.action.root.showing-steps > .action-header {
-    top: -13px;
-    left: 133px;
-}
-
-.action.root {
-    border: 1px solid #2c2c345e;
-    padding: 0px 25px 25px 0px;
-    border-radius: 7px;
-    // background: var(--color-1);
-}
-
-.action.root > .action-header {
-    top: -72px !important;
-    left: -2px !important;
-}
-
-.action.root > .action-header > .action-pre-label {
-    transform: translate(0px, 0px);
-}
-
-.timeline.root > .timeline-anchor.start {
-    margin-top: 0px !important;
-}
-
-.view {
-    box-shadow: 0 0 16px 5px #1111148f !important;
-}
-
-// /* --------------- Focus with label inside -------------- */
-.action.root > .action-header {
-    top: 18px !important;
-    left: 18px !important;
-}
-
-.timeline.root > .timeline-anchor.start {
-    margin-top: 50px !important;
-}
-
-/* ---------------------- Minimized --------------------- */
-.action.minimized > .action-header {
-    opacity: 0 !important;
-}
-
-.action.minimized {
-    opacity: 0.2;
-    filter: saturate(0);
-}
-
-/* ------------------------ Focus ----------------------- */
-.action > .action-header > .action-pre-label {
-    // transition-property: opacity;
-    // transition-duration: var(--focus-duration);
-}
-
-.action.unfocused > .action-header > .action-pre-label {
-    opacity: 0.2;
-}
-
-.action-label > span > span {
-    // transition-property: opacity, color;
-    // transition-duration: var(--focus-duration);
-}
-
-.action-label > span > span.unfocused {
-    color: white !important;
-    opacity: 0.2 !important;
-}
-
-/* ------------------ Interaction areas ----------------- */
-.action-interaction-area {
-    position: absolute;
-    opacity: 0;
-    border-radius: 7px;
-    background: white;
-}
-
-.action.showing-steps > .action-header > .action-interaction-area {
-    display: none;
-}
-
-.action.is-focused > .action-header > .action-interaction-area {
-    opacity: 0;
-}
-
-/* ----------------------- Origin ----------------------- */
-.action-origin-connection {
-    fill: #0000;
-    stroke: url(#grad3);
-    stroke-width: 1px;
-    z-index: -1;
+    /* position: absolute; */
+    z-index: 5;
+    flex-direction: row-reverse;
 }

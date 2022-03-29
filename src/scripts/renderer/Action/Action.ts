@@ -1,18 +1,22 @@
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
-import { Timeline } from '../Timeline/Timeline'
+import { createRepresentation } from '../../utilities/action'
+import { View } from '../View/View'
+import { ActionBundle } from './ActionBundle'
 import { ActionController } from './ActionController'
+import { ActionCursor } from './ActionCursor'
 import { ActionInteractionArea } from './ActionInteractionArea'
 import { ActionRenderer } from './ActionRenderer'
 import { ActionState, createActionState } from './ActionState'
+import { Representation } from './Dynamic/Representation'
 
 /* ----------------------- Options ---------------------- */
 export interface CreateActionOptions {
-    shouldExpand?: boolean
-    shouldShowSteps?: boolean
-    isRoot?: boolean
-    origin?: HTMLElement
+    inline?: boolean
+    spacingDelta?: number
+    isFocusedStep?: boolean
+    isSelected?: boolean
 }
 
 /* ------------------------------------------------------ */
@@ -27,38 +31,66 @@ export class Action {
     renderer: ActionRenderer
     controller: ActionController
 
-    // Timeline
-    timeline: Timeline
+    // Sub-steps
+    steps: (Action | ActionBundle)[] = []
+
+    // Views
+    views: View[] = []
+    viewTimes: number[] = []
+
+    // Cursor
+    cursor: ActionCursor
 
     // Interaction areas
     interactionAreas: ActionInteractionArea[] = []
 
-    constructor(execution: ExecutionGraph | ExecutionNode, options: CreateActionOptions) {
+    // Representation
+    representation: Representation
+
+    parent: Action
+
+    constructor(
+        execution: ExecutionGraph | ExecutionNode,
+        parent: Action,
+        options: CreateActionOptions
+    ) {
         this.execution = execution
-        this.origin = options.origin
+
+        this.parent = parent
 
         Executor.instance.visualization.focus.actions.add(this)
 
         this.state = createActionState()
-        this.renderer = new ActionRenderer()
-        this.timeline = new Timeline(this, options)
+        this.state.spacingDelta = options.spacingDelta ?? 0
+        this.state.inline = options.inline ?? false
+        this.state.isFocusedStep = options.isFocusedStep ?? false
+        this.state.isSelected = options.isSelected ?? false
 
+        this.renderer = new ActionRenderer()
         this.controller = new ActionController(this)
 
-        this.renderer.body.appendChild(this.timeline.renderer.element)
+        // Create interaction areas
+        if (this.state.inline) {
+            setTimeout(() => {
+                this.interactionAreas.push(new ActionInteractionArea(this, this.execution))
+                if (instanceOfExecutionGraph(execution)) {
+                    for (const child of execution.vertices) {
+                        this.interactionAreas.push(new ActionInteractionArea(this, child))
+                    }
+                }
+                // } else {
+                //     this.interactionAreas.push(new ActionInteractionArea(this, this.execution))
+                // }
+            })
+        }
+
+        // Create cursor
+        this.cursor = new ActionCursor(this)
 
         this.renderer.render(this)
 
-        // Create interaction areas
-        setTimeout(() => {
-            this.interactionAreas.push(new ActionInteractionArea(this, this.execution))
-
-            if (instanceOfExecutionGraph(execution)) {
-                for (const child of execution.vertices) {
-                    this.interactionAreas.push(new ActionInteractionArea(this, child))
-                }
-            }
-        }, 1000)
+        // Dynamic representations
+        this.representation = createRepresentation(this)
     }
 
     /* ----------------------- Destroy ---------------------- */
@@ -67,10 +99,14 @@ export class Action {
 
         this.controller.destroy()
         this.renderer.destroy()
-        this.timeline?.destroy()
+
+        this.representation?.destroy()
+
+        this.cursor?.destroy()
+
+        // TODO Destroy interaction areas
 
         this.renderer = null
-        this.timeline = null
         this.controller = null
     }
 }

@@ -254,7 +254,12 @@ export function getDeepestChunks(
 }
 
 export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
-    if (instanceOfExecutionGraph(chunk) && chunk.vertices.length == 1) {
+    let blacklist = new Set<string>(['IfStatement'])
+    if (
+        instanceOfExecutionGraph(chunk) &&
+        chunk.vertices.length == 1 &&
+        !blacklist.has(chunk.nodeData.type)
+    ) {
         return stripChunk(chunk.vertices[0])
     }
 

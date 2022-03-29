@@ -225,8 +225,8 @@
 /* ------------------------ Focus ----------------------- */
 .view-line > span > span.unfocused {
     opacity: 0.2 !important;
-    filter: saturate(0);
-    color: white !important;
+    // filter: saturate(0);
+    // color: white !important;
 }
 
 .view-line > span > span {

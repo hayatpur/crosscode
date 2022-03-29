@@ -21,6 +21,7 @@
 @import './renderer/query.scss';
 @import './renderer/trail.scss';
 @import './renderer/action.scss';
+@import './renderer/representation.scss';
 @import './renderer/visualization.scss';
 
 /* Fonts */
@@ -100,4 +101,14 @@ body {
 
 .svg-canvas.top {
     z-index: 100;
+}
+
+/* ---------------------- Selection --------------------- */
+::-moz-selection {
+    /* Code for Firefox */
+    background: #484a5d;
+}
+
+::selection {
+    background: #484a5d;
 }

@@ -17,7 +17,6 @@ export function FunctionCall(
 ) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
     graph.precondition = clone(environment)
-    console.log(ast)
 
     // Create a scope @TODO: HARD SCOPE
     const createScope = createScopeAnimation(ScopeType.Hard)
@@ -50,5 +49,6 @@ export function FunctionCall(
     applyExecutionNode(popScope, environment)
 
     graph.postcondition = clone(environment)
-    return graph
+    body.postcondition = clone(environment)
+    return body
 }

@@ -1,18 +1,27 @@
-function bs(arr, searchValue, low, high) {
-    if (high <= low || arr.length == 0) return -1
-
-    const mid = low + Math.floor((high - low) / 2)
-
-    if (arr[mid] === searchValue) {
-        return mid
+function qs(array) {
+    if (array.length <= 1) {
+        return array
     }
 
-    if (arr[mid] > searchValue) {
-        return bs(arr, searchValue, low, mid - 1)
+    let pivot = array[0]
+
+    let left = []
+    let right = []
+
+    for (let i = 1; i < array.length - 1; i++) {
+        if (array[i] < pivot) {
+            left.push(array[i])
+        } else {
+            right.push(array[i])
+        }
     }
 
-    return bs(arr, searchValue, mid + 1, high)
+    let l = qs(left)
+    let r = qs(right)
+    l.push(pivot)
+
+    return l.concat(r)
 }
 
-let arr = [2, 5, 7, 8, 13, 18]
-let i = bs(arr, 8, 0, arr.length - 1)
+let a = [2, 4, 1, 3, 0, 9, 5]
+let b = qs(a)

@@ -344,13 +344,8 @@ export function resolvePath(
     if (path.length == 0) {
         return parent ?? root
     }
-
-    // console.log(`${' '.repeat(path.length)}`, clone(path), clone(parent ?? root))
-
     let resolution = resolve(root, path[0], srcId, parent, options)
     let ret = resolvePath(root, path.slice(1), srcId, resolution, options)
-
-    // console.log(`${' '.repeat(path.length)}`, clone(ret))
 
     return ret
 }

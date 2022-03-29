@@ -31,7 +31,6 @@ export class IdentifierRenderer {
     }
 
     secondaryFocus() {
-        console.log('Secondary focus', this.element.innerText)
         this.element.classList.remove('unfocused')
         this.element.classList.add('secondary-focused')
     }

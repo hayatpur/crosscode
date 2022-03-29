@@ -1,166 +1,167 @@
-import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
-import { Executor } from '../../executor/Executor'
-import { Action } from '../Action/Action'
-import { Timeline } from './Timeline'
+// import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
+// import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
+// import { Executor } from '../../executor/Executor'
+// import { Ticker } from '../../utilities/Ticker'
+// import { Action } from '../Action/Action'
+// import { View } from '../View/View'
+// import { Timeline } from './Timeline'
 
-/* ------------------------------------------------------ */
-/*          Defines interactions with a Timeline          */
-/* ------------------------------------------------------ */
-export class TimelineController {
-    timeline: Timeline
+// /* ------------------------------------------------------ */
+// /*          Defines interactions with a Timeline          */
+// /* ------------------------------------------------------ */
+// export class TimelineController {
+//     timeline: Timeline
+//     _tickerId: string
+//     _focus: ExecutionGraph | ExecutionNode
+//     _prevTime: number
 
-    constructor(timeline: Timeline) {
-        this.timeline = timeline
-    }
+//     constructor(timeline: Timeline) {
+//         this.timeline = timeline
+//         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
 
-    makeRoot() {
-        this.timeline.state.isRoot = true
-        this.timeline.renderer.render(this.timeline)
-    }
+//         document.addEventListener('keydown', (e) => {
+//             if (e.key == 'ArrowUp') {
+//                 if (this.timeline.state.currentTime > 0) {
+//                     this.timeline.state.currentTime -= 1
+//                 }
+//             } else if (e.key == 'ArrowDown') {
+//                 if (this.timeline.state.currentTime < this.timeline.steps?.length - 1) {
+//                     this.timeline.state.currentTime += 1
+//                 }
+//             }
+//         })
+//     }
 
-    /* ----------------- Collapse and expand ---------------- */
+//     /* --------------------- Show steps --------------------- */
 
-    collapse() {
-        this.timeline.state.isCollapsed = true
-        this.timeline.renderer.render(this.timeline)
-    }
+//     // TODO: Be able to specify what steps to show
+//     showSteps() {
+//         this.timeline.state.isShowingSteps = true
 
-    expand() {
-        this.timeline.state.isCollapsed = false
-        this.timeline.renderer.render(this.timeline)
-    }
+//         // Create steps
+//         // TODO: Deal with execution nodes
+//         this.timeline.steps = []
+//         this.timeline.views = []
+//         this.timeline.viewTimes = []
 
-    /* --------------------- Show steps --------------------- */
+//         let steps = getExecutionSteps(this.timeline.action.execution)
 
-    // TODO: Be able to specify what steps to show
-    showSteps() {
-        this.timeline.state.isShowingSteps = true
+//         for (let i = 0; i < steps.length; i++) {
+//             const step = steps[i]
 
-        // Create steps
-        // TODO: Deal with execution nodes
-        this.timeline.steps = []
-        this.timeline.trailGroups = []
+//             // Compute any line difference
+//             let delta = 0
+//             if (i < steps.length - 1) {
+//                 let currEnd = step.nodeData.location.end.line
+//                 let nextStart = steps[i + 1].nodeData.location.start.line
+//                 delta = Math.min(Math.max(nextStart - currEnd - 1, 0), 1)
+//             }
 
-        for (const step of getExecutionSteps(this.timeline.action.execution)) {
-            const action = new Action(step, { shouldExpand: false, shouldShowSteps: false })
-            this.timeline.steps.push(action)
-        }
+//             const action = new Action(step, {
+//                 shouldShowSteps: false,
+//                 spacingDelta: delta,
+//                 parentTimeline: this.timeline,
+//             })
+//             this.timeline.steps.push(action)
 
-        // Render them so they're in the right place
-        this.timeline.renderer.render(this.timeline)
+//             // Add a view if root
+//             if (this.timeline.state.isRoot && i == steps.length - 1) {
+//                 const view = new View()
+//                 view.controller.setEnvironments([action.execution.postcondition])
 
-        setTimeout(() => {
-            // Hide all views except the last one
-            const views = this.timeline.renderer.views
-            for (let i = 0; i < views.length - 1; i++) {
-                views[i].controller.toggleHidden()
-            }
-        })
+//                 this.timeline.views.push(view)
+//                 this.timeline.viewTimes.push(steps.length)
+//             }
+//         }
 
-        // Create trail groups
-        // setTimeout(() => {
-        //     for (let i = 0; i < this.timeline.steps.length; i++) {
-        //         const step = this.timeline.steps[i]
-        //         // console.log(
-        //         //     this.timeline.renderer.views[i].renderer.environmentRenderers[0],
-        //         //     this.timeline.renderer.views[i + 1].renderer.environmentRenderers[0]
-        //         // )
-        //         const startEnvs = this.timeline.renderer.views[i].renderer.environmentRenderers
-        //         const endEnvs = this.timeline.renderer.views[i + 1].renderer.environmentRenderers
-        //         const trails = new TrailGroup(
-        //             step,
-        //             startEnvs[startEnvs.length - 1],
-        //             endEnvs[endEnvs.length - 1]
-        //         )
-        //         this.timeline.trailGroups.push(trails)
-        //     }
-        // }, 100)
-    }
+//         // Render them so they're in the right place
+//         this.timeline.renderer.render(this.timeline)
+//     }
 
-    showNewSteps() {
-        // this.timeline.state.isShowingSteps = true
-        this.timeline.state.isShowingNewSteps = true
+//     showNewSteps() {
+//         // this.timeline.state.isShowingSteps = true
+//         // this.timeline.state.isShowingNewSteps = true
+//         // // Create a new timeline
+//         // const newAction = new Action(this.timeline.action.execution, {
+//         //     isRoot: true,
+//         //     shouldShowSteps: true,
+//         //     shouldExpand: true,
+//         // })
+//         // const camera = Executor.instance.visualization.camera
+//         // camera.add(newAction.renderer.element)
+//         // const bbox = this.timeline.action.renderer.element.getBoundingClientRect()
+//         // const vizBbox = Executor.instance.visualization.element.getBoundingClientRect()
+//         // newAction.state.transform.position.x = bbox.x + bbox.width - vizBbox.x
+//         // const newBbox = newAction.renderer.element.getBoundingClientRect()
+//         // newAction.state.transform.position.y = bbox.y + bbox.height / 2 - newBbox.height / 2
+//     }
 
-        // Create a new timeline
-        const newAction = new Action(this.timeline.action.execution, {
-            isRoot: true,
-            shouldShowSteps: true,
-            shouldExpand: true,
-        })
-        const camera = Executor.instance.visualization.camera
-        camera.add(newAction.renderer.element)
+//     hideSteps() {
+//         this.timeline.state.isShowingSteps = false
 
-        const bbox = this.timeline.action.renderer.element.getBoundingClientRect()
-        const vizBbox = Executor.instance.visualization.element.getBoundingClientRect()
+//         // Destroy steps
+//         this.timeline.steps?.forEach((step) => step.destroy())
+//         this.timeline.steps = null
 
-        newAction.state.transform.position.x = bbox.x + bbox.width - vizBbox.x
+//         // Render again
+//         this.timeline.renderer.render(this.timeline)
+//     }
 
-        const newBbox = newAction.renderer.element.getBoundingClientRect()
-        newAction.state.transform.position.y = bbox.y + bbox.height / 2 - newBbox.height / 2
+//     /* ------------------------ Time ------------------------ */
+//     tick(dt: number) {
+//         if (!this.timeline._initialized) return
+//         // if (this.timeline.state.isPlaying) {
+//         //     this.timeline.state.currentTime += dt * this.timeline.state.playbackSpeed
+//         //     const duration = this.timeline.steps?.length - 1 ?? 0
 
-        // Create steps
-        // // TODO: Deal with execution nodes
-        // this.timeline.steps = []
-        // this.timeline.trailGroups = []
+//         //     if (this.timeline.state.currentTime > duration) {
+//         //         this.timeline.state.currentTime = duration
+//         //         this.timeline.state.isPlaying = false
+//         //     }
+//         // }
 
-        // for (const step of getExecutionSteps(this.timeline.action.execution)) {
-        //     const action = new Action(step, { shouldExpand: false, shouldShowSteps: false })
-        //     this.timeline.steps.push(action)
-        // }
+//         // Focus on current step
+//         if (
+//             this.timeline.state.isShowingSteps &&
+//             Math.round(this.timeline.state.currentTime) != this._prevTime
+//         ) {
+//             const step = this.timeline.steps[Math.round(this.timeline.state.currentTime)]
+//             if (this._focus != null) {
+//                 Executor.instance.visualization.focus.clearFocus(this._focus)
+//             }
+//             Executor.instance.visualization.focus.focusOn(step.execution)
+//             this._focus = step.execution
 
-        // // Render them so they're in the right place
-        // this.timeline.renderer.render(this.timeline)
+//             this._prevTime = Math.round(this.timeline.state.currentTime)
 
-        // Create trail groups
-        // setTimeout(() => {
-        //     for (let i = 0; i < this.timeline.steps.length; i++) {
-        //         const step = this.timeline.steps[i]
-        //         // console.log(
-        //         //     this.timeline.renderer.views[i].renderer.environmentRenderers[0],
-        //         //     this.timeline.renderer.views[i + 1].renderer.environmentRenderers[0]
-        //         // )
-        //         const startEnvs = this.timeline.renderer.views[i].renderer.environmentRenderers
-        //         const endEnvs = this.timeline.renderer.views[i + 1].renderer.environmentRenderers
-        //         const trails = new TrailGroup(
-        //             step,
-        //             startEnvs[startEnvs.length - 1],
-        //             endEnvs[endEnvs.length - 1]
-        //         )
-        //         this.timeline.trailGroups.push(trails)
-        //     }
-        // }, 100)
-    }
+//             this.timeline.renderer.renderTime(this.timeline)
 
-    hideSteps() {
-        this.timeline.state.isShowingSteps = false
+//             if (this.timeline.state.isRoot) {
+//                 this.timeline.views[this.timeline.views.length - 1].controller.setEnvironments([
+//                     step.execution.postcondition,
+//                 ])
+//             } else {
+//                 this.timeline.subView.controller.setEnvironments([step.execution.postcondition])
+//             }
+//         }
+//     }
 
-        // Destroy steps
-        this.timeline.steps?.forEach((step) => step.destroy())
-        this.timeline.steps = null
+//     /* ----------------------- Destroy ---------------------- */
+//     destroy() {
+//         Ticker.instance.removeTickFrom(this._tickerId)
+//     }
+// }
 
-        // Destroy trail groups
-        this.timeline.trailGroups?.forEach((trailGroup) => trailGroup.destroy())
-        this.timeline.trailGroups = null
-
-        // Render again
-        this.timeline.renderer.render(this.timeline)
-    }
-
-    /* ----------------------- Destroy ---------------------- */
-    destroy() {}
-}
-
-/* ------------------------------------------------------ */
-/*                    Helper functions                    */
-/* ------------------------------------------------------ */
-// ? Apply blacklist
-export function getExecutionSteps(
-    execution: ExecutionGraph | ExecutionNode
-): (ExecutionGraph | ExecutionNode)[] {
-    if (instanceOfExecutionGraph(execution)) {
-        return execution.vertices
-    } else {
-        return []
-    }
-}
+// /* ------------------------------------------------------ */
+// /*                    Helper functions                    */
+// /* ------------------------------------------------------ */
+// // ? Apply blacklist
+// export function getExecutionSteps(
+//     execution: ExecutionGraph | ExecutionNode
+// ): (ExecutionGraph | ExecutionNode)[] {
+//     if (instanceOfExecutionGraph(execution)) {
+//         return execution.vertices
+//     } else {
+//         return []
+//     }
+// }

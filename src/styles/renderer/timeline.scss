@@ -3,7 +3,6 @@
 /* ------------------------------------------------------ */
 :root {
     --timeline-indent: 0px;
-    --timeline-height: 40px;
 }
 
 .timeline {
@@ -12,103 +11,9 @@
     position: relative;
 }
 
-/* ----------------------- Anchor ----------------------- */
-
-.timeline-anchor {
-    width: 15px;
-    height: 15px;
-    background: var(--color-2);
-    border-radius: 50%;
-    margin-left: 28px;
-
-    transform: scale(0.7);
-    // transition-property: transform, background;
-    // transition-duration: 0.2s;
-
-    box-shadow: 0 0 16px 5px #111114;
-
-    cursor: pointer;
-}
-
-.timeline-anchor:hover {
-    transform: scale(1);
-    background: var(--color-4);
-}
-
-/* ------------- Anchor: start and end rules ------------ */
-
-.timeline-anchor.start {
-    margin-top: 3px;
-    margin-left: calc(var(--timeline-indent) * -1 + 32px);
-}
-
-.timeline-anchor.end {
-    margin-top: var(--timeline-height);
-    margin-bottom: 0px;
-    margin-left: calc(var(--timeline-indent) * -1 + 32px);
-}
-
-/* -------------------- Expand rules -------------------- */
-
-.timeline.expanded > .timeline-anchor {
-    margin-top: var(--timeline-height);
-    margin-bottom: var(--timeline-height);
-}
-
-.timeline.expanded:not(.showing-steps) {
-    margin-top: 22px;
-    margin-left: 8px;
-}
-
-.timeline:not(.expanded):not(.showing-steps) {
-    margin-top: 2px;
-    margin-left: 8px;
-}
-
-.timeline.expanded.showing-steps > .timeline-anchor {
-    margin-left: calc(var(--timeline-indent) * -1 + 21px);
-}
-
-.timeline.expanded.showing-steps > .timeline-anchor.end {
-    margin-top: calc(2 * var(--timeline-height));
-}
-
-.timeline.showing-steps > .timeline-anchor.start {
-    margin-bottom: var(--timeline-height);
-}
-
-.timeline.showing-steps > .timeline-anchor.end {
-    margin-top: calc(2 * var(--timeline-height));
-}
-
-.timeline.root.expanded.showing-steps > .timeline-anchor.end {
-    margin: 0px !important;
-}
-
 /* --------------------- Root rules --------------------- */
 .timeline.root {
     margin-left: 0px;
-}
-
-.timeline.root > .timeline-anchor.start,
-.timeline.root > .timeline-anchor.end {
-    margin-left: 36px;
-    opacity: 0;
-
-    height: 2px;
-    border-radius: 0px;
-    border: none;
-    background: var(--color-2);
-}
-
-.timeline.root > .timeline-anchor.start {
-    margin-bottom: 0px !important;
-    // margin-top: 0px !important;
-    opacity: 0;
-}
-
-.timeline.root > .timeline-anchor.end {
-    margin-top: var(--timeline-height) !important;
 }
 
 .timeline.showing-steps.root {
@@ -117,17 +22,8 @@
 
 /* ----------------- Showing steps rules ---------------- */
 
-.timeline.showing-steps > .timeline-anchor {
-    border: 3px solid var(--color-2);
-    background-color: var(--color-0);
-}
-
 .timeline.showing-steps {
     margin-left: var(--timeline-indent);
-}
-
-.timeline.showing-steps > .action.expanded.showing-steps {
-    margin: 100px 0px;
 }
 
 .timeline.showing-steps > .action.showing-steps {
@@ -158,19 +54,35 @@
     stroke: none;
 }
 
-/* ---------------------- Minimized --------------------- */
-.timeline.minimized > .timeline-connection:last-child {
-    opacity: 0 !important;
+/* -------------------- Timeline Base ------------------- */
+.timeline-base {
+    width: 1px;
+    background: #ffffff17;
+    height: 100%;
+    position: absolute;
+    left: 27px;
 }
 
-.timeline.minimized > .timeline-connection {
-    opacity: 0 !important;
+/* ----------------------- Cursor ----------------------- */
+.timeline-cursor,
+.timeline-moving-cursor {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 10px;
+    height: 10px;
+    background: var(--color-3);
+    border-radius: 50%;
+    display: none;
+    margin-left: -5px;
+    margin-top: -5px;
 }
 
-// .timeline.showing-steps > .action {
-//     margin: 10px 0px;
-// }
+.timeline-cursor.showing-steps,
+.timeline-moving-cursor.showing-steps {
+    display: inherit;
+}
 
-.timeline.showing-steps > .action {
-    margin: var(--timeline-height) 0px;
+.timeline-moving-cursor {
+    opacity: 0.2;
 }

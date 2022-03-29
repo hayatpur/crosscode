@@ -1,9 +1,14 @@
 import { resolvePath } from '../../../environment/environment'
-import { EnvironmentState, IdentifierState } from '../../../environment/EnvironmentState'
-import { reads, writes } from '../../../execution/execution'
-import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
-import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
+import {
+    Accessor,
+    AccessorType,
+    EnvironmentState,
+    IdentifierState,
+    instanceOfEnvironment,
+} from '../../../environment/EnvironmentState'
+import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
 import { createEl } from '../../../utilities/dom'
+import { clone } from '../../../utilities/objects'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
 import {
@@ -36,14 +41,16 @@ export class EnvironmentRenderer {
     }
 
     /* ----------------------- Render ----------------------- */
-    render(environment: EnvironmentState, parent: ExecutionNode | ExecutionGraph) {
-        this.renderMemory(environment, parent)
-        this.renderIdentifiers(environment, parent)
+    render(environment: EnvironmentState, filter?: string[]) {
+        this.renderMemory(environment, filter)
+        this.renderIdentifiers(environment, filter)
     }
 
-    renderMemory(state: EnvironmentState, parent: ExecutionNode | ExecutionGraph) {
+    renderMemory(state: EnvironmentState, filter?: string[]) {
         // Hit test
         const hits = new Set()
+
+        console.log(clone(state))
 
         // Filter out irrelevant memory
         let memory = Object.values(state.memory)
@@ -56,7 +63,7 @@ export class EnvironmentRenderer {
                     data.type == DataType.Function
             )
             .filter((data) => {
-                if (instanceOfPrimitiveData(data) && data.type == DataType.Function) {
+                if (instanceOfPrimitiveData(data)) {
                     return !data.value.toString().includes('[native code]')
                 } else if (data.builtin) {
                     return false
@@ -65,14 +72,63 @@ export class EnvironmentRenderer {
                 }
             })
 
-        const ws = writes(parent).map((w) => w.id)
-        const rs = reads(parent).map((r) => r.id)
+        // const ws = writes(parent).map((w) => w.id)
+        // const rs = reads(parent).map((r) => r.id)
 
-        memory = memory.filter((data) => {
-            return ws.includes(data.id) || rs.includes(data.id)
-        })
+        if (filter != null) {
+            memory = memory.filter((data) => filter.includes(data.id))
+        }
+
+        // Find latest frame that "hard" scopes
+        let hardScope = -1
+        for (let i = state.scope.length - 1; i >= 0; i--) {
+            const scope = state.scope[i]
+
+            if (scope.type == ScopeType.Hard) {
+                hardScope = i
+            }
+        }
+
+        memory = memory.filter((data) => data.frame >= hardScope || data.frame == 1)
+
+        // memory = memory.filter((data) => {
+        //     return ws.includes(data.id) || rs.includes(data.id)
+        // })
 
         // memory.reverse()
+
+        // Render references
+        let references = Object.values(state.memory)
+            .filter((m) => m != null)
+            .filter((data) => instanceOfPrimitiveData(data) && data.type == DataType.Reference)
+
+        if (filter != null) {
+            references = references.filter((data) => filter.includes(data.id))
+        }
+
+        for (const reference of references) {
+            const data = resolvePath(state, reference.value as Accessor[], null)
+            if (instanceOfEnvironment(data)) continue
+            // if (instanceOfPrimitiveData(data) && data.type == DataType.Function) continue
+
+            let renderer = this.dataRenderers[data.id]
+
+            // Create renderer if not there
+            if (renderer == null) {
+                renderer = { column: null, data: null }
+                renderer.column = createEl('div', 'environment-column', this.element)
+                createEl('div', 'identifier-row', renderer.column)
+                createEl('div', 'data-row', renderer.column)
+                renderer.data = createDataRenderer(data)
+
+                renderer.column.children[1].append(renderer.data.element)
+
+                this.dataRenderers[data.id] = renderer
+            }
+
+            hits.add(data.id)
+            renderer.data.setState(data)
+        }
 
         // Render data
         for (const data of memory) {
@@ -82,9 +138,11 @@ export class EnvironmentRenderer {
             if (renderer == null) {
                 renderer = { column: null, data: null }
                 renderer.column = createEl('div', 'environment-column', this.element)
+                createEl('div', 'identifier-row', renderer.column)
+                createEl('div', 'data-row', renderer.column)
                 renderer.data = createDataRenderer(data)
 
-                renderer.column.append(renderer.data.element)
+                renderer.column.children[1].append(renderer.data.element)
 
                 this.dataRenderers[data.id] = renderer
             }
@@ -92,30 +150,6 @@ export class EnvironmentRenderer {
             hits.add(data.id)
             renderer.data.setState(data)
         }
-
-        // Render references
-        const references = Object.values(state.memory)
-            .filter((m) => m != null)
-            .filter((data) => instanceOfPrimitiveData(data) && data.type == DataType.Function)
-
-        // for (const reference of references) {
-        //     const data = resolvePath(state, reference.value as Accessor[], null)
-        //     let renderer = this.dataRenderers[data.id]
-
-        //     // Create renderer if not there
-        //     if (renderer == null) {
-        //         renderer = { column: null, data: null }
-        //         renderer.column = createEl('div', 'environment-column', this.element)
-        //         renderer.data = createDataRenderer(data)
-
-        //         renderer.column.append(renderer.data.element)
-
-        //         this.dataRenderers[data.id] = renderer
-        //     }
-
-        //     hits.add(data.id)
-        //     renderer.data.setState(data)
-        // }
 
         // Remove data that is no longer in the view
         for (const [id, renderer] of Object.entries(this.dataRenderers)) {
@@ -128,28 +162,35 @@ export class EnvironmentRenderer {
         }
     }
 
-    renderIdentifiers(state: EnvironmentState, parent: ExecutionNode | ExecutionGraph) {
+    renderIdentifiers(state: EnvironmentState, filter?: string[]) {
         // Hit test
         const hits = new Set()
         const dataHits = new Set()
 
-        const ws = writes(parent).map((w) => w.id)
-        const rs = reads(parent).map((r) => r.id)
+        // const ws = writes(parent).map((w) => w.id)
+        // const rs = reads(parent).map((r) => r.id)
 
-        for (const scope of state.scope) {
+        let i = 0
+        for (i = state.scope.length - 1; i >= 0; i--) {
+            const scope = state.scope[i]
+
             for (const name of Object.keys(scope.bindings)) {
                 const data = resolvePath(state, scope.bindings[name].location, null)
                 const dataRenderer = this.dataRenderers[data.id]
                 if (dataRenderer == null) continue // Ignore dangling references
 
-                if (!ws.includes(data.id) && !rs.includes(data.id)) {
-                    continue
-                }
+                // if (filter != null) {
+                //     if (!filter.includes(data.id)) continue
+                // }
+
+                // if (!ws.includes(data.id) && !rs.includes(data.id)) {
+                //     continue
+                // }
 
                 let renderer = this.identifierRenderers[name]
                 if (renderer == null) {
                     renderer = new IdentifierRenderer()
-                    dataRenderer.column.appendChild(renderer.element)
+                    dataRenderer.column.children[0].appendChild(renderer.element)
 
                     this.identifierRenderers[name] = renderer
                 }
@@ -158,6 +199,64 @@ export class EnvironmentRenderer {
                 dataHits.add(data.id)
 
                 renderer.setState(scope.bindings[name])
+            }
+
+            if (scope.type == ScopeType.Hard) {
+                break
+            }
+        }
+
+        // Global scope
+        if (i > 0) {
+            const scope = state.scope[0]
+
+            for (const name of Object.keys(scope.bindings)) {
+                const data = resolvePath(state, scope.bindings[name].location, null)
+                const dataRenderer = this.dataRenderers[data.id]
+                if (dataRenderer == null) continue // Ignore dangling references
+
+                let renderer = this.identifierRenderers[name]
+                if (renderer == null) {
+                    renderer = new IdentifierRenderer()
+                    dataRenderer.column.children[0].appendChild(renderer.element)
+
+                    this.identifierRenderers[name] = renderer
+                }
+
+                hits.add(name)
+                dataHits.add(data.id)
+
+                renderer.setState(scope.bindings[name])
+            }
+        }
+
+        // Add register label to the RHS of the data
+        const keys = Object.keys(this.dataRenderers)
+        keys.reverse() // SO HACKY - FIX
+        for (const id of keys) {
+            if (!dataHits.has(id)) {
+                const dataRenderer = this.dataRenderers[id]
+                if (dataRenderer == null) continue
+
+                const name = 'Return Value'
+
+                if (!(name in this.identifierRenderers)) {
+                    const renderer = new IdentifierRenderer()
+                    dataRenderer.column.children[0].appendChild(renderer.element)
+
+                    this.identifierRenderers[name] = renderer
+                }
+
+                hits.add(name)
+
+                this.identifierRenderers[name].setState({
+                    name,
+                    location: [{ type: AccessorType.ID, value: id }],
+                })
+
+                this.identifierRenderers[name].element.classList.add('ret')
+
+                break
             }
         }
 
@@ -195,7 +294,6 @@ export class EnvironmentRenderer {
 
     /* ------------------------ Focus ----------------------- */
     secondaryFocus(dataIds: Set<string>) {
-        console.log(dataIds)
         for (const [id, renderer] of Object.entries(this.getAllChildRenderers())) {
             if (dataIds.has(id)) {
                 renderer.secondaryFocus()
