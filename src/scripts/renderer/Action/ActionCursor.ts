@@ -1,4 +1,3 @@
-import { writes } from '../../execution/execution'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
@@ -84,8 +83,8 @@ export class ActionCursor {
 
                 if (this.action.views.length > 0) {
                     this.action.views[this.action.views.length - 1].controller.setEnvironments(
-                        [execution.postcondition],
-                        [...writes(execution)].map((x) => x.id)
+                        [execution.postcondition]
+                        // [...writes(execution)].map((x) => x.id)
                     )
                 }
             }
