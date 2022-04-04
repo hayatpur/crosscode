@@ -1,94 +1,182 @@
-import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
-import { createEl } from '../../../utilities/dom'
+import * as monaco from 'monaco-editor'
+import { Editor } from '../../../editor/Editor'
 import { Action } from '../Action'
-import { ActionBundle } from '../ActionBundle'
+import { getExecutionSteps } from '../ActionController'
 import { Representation } from './Representation'
 
 export class ForStatementRepresentation extends Representation {
     loopRect: HTMLElement = null
 
     constructor(action: Action) {
-        super(action)
-        this.create()
+        super(action, 4)
     }
 
-    create() {
-        const action = this.action
-        const { renderer, controller } = action
+    applyRepresentation() {
+        if (this.representationIndicators.length === 0) {
+            return
+        }
 
-        renderer.controls[0].classList.remove('hidden')
-        renderer.controls[0].addEventListener('click', () => {
-            controller.destroyStepsAndViews()
-            this.destroyLoopRect()
-            this.action.renderer.body.classList.remove('show-iterations')
+        this.action.controller.destroyStepsAndViews()
 
-            renderer.render(action)
-        })
+        if (this.currentRepresentation == 1 || this.currentRepresentation == 2) {
+            this.action.steps = []
 
-        renderer.controls[1].classList.remove('hidden')
-        renderer.controls[1].addEventListener('click', () => {
-            controller.destroyStepsAndViews()
-            this.destroyLoopRect()
-            this.action.renderer.body.classList.remove('show-iterations')
+            let steps = getExecutionSteps(this.action.execution)
+            let iterations = (steps.length - 2) / 3
 
-            controller.createSteps()
-            this.createLoopRect()
+            for (let iter = 0; iter < iterations; iter++) {
+                if (iter == 0) {
+                    // Variable initialization
+                    const initializer = steps[0]
+                    const initializerAction = new Action(initializer, this.action, {
+                        spacingDelta: 0,
+                        inline: true,
+                        inSitu: true,
+                    })
+                    this.action.steps.push(initializerAction)
+                }
 
-            action.steps = [new ActionBundle(action, action.steps)]
+                // Comparison
+                const comparison = steps[iter * 3 + 1]
+                const comparisonAction = new Action(comparison, this.action, {
+                    spacingDelta: 0,
+                    inline: true,
+                    inSitu: true,
+                })
+                this.action.steps.push(comparisonAction)
 
-            action.renderer.render(action)
-        })
+                // Loop body
+                if (this.currentRepresentation == 2) {
+                    const body = steps[iter * 3 + 2]
+                    const bodyAction = new Action(body, this.action, {
+                        spacingDelta: 0,
+                        inline: true,
+                        inSitu: iter != 0,
+                        stripped: true,
+                    })
+                    this.action.steps.push(bodyAction)
+                }
 
-        action.renderer.controls[2].classList.remove('hidden')
-        action.renderer.controls[2].addEventListener('click', () => {
-            controller.destroyStepsAndViews()
-            this.destroyLoopRect()
-            this.action.renderer.body.classList.remove('show-iterations')
+                // Loop increment
+                const increment = steps[iter * 3 + 3]
+                const incrementAction = new Action(increment, this.action, {
+                    spacingDelta: 0,
+                    inline: true,
+                    inSitu: true,
+                })
+                this.action.steps.push(incrementAction)
+                //     if (i == 0) {
+                //         // Initializer
 
-            controller.createSteps()
-            this.createLoopRect()
+                //     } else if (i % 3 == ) {
+                //     }
+                //     const step = steps[i]
 
-            // Shows iterations
-            this.action.renderer.body.classList.add('show-iterations')
-            this.action.steps.forEach((s) => s.renderer.element.classList.add('iteration'))
-            this.action.steps[0].renderer.element.classList.add('selected')
+                //     // Compute any line difference
+                //     let delta = 0
+                //     if (i < steps.length - 1) {
+                //         let currEnd = step.nodeData.location.end.line
+                //         let nextStart = steps[i + 1].nodeData.location.start.line
+                //         delta = Math.min(Math.max(nextStart - currEnd - 1, 0), 1)
+                //     }
 
-            const iteration = new Action(
-                ((action.execution as ExecutionGraph).vertices[0] as ExecutionGraph).vertices[2],
-                action,
-                { inline: true }
-            )
+                //     const action = new Action(step, this.action, {
+                //         spacingDelta: delta,
+                //         inline: true,
+                //     })
+                //     this.action.steps.push(action)
+            }
 
-            action.steps = [iteration, ...action.steps]
+            // // Add a view if not inline
+            // if (this.action.state.inline) {
+            //     const root = this.action.controller.getSpatialRoot()
+            //     root.controller.updateStepToViewMappings()
+            // } else {
+            //     this.action.controller.updateStepToViewMappings()
+            // }
 
-            action.renderer.render(action)
-        })
+            // Render them so they're in the right place
+            this.action.renderer.render(this.action)
+        }
 
-        action.renderer.controls[3].classList.remove('hidden')
-        action.renderer.controls[3].addEventListener('click', () => {
-            controller.destroyStepsAndViews()
-            this.destroyLoopRect()
-            this.action.renderer.body.classList.remove('show-iterations')
-
-            controller.createSteps()
-            this.createLoopRect()
-
-            // action.steps = [new ActionBundle(action, action.steps)]
-
-            action.renderer.render(action)
-        })
+        const spatialRoot = this.action.controller.getSpatialRoot()
+        spatialRoot.controller.updateStepToViewMappings()
+        // console.log(this.action.views)
     }
 
-    createLoopRect() {
-        this.loopRect = createEl('div', 'loop-rect', this.action.renderer.element)
-    }
+    setSourceCodeOfExecution() {
+        // Header
+        const range = this.action.execution.nodeData.location
+        let headerLabel = Editor.instance.monaco.getModel().getValueInRange({
+            startLineNumber: range.start.line,
+            startColumn: range.start.column + 1,
+            endLineNumber: range.end.line,
+            endColumn: range.end.column + 1,
+        })
 
-    destroyLoopRect() {
-        this.loopRect?.remove()
-        this.loopRect = null
-    }
+        this.action.renderer.footerPreLabel.innerText = ''
+        this.action.renderer.footerLabel.innerText = ''
 
-    destroy() {
-        this.destroyLoopRect()
+        let footerLabel = null
+        let footerLineNumbers = `${this.action.execution.nodeData.location.end.line}`
+        let headerLineNumbers = this.action.execution.nodeData.location.start.line.toString()
+
+        // Label
+        if (this.currentRepresentation == 0) {
+            headerLabel = `for ( ... ) { ... }`
+        } else if (this.currentRepresentation == 1) {
+            let upTill = headerLabel.substring(0, headerLabel.indexOf('{')).trim()
+            headerLabel = `${upTill} { ... }`
+        } else {
+            let upTill = headerLabel.substring(0, headerLabel.indexOf('{')).trim()
+            headerLabel = `${upTill} {`
+            footerLabel = '}'
+        }
+
+        // Spacing
+        if (this.action.state.spacingDelta > 0) {
+            if (footerLineNumbers == null) {
+                footerLineNumbers = `${(
+                    this.action.execution.nodeData.location.end.line + 1
+                ).toString()}`
+            } else {
+                footerLineNumbers += `\n${(
+                    this.action.execution.nodeData.location.end.line + 1
+                ).toString()}`
+            }
+        }
+
+        // Set the line numbers
+        this.action.renderer.headerPreLabel.innerText = headerLineNumbers
+        if (footerLineNumbers != null) {
+            this.action.renderer.footerPreLabel.innerText = footerLineNumbers
+        }
+
+        // Render labels
+        monaco.editor.colorize(headerLabel, 'javascript', {}).then((result) => {
+            if (this.action?.renderer?.headerLabel != null) {
+                this.action.renderer.headerLabel.innerHTML = result
+
+                //     if (this.currentRepresentation == 1) {
+                //         const spans = [
+                //             ...this.action.renderer.headerLabel.children[0].children,
+                //         ] as HTMLSpanElement[]
+                //         for (let i = 1; i < spans.length; i++) {
+                //             if (spans[i].innerText.includes('{')) {
+                //                 break
+                //             }
+                //             spans[i].classList.add('faded-out-span')
+                //         }
+                //     }
+            }
+        })
+
+        if (footerLabel != null) {
+            monaco.editor.colorize(footerLabel, 'javascript', {}).then((result) => {
+                if (this.action?.renderer?.footerLabel != null) {
+                    this.action.renderer.footerLabel.innerHTML = result
+                }
+            })
+        }
     }
 }

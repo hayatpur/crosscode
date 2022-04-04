@@ -6,7 +6,7 @@ import {
     getTrace,
 } from '../../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { Action } from '../Action/Action'
+import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { instanceOfData } from '../View/Environment/data/DataState'
 import { EnvironmentRenderer, getRelevantData } from '../View/Environment/EnvironmentRenderer'
 import { Trail } from './Trail'
@@ -17,19 +17,19 @@ import { TrailState, TrailType } from './TrailState'
 /* ------------------------------------------------------ */
 export class TrailGroup {
     trails: Trail[] = []
-    action: Action
+    execution: ExecutionGraph | ExecutionNode
 
     constructor(
-        action: Action,
+        execution: ExecutionGraph | ExecutionNode,
         startEnvironment: EnvironmentRenderer,
         endEnvironment: EnvironmentRenderer
     ) {
-        this.action = action
+        this.execution = execution
 
-        if (instanceOfExecutionGraph(action.execution)) {
-            const trailStates = getTrail(action.execution)
+        if (instanceOfExecutionGraph(execution)) {
+            const trailStates = getTrail(execution)
             for (const trailState of trailStates) {
-                const trail = new Trail(trailState, startEnvironment, endEnvironment, action)
+                const trail = new Trail(trailState, startEnvironment, endEnvironment, execution)
                 this.trails.push(trail)
             }
         } else {
@@ -37,13 +37,33 @@ export class TrailGroup {
         }
     }
 
+    updateTime(time: number) {
+        this.trails.forEach((trail) => {
+            trail.controller.updateTime(time)
+        })
+    }
+
+    render() {
+        this.trails.forEach((trail) => {
+            trail.renderer.render(trail)
+        })
+    }
+
+    // update(
+    //     execution: ExecutionGraph | ExecutionNode,
+    //     startEnvironment: EnvironmentRenderer,
+    //     endEnvironment: EnvironmentRenderer
+    // ) {
+
+    // }
+
     destroy() {
         this.trails.forEach((trail) => {
             trail.destroy()
         })
 
         this.trails = null
-        this.action = null
+        this.execution = null
     }
 }
 

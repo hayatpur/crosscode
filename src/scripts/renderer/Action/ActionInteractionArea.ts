@@ -38,37 +38,39 @@ export class ActionInteractionArea {
         // Click
         let timer: number
         this.element.addEventListener('click', (event) => {
-            if (event.detail === 1) {
-                timer = setTimeout(() => {
-                    this.clicked()
-                }, 200)
-            }
+            // if (event.detail === 1) {
+            //     timer = setTimeout(() => {
+            //         this.clicked()
+            //     }, 200)
+            // }
+            this.clicked()
         })
         this.element.addEventListener('dblclick', (event) => {
-            clearTimeout(timer)
-            this.doubleClicked()
+            // clearTimeout(timer)
+            // this.doubleClicked()
         })
     }
 
     clicked() {
-        if (this.createdSteps) {
-            this.parentAction.controller.destroyStepsAndViews()
-            this.createdSteps = false
-            return
-        }
+        // if (this.createdSteps) {
+        //     this.parentAction.controller.destroyStepsAndViews()
+        //     this.createdSteps = false
+        //     return
+        // }
 
         if (this.execution.id == this.parentAction.execution.id) {
-            this.parentAction.controller.createSteps()
-        } else {
-            this.temporaryAction = this.parentAction.controller.createFocusedStep(this.execution)
+            this.parentAction.representation.cycle()
         }
+        //  else {
+        //     this.temporaryAction = this.parentAction.controller.createFocusedStep(this.execution)
+        // }
 
-        this.createdSteps = true
+        // this.createdSteps = true
     }
 
     doubleClicked() {
-        this.temporaryAction = this.parentAction.controller.createOutgoingStep(this.execution)
-        this.createdSteps = true
+        // this.temporaryAction = this.parentAction.controller.createOutgoingStep(this.execution)
+        // this.createdSteps = true
     }
 
     create() {

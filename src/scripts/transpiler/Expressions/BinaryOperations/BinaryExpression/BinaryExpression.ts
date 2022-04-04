@@ -47,7 +47,9 @@ export function BinaryExpression(
         ast.operator,
         context.outputRegister
     )
-    addVertex(graph, evaluate, { nodeData: getNodeData(ast, 'Evaluate') })
+    addVertex(graph, evaluate, {
+        nodeData: { ...getNodeData(ast, 'Evaluate'), type: 'BinaryExpressionEvaluate' },
+    })
     applyExecutionNode(evaluate, environment)
 
     cleanUpRegister(environment, leftRegister[0].value)

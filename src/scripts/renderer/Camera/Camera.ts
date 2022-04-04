@@ -45,19 +45,17 @@ export class Camera {
             if (Keyboard.instance.isPressed('Shift')) {
                 this.isDragging = true
                 this.prevMouse = { x: e.clientX, y: e.clientY }
+                e.preventDefault()
             }
-
-            e.preventDefault()
         })
 
         vis.element.addEventListener('mousemove', (e) => {
             if (this.isDragging) {
                 this.state.position.x += e.x - this.prevMouse.x
                 this.state.position.y += e.y - this.prevMouse.y
+                e.preventDefault()
             }
             this.prevMouse = { x: e.x, y: e.y }
-
-            e.preventDefault()
         })
 
         document.body.addEventListener('mouseup', () => {
@@ -70,6 +68,9 @@ export class Camera {
     tick(dt: number) {
         // Apply transform
         this.element.style.transform = `translate(${this.state.position.x}px, ${this.state.position.y}px)`
+        this.vis.element.style.backgroundPosition = `${this.state.position.x}px ${
+            this.state.position.y
+        }px, ${this.state.position.x + 25}px ${this.state.position.y + 25}px`
 
         if (Keyboard.instance.isPressed('Shift')) {
             this.vis.element.classList.add('camera-shift')

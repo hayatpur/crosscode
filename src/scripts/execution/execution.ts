@@ -364,6 +364,26 @@ export function queryExecutionGraphPath(
     return null
 }
 
+export function queryExecutionGraphStrict(
+    animation: ExecutionGraph | ExecutionNode,
+    query: (animation: ExecutionGraph | ExecutionNode) => boolean
+): ExecutionGraph | ExecutionNode {
+    if (query(animation)) {
+        return animation
+    }
+
+    if (instanceOfExecutionGraph(animation) && animation.nodeData.type != 'CallExpression') {
+        for (const vertex of animation.vertices) {
+            const ret = queryExecutionGraphStrict(vertex, query)
+            if (ret != null) {
+                return ret
+            }
+        }
+    }
+
+    return null
+}
+
 export function queryAllExecutionGraph(
     animation: ExecutionGraph | ExecutionNode,
     query: (animation: ExecutionGraph | ExecutionNode) => boolean

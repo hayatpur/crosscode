@@ -16,9 +16,11 @@ export interface ActionState {
 
     spacingDelta: number
     inline: boolean
+    inSitu: boolean
 
     isFocusedStep: boolean
     isSelected: boolean
+    isShowingView: boolean
 }
 
 /* --------------------- Initializer -------------------- */
@@ -33,7 +35,9 @@ export function createActionState(): ActionState {
         scale: 1,
         spacingDelta: 0,
         inline: false,
+        inSitu: false,
         isFocusedStep: false,
         isSelected: false,
+        isShowingView: true,
     }
 }

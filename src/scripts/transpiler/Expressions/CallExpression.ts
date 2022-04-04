@@ -164,13 +164,20 @@ export function CallExpression(
         cleanUpRegister(environment, registers[i][0].value)
     }
 
-    graph.vertices[0].postcondition =
-        instanceOfExecutionGraph(bodyGraph) && bodyGraph.vertices.length > 1
-            ? clone(bodyGraph.vertices[0].postcondition)
-            : clone(bodyGraph.precondition)
+    if (instanceOfExecutionGraph(bodyGraph) && bodyGraph.vertices.length > 1) {
+        graph.vertices[0].postcondition = clone(bodyGraph.vertices[0].postcondition)
+        // graph.vertices[1].nodeData.location = ast.loc
+    }
+
+    // graph.vertices[0].postcondition =
+    //     instanceOfExecutionGraph(bodyGraph) && bodyGraph.vertices.length > 1
+    //         ? clone(bodyGraph.vertices[0].postcondition)
+    //         : clone(bodyGraph.precondition)
     graph.postcondition = clone(environment)
     // bodyGraph.postcondition = clone(environment)
     // return bodyGraph
+
+    graph.nodeData.type = 'CallExpression'
     return graph
 }
 

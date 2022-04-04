@@ -13,8 +13,8 @@
 
 .action {
     display: flex;
+    flex-direction: row;
     position: relative;
-    flex-direction: column;
 }
 
 /* ------------------ Show steps rules ------------------ */
@@ -36,18 +36,27 @@
 
 .action-label > span {
     background: var(--color-10);
-    box-shadow: 0px 0px 10px 5px var(--color-10);
+    // box-shadow: 0px 0px 10px 5px var(--color-10);
 }
 
 /* ------------------------ Body ------------------------ */
 
-.action-body {
+.action:not(.inline) > .action-view-container {
     display: flex;
+    align-items: flex-start;
     flex-direction: column;
-    position: relative;
+    justify-content: center;
 }
 
-.action:not(.showing-steps) > .action-body {
+.action:not(.showing-view) > .action-view-container {
+    border-left: 0px;
+}
+
+.action:not(.inline) > .action-step-container {
+    padding: 15px;
+}
+
+.action.inline > .action-view-container {
     display: none;
 }
 
@@ -58,31 +67,17 @@
     left: 0px;
 
     border: 1px solid #2c2c345e;
-    padding: 15px;
     border-radius: 7px;
     background: var(--color-10);
 }
 
-.action.inline.showing-steps:not(.showing-focused-step):not(.focused-step) > .action-body {
-    margin-left: 40px;
-}
-
-.action.inline.showing-steps > .action-body > .action > .action-header > .action-pre-label,
-.action.inline.showing-steps > .action-body > .action > .action-footer > .action-pre-label {
-    // opacity: 0;
-}
-
-.action.showing-steps:not(.inline):not(.program) > .action-body {
-    // padding-top: 30px;
-}
-
 /* ----------------------- Program ---------------------- */
-.action.program > .action-header,
-.action.program > .action-footer {
+.action.program > .action-step-container > .action-header,
+.action.program > .action-step-container > .action-footer {
     display: none;
 }
 
-.action.focused-step > .action-header {
+.action.focused-step > .action-step-container > .action-header {
     display: none;
 }
 
@@ -90,17 +85,24 @@
 //     display: none;
 // }
 
-.action:not(.inline) > .action-header,
-.action:not(.inline) > .action-footer {
-    top: -7px;
-    left: -16px;
+.action:not(.inline) > .action-step-container > .action-header {
     align-items: center;
+    // border-bottom: 1px solid #ffffff14;
+    // border-radius: 5px 5px 0px 0px;
+    // padding: 2px 0px;
 }
 
-.action:not(.inline) > .action-header > .action-label,
-.action:not(.inline) > .action-footer > .action-label {
-    opacity: 0.2;
+.action:not(.inline) > .action-footer {
+    align-items: center;
+    border-top: 1px solid #ffffff14;
+    border-radius: 5px 5px 0px 0px;
+    padding: 2px 0px;
 }
+
+// .action:not(.inline) > .action-step-container > .action-header > .action-label,
+// .action:not(.inline) > .action-step-container > .action-footer > .action-label {
+//     opacity: 0.2;
+// }
 
 /* ----------------------- Header ----------------------- */
 .action-header,
@@ -109,20 +111,15 @@
     position: relative;
 }
 
-.action.showing-steps:not(.inline) > .action-header > .action-pre-label,
-.action.showing-steps:not(.inline) > .action-footer > .action-pre-label {
-    margin-right: 0px;
-    opacity: 0;
-}
-
-.action:not(.inline) > .action-header::before {
-    content: '';
-    width: 10px;
-    height: 13px;
-    background: var(--color-2);
-    border-radius: 0px 50% 50% 0px;
-    border: 1px solid var(--color-2);
-    border-left: 0px;
+.action:not(.inline) > .action-step-container > .action-header::before {
+    // content: '';
+    // width: 10px;
+    // height: 13px;
+    // background: var(--color-2);
+    // border-radius: 0px 50% 50% 0px;
+    // border: 1px solid var(--color-2);
+    // border-left: 0px;
+    // opacity: 0.5;
 }
 
 /* ---------------------- Prelabel ---------------------- */
@@ -141,7 +138,7 @@
 /* ------------------ Root with borders ----------------- */
 
 .view {
-    box-shadow: 0 0 16px 5px #151517 !important;
+    // box-shadow: 0 0 16px 5px #151517 !important;
 }
 
 /* ------------------------ Focus ----------------------- */
@@ -173,7 +170,7 @@
 //     display: none;
 // }
 
-.action.is-focused > .action-header > .action-interaction-area {
+.action.is-focused > .action-step-container > .action-header > .action-interaction-area {
     background: rgba(255, 255, 255, 0.342);
 }
 
@@ -189,14 +186,27 @@
 .action-base {
     width: 1px;
     background: #ffffff17;
-    height: calc(100% - 10px);
+    height: calc(100% - 40px);
     position: absolute;
-    left: 37px;
-    top: 0px;
+    left: 51px;
+    top: 10px;
     margin-top: 10px;
+    opacity: 0 !important;
 }
 
-.action:not(.showing-steps) > .action-base {
+.action.showing-steps:not(.program) > .action-step-container > .action-base {
+    height: calc(100% - 80px);
+    top: 40px;
+    left: 80px;
+}
+
+.action.showing-steps.inline > .action-step-container > .action-base {
+    height: calc(100% - 50px);
+    top: 35px;
+    left: 65px;
+}
+
+.action:not(.showing-steps) > .action-step-container > .action-base {
     display: none;
 }
 
@@ -219,17 +229,16 @@
 }
 
 /* -------------------- Focused step -------------------- */
-.action.focused-step > .action-body {
-    padding-top: 30px;
+.action.focused-step {
+    padding-top: 0px;
     padding-bottom: 0px;
-    /* margin-left: 110px; */
 }
 
-.action.showing-focused-step > .action-body > .action-base {
+.action.showing-focused-step > .action-step-container > .action-base {
     display: none;
 }
 
-.action.focused-step:last-child > .action-body > .action-base {
+.action.focused-step:last-child > .action-step-container > .action-base {
     height: calc(100% + 20px);
 }
 
@@ -239,12 +248,16 @@
     border-radius: 7px;
     position: absolute;
     background: var(--color-2);
-    top: 10px;
+    top: 25px;
     z-index: 1;
-    left: -18px;
+    left: -3px;
     display: none;
     cursor: pointer;
     transition: 0.2s;
+}
+
+.action:not(.inline):not(.program) > .action-cursor {
+    top: 58px;
 }
 
 .action-cursor:hover {
@@ -252,10 +265,10 @@
 }
 
 .action-cursor.active {
-    background: var(--s-color-3);
+    background: var(--s-color-5);
 }
 
-.action:not(.inline) > .action-body > .action-cursor {
+.action:not(.inline) > .action-cursor {
     display: inherit;
 }
 
@@ -330,4 +343,229 @@
     /* position: absolute; */
     z-index: 5;
     flex-direction: row-reverse;
+}
+
+/* -------------------- View Controls ------------------- */
+
+.action-view-container {
+    position: relative;
+    box-shadow: 0px 0px 20px 0px #11111491;
+}
+
+.action-view-container > .action-toggle-view {
+    pointer-events: inherit;
+    position: absolute;
+    opacity: 1;
+    height: 100%;
+    background: #1a1a1f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 0px;
+    cursor: pointer;
+    width: 25px;
+    font-size: 12px;
+    left: -25px;
+    transition: 0.2s;
+}
+
+.action-toggle-view .hidden {
+    display: none;
+}
+
+.action-toggle-view:hover {
+    color: white;
+    background: #1f1f25 !important;
+}
+
+.action-toggle-view:active,
+.action-toggle-view.active {
+    // color: white;
+    // opacity: 1;
+    // border-radius: 0px 5px 5px 0px;
+}
+
+.action-view-container > .action-toggle-view {
+    opacity: 0;
+    background: none;
+}
+
+.action:hover > .action-view-container > .action-toggle-view {
+    opacity: 1 !important;
+}
+
+.action:not(.program).showing-steps > .action-step-container > .action {
+    margin-left: 30px;
+}
+
+/* ------------------- Action mapping ------------------- */
+.action-mapping-container {
+    background: #1b1b22;
+    display: flex;
+    margin-left: 20px;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.action-mapping-container:hover,
+.action-mapping-container:not(.hidden) {
+    background: #202028;
+}
+
+.action.inline > .action-mapping-container {
+    display: none;
+}
+
+.action-mapping {
+    transition: 0.2s;
+    width: 40px;
+    position: relative;
+}
+
+.action-mapping.hidden {
+    width: 2px;
+    opacity: 0;
+}
+
+.action:hover > .action-mapping-container > .action-mapping.hidden {
+    width: 6px;
+}
+
+.action-mapping-step {
+    position: absolute;
+    width: 5px;
+    height: 15px;
+    background: #383847;
+    border-radius: 7px;
+    margin-left: -2.5px;
+    margin-top: 9px;
+    opacity: 0;
+}
+
+.action-mapping-step:hover {
+    background: #3b3b49;
+}
+
+.action-mapping-view {
+    background: linear-gradient(90deg, transparent 50%, transparent 50%),
+        linear-gradient(90deg, transparent 50%, transparent 50%),
+        linear-gradient(0deg, transparent 50%, transparent 50%),
+        linear-gradient(0deg, #4f4f64 50%, transparent 50%);
+    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+    background-size: 0px 0px, 0px 0px, 0px 0px, 2px 8px;
+    background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px;
+    animation: border-dance 4s infinite linear;
+    position: absolute;
+    width: 2px;
+    right: 0px;
+}
+
+@keyframes border-dance {
+    0% {
+        background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px;
+    }
+    100% {
+        background-position: 0px 0px, 0px 0px, 0px 0px, 0px 64px;
+    }
+}
+
+.action-mapping-connections-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.action-mapping-connection {
+    fill: #0000;
+    stroke: #383847;
+    stroke-width: 1px;
+}
+
+.action-header:hover > .action-representation-indicator-container {
+    opacity: 1;
+    pointer-events: inherit;
+}
+
+.action-representation-indicator-container {
+    display: flex;
+    position: absolute;
+    top: -20px;
+    left: 30px;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.2s;
+}
+
+.representation-indicator {
+    /* width: 14px; */
+    /* height: 10px; */
+
+    margin: 0px 3px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    padding: 2px 6px;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0.2;
+    transition: 0.2s;
+    user-select: none;
+}
+
+.representation-indicator:hover {
+    opacity: 1;
+}
+
+.representation-indicator.selected {
+    opacity: 1;
+    background: #ffffff14;
+}
+
+.representation-indicator:not(.selected) {
+    width: 5px;
+}
+
+.faded-out-span {
+    opacity: 0.2 !important;
+    filter: saturate(0) !important;
+    color: white !important;
+}
+
+/* ----------------------- In-situ ---------------------- */
+.action.inline.in-situ {
+    position: absolute;
+}
+
+.action.in-situ > .action-step-container > .action-header > .action-pre-label {
+    display: none;
+}
+
+.action.in-situ > .action-step-container > .action-header > .action-label > span {
+    box-shadow: none;
+}
+
+.action-mapping-cursor {
+    position: absolute;
+    width: 2px;
+    height: 4px;
+    right: 0px;
+    top: 0px;
+    transition: 0.2s;
+    cursor: pointer;
+    border-top: 4px solid var(--color-4);
+    z-index: 1;
+}
+
+.action-mapping-cursor:hover {
+    border-top: 4px solid var(--color-4);
+    background: var(--color-4);
+}
+
+.action-mapping-cursor.selected {
+    border-top: 4px solid var(--s-color-5) !important;
+}
+
+.environment.hidden {
+    opacity: 0;
 }

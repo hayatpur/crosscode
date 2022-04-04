@@ -8,7 +8,6 @@ import {
 } from '../../../environment/EnvironmentState'
 import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
 import { createEl } from '../../../utilities/dom'
-import { clone } from '../../../utilities/objects'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
 import {
@@ -31,6 +30,9 @@ export class EnvironmentRenderer {
     dataRenderers: { [id: string]: { data: DataRenderer; column: HTMLElement } } = {}
     identifierRenderers: { [id: string]: IdentifierRenderer } = {}
 
+    // SVG overlay
+    svg: SVGElement
+
     /* ----------------------- Create ----------------------- */
     constructor() {
         this.create()
@@ -38,6 +40,9 @@ export class EnvironmentRenderer {
 
     create() {
         this.element = createEl('div', 'environment')
+        this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        this.element.appendChild(this.svg)
+        this.svg.classList.add('environment-svg')
     }
 
     /* ----------------------- Render ----------------------- */
@@ -49,8 +54,6 @@ export class EnvironmentRenderer {
     renderMemory(state: EnvironmentState, filter?: string[]) {
         // Hit test
         const hits = new Set()
-
-        console.log(clone(state))
 
         // Filter out irrelevant memory
         let memory = Object.values(state.memory)

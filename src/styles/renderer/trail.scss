@@ -18,17 +18,26 @@
     stroke: url(#grad1);
     stroke-width: 1px;
     z-index: -1;
-    animation: showStroke 10s;
+    // animation: showStroke 10s;
 }
 
 .trail-move {
-    stroke: url(#grad1);
+    stroke: var(--color-4);
     stroke-dasharray: 6 2;
     stroke-dashoffset: 0;
-    animation: showStroke 10s;
+    // animation: showStroke 10s;
 }
 
 .trail-create {
     stroke: url(#grad2);
     stroke-width: 1px;
+}
+
+.trail-path.hidden {
+    opacity: 0;
+}
+
+.reference-movement-path {
+    fill: #0000;
+    stroke: #0000;
 }

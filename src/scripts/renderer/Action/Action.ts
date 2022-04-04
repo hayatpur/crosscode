@@ -3,13 +3,14 @@ import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
 import { createRepresentation } from '../../utilities/action'
 import { View } from '../View/View'
-import { ActionBundle } from './ActionBundle'
+// import { ActionBundle } from './ActionBundle'
 import { ActionController } from './ActionController'
 import { ActionCursor } from './ActionCursor'
 import { ActionInteractionArea } from './ActionInteractionArea'
 import { ActionRenderer } from './ActionRenderer'
 import { ActionState, createActionState } from './ActionState'
 import { Representation } from './Dynamic/Representation'
+import { ActionMapping } from './Mapping/ActionMapping'
 
 /* ----------------------- Options ---------------------- */
 export interface CreateActionOptions {
@@ -17,6 +18,9 @@ export interface CreateActionOptions {
     spacingDelta?: number
     isFocusedStep?: boolean
     isSelected?: boolean
+    isShowingView?: boolean
+    inSitu?: boolean
+    stripped?: boolean
 }
 
 /* ------------------------------------------------------ */
@@ -32,11 +36,10 @@ export class Action {
     controller: ActionController
 
     // Sub-steps
-    steps: (Action | ActionBundle)[] = []
+    steps: Action[] = []
 
     // Views
     views: View[] = []
-    viewTimes: number[] = []
 
     // Cursor
     cursor: ActionCursor
@@ -47,7 +50,13 @@ export class Action {
     // Representation
     representation: Representation
 
+    // Source-code to view mapping
+    mapping: ActionMapping
+
     parent: Action
+
+    // Misc
+    stripped: boolean
 
     constructor(
         execution: ExecutionGraph | ExecutionNode,
@@ -65,12 +74,15 @@ export class Action {
         this.state.inline = options.inline ?? false
         this.state.isFocusedStep = options.isFocusedStep ?? false
         this.state.isSelected = options.isSelected ?? false
+        this.state.isShowingView = options.isShowingView ?? false
+        this.state.inSitu = options.inSitu ?? false
+        this.stripped = options.stripped ?? false
 
         this.renderer = new ActionRenderer()
         this.controller = new ActionController(this)
 
         // Create interaction areas
-        if (this.state.inline) {
+        if (this.state.inline && !this.state.inSitu) {
             setTimeout(() => {
                 this.interactionAreas.push(new ActionInteractionArea(this, this.execution))
                 if (instanceOfExecutionGraph(execution)) {
@@ -78,10 +90,11 @@ export class Action {
                         this.interactionAreas.push(new ActionInteractionArea(this, child))
                     }
                 }
-                // } else {
-                //     this.interactionAreas.push(new ActionInteractionArea(this, this.execution))
-                // }
             })
+        }
+
+        if (!this.state.inline) {
+            this.controller.createView()
         }
 
         // Create cursor
@@ -91,6 +104,15 @@ export class Action {
 
         // Dynamic representations
         this.representation = createRepresentation(this)
+
+        // Create mapping
+        if (!this.state.inline) {
+            this.mapping = new ActionMapping(this)
+        }
+
+        setTimeout(() => {
+            this.mapping?.render()
+        }, 500)
     }
 
     /* ----------------------- Destroy ---------------------- */
@@ -103,6 +125,8 @@ export class Action {
         this.representation?.destroy()
 
         this.cursor?.destroy()
+
+        this.mapping?.destroy()
 
         // TODO Destroy interaction areas
 

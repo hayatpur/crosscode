@@ -11,8 +11,16 @@
     // transition: 0.2s;
     display: flex;
     align-items: center;
-    border-left: 2px solid var(--color-1);
     overflow: hidden;
+
+    background-image: radial-gradient(#ffffff0c 1.25px, transparent 1.25px),
+        radial-gradient(#ffffff0c 1.25px, transparent 1.25px);
+    background-size: 45px 45px;
+    background-position: 0px 0px, 25px 25px;
+
+    transition-property: background-position, background-image;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
 }
 
 /* ----------------------- Camera ----------------------- */
@@ -26,6 +34,11 @@
 
 .visualization.camera-shift {
     cursor: move;
+}
+
+.visualization.camera-shift:active {
+    background-image: radial-gradient(#ffffff13 1.25px, transparent 1.25px),
+        radial-gradient(#ffffff13 1.25px, transparent 1.25px);
 }
 
 .visualization > .minimap {
@@ -71,4 +84,15 @@
     top: 0px;
     left: 0px;
     z-index: -1;
+}
+
+.code-shadow {
+    height: 100%;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    user-select: none;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0px 0px 50px 40px #111114;
 }

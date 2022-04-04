@@ -1,13 +1,12 @@
 import { Editor } from '../../editor/Editor'
-import { EnvironmentState } from '../../environment/EnvironmentState'
+import { queryExecutionGraph } from '../../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
+import { getAllSteps, isExpandable } from '../../utilities/action'
 import { Ticker } from '../../utilities/Ticker'
 import { View } from '../View/View'
 import { Action } from './Action'
-import { ActionBundle } from './ActionBundle'
-import { isExpandable } from './ActionRenderer'
 
 /* ------------------------------------------------------ */
 /*           Defines interactions with an Action          */
@@ -29,16 +28,30 @@ export class ActionController {
             action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
 
             action.renderer.expandButton.addEventListener('click', () => {
-                // action.state.isExpanded = !action.state.isExpanded
-                action.renderer.expandButton.classList.toggle('pressed')
-                if (action.renderer.expandButton.classList.contains('pressed')) {
-                    action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-down-outline"></ion-icon>`
-                } else {
-                    action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
-                }
-                // this.updateClasses(action)
+                this.action.representation.cycle()
             })
         }
+
+        this.action.renderer.expandButton?.addEventListener('click', () => {
+            if (this.action.steps.length > 0) {
+                this.destroyStepsAndViews()
+            } else {
+                this.createSteps()
+            }
+        })
+    }
+
+    /* -------------------- Toggle views -------------------- */
+    showView() {
+        this.action.state.isShowingView = true
+
+        this.action.renderer.render(this.action)
+    }
+
+    hideView() {
+        this.action.state.isShowingView = false
+
+        this.action.renderer.render(this.action)
     }
 
     /* ----------------------- Update ----------------------- */
@@ -58,20 +71,17 @@ export class ActionController {
         // Attach line numbers to root
         if (this.action.state.inline) {
             const root = this.action.controller.getSpatialRoot()
-            const rootBody = root.renderer.body.getBoundingClientRect()
+            const rootBody = root.renderer.stepContainer.getBoundingClientRect()
             const thisBody = this.action.renderer.element.getBoundingClientRect()
             const delta = rootBody.x - thisBody.x
-            // console.log(`translateX(${delta}px)`)
-            this.action.renderer.headerPreLabel.style.transform = `translateX(${delta}px)`
-            this.action.renderer.footerPreLabel.style.transform = `translateX(${delta}px)`
+            this.action.renderer.headerPreLabel.style.transform = `translateX(${delta + 15}px)`
+            this.action.renderer.footerPreLabel.style.transform = `translateX(${delta + 15}px)`
         }
     }
 
     /* ------------------------ Step ------------------------ */
     createSteps() {
         this.action.steps = []
-        this.action.views = []
-        this.action.viewTimes = []
 
         let steps = getExecutionSteps(this.action.execution)
 
@@ -94,40 +104,43 @@ export class ActionController {
         }
 
         // Add a view if not inline
-        // TODO: Should be based on execution type
-        if (!this.action.state.inline) {
-            //     if (this.action.execution.nodeData.type == 'CallExpression') {
-            //         const args = this.action.steps[0] as Action
-            //         // args.controller.collapse(0)
-            //         const func = this.action.steps[1] as Action
-            //         // View before function call but after arguments that shows the argument
-            //         // values
-            //         const argView = new View()
-            //         argView.controller.setEnvironments(
-            //             [args.execution.postcondition],
-            //             [...writes(args.execution)].map((x) => x.id)
-            //         )
-            //         this.action.views.push(argView)
-            //         this.action.viewTimes.push(1)
-            //         // View after function call
-            //         const funcView = new View()
-            //         funcView.controller.setEnvironments(
-            //             [func.execution.postcondition],
-            //             [...writes(func.execution)].map((x) => x.id)
-            //         )
-            //         this.action.views.push(funcView)
-            //         this.action.viewTimes.push(2)
-            //     } else {
-            //         // View at end
-            // const view = new View()
-            // view.controller.setEnvironments([this.action.execution.postcondition])
-            // this.action.views.push(view)
-            // this.action.viewTimes.push(steps.length)
-            //     }
+        if (this.action.state.inline) {
+            const root = this.getSpatialRoot()
+            root.controller.updateStepToViewMappings()
+        } else {
+            this.updateStepToViewMappings()
         }
 
         // Render them so they're in the right place
         this.action.renderer.render(this.action)
+    }
+
+    updateStepToViewMappings() {
+        const allSteps = getAllSteps(this.action)
+
+        for (const view of this.action.views) {
+            view.controller.clearExecutions()
+        }
+
+        for (const step of allSteps) {
+            // if (step instanceof ActionBundle) continue
+            if (step.steps.length > 0) continue
+
+            // Put it in the corresponding view
+            for (const view of this.action.views) {
+                for (const potentialExecution of view.representingExecutions) {
+                    if (
+                        queryExecutionGraph(
+                            potentialExecution,
+                            (child) => child.id == step.execution.id
+                        )
+                    ) {
+                        view.controller.addExecution(step.execution)
+                        break
+                    }
+                }
+            }
+        }
     }
 
     getRoot() {
@@ -146,30 +159,18 @@ export class ActionController {
         return root
     }
 
-    createView(timeStep: number) {
-        const view = new View()
-
-        let env: EnvironmentState
-
-        if (timeStep == 0) {
-            env = this.action.execution.precondition
-        } else if (timeStep > this.action.steps.length) {
-            env = this.action.execution.postcondition
-        } else {
-            const step = this.action.steps[timeStep - 1]
-
-            if (step instanceof ActionBundle) {
-                env = step.getPostCondition()
-            } else {
-                env = step.execution.postcondition
-            }
+    createView(representingExecutions: (ExecutionGraph | ExecutionNode)[] = null) {
+        if (representingExecutions == null) {
+            representingExecutions = [this.action.execution]
         }
 
-        view.controller.setEnvironments([env])
+        const view = new View()
+        view.representingExecutions = representingExecutions
 
         this.action.views.push(view)
-        this.action.viewTimes.push(timeStep)
 
+        // Render again
+        this.action.renderer.render(this.action)
         return view
     }
 
@@ -181,7 +182,6 @@ export class ActionController {
         // Destroy views
         this.action.views?.forEach((view) => view.destroy())
         this.action.views = []
-        this.action.viewTimes = []
 
         // Render again
         this.action.renderer.render(this.action)
@@ -228,6 +228,7 @@ export class ActionController {
         })
         step.controller.createSteps()
 
+        this.action.controller.getSpatialRoot().controller.hideView()
         this.action.steps.push(step)
         this.action.renderer.render(this.action)
 
@@ -236,7 +237,7 @@ export class ActionController {
         return step
     }
 
-    destroyOutgoingStep(step: Action | ActionBundle) {
+    destroyOutgoingStep(step: Action) {
         step.destroy()
         this.action.steps.splice(this.action.steps.indexOf(step), 1)
         this.action.renderer.render(this.action)

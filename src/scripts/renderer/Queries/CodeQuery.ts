@@ -1,14 +1,14 @@
-import { Editor } from '../../editor/Editor'
-import { queryAllExecutionGraph, queryExecutionGraph } from '../../execution/execution'
+import * as ESTree from 'estree'
+import { getDepthOfExecution, queryExecutionGraph } from '../../execution/execution'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
-import { bboxContains, getDeepestChunks, stripChunk } from '../../utilities/math'
+import { getClosestMatch } from '../../utilities/math'
 import { Action } from '../Action/Action'
-import { ActionBundle } from '../Action/ActionBundle'
 
 export interface CodeQueryState {
-    selection: { x: number; y: number; width: number; height: number } | null
+    // selection: { x: number; y: number; width: number; height: number } | null
+    selection: ESTree.SourceLocation
 }
 
 export class CodeQuery {
@@ -21,27 +21,35 @@ export class CodeQuery {
         this.query = query
 
         // List of base nodes
-        const nodes = queryAllExecutionGraph(Executor.instance.execution, (animation) =>
-            instanceOfExecutionNode(animation)
-        )
+        // const nodes = queryAllExecutionGraph(Executor.instance.execution, (animation) =>
+        //     instanceOfExecutionNode(animation)
+        // )
 
         // Find nodes that are inside the selection
-        const selectedNodeIds: Set<string> = new Set()
+        // const selectedNodeIds: Set<string> = new Set()
 
-        for (const node of nodes) {
-            const location = node.nodeData.location
-            const bbox = Editor.instance.computeBoundingBoxForLoc(location)
+        // for (const node of nodes) {
+        //     const location = node.nodeData.location
+        //     const bbox = Editor.instance.computeBoundingBoxForLoc(location)
 
-            const contains = bboxContains(this.query.selection, bbox)
+        //     const contains = bboxContains(this.query.selection, bbox)
 
-            if (contains) {
-                selectedNodeIds.add(node.id)
-            }
-        }
+        //     if (contains) {
+        //         selectedNodeIds.add(node.id)
+        //     }
+        // }
 
         // Group nodes into chunks
-        let executionSelection = getDeepestChunks(Executor.instance.execution, selectedNodeIds)
-        executionSelection = executionSelection.map((chunk) => stripChunk(chunk))
+        // let executionSelection = getDeepestChunks(Executor.instance.execution, selectedNodeIds)
+        // executionSelection = executionSelection.map((chunk) => stripChunk(chunk))
+
+        let executionSelection = getClosestMatch(query.selection) ?? []
+        executionSelection.sort((a, b) => {
+            const aDepth = getDepthOfExecution(a, Executor.instance.execution)
+            const bDepth = getDepthOfExecution(b, Executor.instance.execution)
+
+            return aDepth - bDepth
+        })
 
         for (const execution of executionSelection) {
             // Two cases:
@@ -62,9 +70,10 @@ export class CodeQuery {
     }
 
     destroy() {
-        console.log('Destroying...')
+        // console.log('Destroying...')
+        // console.log(this.actions, this.parents)
 
-        for (let i = 0; i < this.actions.length; i++) {
+        for (let i = this.actions.length - 1; i >= 0; i--) {
             const action = this.actions[i]
             const parent = this.parents[i]
 
@@ -94,9 +103,6 @@ export function getParentInRoot(goal: ExecutionGraph | ExecutionNode): Action {
         let foundMatch = false
         for (const step of parent.steps) {
             // TODO support bundles
-            if (step instanceof ActionBundle) {
-                continue
-            }
 
             const contains =
                 queryExecutionGraph(step.execution, (animation) => animation.id == goal.id) != null

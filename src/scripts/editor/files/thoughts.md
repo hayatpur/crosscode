@@ -195,6 +195,12 @@ Animations:
 
 -   Only move if the data is a "move" function of inputs, otherwise just highlight them, raise them or something and create the data
 
+-   Header -> Body
+-   Spatial moving and polish that up
+-   Adding context: go up a level of abstraction, go up in the same level of abstraction, go down in the same level of abstraction
+-   Traces
+-   Animations
+
 _Writing_
 [ ] Finish related work (ddl: this week)
 [ ] Formative study (ddl: Feb 25)

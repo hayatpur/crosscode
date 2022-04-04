@@ -1,4 +1,5 @@
-import { Action } from '../Action/Action'
+import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { EnvironmentRenderer } from '../View/Environment/EnvironmentRenderer'
 import { TrailController } from './TrailController'
 import { TrailRenderer } from './TrailRenderer'
@@ -15,17 +16,19 @@ export class Trail {
     startEnvironment: EnvironmentRenderer
     endEnvironment: EnvironmentRenderer
 
-    action: Action
+    execution: ExecutionGraph | ExecutionNode
+
+    time: number = 0
 
     constructor(
         state: TrailState,
         startEnvironment: EnvironmentRenderer,
         endEnvironment: EnvironmentRenderer,
-        action: Action
+        execution: ExecutionGraph | ExecutionNode
     ) {
         this.state = state
 
-        this.action = action
+        this.execution = execution
 
         this.startEnvironment = startEnvironment
         this.endEnvironment = endEnvironment

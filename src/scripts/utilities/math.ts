@@ -1,6 +1,8 @@
-import { queryExecutionGraph } from '../execution/execution'
+import * as ESTree from 'estree'
+import { queryAllExecutionGraph, queryExecutionGraph } from '../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
+import { Executor } from '../executor/Executor'
 import { DataState, instanceOfObjectData } from '../renderer/View/Environment/data/DataState'
 
 export interface Vector {
@@ -184,8 +186,37 @@ export function bboxContains(
     )
 }
 
+// export function growChunk(chunk: Set<string>) {
+//     // Base cases
+
+//     // Empty chunk
+//     if (chunk.size === 0) {
+//         return []
+//     }
+
+//     // Single chunk
+//     if (chunk.size == 1) {
+//         return queryExecutionGraph(Executor.instance.execution, (node) => node.id == [...chunk][0])
+//     }
+
+//     // Find a candidate parent (if any) by backtracking through each child
+
+//     for (const child of chunk) {
+//         const parent = queryExecutionGraph(
+//             Executor.instance.execution,
+//             (node) =>
+//                 instanceOfExecutionGraph(node) && node.vertices.map((v) => v.id).includes(child)
+//         )
+
+//         // Is the root
+//         if (parent == null) {
+//             continue
+//         }
+//     }
+// }
+
 export function getDeepestChunks(
-    animation: ExecutionGraph | ExecutionNode,
+    parentExecution: ExecutionGraph | ExecutionNode,
     selection: Set<string>
 ): (ExecutionGraph | ExecutionNode)[] {
     // Base cases
@@ -193,28 +224,31 @@ export function getDeepestChunks(
         return []
     }
 
-    if (instanceOfExecutionNode(animation)) {
-        if (selection.has(animation.id) && selection.size == 1) {
-            return [animation]
+    if (instanceOfExecutionNode(parentExecution)) {
+        if (selection.has(parentExecution.id) && selection.size == 1) {
+            return [parentExecution]
         } else {
             return []
         }
     }
 
-    if (animation.vertices.length == 0) {
+    if (parentExecution.vertices.length == 0) {
         return []
-    } else if (animation.vertices.length == 1) {
-        const deepestChunks = getDeepestChunks(animation.vertices[0], selection)
-        if (deepestChunks.length == 1 && deepestChunks[0].id == animation.vertices[0].id) {
-            return [animation]
+    } else if (parentExecution.vertices.length == 1) {
+        const deepestChunks = getDeepestChunks(parentExecution.vertices[0], selection)
+        if (deepestChunks.length == 1 && deepestChunks[0].id == parentExecution.vertices[0].id) {
+            return [parentExecution]
         } else {
             return deepestChunks
         }
     }
 
+    // Which vertex of parent contains what bits of the chunk
     const childrenContains: Set<string>[] = []
 
-    for (const child of animation.vertices) {
+    for (const c of parentExecution.vertices) {
+        let child = c
+
         const contains: Set<string> = new Set()
         for (const id of selection) {
             if (queryExecutionGraph(child, (node) => node.id == id) != null) {
@@ -223,8 +257,7 @@ export function getDeepestChunks(
         }
 
         if (contains.size == selection.size) {
-            // Found a node that contains the selection, return the deepest chunk
-            // in that node
+            // Found a vertex that contains the whole chunk, return the deepest chunk in that node
             return getDeepestChunks(child, selection)
         } else {
             childrenContains.push(contains)
@@ -238,23 +271,39 @@ export function getDeepestChunks(
     let allAreDeepestChunks = true
     let allDeepestChunks: (ExecutionGraph | ExecutionNode)[] = []
     for (let i = 0; i < childrenContains.length; i++) {
-        const deepestChunks = getDeepestChunks(animation.vertices[i], childrenContains[i])
+        const deepestChunks = getDeepestChunks(parentExecution.vertices[i], childrenContains[i])
         allDeepestChunks.push(...deepestChunks)
 
-        if (deepestChunks.length != 1 || deepestChunks[0].id != animation.vertices[i].id) {
+        if (deepestChunks.length != 1 || deepestChunks[0].id != parentExecution.vertices[i].id) {
             allAreDeepestChunks = false
         }
     }
 
+    // console.log(allDeepestChunks, parentExecution.nodeData.type)
+    const parent = queryExecutionGraph(
+        Executor.instance.execution,
+        (node) =>
+            instanceOfExecutionGraph(node) &&
+            node.vertices.map((v) => v.id).includes(parentExecution.id)
+    )
+    // console.log(parent)
+
     if (allArePartiallyContained && allAreDeepestChunks) {
-        return [animation]
+        console.log(parentExecution.nodeData.type, 'A')
+        return [parentExecution]
     } else {
+        console.log(allDeepestChunks, 'B')
         return allDeepestChunks
     }
 }
 
 export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
-    let blacklist = new Set<string>(['IfStatement'])
+    let blacklist = new Set<string>([
+        'IfStatement',
+        'ForStatement',
+        'ReturnStatement',
+        'CallExpression',
+    ])
     if (
         instanceOfExecutionGraph(chunk) &&
         chunk.vertices.length == 1 &&
@@ -264,4 +313,73 @@ export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
     }
 
     return chunk
+}
+
+export function getClosestMatch(target: ESTree.SourceLocation) {
+    const allNodes = queryAllExecutionGraph(Executor.instance.execution, (node) => true)
+    const allDistances = allNodes.map((node) =>
+        tokenDistanceFromTarget(node.nodeData.location, target)
+    )
+    // const minDistance = Math.min(...allDistances)
+
+    let minNodes: (ExecutionGraph | ExecutionNode)[] = []
+
+    const blacklist = new Set<string>([
+        'BinaryExpressionEvaluate',
+        'ForStatementIteration',
+        'BlockStatement',
+    ])
+    for (let i = 0; i < allNodes.length; i++) {
+        if (allDistances[i] == 0 && !blacklist.has(allNodes[i].nodeData.type)) {
+            minNodes.push(allNodes[i])
+        }
+    }
+
+    let toRemove = new Set<string>()
+    for (let i = 0; i < minNodes.length; i++) {
+        if (minNodes[i].nodeData.type == 'Arguments') {
+            const children = (minNodes[i] as ExecutionGraph).vertices.map((v) => v.id)
+            for (const other of minNodes) {
+                if (children.includes(other.id)) {
+                    toRemove.add(minNodes[i].id)
+                }
+            }
+        }
+    }
+
+    minNodes = minNodes.filter((node) => !toRemove.has(node.id))
+
+    console.log(minNodes.map((n) => [n.nodeData.type, n.id]))
+
+    return minNodes
+
+    // const minDistanceIndex = allDistances.indexOf(minDistance)
+    // // console.log(minDistance, allNodes[minDistanceIndex].nodeData.type)
+    // // console.log(allNodes[minDistanceIndex].nodeData.location, target)
+
+    // if (minDistance == 0) {
+    //     return [allNodes[minDistanceIndex]]
+    // } else {
+    //     return null
+    // }
+}
+
+export function tokenDistanceFromTarget(
+    node: ESTree.SourceLocation,
+    target: ESTree.SourceLocation
+) {
+    // Multiline selection
+    if (target.end.line - target.start.line > 0) {
+        return (
+            Math.abs(node.start.line - target.start.line) +
+            Math.abs(node.end.line - target.end.line)
+        )
+    }
+
+    return (
+        Math.abs(node.start.line - target.start.line) +
+        Math.abs(node.start.column - target.start.column + 1) +
+        Math.abs(node.end.line - target.end.line) +
+        Math.abs(node.end.column - target.end.column + 1)
+    )
 }

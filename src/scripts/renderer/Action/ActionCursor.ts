@@ -54,7 +54,7 @@ export class ActionCursor {
     }
 
     create() {
-        this.element = createEl('div', 'action-cursor', this.action.renderer.body)
+        this.element = createEl('div', 'action-cursor', this.action.renderer.element)
     }
 
     /* ----------------------- Update ----------------------- */
@@ -63,31 +63,31 @@ export class ActionCursor {
             const allSteps = getAllSteps(this.action)
 
             // Move to current position
-            const step = allSteps[this.position]
-            const stepBbox = step.renderer.element.getBoundingClientRect()
-            const parentBbox = this.action.renderer.body.getBoundingClientRect()
-            this.element.style.top = `${stepBbox.y - parentBbox.y + 10}px`
+            // const step = allSteps[this.position]
+            // const stepBbox = step.renderer.element.getBoundingClientRect()
+            // const parentBbox = this.action.renderer.element.getBoundingClientRect()
+            // this.element.style.top = `${stepBbox.y - parentBbox.y + 10}px`
 
-            let execution = step instanceof Action ? step.execution : step.getPostExecution()
+            // let execution = step instanceof Action ? step.execution : step.getPostExecution()
 
-            // Focus
-            if (this._currentFocus != execution) {
-                // Unfocus
-                if (this._currentFocus != null) {
-                    Executor.instance.visualization.focus.clearFocus(this._currentFocus)
-                }
+            // // Focus
+            // if (this._currentFocus != execution) {
+            //     // Unfocus
+            //     if (this._currentFocus != null) {
+            //         Executor.instance.visualization.focus.clearFocus(this._currentFocus)
+            //     }
 
-                // Focus
-                Executor.instance.visualization.focus.focusOn(execution)
-                this._currentFocus = execution
+            //     // Focus
+            //     Executor.instance.visualization.focus.focusOn(execution)
+            //     this._currentFocus = execution
 
-                if (this.action.views.length > 0) {
-                    this.action.views[this.action.views.length - 1].controller.setEnvironments(
-                        [execution.postcondition]
-                        // [...writes(execution)].map((x) => x.id)
-                    )
-                }
-            }
+            //     if (this.action.views.length > 0) {
+            //         this.action.views[this.action.views.length - 1].controller.setEnvironments(
+            //             [execution.postcondition]
+            //             // [...writes(execution)].map((x) => x.id)
+            //         )
+            //     }
+            // }
         } else {
             // Unfocus
             if (this._currentFocus != null) {

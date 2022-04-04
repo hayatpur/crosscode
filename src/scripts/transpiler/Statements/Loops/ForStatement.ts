@@ -28,15 +28,15 @@ export function ForStatement(
     // addVertex(graph, createScope, { nodeData: getNodeData(ast, 'Create Scope') })
     applyExecutionNode(createScope, environment)
 
-    let iteration = createExecutionGraph({
-        ...getNodeData(ast),
-        type: 'ForStatementIteration',
-    })
-    iteration.precondition = clone(environment)
+    // let iteration = createExecutionGraph({
+    //     ...getNodeData(ast),
+    //     type: 'ForStatementIteration',
+    // })
+    // iteration.precondition = clone(environment)
 
     // Init
     const init = Compiler.compile(ast.init, environment, context)
-    addVertex(iteration, init, { nodeData: getNodeData(ast.init, 'Initial') })
+    addVertex(graph, init, { nodeData: getNodeData(ast.init, 'Initial') })
 
     // Points to the result of test
 
@@ -49,25 +49,18 @@ export function ForStatement(
             ...context,
             outputRegister: testRegister,
         })
-        addVertex(iteration, test, { nodeData: getNodeData(ast.test, 'Test') })
+        addVertex(graph, test, { nodeData: getNodeData(ast.test, 'Test') })
 
         const testData = resolvePath(environment, testRegister, null) as DataState
         const testValue = testData.value as boolean
 
         // Consume testData
         const consume = consumeDataAnimation(testRegister)
-        // addVertex(iteration, consume, { nodeData: getNodeData(ast) })
         applyExecutionNode(consume, environment)
         cleanUpRegister(environment, testRegister[0].value)
 
         if (!testValue) {
-            iteration.postcondition = clone(environment)
-            // addVertex(graph, iteration, {
-            //     nodeData: {
-            //         ...getNodeData(ast),
-            //         type: 'ForStatementIteration',
-            //     },
-            // })
+            graph.postcondition = clone(environment)
             break
         }
 
@@ -78,7 +71,7 @@ export function ForStatement(
             controlOutput: controlOutput,
         })
 
-        addVertex(iteration, body, { nodeData: getNodeData(ast.body, 'Body') })
+        addVertex(graph, body, { nodeData: getNodeData(ast.body, 'Body') })
 
         if (controlOutput.output == ControlOutput.Break) {
             context.controlOutput.output = ControlOutput.None
@@ -95,22 +88,22 @@ export function ForStatement(
             ...context,
             outputRegister: null,
         })
-        addVertex(iteration, update, { nodeData: getNodeData(ast.update, 'Update') })
+        addVertex(graph, update, { nodeData: getNodeData(ast.update, 'Update') })
 
         // Add iteration to the graph
-        iteration.postcondition = clone(environment)
-        addVertex(graph, iteration, {
-            nodeData: {
-                ...getNodeData(ast, `Iteration ${_i}`),
-                type: 'ForStatementIteration',
-            },
-        })
+        // iteration.postcondition = clone(environment)
+        // addVertex(graph, iteration, {
+        //     nodeData: {
+        //         ...getNodeData(ast, `Iteration ${_i}`),
+        //         type: 'ForStatementIteration',
+        //     },
+        // })
 
-        iteration = createExecutionGraph({
-            ...getNodeData(ast),
-            type: 'ForStatementIteration',
-        })
-        iteration.precondition = clone(environment)
+        // iteration = createExecutionGraph({
+        //     ...getNodeData(ast),
+        //     type: 'ForStatementIteration',
+        // })
+        // iteration.precondition = clone(environment)
 
         _i++
     }

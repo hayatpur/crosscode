@@ -50,7 +50,12 @@ export class CodeQueryCreator {
         selectionBbox.height += paddingY * 2
 
         if (Editor.instance.getSelectedText().length > 0) {
-            this.currentQuery = new CodeQuery({ selection: selectionBbox })
+            this.currentQuery = new CodeQuery({
+                selection: {
+                    start: { line: e.selection.startLineNumber, column: e.selection.startColumn },
+                    end: { line: e.selection.endLineNumber, column: e.selection.endColumn },
+                },
+            })
         }
     }
 

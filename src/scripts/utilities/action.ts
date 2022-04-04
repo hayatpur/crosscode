@@ -1,5 +1,7 @@
+import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Action } from '../renderer/Action/Action'
-import { ActionBundle } from '../renderer/Action/ActionBundle'
+import { BlockStatementRepresentation } from '../renderer/Action/Dynamic/BlockStatementRepresentation'
 import { CallExpressionRepresentation } from '../renderer/Action/Dynamic/CallExpressionRepresentation'
 import { ForStatementRepresentation } from '../renderer/Action/Dynamic/ForStatementRepresentation'
 import { FunctionCallRepresentation } from '../renderer/Action/Dynamic/FunctionCallRepresentation'
@@ -57,8 +59,6 @@ export function queryAction(action: Action, query: (animation: Action) => boolea
     }
 
     for (const step of action.steps) {
-        if (step instanceof ActionBundle) continue
-
         const ret = queryAction(step, query)
         if (ret != null) {
             return ret
@@ -76,8 +76,6 @@ export function queryAllAction(action: Action, query: (animation: Action) => boo
     }
 
     for (const step of action.steps) {
-        if (step instanceof ActionBundle) continue
-
         acc.push(...queryAllAction(step, query))
     }
 
@@ -96,23 +94,66 @@ export function createRepresentation(action: Action) {
         case 'ForStatement':
             representation = ForStatementRepresentation
             break
+        case 'Program':
+            representation = BlockStatementRepresentation
+            break
+        case 'BlockStatement' || 'Program':
+            representation = BlockStatementRepresentation
+            break
+        default:
+            representation = Representation
+            break
     }
 
-    if (representation != null) {
-        return new representation(action)
-    } else {
-        return null
-    }
+    return new representation(action)
 }
 
-export function getAllSteps(action: Action | ActionBundle) {
+export function getAllSteps(action: Action): Action[] {
     const allSteps = []
 
-    let steps = action instanceof ActionBundle ? action.actions : action.steps
+    let steps = action.steps
 
     for (const step of steps) {
         allSteps.push(step, ...getAllSteps(step))
     }
 
     return allSteps
+}
+
+export function getAllBaseSteps(action: Action): Action[] {
+    const allSteps = []
+
+    let steps = action.steps
+
+    // if (steps.length == 0) {
+
+    // }
+
+    for (const step of steps) {
+        let stepSteps = action.steps
+        if (stepSteps.length == 0) {
+            allSteps.push(step)
+        } else {
+            allSteps.push(...getAllSteps(step))
+        }
+    }
+
+    return allSteps
+}
+
+export function isExpandable(execution: ExecutionGraph | ExecutionNode) {
+    const expandibleTypes = new Set([
+        'ForStatement',
+        'WhileStatement',
+        'IfStatement',
+        'FunctionCall',
+    ])
+
+    return expandibleTypes.has(execution.nodeData.type)
+}
+
+export function getLabelOfExecution(execution: ExecutionGraph | ExecutionNode) {
+    return (instanceOfExecutionNode(execution) ? execution.name : execution.nodeData.type)
+        .replace(/([A-Z])/g, ' $1')
+        .trim()
 }

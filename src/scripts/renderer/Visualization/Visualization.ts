@@ -26,6 +26,7 @@ export class Visualization {
     focus: Focus
 
     codeBackdrop: HTMLElement
+    codeShadow: HTMLElement
 
     minimap: Minimap
 
@@ -37,10 +38,13 @@ export class Visualization {
         this.element = createEl('div', 'visualization', document.body)
 
         // Fog of war
-        this.fogOfWar = createEl('div', 'fog-of-war', this.element)
+        // this.fogOfWar = createEl('div', 'fog-of-war', this.element)
 
         // Code backdrop
         this.codeBackdrop = createEl('div', 'code-backdrop', document.body)
+
+        // Code shadow
+        this.codeShadow = createEl('div', 'code-shadow', document.body)
 
         // Camera
         this.camera = new Camera(this)
@@ -60,9 +64,10 @@ export class Visualization {
         // Root action
         this.root = new Action(execution, null, {
             inline: false,
+            isShowingView: true,
         })
         this.root.controller.createSteps()
-        this.root.controller.createView(this.root.steps.length)
+
         this.root.renderer.render(this.root)
 
         this.camera.add(this.root.renderer.element)
@@ -83,6 +88,7 @@ export class Visualization {
         const margin = Editor.instance.getMaxWidth() + 100
         this.element.style.left = `${margin}px`
         this.codeBackdrop.style.width = `${margin}px`
+        this.codeShadow.style.width = `${margin}px`
     }
 
     /* ----------------------- Destroy ---------------------- */
