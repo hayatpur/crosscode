@@ -3,6 +3,7 @@ import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
 import { getAllSteps } from '../../utilities/action'
 import { createEl } from '../../utilities/dom'
+import { lerp } from '../../utilities/math'
 import { Ticker } from '../../utilities/Ticker'
 import { Action } from './Action'
 
@@ -43,7 +44,7 @@ export class ActionCursor {
                     this.position -= 1
                 }
             } else if (e.key == 'ArrowDown') {
-                const allSteps = getAllSteps(this.action)
+                const allSteps = getAllSteps(this.action).filter((step) => step.steps.length == 0)
                 if (this.position < allSteps.length - 1) {
                     this.position += 1
                 }
@@ -60,34 +61,53 @@ export class ActionCursor {
     /* ----------------------- Update ----------------------- */
     tick(dt: number) {
         if (this.active) {
-            const allSteps = getAllSteps(this.action)
+            const allSteps = getAllSteps(this.action).filter((step) => step.steps.length == 0)
 
             // Move to current position
-            // const step = allSteps[this.position]
-            // const stepBbox = step.renderer.element.getBoundingClientRect()
-            // const parentBbox = this.action.renderer.element.getBoundingClientRect()
-            // this.element.style.top = `${stepBbox.y - parentBbox.y + 10}px`
+            const step = allSteps[this.position]
+            const stepBbox = step.renderer.element.getBoundingClientRect()
+            const parentBbox = this.action.renderer.element.getBoundingClientRect()
+            this.element.style.top = `${stepBbox.y - parentBbox.y + 10}px`
 
-            // let execution = step instanceof Action ? step.execution : step.getPostExecution()
+            let execution = step.execution
 
-            // // Focus
-            // if (this._currentFocus != execution) {
-            //     // Unfocus
-            //     if (this._currentFocus != null) {
-            //         Executor.instance.visualization.focus.clearFocus(this._currentFocus)
-            //     }
+            // Focus
+            if (this._currentFocus != execution) {
+                // Unfocus
+                if (this._currentFocus != null) {
+                    Executor.instance.visualization.focus.clearFocus(this._currentFocus)
+                }
 
-            //     // Focus
-            //     Executor.instance.visualization.focus.focusOn(execution)
-            //     this._currentFocus = execution
+                // Focus
+                Executor.instance.visualization.focus.focusOn(execution)
+                this._currentFocus = execution
+            }
 
-            //     if (this.action.views.length > 0) {
-            //         this.action.views[this.action.views.length - 1].controller.setEnvironments(
-            //             [execution.postcondition]
-            //             // [...writes(execution)].map((x) => x.id)
-            //         )
-            //     }
-            // }
+            for (let viewIndex = 0; viewIndex < this.action.views.length; viewIndex++) {
+                const view = this.action.views[viewIndex]
+
+                for (let i = 0; i < view.executions.length; i++) {
+                    if (view.executions[i].id == execution.id) {
+                        const viewTime = view.controller.getTime(i)
+                        console.log(viewIndex, viewTime)
+
+                        const mappingTime =
+                            viewIndex * (1 / this.action.views.length) +
+                            viewTime / this.action.views.length
+
+                        // Seek
+                        if (Math.abs(this.action.mapping.time - (mappingTime - 0.01)) < 0.001) {
+                            this.action.mapping.updateTime(mappingTime - 0.01)
+                        } else {
+                            this.action.mapping.updateTime(
+                                lerp(this.action.mapping.time, mappingTime - 0.01, dt * 0.005)
+                            )
+                        }
+
+                        break
+                    }
+                }
+            }
         } else {
             // Unfocus
             if (this._currentFocus != null) {

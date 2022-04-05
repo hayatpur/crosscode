@@ -95,6 +95,13 @@ export class Action {
 
         if (!this.state.inline) {
             this.controller.createView()
+            // if (instanceOfExecutionGraph(execution)) {
+            //     for (const child of execution.vertices) {
+            //         this.controller.createView([child])
+            //     }
+            //     // this.controller.createView([(this.execution as ExecutionGraph).vertices[0]])
+            //     // this.controller.createView([(this.execution as ExecutionGraph).vertices[1]])
+            // }
         }
 
         // Create cursor

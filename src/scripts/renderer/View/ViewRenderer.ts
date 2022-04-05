@@ -35,6 +35,8 @@ export class ViewRenderer {
     render(view: View, filter?: string[]) {
         this.renderEnvironment(view, filter)
 
+        console.log(this.environmentRenderers)
+
         setTimeout(() => {
             this.renderTrails(view)
             this.updateTime(view)
@@ -61,7 +63,6 @@ export class ViewRenderer {
             this.environmentRenderers[i + 1].render(view.executions[i].postcondition, filter)
             this.environmentRenderers[i + 1].element.classList.add('hidden')
         }
-        // console.log(this.environmentRenderers.length, view.executions.length)
 
         let hit = false
         for (let i = 0; i < view.executions.length; i++) {
@@ -88,6 +89,9 @@ export class ViewRenderer {
     }
 
     renderTrails(view: View) {
+        Object.values(this.trails).forEach((trail) => trail.destroy())
+        this.trails = {}
+
         const hits = new Set<string>()
         for (let i = 0; i < view.executions.length; i++) {
             const exec = view.executions[i]
@@ -113,12 +117,12 @@ export class ViewRenderer {
             // )
         }
 
-        for (const id of Object.keys(this.trails)) {
-            if (!hits.has(id)) {
-                this.trails[id].destroy()
-                delete this.trails[id]
-            }
-        }
+        // for (const id of Object.keys(this.trails)) {
+        //     if (!hits.has(id)) {
+        //         this.trails[id].destroy()
+        //         delete this.trails[id]
+        //     }
+        // }
     }
 
     updateTime(view: View) {

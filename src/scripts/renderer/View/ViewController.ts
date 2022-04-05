@@ -39,6 +39,12 @@ export class ViewController {
     updateTime(time: number) {
         this.view.state.time = time
         this.view.renderer.updateTime(this.view)
+
+        if (time == 0) {
+            this.view.renderer.element.classList.add('inactive')
+        } else {
+            this.view.renderer.element.classList.remove('inactive')
+        }
     }
 
     toggleHidden() {
@@ -52,6 +58,7 @@ export class ViewController {
 
     clearExecutions() {
         this.view.executions = []
+
         this.view.renderer.render(this.view)
     }
 

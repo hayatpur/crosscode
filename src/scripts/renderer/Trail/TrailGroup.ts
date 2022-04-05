@@ -8,7 +8,7 @@ import {
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { instanceOfData } from '../View/Environment/data/DataState'
-import { EnvironmentRenderer, getRelevantData } from '../View/Environment/EnvironmentRenderer'
+import { EnvironmentRenderer, getRelevantFlatData } from '../View/Environment/EnvironmentRenderer'
 import { Trail } from './Trail'
 import { TrailState, TrailType } from './TrailState'
 
@@ -73,10 +73,10 @@ export class TrailGroup {
 
 export function getTrail(execution: ExecutionGraph) {
     const traces = getTrace(execution)
-    const preDataKeys = getRelevantData(execution.precondition).map((data) =>
+    const preDataKeys = getRelevantFlatData(execution.precondition).map((data) =>
         instanceOfData(data) ? data.id : data.name
     )
-    const postDataKeys = getRelevantData(execution.postcondition).map((data) =>
+    const postDataKeys = getRelevantFlatData(execution.postcondition).map((data) =>
         instanceOfData(data) ? data.id : data.name
     )
     const trails: TrailState[] = []
@@ -93,7 +93,6 @@ export function getTrail(execution: ExecutionGraph) {
 
         for (const branch of branches) {
             const [operations, leaves] = getAllOperationsAndLeaves(branch)
-
             const endOperation = operations[operations.length - 1]
             if (endOperation == null) {
                 continue
@@ -168,6 +167,10 @@ export function convertEndOperationsAndLeavesToTrails(
             }
         }
     }
+
+    // console.log(dataId, endOperations, leaves)
+    // console.log(effects, creates)
+    // console.log('==============================')
 
     return [...effects, ...creates]
 }

@@ -1,8 +1,8 @@
-import { Executor } from '../../../executor/Executor'
 import { getAllSteps } from '../../../utilities/action'
 import { createEl } from '../../../utilities/dom'
 import { Keyboard } from '../../../utilities/Keyboard'
 import { catmullRomSolve, lerp } from '../../../utilities/math'
+import { Mouse } from '../../../utilities/Mouse'
 import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
 
@@ -28,6 +28,9 @@ export class ActionMapping {
     cursor: HTMLElement
     cursorSelected: boolean = false
     time: number = 0
+
+    // Splitter
+    splitter: HTMLElement
 
     _tickerId: string
 
@@ -57,6 +60,22 @@ export class ActionMapping {
             e.preventDefault()
             e.stopPropagation()
         })
+
+        this.splitter.addEventListener('click', (e) => {
+            this.split()
+            e.preventDefault()
+            e.stopPropagation()
+        })
+    }
+
+    split() {
+        const mouse = Mouse.instance.position
+        const containerBbox = this.element.getBoundingClientRect()
+
+        const y = mouse.y - containerBbox.y
+        const time = y / containerBbox.height
+
+        // this.action.split(time)
     }
 
     create() {
@@ -67,6 +86,8 @@ export class ActionMapping {
         this.connectionsContainer.classList.add('action-mapping-connections-container')
 
         this.cursor = createEl('div', 'action-mapping-cursor', this.element)
+
+        this.splitter = createEl('div', 'action-mapping-splitter', this.element)
     }
 
     render() {
@@ -78,6 +99,28 @@ export class ActionMapping {
     tick(dt: number) {
         this.renderConnections()
 
+        if (Keyboard.instance.isPressed('Control') && !this.isHidden) {
+            const mouse = Mouse.instance.position
+            const containerBbox = this.element.getBoundingClientRect()
+
+            if (
+                mouse.x > containerBbox.x &&
+                mouse.x < containerBbox.x + containerBbox.width &&
+                mouse.y > containerBbox.y &&
+                mouse.y < containerBbox.y + containerBbox.height
+            ) {
+                this.splitter.classList.add('active')
+
+                let y = mouse.y - containerBbox.y
+                y = Math.max(0, Math.min(y, containerBbox.height))
+                this.splitter.style.top = `${y}px`
+            } else {
+                this.splitter.classList.remove('active')
+            }
+        } else {
+            this.splitter.classList.remove('active')
+        }
+
         const multiplier = 0.001
         if (Keyboard.instance.isPressed('ArrowUp') && this.cursorSelected) {
             this.updateTime(this.time - dt * multiplier)
@@ -88,12 +131,25 @@ export class ActionMapping {
         this.cursor.style.top = `${this.time * 100}%`
     }
 
-    updateTime(time: number) {
+    updateTime(time: number, force: boolean = false) {
+        time = Math.max(0, Math.min(time, 1))
+        if (time == this.time && !force) {
+            return
+        }
+
         this.time = time
-        this.time = Math.max(0, Math.min(this.time, 1))
-        this.action.views.forEach((view) => {
-            view.controller.updateTime(time)
-        })
+
+        const factor = 1 / this.action.views.length
+
+        for (let i = 0; i < this.action.views.length; i++) {
+            const view = this.action.views[i]
+            const viewTime = Math.min(Math.max(this.time / factor - i, 0), 1)
+            view.controller.updateTime(viewTime)
+        }
+
+        // this.action.views.forEach((view) => {
+        //     view.controller.updateTime(time)
+        // })
     }
 
     renderConnections() {
@@ -135,7 +191,7 @@ export class ActionMapping {
                 // connection.setAttribute('d', `M ${x1} ${y1} ${x2} ${y2}`)
                 connection.setAttribute(
                     'd',
-                    catmullRomSolve([x1, y1, (x1 + x2) / 2, y2, x2, y2], Executor.instance.PARAMS.a)
+                    catmullRomSolve([x1, y1, (x1 + x2) / 2, y2, x2, y2], 0)
                 )
 
                 hits.add(id)
@@ -184,9 +240,7 @@ export class ActionMapping {
 
         for (const view of this.action.views) {
             for (const execution of view.executions) {
-                const step = allSteps.find(
-                    (step) => step instanceof Action && step.execution.id === execution.id
-                ) as Action
+                const step = allSteps.find((step) => step.execution.id === execution.id) as Action
 
                 let proxy = this.sourceCodeProxies[step.execution.id]
 

@@ -339,8 +339,8 @@ export class EnvironmentRenderer {
 
         this.element.remove()
 
-        this.dataRenderers = {}
-        this.identifierRenderers = {}
+        this.dataRenderers = null
+        this.identifierRenderers = null
         this.element = null
     }
 }
@@ -399,4 +399,54 @@ export function getRelevantData(state: EnvironmentState) {
     }
 
     return [...data, ...identifiers]
+}
+
+export function getRelevantFlatData(state: EnvironmentState) {
+    // Filter out irrelevant memory
+    const data = Object.values(state.memory)
+        .filter((m) => m != null)
+        .filter(
+            (data) =>
+                instanceOfObjectData(data) ||
+                data.type == DataType.Literal ||
+                data.type == DataType.Array ||
+                data.type == DataType.Function
+        )
+        .filter((data) => {
+            if (instanceOfPrimitiveData(data) && data.type == DataType.Function) {
+                return !data.value.toString().includes('[native code]')
+            } else if (data.builtin) {
+                return false
+            } else {
+                return true
+            }
+        })
+
+    let flattened = []
+    let pool = [...data]
+
+    while (pool.length > 0) {
+        const data = pool.shift()
+        if (instanceOfPrimitiveData(data)) {
+            flattened.push(data)
+        } else if (instanceOfObjectData(data)) {
+            if (Array.isArray(data.value)) {
+                pool.push(...(data.value as DataState[]))
+            } else if (data.constructor == Object) {
+                pool.push(...Object.values(data.value as DataState[]))
+            }
+
+            flattened.push(data)
+        }
+    }
+
+    const identifiers: IdentifierState[] = []
+
+    for (const scope of state.scope) {
+        for (const name of Object.keys(scope.bindings)) {
+            identifiers.push(scope.bindings[name])
+        }
+    }
+
+    return [...flattened, ...identifiers]
 }

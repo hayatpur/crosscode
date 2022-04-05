@@ -89,6 +89,13 @@ export class Focus {
             else if (queryExecutionGraph(action.execution, (e) => e.id == node.id)) {
                 action.controller.focus(node)
             }
+            // If spatially related
+            else if (
+                JSON.stringify(node.nodeData.location) ==
+                JSON.stringify(action.execution.nodeData.location)
+            ) {
+                action.controller.focus()
+            }
         }
 
         // Unfocus all tokens

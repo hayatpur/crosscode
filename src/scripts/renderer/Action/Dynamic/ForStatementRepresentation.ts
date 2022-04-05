@@ -1,5 +1,7 @@
 import * as monaco from 'monaco-editor'
 import { Editor } from '../../../editor/Editor'
+import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { Action } from '../Action'
 import { getExecutionSteps } from '../ActionController'
 import { Representation } from './Representation'
@@ -17,54 +19,61 @@ export class ForStatementRepresentation extends Representation {
         }
 
         this.action.controller.destroyStepsAndViews()
+        const spatialRoot = this.action.controller.getSpatialRoot()
 
-        if (this.currentRepresentation == 1 || this.currentRepresentation == 2) {
+        let relevantViewsPerIteration: (ExecutionGraph | ExecutionNode)[][] = []
+
+        if (this.currentRepresentation == 1) {
             this.action.steps = []
 
             let steps = getExecutionSteps(this.action.execution)
             let iterations = (steps.length - 2) / 3
 
             for (let iter = 0; iter < iterations; iter++) {
+                relevantViewsPerIteration[iter] = []
+
                 if (iter == 0) {
                     // Variable initialization
-                    const initializer = steps[0]
-                    const initializerAction = new Action(initializer, this.action, {
-                        spacingDelta: 0,
-                        inline: true,
-                        inSitu: true,
-                    })
-                    this.action.steps.push(initializerAction)
+                    // const initializer = steps[0]
+                    // const initializerAction = new Action(initializer, this.action, {
+                    //     spacingDelta: 0,
+                    //     inline: true,
+                    //     inSitu: true,
+                    // })
+                    // this.action.steps.push(initializerAction)
+                    // relevantViewsPerIteration[iter].push(initializer)
                 }
 
                 // Comparison
-                const comparison = steps[iter * 3 + 1]
-                const comparisonAction = new Action(comparison, this.action, {
-                    spacingDelta: 0,
-                    inline: true,
-                    inSitu: true,
-                })
-                this.action.steps.push(comparisonAction)
+                // const comparison = steps[iter * 3 + 1]
+                // const comparisonAction = new Action(comparison, this.action, {
+                //     spacingDelta: 0,
+                //     inline: true,
+                //     inSitu: true,
+                // })
+                // this.action.steps.push(comparisonAction)
+                // relevantViewsPerIteration[iter].push(comparison)
 
                 // Loop body
-                if (this.currentRepresentation == 2) {
-                    const body = steps[iter * 3 + 2]
-                    const bodyAction = new Action(body, this.action, {
-                        spacingDelta: 0,
-                        inline: true,
-                        inSitu: iter != 0,
-                        stripped: true,
-                    })
-                    this.action.steps.push(bodyAction)
-                }
-
-                // Loop increment
-                const increment = steps[iter * 3 + 3]
-                const incrementAction = new Action(increment, this.action, {
+                const body = steps[iter * 3 + 2]
+                const bodyAction = new Action(body, this.action, {
                     spacingDelta: 0,
                     inline: true,
-                    inSitu: true,
+                    inSitu: iter != 0,
+                    stripped: true,
                 })
-                this.action.steps.push(incrementAction)
+                this.action.steps.push(bodyAction)
+                relevantViewsPerIteration[iter].push(body)
+
+                // Loop increment
+                // const increment = steps[iter * 3 + 3]
+                // const incrementAction = new Action(increment, this.action, {
+                //     spacingDelta: 0,
+                //     inline: true,
+                //     inSitu: true,
+                // })
+                // this.action.steps.push(incrementAction)
+                // relevantViewsPerIteration[iter].push(increment)
                 //     if (i == 0) {
                 //         // Initializer
 
@@ -87,6 +96,10 @@ export class ForStatementRepresentation extends Representation {
                 //     this.action.steps.push(action)
             }
 
+            // for (const iters of relevantViewsPerIteration) {
+            //     spatialRoot.controller.createView(iters)
+            // }
+
             // // Add a view if not inline
             // if (this.action.state.inline) {
             //     const root = this.action.controller.getSpatialRoot()
@@ -99,7 +112,6 @@ export class ForStatementRepresentation extends Representation {
             this.action.renderer.render(this.action)
         }
 
-        const spatialRoot = this.action.controller.getSpatialRoot()
         spatialRoot.controller.updateStepToViewMappings()
         // console.log(this.action.views)
     }
@@ -124,9 +136,6 @@ export class ForStatementRepresentation extends Representation {
         // Label
         if (this.currentRepresentation == 0) {
             headerLabel = `for ( ... ) { ... }`
-        } else if (this.currentRepresentation == 1) {
-            let upTill = headerLabel.substring(0, headerLabel.indexOf('{')).trim()
-            headerLabel = `${upTill} { ... }`
         } else {
             let upTill = headerLabel.substring(0, headerLabel.indexOf('{')).trim()
             headerLabel = `${upTill} {`
