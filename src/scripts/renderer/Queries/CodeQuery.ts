@@ -51,6 +51,8 @@ export class CodeQuery {
             return aDepth - bDepth
         })
 
+        console.log(executionSelection)
+
         for (const execution of executionSelection) {
             // Two cases:
             // 1. If the execution is already shown, just highlight it
@@ -59,10 +61,17 @@ export class CodeQuery {
             const parent = getParentInRoot(execution)
             const action = new Action(execution, parent, {
                 inline: true,
+                spacingDelta: 0,
             })
 
             parent.steps.push(action)
             parent.renderer.render(parent)
+
+            // const spatialRoot = parent.controller.getSpatialRoot()
+            // spatialRoot.mapping.updateSteps()
+            // Update temporal overlaps
+            parent.controller.updateTemporalOverlaps()
+            parent.representation.render()
 
             this.actions.push(action)
             this.parents.push(parent)

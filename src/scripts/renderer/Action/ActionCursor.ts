@@ -1,9 +1,7 @@
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
-import { getAllSteps } from '../../utilities/action'
 import { createEl } from '../../utilities/dom'
-import { lerp } from '../../utilities/math'
 import { Ticker } from '../../utilities/Ticker'
 import { Action } from './Action'
 
@@ -12,7 +10,6 @@ export class ActionCursor {
     action: Action
 
     active: boolean = false
-    position: number = 0
 
     _tickerId: string
     _currentFocus: ExecutionGraph | ExecutionNode
@@ -40,13 +37,13 @@ export class ActionCursor {
             if (!this.active) return
 
             if (e.key == 'ArrowUp') {
-                if (this.position > 0) {
-                    this.position -= 1
+                if (this.action.time > 0) {
+                    this.action.time -= 1
                 }
             } else if (e.key == 'ArrowDown') {
-                const allSteps = getAllSteps(this.action).filter((step) => step.steps.length == 0)
-                if (this.position < allSteps.length - 1) {
-                    this.position += 1
+                const allSteps = this.action.getAllFrames()
+                if (this.action.time < allSteps.length - 1) {
+                    this.action.time += 1
                 }
             }
         })
@@ -61,12 +58,28 @@ export class ActionCursor {
     /* ----------------------- Update ----------------------- */
     tick(dt: number) {
         if (this.active) {
-            const allSteps = getAllSteps(this.action).filter((step) => step.steps.length == 0)
+            const allSteps = this.action.getAllFrames()
 
             // Move to current position
-            const step = allSteps[this.position]
-            const stepBbox = step.renderer.element.getBoundingClientRect()
-            const parentBbox = this.action.renderer.element.getBoundingClientRect()
+            const step = allSteps[this.action.time]
+            let stepBbox = step.renderer.element.getBoundingClientRect()
+            let parentBbox = this.action.renderer.element.getBoundingClientRect()
+            if (stepBbox.y == 0) {
+                const overlaps = [...Executor.instance.visualization.focus.actions].filter(
+                    (action) =>
+                        JSON.stringify(action.execution.nodeData.location) ==
+                        JSON.stringify(step.execution.nodeData.location)
+                )
+
+                for (const stepOverlap of overlaps) {
+                    stepBbox = stepOverlap.renderer.headerLabel.getBoundingClientRect()
+
+                    if (stepBbox.y != 0) {
+                        break
+                    }
+                }
+            }
+
             this.element.style.top = `${stepBbox.y - parentBbox.y + 10}px`
 
             let execution = step.execution
@@ -83,31 +96,9 @@ export class ActionCursor {
                 this._currentFocus = execution
             }
 
-            for (let viewIndex = 0; viewIndex < this.action.views.length; viewIndex++) {
-                const view = this.action.views[viewIndex]
-
-                for (let i = 0; i < view.executions.length; i++) {
-                    if (view.executions[i].id == execution.id) {
-                        const viewTime = view.controller.getTime(i)
-                        console.log(viewIndex, viewTime)
-
-                        const mappingTime =
-                            viewIndex * (1 / this.action.views.length) +
-                            viewTime / this.action.views.length
-
-                        // Seek
-                        if (Math.abs(this.action.mapping.time - (mappingTime - 0.01)) < 0.001) {
-                            this.action.mapping.updateTime(mappingTime - 0.01)
-                        } else {
-                            this.action.mapping.updateTime(
-                                lerp(this.action.mapping.time, mappingTime - 0.01, dt * 0.005)
-                            )
-                        }
-
-                        break
-                    }
-                }
-            }
+            this.action.views.forEach((view) => {
+                view.renderer.updateTime(view)
+            })
         } else {
             // Unfocus
             if (this._currentFocus != null) {

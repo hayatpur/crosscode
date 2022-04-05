@@ -8,7 +8,31 @@ export class BlockStatementRepresentation extends Representation {
         super(action, 2)
     }
 
+    applyRepresentation() {
+        if (this.totalRepresentations === 0) {
+            return
+        }
+
+        this.action.controller.destroyStepsAndViews()
+
+        if (this.currentRepresentation != 0) {
+            this.action.controller.createSteps()
+        }
+
+        const spatialRoot = this.action.controller.getSpatialRoot()
+        spatialRoot.mapping.updateSteps()
+    }
+
     setSourceCodeOfExecution() {
+        if (this.currentRepresentation == 0) {
+            this.action.renderer.header.classList.remove('stripped')
+            this.action.renderer.footer.classList.remove('stripped')
+        } else {
+            this.action.renderer.header.classList.add('stripped')
+            this.action.renderer.footer.classList.add('stripped')
+            return
+        }
+
         // Header
         const range = this.action.execution.nodeData.location
         let headerLabel = Editor.instance.monaco.getModel().getValueInRange({

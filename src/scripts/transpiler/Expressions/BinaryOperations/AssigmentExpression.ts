@@ -35,7 +35,7 @@ export function AssignmentExpression(
     addVertex(graph, right, { nodeData: getNodeData(ast.right) })
 
     const place = moveAndPlaceAnimation(rightRegister, leftRegister)
-    addVertex(graph, place, { nodeData: getNodeData(ast) })
+    addVertex(graph, place, { nodeData: getNodeData(ast.left) })
     applyExecutionNode(place, environment)
 
     cleanUpRegister(environment, leftRegister[0].value)

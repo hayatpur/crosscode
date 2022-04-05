@@ -1,71 +1,39 @@
-import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { View } from './View'
 
 export class ViewController {
     view: View
-
-    // _tickerId: string
 
     /* ----------------------- Create ----------------------- */
 
     constructor(view: View) {
         this.view = view
 
-        // document.addEventListener('keydown', (e) => {
-        //     if (!this.cursorSelected) return
-
-        //     if (e.key == 'ArrowUp') {
-        //         if (this.position > 0) {
-        //             this.position -= 1
-        //         }
-        //     } else if (e.key == 'ArrowDown') {
-        //         const allSteps = getAllSteps(this.action)
-        //         if (this.position < allSteps.length - 1) {
-        //             this.position += 1
-        //         }
-        //     }
-        // })
-
-        // this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+        this.setFrames()
     }
 
-    getTime(index: number) {
-        return this.view.executions.length == 1
-            ? 0.5
-            : (index + 1) / (this.view.executions.length + 1)
-    }
+    setFrames() {
+        this.view.frames = []
 
-    updateTime(time: number) {
-        this.view.state.time = time
-        this.view.renderer.updateTime(this.view)
+        // Start with the frames of the action
+        const allSteps = this.view.action.getAllFrames()
 
-        if (time == 0) {
-            this.view.renderer.element.classList.add('inactive')
-        } else {
-            this.view.renderer.element.classList.remove('inactive')
-        }
+        this.view.frames.push(this.view.action.execution.precondition)
+        allSteps.forEach((step) => this.view.frames.push(step.execution.postcondition))
+        this.view.frames.push(this.view.action.execution.postcondition)
+
+        this.view.renderer.render(this.view)
+
+        console.log('Setting frames...', this.view.frames.length)
     }
 
     toggleHidden() {
         this.view.renderer.element.classList.toggle('hidden')
     }
 
-    setExecutions(executions: (ExecutionGraph | ExecutionNode)[], filter?: string[]) {
-        this.view.executions = executions
-        this.view.renderer.render(this.view, filter)
-    }
-
-    clearExecutions() {
-        this.view.executions = []
-
-        this.view.renderer.render(this.view)
-    }
-
-    addExecution(execution: ExecutionGraph | ExecutionNode) {
-        this.view.executions.push(execution)
-        this.view.renderer.render(this.view)
-    }
+    // setExecutions(frames: EnvironmentState[], filter?: string[]) {
+    //     this.view.frames = frames
+    //     this.view.renderer.render(this.view, filter)
+    // }
 
     /* ------------------------ Focus ----------------------- */
 

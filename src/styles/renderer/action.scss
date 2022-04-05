@@ -158,12 +158,16 @@
     opacity: 0;
 }
 
+.action-interaction-area.inactive {
+    display: none;
+}
+
 .action-interaction-area:hover {
     opacity: 0.2;
 }
 
 .action-interaction-area.itself {
-    opacity: 0;
+    // opacity: 0;
 }
 
 // .action.showing-steps > .action-header > .action-interaction-area {
@@ -395,7 +399,7 @@
 }
 
 .action:not(.program).showing-steps > .action-step-container > .action {
-    margin-left: 30px;
+    margin-left: 15px;
 }
 
 /* ------------------- Action mapping ------------------- */
@@ -404,7 +408,7 @@
     display: flex;
     margin-left: 20px;
     justify-content: center;
-    cursor: pointer;
+    // cursor: pointer;
     transition: 0.2s;
 }
 
@@ -419,17 +423,25 @@
 
 .action-mapping {
     transition: 0.2s;
-    width: 40px;
+    min-width: 100px;
     position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+.action-mapping:not(.hidden) {
+    overflow: auto;
 }
 
 .action-mapping.hidden {
     width: 2px;
+    min-width: 2px !important;
     opacity: 0;
 }
 
 .action:hover > .action-mapping-container > .action-mapping.hidden {
     width: 6px;
+    min-width: 6px !important;
 }
 
 .action-mapping-step {
@@ -474,6 +486,7 @@
     width: 100%;
     height: 100%;
     position: absolute;
+    pointer-events: none;
 }
 
 .action-mapping-connection {
@@ -581,4 +594,78 @@
 .action-mapping-splitter.active {
     opacity: 1;
     pointer-events: inherit;
+}
+
+.action-proxy-container {
+    display: flex;
+}
+
+.action-proxy-container.root {
+    position: relative;
+    left: 0px;
+    grid-row-start: 1;
+    grid-column-start: 1;
+}
+
+.action-proxy-container > .action-proxy-indicator {
+    background: #393947;
+    margin: 2px 5px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 10px;
+    padding: 3px 6px;
+    font-family: Fira Code;
+    max-height: 2px;
+    max-width: 40px;
+}
+
+.action-proxy-container > .action-proxy-steps {
+}
+
+.Body > .action-proxy-indicator {
+    height: 18px !important;
+    width: 59px !important;
+}
+
+.Update > .action-proxy-indicator {
+    height: 2px !important;
+    opacity: 0.5;
+}
+
+.Initial > .action-proxy-indicator {
+    height: 2px !important;
+    opacity: 0.5;
+}
+
+.Test > .action-proxy-indicator {
+    height: 2px !important;
+    opacity: 0.5;
+}
+
+.action.inline.temporal-overlap:not(.temporal-overlap-showing) {
+    display: none;
+}
+
+.action-header.stripped {
+    display: none;
+}
+
+.action-footer.stripped {
+    display: none;
+}
+
+.action-proxy-container.is-focused:not(.unfocused) > .action-proxy-indicator {
+    background: var(--s-color-4);
+    opacity: 1;
+}
+
+.action-proxy-steps {
+    height: fit-content;
+}
+
+.action-proxy-iteration {
+    margin-bottom: 12px;
 }

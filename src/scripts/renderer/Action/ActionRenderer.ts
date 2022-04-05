@@ -140,6 +140,10 @@ export class ActionRenderer {
         action.state.inSitu
             ? this.element.classList.add('in-situ')
             : this.element.classList.remove('in-situ')
+
+        action.skipOver
+            ? this.element.classList.add('skip-over')
+            : this.element.classList.remove('skip-over')
     }
 
     renderSteps(action: Action) {
@@ -164,7 +168,7 @@ export class ActionRenderer {
                                 action.execution.nodeData.location
                             )
 
-                            step.renderer.element.style.left = `${stepBbox.x - parentBbox.x + 2}px`
+                            step.renderer.element.style.left = `${stepBbox.x - parentBbox.x + 17}px`
                             step.renderer.element.style.top = `${stepBbox.y - parentBbox.y}px`
                         } else {
                             step.renderer.element.style.left = `30px`

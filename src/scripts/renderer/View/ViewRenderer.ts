@@ -1,4 +1,6 @@
 import { createEl } from '../../utilities/dom'
+import { lerp } from '../../utilities/math'
+import { Ticker } from '../../utilities/Ticker'
 import { TrailGroup } from '../Trail/TrailGroup'
 import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
 import { View } from './View'
@@ -15,10 +17,19 @@ export class ViewRenderer {
 
     trails: { [id: string]: TrailGroup } = {}
     time: number = 0
+    targetTime: number = 0
+
+    _tickerId: string
 
     /* ----------------------- Create ----------------------- */
     constructor() {
         this.create()
+
+        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+    }
+
+    tick(dt: number) {
+        this.time = lerp(this.time, this.targetTime, dt * 0.002)
     }
 
     create() {
@@ -28,14 +39,13 @@ export class ViewRenderer {
     createEnvironmentRenderer() {
         const renderer = new EnvironmentRenderer()
         this.element.appendChild(renderer.element)
+        renderer.element.classList.add('hidden')
         return renderer
     }
 
     /* ----------------------- Render ----------------------- */
-    render(view: View, filter?: string[]) {
+    render(view: View, filter: string[] = null) {
         this.renderEnvironment(view, filter)
-
-        console.log(this.environmentRenderers)
 
         setTimeout(() => {
             this.renderTrails(view)
@@ -43,46 +53,17 @@ export class ViewRenderer {
         }, 100)
     }
 
-    renderEnvironment(view: View, filter?: string[]) {
-        const time = view.state.time
-
-        // Render environments
-        if (view.executions.length > 0) {
-            if (this.environmentRenderers.length == 0) {
-                this.environmentRenderers[0] = this.createEnvironmentRenderer()
-            }
-            this.environmentRenderers[0].render(view.executions[0].precondition, filter)
-            this.environmentRenderers[0].element.classList.add('hidden')
-        }
-
-        for (let i = 0; i < view.executions.length; i++) {
-            if (this.environmentRenderers.length - 1 <= i) {
+    renderEnvironment(view: View, filter: string[] = null) {
+        for (let i = 0; i < view.frames.length; i++) {
+            if (this.environmentRenderers.length <= i) {
                 this.environmentRenderers.push(this.createEnvironmentRenderer())
             }
 
-            this.environmentRenderers[i + 1].render(view.executions[i].postcondition, filter)
-            this.environmentRenderers[i + 1].element.classList.add('hidden')
-        }
-
-        let hit = false
-        for (let i = 0; i < view.executions.length; i++) {
-            const execTime = view.controller.getTime(i)
-
-            if (execTime >= time) {
-                this.environmentRenderers[i + 1].element.classList.remove('hidden')
-                hit = true
-                break
-            }
-        }
-
-        if (!hit && this.environmentRenderers.length > 0) {
-            this.environmentRenderers[
-                this.environmentRenderers.length - 1
-            ].element.classList.remove('hidden')
+            this.environmentRenderers[i].render(view.frames[i], filter)
         }
 
         // Cleanup unused renderers
-        while (this.environmentRenderers.length - 1 > view.executions.length) {
+        while (this.environmentRenderers.length - 1 > view.frames.length) {
             const renderer = this.environmentRenderers.pop()
             renderer.destroy()
         }
@@ -91,69 +72,54 @@ export class ViewRenderer {
     renderTrails(view: View) {
         Object.values(this.trails).forEach((trail) => trail.destroy())
         this.trails = {}
-
         const hits = new Set<string>()
-        for (let i = 0; i < view.executions.length; i++) {
-            const exec = view.executions[i]
-            let trail = this.trails[exec.id]
+
+        const steps = view.action.getAllFrames()
+
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i]
+            let trail = this.trails[step.execution.id]
 
             if (!trail) {
-                this.trails[exec.id] = new TrailGroup(
-                    exec,
+                this.trails[step.execution.id] = new TrailGroup(
+                    step.execution,
                     this.environmentRenderers[i],
                     this.environmentRenderers[i + 1]
                 )
-                trail = this.trails[exec.id]
+                trail = this.trails[step.execution.id]
             }
 
             trail.render()
-
-            hits.add(exec.id)
-
-            // this.trails[exec.id].update(
-            //     exec,
-            //     this.environmentRenderers[i],
-            //     this.environmentRenderers[i + 1]
-            // )
+            hits.add(step.execution.id)
         }
-
-        // for (const id of Object.keys(this.trails)) {
-        //     if (!hits.has(id)) {
-        //         this.trails[id].destroy()
-        //         delete this.trails[id]
-        //     }
-        // }
     }
 
     updateTime(view: View) {
-        const factor = 1 / (view.executions.length + 1)
+        this.targetTime = view.action.time
+        // const factor = 1 / (view.frames.length + 1)
 
         // Update view being shown
         this.environmentRenderers.forEach((renderer) => {
             renderer.element.classList.add('hidden')
         })
-        let hit = false
-        for (let i = 0; i < view.executions.length; i++) {
-            const execTime = view.controller.getTime(i)
 
-            if (execTime >= view.state.time) {
+        for (let i = 0; i < view.frames.length - 1; i++) {
+            if (i >= view.action.time) {
                 this.environmentRenderers[i + 1].element.classList.remove('hidden')
-                hit = true
                 break
             }
         }
 
-        if (!hit && this.environmentRenderers.length > 0) {
-            this.environmentRenderers[
-                this.environmentRenderers.length - 1
-            ].element.classList.remove('hidden')
-        }
-
         // Update trail time
-        for (let i = 0; i < view.executions.length; i++) {
-            const id = view.executions[i].id
-            const trails = view.renderer.trails[id]
-            trails.updateTime(Math.min(Math.max(view.state.time / factor - i, 0), 1))
+        const steps = view.action.getAllFrames()
+        const factor = 1 / (steps.length - 1)
+
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i]
+            const trails = view.renderer.trails[step.execution.id]
+            if (trails != null) {
+                trails.updateTime(Math.min(Math.max(this.time / factor - i, 0), 1))
+            }
         }
     }
 
@@ -163,6 +129,7 @@ export class ViewRenderer {
             renderer.destroy()
         }
         this.environmentRenderers = []
+        Ticker.instance.removeTickFrom(this._tickerId)
 
         this.element.remove()
         this.element = null

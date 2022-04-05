@@ -1,5 +1,6 @@
-import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { EnvironmentState } from '../../environment/EnvironmentState'
+import { Action } from '../Action/Action'
+import { TrailGroup } from '../Trail/TrailGroup'
 import { ViewController } from './ViewController'
 import { ViewRenderer } from './ViewRenderer'
 import { createViewState, ViewState } from './ViewState'
@@ -8,18 +9,26 @@ import { createViewState, ViewState } from './ViewState'
 /*        View displays a series of program states        */
 /* ------------------------------------------------------ */
 export class View {
+    action: Action
+
     state: ViewState
     renderer: ViewRenderer
     controller: ViewController
+    frames: EnvironmentState[] = []
+    trails: { [id: string]: TrailGroup } = {}
 
-    executions: (ExecutionGraph | ExecutionNode)[] = []
-    representingExecutions: (ExecutionGraph | ExecutionNode)[] = []
+    timeOffset: number = 0
 
-    constructor() {
+    constructor(action: Action, timeOffset: number = 0) {
+        this.action = action
+
+        this.timeOffset = timeOffset
+
         this.state = createViewState()
         this.renderer = new ViewRenderer()
         this.controller = new ViewController(this)
-        this.controller.updateTime(0)
+
+        this.renderer.render(this)
     }
 
     /* ----------------------- Destroy ---------------------- */

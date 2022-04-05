@@ -6,6 +6,7 @@ import { CallExpressionRepresentation } from '../renderer/Action/Dynamic/CallExp
 import { ForStatementRepresentation } from '../renderer/Action/Dynamic/ForStatementRepresentation'
 import { FunctionCallRepresentation } from '../renderer/Action/Dynamic/FunctionCallRepresentation'
 import { Representation } from '../renderer/Action/Dynamic/Representation'
+import { WhileStatementRepresentation } from '../renderer/Action/Dynamic/WhileStatementRepresentation'
 
 /* ------------------------------------------------------ */
 /*             Helper functions to for actions            */
@@ -100,6 +101,9 @@ export function createRepresentation(action: Action) {
         case 'BlockStatement' || 'Program':
             representation = BlockStatementRepresentation
             break
+        case 'WhileStatement':
+            representation = WhileStatementRepresentation
+            break
         default:
             representation = Representation
             break
@@ -115,27 +119,6 @@ export function getAllSteps(action: Action): Action[] {
 
     for (const step of steps) {
         allSteps.push(step, ...getAllSteps(step))
-    }
-
-    return allSteps
-}
-
-export function getAllBaseSteps(action: Action): Action[] {
-    const allSteps = []
-
-    let steps = action.steps
-
-    // if (steps.length == 0) {
-
-    // }
-
-    for (const step of steps) {
-        let stepSteps = action.steps
-        if (stepSteps.length == 0) {
-            allSteps.push(step)
-        } else {
-            allSteps.push(...getAllSteps(step))
-        }
     }
 
     return allSteps

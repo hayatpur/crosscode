@@ -112,3 +112,22 @@ body {
 ::selection {
     background: #484a5d;
 }
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track-piece {
+    background-color: #202028;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #343440;
+    outline: none;
+    outline-offset: -2px;
+    border: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #909090;
+}

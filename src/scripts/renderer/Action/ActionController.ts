@@ -1,9 +1,8 @@
 import { Editor } from '../../editor/Editor'
-import { queryExecutionGraph } from '../../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { Executor } from '../../executor/Executor'
-import { getAllSteps, isExpandable } from '../../utilities/action'
+import { isExpandable } from '../../utilities/action'
 import { Ticker } from '../../utilities/Ticker'
 import { View } from '../View/View'
 import { Action } from './Action'
@@ -39,6 +38,9 @@ export class ActionController {
                 this.createSteps()
             }
         })
+
+        // Update temporal overlaps
+        this.updateTemporalOverlaps()
     }
 
     /* -------------------- Toggle views -------------------- */
@@ -77,6 +79,70 @@ export class ActionController {
             this.action.renderer.headerPreLabel.style.transform = `translateX(${delta + 15}px)`
             this.action.renderer.footerPreLabel.style.transform = `translateX(${delta + 15}px)`
         }
+
+        if (this.action.steps.length > 0) {
+            this.action.interactionAreas.forEach((area) => area.element.classList.add('inactive'))
+        } else {
+            this.action.interactionAreas.forEach((area) =>
+                area.element.classList.remove('inactive')
+            )
+        }
+    }
+
+    getTemporalOverlaps() {
+        const overlaps: { [loc: string]: Action[] } = {}
+
+        // Find all overlaps
+        for (const step of this.action.steps) {
+            const loc = JSON.stringify(step.execution.nodeData.location)
+            if (overlaps[loc] != null) {
+                continue
+            }
+
+            if (overlaps[loc] == null) {
+                overlaps[loc] = []
+            }
+
+            for (const other of this.action.steps) {
+                if (loc == JSON.stringify(other.execution.nodeData.location)) {
+                    overlaps[loc].push(other)
+                }
+            }
+        }
+
+        // Remove with no overlaps
+        for (const [loc, overlap] of Object.entries(overlaps)) {
+            if (overlap.length <= 1) {
+                delete overlaps[loc]
+            }
+        }
+
+        return overlaps
+    }
+
+    updateTemporalOverlaps() {
+        const overlaps = this.getTemporalOverlaps()
+
+        const time = this.action.getStepTime()
+
+        // Update overlaps
+        for (const [loc, overlap] of Object.entries(overlaps)) {
+            if (overlap.length <= 1) {
+                continue
+            }
+
+            for (const step of overlap) {
+                step.renderer.element.classList.add('temporal-overlap')
+            }
+
+            for (const step of overlap) {
+                const index = this.action.steps.indexOf(step)
+                if (index >= time) {
+                    step.renderer.element.classList.add('temporal-overlap-showing')
+                    break
+                }
+            }
+        }
     }
 
     /* ------------------------ Step ------------------------ */
@@ -103,44 +169,18 @@ export class ActionController {
             this.action.steps.push(action)
         }
 
-        // Add a view if not inline
-        if (this.action.state.inline) {
-            const root = this.getSpatialRoot()
-            root.controller.updateStepToViewMappings()
-        } else {
-            this.updateStepToViewMappings()
-        }
+        this.getSpatialRoot().mapping.updateSteps()
 
         // Render them so they're in the right place
         this.action.renderer.render(this.action)
-    }
 
-    updateStepToViewMappings() {
-        const allSteps = getAllSteps(this.action)
+        // Update temporal overlaps
+        this.updateTemporalOverlaps()
 
-        for (const view of this.action.views) {
-            view.controller.clearExecutions()
-        }
-
-        for (const step of allSteps) {
-            // if (step instanceof ActionBundle) continue
-            if (step.steps.length > 0) continue
-
-            // Put it in the corresponding view
-            for (const view of this.action.views) {
-                for (const potentialExecution of view.representingExecutions) {
-                    if (
-                        queryExecutionGraph(
-                            potentialExecution,
-                            (child) => child.id == step.execution.id
-                        )
-                    ) {
-                        view.controller.addExecution(step.execution)
-                        break
-                    }
-                }
-            }
-        }
+        // Update view steps
+        this.action.views.forEach((view) => {
+            view.controller.setFrames()
+        })
     }
 
     getRoot() {
@@ -160,12 +200,11 @@ export class ActionController {
     }
 
     createView(representingExecutions: (ExecutionGraph | ExecutionNode)[] = null) {
-        if (representingExecutions == null) {
-            representingExecutions = [this.action.execution]
-        }
+        // if (representingExecutions == null) {
+        //     representingExecutions = [this.action.execution]
+        // }
 
-        const view = new View()
-        view.representingExecutions = representingExecutions
+        const view = new View(this.action)
 
         this.action.views.push(view)
 
@@ -286,24 +325,38 @@ export class ActionController {
             const tokens = [
                 ...this.action.renderer.header.querySelectorAll('.action-label > span > span'),
             ]
+            if (this.action.renderer.footer != null) {
+                tokens.push(
+                    ...this.action.renderer.footer.querySelectorAll('.action-label > span > span')
+                )
+            }
             for (const el of tokens) {
                 el.classList.remove('unfocused')
             }
+
+            this.action.proxy?.focus()
         }
     }
 
     unfocus() {
         this.action.renderer.element.classList.add('unfocused')
-
         this.action.renderer.element.classList.add('is-focused')
 
         const tokens = [
             ...this.action.renderer.header.querySelectorAll('.action-label > span > span'),
         ]
 
+        if (this.action.renderer.footer != null) {
+            tokens.push(
+                ...this.action.renderer.footer.querySelectorAll('.action-label > span > span')
+            )
+        }
+
         for (const el of tokens) {
             el.classList.add('unfocused')
         }
+
+        this.action.proxy?.unfocus()
     }
 
     clearFocus() {
@@ -313,9 +366,17 @@ export class ActionController {
         const tokens = [
             ...this.action.renderer.header.querySelectorAll('.action-label > span > span'),
         ]
+        if (this.action.renderer.footer != null) {
+            tokens.push(
+                ...this.action.renderer.footer.querySelectorAll('.action-label > span > span')
+            )
+        }
+
         for (const el of tokens) {
             el.classList.remove('unfocused')
         }
+
+        this.action.proxy?.clearFocus()
     }
 
     /* -------------------- Mouse events -------------------- */

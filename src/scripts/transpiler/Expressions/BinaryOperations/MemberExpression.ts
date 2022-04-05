@@ -32,7 +32,7 @@ export function MemberExpression(
         feed: false,
         outputRegister: objectRegister,
     })
-    // addVertex(graph, object, { nodeData: getNodeData(ast.object, 'Object') })
+    addVertex(graph, object, { nodeData: getNodeData(ast.object, 'Object') })
 
     // Create a register that'll point to the location of computed property
     const propertyRegister = [{ type: AccessorType.Register, value: `${graph.id}_Property` }]

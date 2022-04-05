@@ -75,6 +75,7 @@ export class Focus {
 
         // Focus on actions
         let node = this.currentFocus[this.currentFocus.length - 1]
+        // console.log(node)
         for (const action of this.actions) {
             action.controller.unfocus()
 
@@ -83,17 +84,26 @@ export class Focus {
                 action.execution.id == node.id ||
                 queryExecutionGraph(node, (e) => e.id == action.execution.id)
             ) {
+                // console.log(action.execution.nodeData.type, 'A')
                 action.controller.focus()
             }
             // If node is a child
             else if (queryExecutionGraph(action.execution, (e) => e.id == node.id)) {
-                action.controller.focus(node)
+                if (
+                    !(
+                        action.execution.nodeData.type == 'ForStatement' &&
+                        node.nodeData.preLabel == 'Body'
+                    )
+                ) {
+                    action.controller.focus(node)
+                }
             }
             // If spatially related
             else if (
                 JSON.stringify(node.nodeData.location) ==
                 JSON.stringify(action.execution.nodeData.location)
             ) {
+                // console.log(action.execution.nodeData.type, 'C')
                 action.controller.focus()
             }
         }

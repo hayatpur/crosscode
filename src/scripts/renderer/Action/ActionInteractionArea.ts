@@ -59,7 +59,21 @@ export class ActionInteractionArea {
         // }
 
         if (this.execution.id == this.parentAction.execution.id) {
-            this.parentAction.representation.cycle()
+            const overlaps = [...Executor.instance.visualization.focus.actions].filter(
+                (action) =>
+                    JSON.stringify(action.execution.nodeData.location) ==
+                    JSON.stringify(this.execution.nodeData.location)
+            )
+            // const overlaps = this.parentAction.parent?.controller.getTemporalOverlaps()
+            // console.log(overlaps)
+            // const loc = JSON.stringify(this.execution.nodeData.location)
+
+            // if (overlaps?.[loc] != null) {
+            // const overlap = overlaps[loc]
+            overlaps.forEach((action) => action.representation.cycle())
+            // } else {
+            // this.parentAction.representation.cycle()
+            // }
         }
         //  else {
         //     this.temporaryAction = this.parentAction.controller.createFocusedStep(this.execution)

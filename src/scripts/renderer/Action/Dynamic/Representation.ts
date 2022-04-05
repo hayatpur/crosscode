@@ -1,7 +1,6 @@
 import * as monaco from 'monaco-editor'
 import { Editor } from '../../../editor/Editor'
 import { instanceOfExecutionNode } from '../../../execution/primitive/ExecutionNode'
-import { createEl } from '../../../utilities/dom'
 import { Action } from '../Action'
 
 /* ------------------------------------------------------ */
@@ -11,7 +10,6 @@ export class Representation {
     action: Action
     currentRepresentation: number = 0
     totalRepresentations: number = 0
-    representationIndicators: HTMLElement[] = []
 
     constructor(action: Action, totalRepresentations: number = null) {
         this.action = action
@@ -28,29 +26,17 @@ export class Representation {
         if (instanceOfExecutionNode(this.action.execution)) {
             return
         }
-
-        // Default representation has two options for actions with sub-steps: expanded or hidden
-        for (let i = 0; i < this.totalRepresentations; i++) {
-            const representationIndicator = createEl(
-                'div',
-                'representation-indicator',
-                this.action.renderer.representationIndicatorContainer
-            )
-            representationIndicator.innerText = `${i}`
-            this.representationIndicators.push(representationIndicator)
-        }
     }
 
     cycle() {
-        this.currentRepresentation =
-            (this.currentRepresentation + 1) % this.representationIndicators.length
+        this.currentRepresentation = (this.currentRepresentation + 1) % this.totalRepresentations
 
         this.applyRepresentation()
         this.render()
     }
 
     applyRepresentation() {
-        if (this.representationIndicators.length === 0) {
+        if (this.totalRepresentations === 0) {
             return
         }
 
@@ -59,21 +45,13 @@ export class Representation {
         } else {
             this.action.controller.createSteps()
         }
-
-        this.action.controller.updateStepToViewMappings()
     }
 
     render() {
         this.setSourceCodeOfExecution()
-        if (this.representationIndicators.length === 0) {
+        if (this.totalRepresentations === 0) {
             return
         }
-
-        for (const indicator of this.representationIndicators) {
-            indicator.classList.remove('selected')
-        }
-
-        this.representationIndicators[this.currentRepresentation].classList.add('selected')
     }
 
     destroy() {}
