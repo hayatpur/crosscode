@@ -159,7 +159,7 @@
 }
 
 .action-interaction-area.inactive {
-    display: none;
+    // display: none;
 }
 
 .action-interaction-area:hover {
@@ -176,6 +176,10 @@
 
 .action.is-focused > .action-step-container > .action-header > .action-interaction-area {
     background: rgba(255, 255, 255, 0.342);
+}
+
+.action.is-focused > .action-step-container > .action-header > .action-interaction-area.inactive {
+    background: rgba(255, 255, 255, 0);
 }
 
 /* ----------------------- Origin ----------------------- */
@@ -657,6 +661,11 @@
     display: none;
 }
 
+.action-proxy-container.is-focused:not(.unfocused).is-focused-secondary > .action-proxy-indicator {
+    background: var(--s-color-4);
+    opacity: 0.2;
+}
+
 .action-proxy-container.is-focused:not(.unfocused) > .action-proxy-indicator {
     background: var(--s-color-4);
     opacity: 1;
@@ -668,4 +677,11 @@
 
 .action-proxy-iteration {
     margin-bottom: 12px;
+}
+
+.view-cursor {
+    width: 2px;
+    height: 5px;
+    position: absolute;
+    background: var(--color-3);
 }

@@ -182,10 +182,15 @@ export class ActionProxy {
     unfocus() {
         this.element.classList.add('unfocused')
         this.element.classList.add('is-focused')
+        this.element.classList.remove('is-focused-secondary')
     }
 
-    focus() {
+    focus(secondary = false) {
         this.element.classList.remove('unfocused')
         this.element.classList.add('is-focused')
+
+        if (secondary) {
+            this.element.classList.add('is-focused-secondary')
+        }
     }
 }

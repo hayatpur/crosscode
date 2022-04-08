@@ -104,7 +104,7 @@ export class Focus {
                 JSON.stringify(action.execution.nodeData.location)
             ) {
                 // console.log(action.execution.nodeData.type, 'C')
-                action.controller.focus()
+                action.controller.focus(null, true)
             }
         }
 

@@ -21,19 +21,23 @@ export class ViewRenderer {
 
     _tickerId: string
 
+    cursor: HTMLElement
+
     /* ----------------------- Create ----------------------- */
     constructor() {
         this.create()
-
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
-    }
-
-    tick(dt: number) {
-        this.time = lerp(this.time, this.targetTime, dt * 0.002)
     }
 
     create() {
         this.element = createEl('div', 'view')
+        this.cursor = createEl('div', 'view-cursor', this.element)
+    }
+
+    tick(dt: number) {
+        this.time = lerp(this.time, this.targetTime, dt * 0.002)
+
+        this.cursor.style.top = `${(this.time / (this.environmentRenderers.length - 2)) * 100}%`
     }
 
     createEnvironmentRenderer() {

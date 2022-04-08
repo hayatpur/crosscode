@@ -283,7 +283,7 @@ export class ActionController {
     }
 
     /* ------------------------ Focus ----------------------- */
-    focus(node?: ExecutionGraph | ExecutionNode) {
+    focus(node?: ExecutionGraph | ExecutionNode, secondary: boolean = false) {
         this.action.renderer.element.classList.remove('unfocused')
         this.action.renderer.element.classList.add('is-focused')
 
@@ -334,7 +334,7 @@ export class ActionController {
                 el.classList.remove('unfocused')
             }
 
-            this.action.proxy?.focus()
+            this.action.proxy?.focus(secondary)
         }
     }
 
