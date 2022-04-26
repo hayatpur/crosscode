@@ -87,10 +87,12 @@ svg.environment-svg {
 
 .environment.hidden > .environment-column {
     opacity: 0;
+    // width: 0px;
 }
 
 .environment.hidden > .environment-svg {
     opacity: 0;
+    // width: 0px;
 }
 
 .view.inactive {

@@ -292,3 +292,164 @@ _Video_
 **Conclusion**
 
 **Exam Questions**
+
+My CHI reading list:
+
+Causality-preserving Asynchronous Reality
+https://programs.sigchi.org/chi/2022/index/content/68789
+
+ComputableViz: Mathematical Operators as a Formalism for Visualization Processing and Analysis
+https://programs.sigchi.org/chi/2022/index/content/71875
+
+Computational Rationality as a Theory of Interaction
+https://programs.sigchi.org/chi/2022/index/content/72064
+
+Design Guidelines for Prompt Engineering Text-to-Image Generative Models
+https://programs.sigchi.org/chi/2022/index/content/68919
+
+Discovering the Syntax and Strategies of Natural Language Programming with Generative Language Models
+https://programs.sigchi.org/chi/2022/index/content/68967
+
+Do You See What You Mean? Using Predictive Visualizations to Reduce Optimism in Duration Estimates
+https://programs.sigchi.org/chi/2022/index/content/68894
+
+Does Dynamically Drawn Text Improve Learning? Investigating the Effect of Text Presentation Styles in Video Learning
+https://programs.sigchi.org/chi/2022/index/content/72133
+
+Embodied Geometric Reasoning with a Robot: The Impact of Robot Gestures on Student Reasoning about Geometrical Conjectures
+https://programs.sigchi.org/chi/2022/index/content/71908
+
+Exploring Technical Reasoning in Digital Tool Use
+https://programs.sigchi.org/chi/2022/index/content/68768
+
+FluidMeet: Enabling Frictionless Transitions Between In-Group, Between-Group, and Private Conversations During Virtual Breakout Meetings
+https://programs.sigchi.org/chi/2022/index/content/71885
+
+From Who You Know to What You Read: Augmenting Scientific Recommendations with Implicit Social Networks
+https://programs.sigchi.org/chi/2022/index/content/72122
+
+Gesture Elicitation as a Computational Optimization Problem
+https://programs.sigchi.org/chi/2022/index/content/68832
+
+Hand Interfaces: Using Hands to Imitate Objects in AR/VR for Expressive Interactions
+https://programs.sigchi.org/chi/2022/index/content/68766
+
+Hidden Interfaces for Ambient Computing: Enabling Interaction in Everyday Materials through High-brightness Visuals on Low-cost Matrix Displays
+https://programs.sigchi.org/chi/2022/index/content/71976
+
+HydroMod: Constructive Modules for Prototyping Hydraulic Physical Interfaces
+https://programs.sigchi.org/chi/2022/index/content/68755
+
+i-LaTeX: Manipulating Transitional Representations between LaTeX Code and Generated Documents
+https://programs.sigchi.org/chi/2022/index/content/71977
+
+ImageExplorer: Multi-Layered Touch Exploration to Encourage Skepticism Towards Imperfect AI-Generated Image Captions
+https://programs.sigchi.org/chi/2022/index/content/69011
+
+Jury Learning: Integrating Dissenting Voices into Machine Learning Models
+https://programs.sigchi.org/chi/2022/index/content/68851
+
+Math Augmentation: How Authors Enhance the Readability of Formulas using Novel Visual Design Practices
+https://programs.sigchi.org/chi/2022/index/content/68734
+
+Methodological Reflections on Ways of Seeing
+https://programs.sigchi.org/chi/2022/index/content/71960
+
+Mixplorer: Scaffolding Design Space Exploration through Genetic Recombination of Multiple Peoples' Designs to Support Novices' Creativity
+https://programs.sigchi.org/chi/2022/index/content/68939
+
+More Errors vs. Longer Commands: The Effects of Repetition and Reduced Expressiveness on Input Interpretation Error, Learning, and User Preference
+https://programs.sigchi.org/chi/2022/index/content/68995
+
+Neo: Generalizing Confusion Matrix Visualization to Hierarchical and Multi-Output Labels
+https://programs.sigchi.org/chi/2022/index/content/68791
+
+Paper Trail: An Immersive Authoring System for Augmented Reality Instructional Experiences
+https://programs.sigchi.org/chi/2022/index/content/71897
+
+Passages: Interacting with Text Across Documents
+https://programs.sigchi.org/chi/2022/index/content/68840
+
+Probability Weighting in Interactive Decisions: Evidence for Overuse of Bad Assistance, Underuse of Good Assistance
+https://programs.sigchi.org/chi/2022/index/content/72158
+
+Promptiverse: Scalable Generation of Scaffolding Prompts Through Human-AI Hybrid Knowledge Graph Annotation
+https://programs.sigchi.org/chi/2022/index/content/68937
+
+Put a Label On It! Approaches for Constructing and Contextualizing Bar Chart Physicalizations
+https://programs.sigchi.org/chi/2022/index/content/69014
+
+Putting scientific results in perspective: Improving the communication of standardized effect sizes
+https://programs.sigchi.org/chi/2022/index/content/68802
+
+Predicting and Explaining Mobile UI Tappability with Vision Modeling and Saliency Analysis
+https://programs.sigchi.org/chi/2022/index/content/71845
+
+Recruiting Participants With Programming Skills: A Comparison of Four Crowdsourcing Platforms and a CS Student Mailing List
+https://programs.sigchi.org/chi/2022/index/content/68827
+
+Rediscovering Affordance: A Reinforcement Learning Perspective
+https://programs.sigchi.org/chi/2022/index/content/68968
+
+Solving Separation-of-Concerns Problems in Collaborative Design of Human-AI Systems through Leaky Abstractions
+https://programs.sigchi.org/chi/2022/index/content/71868
+
+Shared Interest: Measuring Human-AI Alignment to Identify Recurring Patterns in Model Behavior
+https://programs.sigchi.org/chi/2022/index/content/68960
+
+Structure-aware Visualization Retrieval
+https://programs.sigchi.org/chi/2022/index/content/68743
+
+Style Blink: Exploring Digital Inking of Structured Information via Handcrafted Styling as a First-Class Object
+https://programs.sigchi.org/chi/2022/index/content/68953
+
+Stylette: Styling the Web with Natural Language
+https://programs.sigchi.org/chi/2022/index/content/68932
+
+Symphony: Composing Interactive Interfaces for Machine Learning
+https://programs.sigchi.org/chi/2022/index/content/68746
+
+Tisane: Authoring Statistical Models via Formal Reasoning from Conceptual and Data Relationships
+https://programs.sigchi.org/chi/2022/index/content/68888
+
+Towards Relatable Explainable AI with the Perceptual Process
+https://programs.sigchi.org/chi/2022/index/content/68763
+
+Understanding How Programmers Can Use Annotations on Documentation
+https://programs.sigchi.org/chi/2022/index/content/68723
+
+Varv: Reprogrammable Interactive Software as a Declarative Data Structure
+https://programs.sigchi.org/chi/2022/index/content/68790
+
+VisGuide: User-Oriented Recommendations for Data Event Extraction
+https://programs.sigchi.org/chi/2022/index/content/72046
+
+VRception: Rapid Prototyping of Cross-Reality Systems in Virtual Reality
+https://programs.sigchi.org/chi/2022/index/content/68885
+
+Weaving Stories: Toward Repertoires for Designing Things
+https://programs.sigchi.org/chi/2022/index/content/68910
+
+Zoom Obscura: Counterfunctional Design for Video-Conferencing
+https://programs.sigchi.org/chi/2022/index/content/68808
+
+(Dis)Appearables: A Concept and Method for Actuated Tangible UIs to Appear and Disappear based on Stages
+https://programs.sigchi.org/chi/2022/index/content/68770
+
+Introduction
+
+Attention is the core idea that some stimulus are treated different than others for processes, representation, and/or learning.
+
+Attention is common to a lot of observable effects.
+
+Range of experiments hav ecases for where different locations are contrasted against nothing or against another stimulli at another location.
+
+Starting point: build a model where competition is a natural consequence of the computational task.
+
+E.g., multiple conditioned stimmuli (CSs) such as lights and tones have to be used to predict unconditioned stimuli (USs) such as rewards and punishments.
+
+What does it mean for a collection of CSs to learn?
+
+Previous: seperated two underlying components of attention competion, one governing representation, based on how realiable a CS is at predicting a US, and one genering learning, based on how uncertain to the quatnaative prediction made of a US by a (reliable or unrealiable) CS.
+
+Goal: provide rational accounts for sensory attention

@@ -50,9 +50,6 @@ export class ActionProxy {
         this.element.classList.add(`${this.action.execution.nodeData.preLabel}`)
 
         this.label = createEl('div', 'action-proxy-label', this.element)
-
-        // this.label.innerText = this.action.execution.nodeData.type
-        // this.indicator.innerText = this.action.execution.nodeData.preLabel
     }
 
     updateLabel() {
@@ -81,16 +78,14 @@ export class ActionProxy {
         // const loc = this.action.execution.nodeData.location
         // const width = (loc.end.column - loc.start.column) * 2
         // const height = (loc.end.line - loc.start.line + 1) * 4
-        this.indicator.style.width = `${labelBbox.width * 0.2}px`
-        this.indicator.style.height = `${bbox.height * 0.6}px`
+        this.indicator.style.width = `${labelBbox.width * 0.15}px`
+        this.indicator.style.height = `${bbox.height * 0.3}px`
     }
 
     updateSteps() {
         setTimeout(() => {
             this.updateLabel()
         })
-
-        // console.log(this.action.execution.nodeData.type)
 
         if (this.action.execution.nodeData.type == 'ForStatement') {
             // Reset

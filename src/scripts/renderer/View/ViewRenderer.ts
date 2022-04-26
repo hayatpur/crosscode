@@ -21,8 +21,6 @@ export class ViewRenderer {
 
     _tickerId: string
 
-    cursor: HTMLElement
-
     /* ----------------------- Create ----------------------- */
     constructor() {
         this.create()
@@ -31,13 +29,10 @@ export class ViewRenderer {
 
     create() {
         this.element = createEl('div', 'view')
-        this.cursor = createEl('div', 'view-cursor', this.element)
     }
 
     tick(dt: number) {
         this.time = lerp(this.time, this.targetTime, dt * 0.002)
-
-        this.cursor.style.top = `${(this.time / (this.environmentRenderers.length - 2)) * 100}%`
     }
 
     createEnvironmentRenderer() {
@@ -115,16 +110,16 @@ export class ViewRenderer {
         }
 
         // Update trail time
-        const steps = view.action.getAllFrames()
-        const factor = 1 / (steps.length - 1)
+        // const steps = view.action.getAllFrames()
+        // const factor = 1 / (steps.length - 1)
 
-        for (let i = 0; i < steps.length; i++) {
-            const step = steps[i]
-            const trails = view.renderer.trails[step.execution.id]
-            if (trails != null) {
-                trails.updateTime(Math.min(Math.max(this.time / factor - i, 0), 1))
-            }
-        }
+        // for (let i = 0; i < steps.length; i++) {
+        //     const step = steps[i]
+        //     const trails = view.renderer.trails[step.execution.id]
+        //     if (trails != null) {
+        //         trails.updateTime(Math.min(Math.max(this.time / factor - i, 0), 1))
+        //     }
+        // }
     }
 
     /* ----------------------- Destroy ---------------------- */

@@ -427,7 +427,6 @@
 
 .action-mapping {
     transition: 0.2s;
-    min-width: 100px;
     position: relative;
     display: grid;
     grid-template-columns: 1fr;
@@ -600,6 +599,26 @@
     pointer-events: inherit;
 }
 
+.action.inline.temporal-overlap:not(.temporal-overlap-showing) {
+    display: none;
+}
+
+.action-header.stripped {
+    display: none;
+}
+
+.action-footer.stripped {
+    display: none;
+}
+
+.view-cursor {
+    width: 2px;
+    height: 5px;
+    position: absolute;
+    background: var(--color-3);
+}
+
+/* -------------------- Action proxy -------------------- */
 .action-proxy-container {
     display: flex;
 }
@@ -609,25 +628,44 @@
     left: 0px;
     grid-row-start: 1;
     grid-column-start: 1;
+    // background: #ffffff0f;
+    align-items: center;
+    padding: 0px 10px;
 }
 
 .action-proxy-container > .action-proxy-indicator {
     background: #393947;
-    margin: 2px 5px;
     border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
 
     font-size: 10px;
-    padding: 3px 6px;
     font-family: Fira Code;
-    max-height: 2px;
-    max-width: 40px;
+}
+
+.action-proxy-container.is-focused:not(.unfocused).is-focused-secondary > .action-proxy-indicator {
+    background: var(--s-color-4);
+    opacity: 0.6;
+}
+
+.action-proxy-container.is-focused:not(.unfocused) > .action-proxy-indicator {
+    background: var(--s-color-4);
+    opacity: 1;
+}
+
+.action-proxy-steps {
+    height: fit-content;
+}
+
+.action-proxy-iteration {
+    margin-bottom: 12px;
 }
 
 .action-proxy-container > .action-proxy-steps {
 }
+
+/* ----------------- AST Specific Styles ---------------- */
 
 .Body > .action-proxy-indicator {
     height: 18px !important;
@@ -647,41 +685,4 @@
 .Test > .action-proxy-indicator {
     height: 2px !important;
     opacity: 0.5;
-}
-
-.action.inline.temporal-overlap:not(.temporal-overlap-showing) {
-    display: none;
-}
-
-.action-header.stripped {
-    display: none;
-}
-
-.action-footer.stripped {
-    display: none;
-}
-
-.action-proxy-container.is-focused:not(.unfocused).is-focused-secondary > .action-proxy-indicator {
-    background: var(--s-color-4);
-    opacity: 0.2;
-}
-
-.action-proxy-container.is-focused:not(.unfocused) > .action-proxy-indicator {
-    background: var(--s-color-4);
-    opacity: 1;
-}
-
-.action-proxy-steps {
-    height: fit-content;
-}
-
-.action-proxy-iteration {
-    margin-bottom: 12px;
-}
-
-.view-cursor {
-    width: 2px;
-    height: 5px;
-    position: absolute;
-    background: var(--color-3);
 }

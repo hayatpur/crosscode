@@ -83,9 +83,10 @@ export class ActionMapping {
             const step = this.action.steps.find((step) => step.execution.id === stepId)
 
             const bbox = step.renderer.element.getBoundingClientRect()
+            const bboxHeader = step.renderer.header.getBoundingClientRect()
 
             proxy.element.style.top = `${bbox.top - thisBbox.y}px`
-            proxy.element.style.height = `${bbox.height}px`
+            proxy.element.style.height = `${bboxHeader.height}px`
         }
     }
 
