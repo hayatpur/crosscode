@@ -284,7 +284,6 @@ export class ActionController {
 
     /* ------------------------ Focus ----------------------- */
     focus(node?: ExecutionGraph | ExecutionNode, secondary: boolean = false) {
-        this.action.renderer.element.classList.remove('unfocused')
         this.action.renderer.element.classList.add('is-focused')
 
         if (node != null) {
@@ -318,9 +317,6 @@ export class ActionController {
                     tokenBbox.y + tokenBbox.height <= bbox.y + bbox.height
                 )
             })
-            for (const el of contained) {
-                el.classList.remove('unfocused')
-            }
         } else {
             const tokens = [
                 ...this.action.renderer.header.querySelectorAll('.action-label > span > span'),
@@ -330,16 +326,12 @@ export class ActionController {
                     ...this.action.renderer.footer.querySelectorAll('.action-label > span > span')
                 )
             }
-            for (const el of tokens) {
-                el.classList.remove('unfocused')
-            }
 
             this.action.proxy?.focus(secondary)
         }
     }
 
     unfocus() {
-        this.action.renderer.element.classList.add('unfocused')
         this.action.renderer.element.classList.add('is-focused')
 
         const tokens = [
@@ -352,15 +344,10 @@ export class ActionController {
             )
         }
 
-        for (const el of tokens) {
-            el.classList.add('unfocused')
-        }
-
         this.action.proxy?.unfocus()
     }
 
     clearFocus() {
-        this.action.renderer.element.classList.remove('unfocused')
         this.action.renderer.element.classList.remove('is-focused')
 
         const tokens = [
@@ -370,10 +357,6 @@ export class ActionController {
             tokens.push(
                 ...this.action.renderer.footer.querySelectorAll('.action-label > span > span')
             )
-        }
-
-        for (const el of tokens) {
-            el.classList.remove('unfocused')
         }
 
         this.action.proxy?.clearFocus()

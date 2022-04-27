@@ -312,12 +312,6 @@ export class EnvironmentRenderer {
         }
     }
 
-    unfocus() {
-        for (const renderer of Object.values(this.getAllChildRenderers())) {
-            renderer.unfocus()
-        }
-    }
-
     clearFocus() {
         for (const renderer of Object.values(this.getAllChildRenderers())) {
             renderer.clearFocus()

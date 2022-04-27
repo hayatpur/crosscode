@@ -109,36 +109,11 @@ export class ArrayRenderer extends DataRenderer {
     }
 
     /* ------------------------ Focus ----------------------- */
-    unfocus() {
-        this.closingBrace.classList.add('unfocused')
-        this.openingBrace.classList.add('unfocused')
-
-        for (const id of Object.keys(this.dataRenderers)) {
-            this.dataRenderers[id].comma.classList.add('unfocused')
-        }
-    }
-
     focus() {
-        this.closingBrace.classList.remove('unfocused')
-        this.openingBrace.classList.remove('unfocused')
-
-        for (const id of Object.keys(this.dataRenderers)) {
-            this.dataRenderers[id].comma.classList.remove('unfocused')
-        }
-
-        this.element.classList.remove('unfocused')
         this.element.classList.remove('secondary-focused')
     }
 
     clearFocus() {
-        this.closingBrace.classList.remove('unfocused')
-        this.openingBrace.classList.remove('unfocused')
-
-        for (const id of Object.keys(this.dataRenderers)) {
-            this.dataRenderers[id].comma.classList.remove('unfocused')
-        }
-
-        this.element.classList.remove('unfocused')
         this.element.classList.remove('secondary-focused')
     }
 }

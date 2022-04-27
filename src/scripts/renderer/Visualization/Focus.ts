@@ -51,16 +51,11 @@ export class Focus {
         if (!this.dirty) return
 
         // Clear focus
-        let start = performance.now()
         if (this.currentFocus.length == 0) {
             for (const action of this.actions) {
                 action.controller.clearFocus()
             }
-            // Clear focus on all tokens
-            for (const token of Editor.instance.getAllTokens()) {
-                token.classList.remove('unfocused')
-                token.classList.remove('secondary-focus')
-            }
+
             let views: View[] = []
             for (const action of this.actions) {
                 if (action.steps.length > 0) {
@@ -75,7 +70,7 @@ export class Focus {
 
         // Focus on actions
         let node = this.currentFocus[this.currentFocus.length - 1]
-        // console.log(node)
+
         for (const action of this.actions) {
             action.controller.unfocus()
 
@@ -103,14 +98,8 @@ export class Focus {
                 JSON.stringify(node.nodeData.location) ==
                 JSON.stringify(action.execution.nodeData.location)
             ) {
-                // console.log(action.execution.nodeData.type, 'C')
                 action.controller.focus(null, true)
             }
-        }
-
-        // Unfocus all tokens
-        for (const token of Editor.instance.getAllTokens()) {
-            token.classList.add('unfocused')
         }
 
         if (instanceOfExecutionGraph(node)) {
@@ -125,20 +114,15 @@ export class Focus {
 
                 const els = Editor.instance.getContainedTokenElements(bbox)
                 for (const el of els) {
-                    el.classList.remove('unfocused')
-                    el.classList.add('secondary-focus')
+                    el.classList.add('is-focused')
                 }
             }
         }
-        // const secondaryNodes = queryAllExecutionGraph(
-        //     node,
-        //     (n) => n.id != node.id && (instanceOfExecutionNode(n) || n.vertices.length < 2)
-        // )
 
-        // console.log(secondaryNodes.length)
+        // Focus on tokens
+        // const primaryNodes = [node]
 
-        // Secondary focus on tokens
-        // for (const loc of secondaryNodes.map((n) => n.nodeData.location)) {
+        // for (const loc of primaryNodes.map((n) => n.nodeData.location)) {
         //     const bbox = Editor.instance.computeBoundingBoxForLoc(loc)
         //     let padding = 20
         //     bbox.x -= padding
@@ -148,28 +132,9 @@ export class Focus {
 
         //     const els = Editor.instance.getContainedTokenElements(bbox)
         //     for (const el of els) {
-        //         el.classList.remove('unfocused')
         //         el.classList.add('secondary-focus')
         //     }
         // }
-
-        // Focus on tokens
-        const primaryNodes = [node]
-
-        for (const loc of primaryNodes.map((n) => n.nodeData.location)) {
-            const bbox = Editor.instance.computeBoundingBoxForLoc(loc)
-            let padding = 20
-            bbox.x -= padding
-            bbox.y -= padding
-            bbox.width += 2 * padding
-            bbox.height += 2 * padding
-
-            const els = Editor.instance.getContainedTokenElements(bbox)
-            for (const el of els) {
-                el.classList.remove('unfocused')
-                el.classList.remove('secondary-focus')
-            }
-        }
 
         let views: View[] = []
         for (const action of this.actions) {
@@ -183,7 +148,6 @@ export class Focus {
         const rs = new Set(reads(node).map((r) => r.id))
 
         for (const view of views) {
-            view.controller.unfocus()
             view.controller.secondaryFocus(rs)
             view.controller.focus(ws)
         }

@@ -170,18 +170,15 @@ export class ActionProxy {
     }
 
     clearFocus() {
-        this.element.classList.remove('unfocused')
         this.element.classList.remove('is-focused')
     }
 
     unfocus() {
-        this.element.classList.add('unfocused')
         this.element.classList.add('is-focused')
         this.element.classList.remove('is-focused-secondary')
     }
 
     focus(secondary = false) {
-        this.element.classList.remove('unfocused')
         this.element.classList.add('is-focused')
 
         if (secondary) {
@@ -191,7 +188,8 @@ export class ActionProxy {
 
     getControlFlowPoints() {
         const bbox = this.element.getBoundingClientRect()
+        const indicatorBBox = this.indicator.getBoundingClientRect()
 
-        return [[0, bbox.y]]
+        return [[20, indicatorBBox.y + indicatorBBox.height / 2]]
     }
 }

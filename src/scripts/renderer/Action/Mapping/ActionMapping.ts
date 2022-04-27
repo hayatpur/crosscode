@@ -94,6 +94,8 @@ export class ActionMapping {
             proxy.element.style.top = `${bbox.top - thisBbox.y}px`
             proxy.element.style.height = `${bboxHeader.height}px`
         }
+
+        this.controlFlow.update()
     }
 
     hide() {

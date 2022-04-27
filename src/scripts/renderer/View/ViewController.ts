@@ -37,12 +37,6 @@ export class ViewController {
 
     /* ------------------------ Focus ----------------------- */
 
-    unfocus() {
-        for (const env of this.view.renderer.environmentRenderers) {
-            env.unfocus()
-        }
-    }
-
     secondaryFocus(dataIds: Set<string>) {
         for (const env of this.view.renderer.environmentRenderers) {
             env.secondaryFocus(dataIds)

@@ -26,22 +26,16 @@ export class IdentifierRenderer {
     }
 
     /* ------------------------ Focus ----------------------- */
-    unfocus() {
-        this.element.classList.add('unfocused')
-    }
 
     secondaryFocus() {
-        this.element.classList.remove('unfocused')
         this.element.classList.add('secondary-focused')
     }
 
     focus() {
-        this.element.classList.remove('unfocused')
         this.element.classList.remove('secondary-focused')
     }
 
     clearFocus() {
-        this.element.classList.remove('unfocused')
         this.element.classList.remove('secondary-focused')
     }
 }

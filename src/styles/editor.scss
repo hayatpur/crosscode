@@ -223,18 +223,6 @@
 }
 
 /* ------------------------ Focus ----------------------- */
-.view-line > span > span.unfocused {
-    opacity: 0.2 !important;
-    // filter: saturate(0);
-    // color: white !important;
-}
-
-.view-line > span > span {
-    // transition-property: opacity, color;
-    // transition-duration: var(--focus-duration);
-}
-
-.view-line > span > span.secondary-focus {
-    opacity: 0.6 !important;
-    color: var(--s-color-4) !important;
+.view-line > span > span.is-focused {
+    background-color: wheat;
 }

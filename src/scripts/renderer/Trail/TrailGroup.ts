@@ -30,7 +30,7 @@ export class TrailGroup {
             console.log(execution.nodeData.type)
             const trailStates = getTrail(execution)
             for (const trailState of trailStates) {
-                console.log(trailState)
+                // console.log(trailState)
                 const trail = new Trail(trailState, startEnvironment, endEnvironment, execution)
                 this.trails.push(trail)
             }

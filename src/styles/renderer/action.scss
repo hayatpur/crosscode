@@ -141,13 +141,6 @@
     // box-shadow: 0 0 16px 5px #151517 !important;
 }
 
-/* ------------------------ Focus ----------------------- */
-
-.action-label > span > span.unfocused {
-    // color: white !important;
-    opacity: 0.2 !important;
-}
-
 /* ------------------ Interaction areas ----------------- */
 .action-interaction-area {
     position: absolute;
@@ -642,14 +635,15 @@
 
     font-size: 10px;
     font-family: Fira Code;
+    box-shadow: 0px 0px 3px 5px #202028;
 }
 
-.action-proxy-container.is-focused:not(.unfocused).is-focused-secondary > .action-proxy-indicator {
+.action-proxy-container.is-focused.is-focused-secondary > .action-proxy-indicator {
     background: var(--s-color-4);
     opacity: 0.6;
 }
 
-.action-proxy-container.is-focused:not(.unfocused) > .action-proxy-indicator {
+.action-proxy-container.is-focused > .action-proxy-indicator {
     background: var(--s-color-4);
     opacity: 1;
 }
@@ -685,4 +679,35 @@
 .Test > .action-proxy-indicator {
     height: 2px !important;
     opacity: 0.5;
+}
+
+/* -------------------- Control flow -------------------- */
+svg.control-flow-svg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+@keyframes control-flow-show-stroke {
+    0% {
+        stroke-dashoffset: 0;
+    }
+    50% {
+        stroke-dashoffset: 5;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+.control-flow-path {
+    fill: none;
+    stroke: #393947;
+    stroke-width: 1.5px;
+    stroke-dasharray: 4px 5px;
+    stroke-dashoffset: 0;
+    animation: showStroke 10s;
+    animation-iteration-count: infinite;
 }

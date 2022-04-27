@@ -15,18 +15,6 @@
 }
 
 /* ------------------------ Focus ----------------------- */
-.data.unfocused {
-    opacity: 0.2 !important;
-    // color: white !important;
-    // filter: saturate(0);
-}
-
-.data {
-    // transition-property: opacity, color;
-    // transition-duration: var(--focus-duration);
-}
-
 .data.secondary-focused {
     color: var(--s-color-3);
-    // opacity: 0.7;
 }
