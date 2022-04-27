@@ -2,6 +2,7 @@ import { createEl } from '../../../utilities/dom'
 import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
 import { ActionProxy } from './ActionProxy'
+import { ControlFlow } from './ControlFlow'
 
 export class ActionMapping {
     element: HTMLElement
@@ -19,6 +20,9 @@ export class ActionMapping {
     isHidden: boolean = false
     _tickerId: string
 
+    // Control flow
+    controlFlow: ControlFlow
+
     constructor(action: Action) {
         this.action = action
         this.create()
@@ -33,6 +37,8 @@ export class ActionMapping {
         })
 
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+
+        this.controlFlow = new ControlFlow(this)
     }
 
     updateSteps() {

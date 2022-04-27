@@ -1,3 +1,4 @@
+import { catmullRomSolve } from '../../../utilities/math'
 import { Action } from '../Action'
 import { ActionMapping } from './ActionMapping'
 
@@ -7,36 +8,34 @@ import { ActionMapping } from './ActionMapping'
 export class ControlFlow {
     steps: Action[] = []
 
-    connectionsContainer: SVGElement
-    connections: SVGPathElement[] = []
+    container: SVGElement
+    flowPath: SVGPathElement
 
     constructor(mapping: ActionMapping) {
-        this.connectionsContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-        this.connectionsContainer.classList.add('connections-svg')
+        // Create container
+        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        this.container.classList.add('control-flow-svg')
+        mapping.element.appendChild(this.container)
 
-        mapping.element.appendChild(this.connectionsContainer)
+        // Create path
+        this.flowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        this.flowPath.classList.add('control-flow-path')
 
         this.update()
     }
 
     update() {
-        this.connections.forEach((connection) => {
-            connection.remove()
-        })
-
-        this.connections = []
+        // Get all control flow points
+        const controlFlowPoints = [[0, 0]]
 
         for (let i = 0; i < this.steps.length; i++) {
-            const step = this.steps[i]
-            const connection = this.createConnection(step)
-
-            if (i > 0) {
-                const previousStep = this.steps[i - 1]
-                const previousConnection = this.createConnection(previousStep)
-
-                this.connections.push(previousConnection)
-                this.connections.push(connection)
-            }
+            controlFlowPoints.push(...this.steps[i].proxy.getControlFlowPoints())
         }
+
+        // controlFlowPoints.push([0, 0])
+
+        // Create path
+        const d = catmullRomSolve(controlFlowPoints.flat(), 0.5)
+        this.flowPath.setAttribute('d', d)
     }
 }

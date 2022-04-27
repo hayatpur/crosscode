@@ -188,4 +188,10 @@ export class ActionProxy {
             this.element.classList.add('is-focused-secondary')
         }
     }
+
+    getControlFlowPoints() {
+        const bbox = this.element.getBoundingClientRect()
+
+        return [[0, bbox.y]]
+    }
 }
