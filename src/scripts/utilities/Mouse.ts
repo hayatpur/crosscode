@@ -13,18 +13,16 @@ export class Mouse {
     }
 
     constructor() {
-        const mouse = this
-
         document.addEventListener('mousemove', (e) => {
-            mouse.position = { x: e.clientX, y: e.clientY }
+            this.position = { x: e.clientX, y: e.clientY }
         })
 
         document.addEventListener('mousedown', (e) => {
-            mouse.held = true
+            this.held = true
         })
 
         document.addEventListener('mouseup', (e) => {
-            mouse.held = false
+            this.held = false
         })
     }
 }

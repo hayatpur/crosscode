@@ -14,17 +14,15 @@ export class TrailController {
 
     /* ----------------------- Update ----------------------- */
 
-    tick(dt: number) {
-        // const startEnv = this.trail.startEnvironment
-        // const endEnv = this.trail.endEnvironment
-        // this.trail.renderer.render(this.trail)
-    }
+    tick(dt: number) {}
 
     updateTime(time: number) {
         this.trail.time = time
-        this.trail.renderer.updateTime(this.trail)
+        this.trail.renderer.update()
     }
 
     /* ----------------------- Destroy ---------------------- */
-    destroy() {}
+    destroy() {
+        Ticker.instance.removeTickFrom(this._tickerId)
+    }
 }

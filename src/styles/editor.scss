@@ -7,7 +7,8 @@
 #editor {
     width: 100%;
     height: 100%;
-    padding: 7rem;
+    padding: 2rem;
+    padding-top: 7rem;
 }
 
 /* ----------------------- Monaco ----------------------- */
@@ -48,7 +49,6 @@
 }
 
 .monaco-editor .line-numbers {
-    color: var(--highlight-color) !important;
     opacity: 0.7;
     font-size: 12px !important;
     margin-top: 2px !important;
@@ -224,5 +224,5 @@
 
 /* ------------------------ Focus ----------------------- */
 .view-line > span > span.is-focused {
-    background-color: wheat;
+    background-color: #161d23;
 }

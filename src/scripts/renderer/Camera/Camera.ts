@@ -67,11 +67,15 @@ export class Camera {
 
     tick(dt: number) {
         // Apply transform
-        this.element.style.transform = `translate(${this.state.position.x}px, ${this.state.position.y}px)`
+        this.element.style.marginLeft = `${this.state.position.x}px`
+        this.element.style.marginTop = `${this.state.position.y}px`
+
+        // Background shift
         this.vis.element.style.backgroundPosition = `${this.state.position.x}px ${
             this.state.position.y
-        }px, ${this.state.position.x + 25}px ${this.state.position.y + 25}px`
+        }px, ${this.state.position.x + 15}px ${this.state.position.y + 15}px`
 
+        // Shift
         if (Keyboard.instance.isPressed('Shift')) {
             this.vis.element.classList.add('camera-shift')
         } else {

@@ -5,34 +5,14 @@ import { Representation } from './Representation'
 
 export class BlockStatementRepresentation extends Representation {
     constructor(action: Action) {
-        super(action, 2)
+        super(action)
     }
 
-    applyRepresentation() {
-        if (this.totalRepresentations === 0) {
-            return
-        }
-
-        this.action.controller.destroyStepsAndViews()
-
-        if (this.currentRepresentation != 0) {
-            this.action.controller.createSteps()
-        }
-
-        const spatialRoot = this.action.controller.getSpatialRoot()
-        spatialRoot.mapping.updateSteps()
+    update() {
+        this.setSourceCodeOfExecution()
     }
 
     setSourceCodeOfExecution() {
-        if (this.currentRepresentation == 0) {
-            this.action.renderer.header.classList.remove('stripped')
-            this.action.renderer.footer.classList.remove('stripped')
-        } else {
-            this.action.renderer.header.classList.add('stripped')
-            this.action.renderer.footer.classList.add('stripped')
-            return
-        }
-
         // Header
         const range = this.action.execution.nodeData.location
         let headerLabel = Editor.instance.monaco.getModel().getValueInRange({
@@ -42,38 +22,33 @@ export class BlockStatementRepresentation extends Representation {
             endColumn: range.end.column + 1,
         })
 
-        this.action.renderer.footerPreLabel.innerText = ''
+        this.action.renderer.footerLineLabel.innerText = ''
         this.action.renderer.footerLabel.innerText = ''
 
         let footerLabel = null
         let footerLineNumbers = null
         let headerLineNumbers = this.action.execution.nodeData.location.start.line.toString()
 
-        // Label
-        if (this.currentRepresentation == 0) {
-            headerLabel = `...`
+        // Abbreviate body statement
+        if (this.action.steps.length == 0) {
+            headerLabel = `\t...`
         } else {
-            headerLabel = ``
-            footerLineNumbers = `${this.action.execution.nodeData.location.end.line}`
+            headerLabel = ''
+            headerLineNumbers = ''
         }
-
-        // Spacing
-        if (this.action.state.spacingDelta > 0) {
-            if (footerLineNumbers == null) {
-                footerLineNumbers = `${(
-                    this.action.execution.nodeData.location.end.line + 1
-                ).toString()}`
-            } else {
-                footerLineNumbers += `\n${(
-                    this.action.execution.nodeData.location.end.line + 1
-                ).toString()}`
-            }
-        }
+        // footerLabel = '}'
+        // footerLineNumbers = `${(this.action.execution.nodeData.location.end.line + 1).toString()}`
 
         // Set the line numbers
-        this.action.renderer.headerPreLabel.innerText = headerLineNumbers
+        this.action.renderer.headerLineLabel.innerText = headerLineNumbers
         if (footerLineNumbers != null) {
-            this.action.renderer.footerPreLabel.innerText = footerLineNumbers
+            this.action.renderer.footerLineLabel.innerText = footerLineNumbers
+        }
+
+        if (headerLabel == '') {
+            this.action.renderer.header.classList.add('is-hidden')
+        } else {
+            this.action.renderer.header.classList.remove('is-hidden')
         }
 
         // Render labels
@@ -91,4 +66,6 @@ export class BlockStatementRepresentation extends Representation {
             })
         }
     }
+
+    destroy() {}
 }

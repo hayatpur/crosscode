@@ -1,12 +1,9 @@
-import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Action } from '../renderer/Action/Action'
 import { BlockStatementRepresentation } from '../renderer/Action/Dynamic/BlockStatementRepresentation'
-import { CallExpressionRepresentation } from '../renderer/Action/Dynamic/CallExpressionRepresentation'
-import { ForStatementRepresentation } from '../renderer/Action/Dynamic/ForStatementRepresentation'
-import { FunctionCallRepresentation } from '../renderer/Action/Dynamic/FunctionCallRepresentation'
+import { IfStatementRepresentation } from '../renderer/Action/Dynamic/IfStatementRepresentation'
 import { Representation } from '../renderer/Action/Dynamic/Representation'
-import { WhileStatementRepresentation } from '../renderer/Action/Dynamic/WhileStatementRepresentation'
 
 /* ------------------------------------------------------ */
 /*             Helper functions to for actions            */
@@ -85,25 +82,29 @@ export function queryAllAction(action: Action, query: (animation: Action) => boo
 
 export function createRepresentation(action: Action) {
     let representation: typeof Representation = null
+    console.log(action.execution.nodeData.type)
     switch (action.execution.nodeData.type) {
-        case 'CallExpression':
-            representation = CallExpressionRepresentation
+        case 'IfStatement':
+            representation = IfStatementRepresentation
             break
-        case 'FunctionCall':
-            representation = FunctionCallRepresentation
-            break
-        case 'ForStatement':
-            representation = ForStatementRepresentation
-            break
-        case 'Program':
+        // case 'CallExpression':
+        //     representation = CallExpressionRepresentation
+        //     break
+        // case 'FunctionCall':
+        //     representation = FunctionCallRepresentation
+        //     break
+        // case 'ForStatement':
+        //     representation = ForStatementRepresentation
+        //     break
+        // case 'Program':
+        //     representation = BlockStatementRepresentation
+        //     break
+        case 'BlockStatement':
             representation = BlockStatementRepresentation
             break
-        case 'BlockStatement' || 'Program':
-            representation = BlockStatementRepresentation
-            break
-        case 'WhileStatement':
-            representation = WhileStatementRepresentation
-            break
+        // case 'WhileStatement':
+        //     representation = WhileStatementRepresentation
+        //     break
         default:
             representation = Representation
             break
@@ -135,8 +136,40 @@ export function isExpandable(execution: ExecutionGraph | ExecutionNode) {
     return expandibleTypes.has(execution.nodeData.type)
 }
 
+export function isExpression(execution: ExecutionGraph | ExecutionNode) {
+    const expressionTypes = new Set(['Test'])
+
+    return expressionTypes.has(execution.nodeData.preLabel)
+}
+
 export function getLabelOfExecution(execution: ExecutionGraph | ExecutionNode) {
     return (instanceOfExecutionNode(execution) ? execution.name : execution.nodeData.type)
         .replace(/([A-Z])/g, ' $1')
         .trim()
+}
+
+export function getActionRoot(action: Action) {
+    let root = action
+    while (root.parent != null) {
+        root = root.parent
+    }
+    return root
+}
+
+export function getActionSpatialRoot(action: Action) {
+    let root = action
+    while (root.parent != null && root.state.isInline) {
+        root = root.parent
+    }
+    return root
+}
+
+export function getExecutionSteps(
+    execution: ExecutionGraph | ExecutionNode
+): (ExecutionGraph | ExecutionNode)[] {
+    if (instanceOfExecutionGraph(execution)) {
+        return execution.vertices
+    } else {
+        return []
+    }
 }

@@ -33,6 +33,9 @@ export class EnvironmentRenderer {
     // SVG overlay
     svg: SVGElement
 
+    private environmentCache: string = null
+    private filterCache: string = null
+
     /* ----------------------- Create ----------------------- */
     constructor() {
         this.create()
@@ -47,8 +50,20 @@ export class EnvironmentRenderer {
 
     /* ----------------------- Render ----------------------- */
     render(environment: EnvironmentState, filter?: string[]) {
+        // If already the same
+        if (
+            this.environmentCache === JSON.stringify(environment) &&
+            this.filterCache === JSON.stringify(filter ?? null)
+        ) {
+            return
+        }
+
         this.renderMemory(environment, filter)
         this.renderIdentifiers(environment, filter)
+
+        // Update caches
+        this.environmentCache = JSON.stringify(environment)
+        this.filterCache = JSON.stringify(filter ?? null)
     }
 
     renderMemory(state: EnvironmentState, filter?: string[]) {

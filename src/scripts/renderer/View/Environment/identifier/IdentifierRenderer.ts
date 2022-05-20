@@ -1,4 +1,5 @@
 import { IdentifierState } from '../../../../environment/EnvironmentState'
+import { clone } from '../../../../utilities/objects'
 import { Ticker } from '../../../../utilities/Ticker'
 
 export class IdentifierRenderer {
@@ -6,6 +7,7 @@ export class IdentifierRenderer {
     environmentReference: HTMLElement
 
     private _tickerId: string
+    _cachedState: IdentifierState | null = null
 
     constructor() {
         this.element = document.createElement('div')
@@ -16,6 +18,8 @@ export class IdentifierRenderer {
 
     setState(state: IdentifierState) {
         this.element.innerHTML = `${state.name}`
+
+        this._cachedState = clone(state)
     }
 
     tick(dt: number) {}

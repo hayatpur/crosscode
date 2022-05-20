@@ -1,5 +1,9 @@
-let array = [5, 2, 7, 1, 6]
-let n = array.length
+let l = [1, 2, 3, 4]
 
-array[0] = array[n - 1]
-array[n - 1] = n
+// Swap
+if (l[0] < l[1]) {
+    let y = l[1]
+    l[0] = y
+    let z = l[0]
+    l[1] = z
+}

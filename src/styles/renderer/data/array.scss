@@ -12,7 +12,7 @@
 .data-array-brace {
     color: var(--color-3);
     font-weight: 400;
-    font-family: Fira Code;
+    font-family: var(--code-font-family);
 }
 
 .data-array-opening-brace {
@@ -51,5 +51,5 @@
 .data-array-comma {
     color: var(--color-3);
     font-weight: 400;
-    font-family: Fira Code;
+    font-family: var(--code-font-family);
 }

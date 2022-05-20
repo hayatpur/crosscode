@@ -1,7 +1,6 @@
 import { Editor } from '../../editor/Editor'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
-import { Executor } from '../../executor/Executor'
 import { createEl } from '../../utilities/dom'
 import { Action } from './Action'
 
@@ -22,70 +21,22 @@ export class ActionInteractionArea {
 
         this.create()
 
-        // Focus
-        this.element.addEventListener('mouseenter', (e) => {
-            // if (!this.createdSteps) {
-            Executor.instance.visualization.focus.focusOn(this.execution)
-            // }
-        })
-
-        this.element.addEventListener('mouseleave', (e) => {
-            // if (!this.createdSteps) {
-            Executor.instance.visualization.focus.clearFocus(this.execution)
-            // }
-        })
-
         // Click
-        let timer: number
-        this.element.addEventListener('click', (event) => {
-            // if (event.detail === 1) {
-            //     timer = setTimeout(() => {
-            //         this.clicked()
-            //     }, 200)
-            // }
-            this.clicked()
+        this.element.addEventListener('click', (e: MouseEvent) => {
+            this.clicked(e)
         })
-        this.element.addEventListener('dblclick', (event) => {
-            // clearTimeout(timer)
-            // this.doubleClicked()
+
+        // Hover
+        this.element.addEventListener('mouseenter', (e: MouseEvent) => {
+            this.parentAction.proxy.indicator.classList.add('is-hovering')
+        })
+
+        this.element.addEventListener('mouseleave', (e: MouseEvent) => {
+            this.parentAction.proxy.indicator.classList.remove('is-hovering')
         })
     }
 
-    clicked() {
-        // if (this.createdSteps) {
-        //     this.parentAction.controller.destroyStepsAndViews()
-        //     this.createdSteps = false
-        //     return
-        // }
-
-        if (this.execution.id == this.parentAction.execution.id) {
-            const overlaps = [...Executor.instance.visualization.focus.actions].filter(
-                (action) =>
-                    JSON.stringify(action.execution.nodeData.location) ==
-                    JSON.stringify(this.execution.nodeData.location)
-            )
-            // const overlaps = this.parentAction.parent?.controller.getTemporalOverlaps()
-            // console.log(overlaps)
-            // const loc = JSON.stringify(this.execution.nodeData.location)
-
-            // if (overlaps?.[loc] != null) {
-            // const overlap = overlaps[loc]
-            overlaps.forEach((action) => action.representation.cycle())
-            // } else {
-            // this.parentAction.representation.cycle()
-            // }
-        }
-        //  else {
-        //     this.temporaryAction = this.parentAction.controller.createFocusedStep(this.execution)
-        // }
-
-        // this.createdSteps = true
-    }
-
-    doubleClicked() {
-        // this.temporaryAction = this.parentAction.controller.createOutgoingStep(this.execution)
-        // this.createdSteps = true
-    }
+    clicked(e: MouseEvent) {}
 
     create() {
         this.element = createEl('div', 'action-interaction-area')

@@ -47,7 +47,9 @@ export class Editor {
             codeLens: false,
             dragAndDrop: false,
             theme: 'atom',
-            fontFamily: 'Fira Code',
+            fontFamily: window
+                .getComputedStyle(document.documentElement)
+                .getPropertyValue('--code-font-family'),
             fontLigatures: true,
             quickSuggestions: false,
             parameterHints: {

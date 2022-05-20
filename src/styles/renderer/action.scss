@@ -1,15 +1,12 @@
-// @keyframes fadein {
-//     from {
-//         opacity: 0;
-//     }
-//     to {
-//         opacity: 1;
-//     }
-// }
-
 /* ------------------------------------------------------ */
 /*               Defines styles for actions               */
 /* ------------------------------------------------------ */
+
+:root {
+    --gutter-size: 40px;
+    --action-padding: 15px;
+    --action-border: 1px solid #2c2c345e;
+}
 
 .action {
     display: flex;
@@ -17,92 +14,67 @@
     position: relative;
 }
 
-/* ------------------ Show steps rules ------------------ */
-
-.action.showing-steps {
-    // align-items: center;
-}
-
 /* ------------------------ Label ----------------------- */
 
 .action-label {
-    font-family: Fira Code;
-    font-size: 18px;
-    letter-spacing: -0.5px;
-    line-height: 34px;
+    font-family: var(--code-font-family);
+    font-size: var(--code-font-size);
+    letter-spacing: var(--code-font-letter-spacing);
+    line-height: var(--code-font-line-height);
     position: relative;
     user-select: none;
 }
 
-.action-label > span {
-    background: var(--color-10);
-    // box-shadow: 0px 0px 10px 5px var(--color-10);
-}
-
 /* ------------------------ Body ------------------------ */
 
-.action:not(.inline) > .action-view-container {
+.action:not(.is-inline) > .action-view-container {
     display: flex;
     align-items: flex-start;
     flex-direction: column;
     justify-content: center;
 }
 
-.action:not(.showing-view) > .action-view-container {
-    border-left: 0px;
+.action:not(.is-inline) > .action-step-container {
+    padding: var(--action-padding);
 }
 
-.action:not(.inline) > .action-step-container {
-    padding: 15px;
-}
-
-.action.inline > .action-view-container {
+.action.is-inline > .action-view-container {
     display: none;
 }
 
 /* ------------------------ Root ------------------------ */
-.action:not(.inline) {
+.action:not(.is-inline) {
     position: absolute;
     top: 0px;
     left: 0px;
 
-    border: 1px solid #2c2c345e;
+    border: var(--action-border);
     border-radius: 7px;
+
     background: var(--color-10);
 }
 
+// Add a gutter for line numbers
+.action:not(.is-inline) {
+    padding-left: var(--gutter-size);
+}
+
 /* ----------------------- Program ---------------------- */
-.action.program > .action-step-container > .action-header,
-.action.program > .action-step-container > .action-footer {
+.action.is-program > .action-step-container > .action-header,
+.action.is-program > .action-step-container > .action-footer {
     display: none;
 }
 
-.action.focused-step > .action-step-container > .action-header {
-    display: none;
-}
-
-// .action.showing-steps > .action-header {
-//     display: none;
-// }
-
-.action:not(.inline) > .action-step-container > .action-header {
+.action:not(.is-inline) > .action-step-container > .action-header {
     align-items: center;
-    // border-bottom: 1px solid #ffffff14;
-    // border-radius: 5px 5px 0px 0px;
-    // padding: 2px 0px;
 }
 
-.action:not(.inline) > .action-footer {
+.action:not(.is-inline) > .action-footer {
     align-items: center;
     border-top: 1px solid #ffffff14;
     border-radius: 5px 5px 0px 0px;
     padding: 2px 0px;
 }
-
-// .action:not(.inline) > .action-step-container > .action-header > .action-label,
-// .action:not(.inline) > .action-step-container > .action-footer > .action-label {
-//     opacity: 0.2;
-// }
 
 /* ----------------------- Header ----------------------- */
 .action-header,
@@ -111,34 +83,29 @@
     position: relative;
 }
 
-.action:not(.inline) > .action-step-container > .action-header::before {
-    // content: '';
-    // width: 10px;
-    // height: 13px;
-    // background: var(--color-2);
-    // border-radius: 0px 50% 50% 0px;
-    // border: 1px solid var(--color-2);
-    // border-left: 0px;
-    // opacity: 0.5;
-}
-
-/* ---------------------- Prelabel ---------------------- */
-.action-pre-label {
-    font-family: Fira Code;
-    letter-spacing: -0.5px;
-    line-height: 34px;
+/* --------------------- Line Label -------------------- */
+.action-line-label {
+    font-family: var(--code-font-family);
+    letter-spacing: var(--code-font-letter-spacing);
+    line-height: var(--code-font-line-height);
     color: #858585;
-    opacity: 0.6;
-    font-size: 10px !important;
-    margin-right: 22px;
+    opacity: 0.7;
+    font-size: 12px !important;
     width: 10px;
     user-select: none;
+    position: absolute;
+    left: -32px;
+    font-weight: 300;
 }
 
-/* ------------------ Root with borders ----------------- */
-
-.view {
-    // box-shadow: 0 0 16px 5px #151517 !important;
+.action-step-newline {
+    font-family: var(--code-font-family);
+    letter-spacing: var(--code-font-letter-spacing);
+    line-height: var(--code-font-line-height);
+    color: #858585;
+    opacity: 0.7;
+    font-size: 12px !important;
+    margin-left: -32px;
 }
 
 /* ------------------ Interaction areas ----------------- */
@@ -146,140 +113,66 @@
     position: absolute;
     opacity: 0.08;
     border-radius: 0px;
-    background: white;
+    background: #fff;
     margin-top: 4px;
     opacity: 0;
-}
-
-.action-interaction-area.inactive {
-    // display: none;
+    background: #88d0f226;
+    border-radius: 5px;
+    mix-blend-mode: hard-light;
+    // background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='5' ry='5' stroke='%237DD3FC4F' stroke-width='1' stroke-dasharray='4%2c 4' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
 }
 
 .action-interaction-area:hover {
-    opacity: 0.2;
+    opacity: 1;
 }
 
-.action-interaction-area.itself {
-    // opacity: 0;
+.action.is-focused > .action-step-container > .action-header > .action-interaction-area.itself {
+    opacity: 1;
 }
 
-// .action.showing-steps > .action-header > .action-interaction-area {
-//     display: none;
-// }
-
-.action.is-focused > .action-step-container > .action-header > .action-interaction-area {
-    background: rgba(255, 255, 255, 0.342);
-}
-
-.action.is-focused > .action-step-container > .action-header > .action-interaction-area.inactive {
-    background: rgba(255, 255, 255, 0);
-}
-
-/* ----------------------- Origin ----------------------- */
-.action-origin-connection {
-    fill: #0000;
-    stroke: url(#grad3);
-    stroke-width: 1px;
-    z-index: -1;
-}
-
-/* ------------------------ Base ------------------------ */
-.action-base {
-    width: 1px;
-    background: #ffffff17;
-    height: calc(100% - 40px);
-    position: absolute;
-    left: 51px;
-    top: 10px;
-    margin-top: 10px;
-    opacity: 0 !important;
-}
-
-.action.showing-steps:not(.program) > .action-step-container > .action-base {
-    height: calc(100% - 80px);
-    top: 40px;
-    left: 80px;
-}
-
-.action.showing-steps.inline > .action-step-container > .action-base {
-    height: calc(100% - 50px);
-    top: 35px;
-    left: 65px;
-}
-
-.action:not(.showing-steps) > .action-step-container > .action-base {
-    display: none;
-}
-
-/* ----------------------- Bundle ----------------------- */
-.action-bundle {
-    background: #26262f;
-    border-radius: 7px;
-    padding: 0px 5px;
-    font-size: 14px;
-    font-weight: 600;
-    margin-left: -4px;
-    color: var(--s-color-2);
-    display: flex;
-    position: relative;
-    flex-direction: column;
-    margin: 9px;
-    margin-left: 34px;
-    width: fit-content;
-    font-family: Fira Code;
-}
-
-/* -------------------- Focused step -------------------- */
-.action.focused-step {
-    padding-top: 0px;
-    padding-bottom: 0px;
-}
-
-.action.showing-focused-step > .action-step-container > .action-base {
-    display: none;
-}
-
-.action.focused-step:last-child > .action-step-container > .action-base {
-    height: calc(100% + 20px);
-}
-
+/* ----------------------- Cursor ----------------------- */
 .action-cursor {
-    width: 5px;
-    height: 15px;
-    border-radius: 7px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
     position: absolute;
-    background: var(--color-2);
-    top: 25px;
+    background: var(--s-color-2);
+    top: 27px;
     z-index: 1;
-    left: -3px;
-    display: none;
+    left: 15px;
     cursor: pointer;
-    transition: 0.2s;
+    opacity: 0.7;
+
+    transition-property: transform, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in;
+
+    margin-top: 6px;
+
+    transform: scale(1);
 }
 
-.action:not(.inline):not(.program) > .action-cursor {
+.action:not(.is-inline):not(.program) > .action-cursor {
     top: 58px;
 }
 
 .action-cursor:hover {
-    background: var(--color-3);
+    opacity: 1;
+    transform: scale(1.1);
 }
 
-.action-cursor.active {
-    background: var(--s-color-5);
-}
-
-.action:not(.inline) > .action-cursor {
-    display: inherit;
+.action-cursor.is-dragging {
+    opacity: 1;
+    transform: scale(0.8);
 }
 
 /* -------------------- Expand button ------------------- */
 .action-expand-button {
     position: absolute;
-    left: 14px;
-    top: 9px;
+    left: -19px;
+    top: 10px;
     font-size: 14px;
-    opacity: 0;
+    opacity: 0.8;
     cursor: pointer;
 }
 
@@ -295,149 +188,45 @@
     opacity: 0.5;
 }
 
-/* ---------------------- Controls ---------------------- */
-.action-control-button {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.action-header:hover > .action-controls > .action-control-button {
-    opacity: inherit;
-    pointer-events: inherit;
-    opacity: 1;
-}
-
-.action-control-button {
-    width: 10px;
-    height: 10px;
-    font-size: 12px;
-    margin: 3px;
-    transform: scale(1);
-    // transition: 0.2s;
-    color: rgba(255, 255, 255, 0.349);
-    cursor: pointer;
-}
-
-.action-control-button.hidden {
-    display: none;
-}
-
-.action-control-button:hover {
-    color: white;
-    transform: scale(1.2);
-}
-
-.action-control-button:active,
-.action-control-button.active {
-    transform: scale(1);
-    color: white;
-    opacity: 1;
-}
-
-.action-controls {
-    position: absolute;
-    top: -4px;
-    display: flex;
-    left: -70px;
-    padding: 10px;
-    padding-left: 2px;
-    /* position: absolute; */
-    z-index: 5;
-    flex-direction: row-reverse;
-}
-
 /* -------------------- View Controls ------------------- */
-
-.action-view-container {
-    position: relative;
-    box-shadow: 0px 0px 20px 0px #11111491;
-}
-
-.action-view-container > .action-toggle-view {
-    pointer-events: inherit;
-    position: absolute;
-    opacity: 1;
-    height: 100%;
-    background: #1a1a1f;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: 0px;
-    cursor: pointer;
-    width: 25px;
-    font-size: 12px;
-    left: -25px;
-    transition: 0.2s;
-}
-
-.action-toggle-view .hidden {
-    display: none;
-}
-
-.action-toggle-view:hover {
-    color: white;
-    background: #1f1f25 !important;
-}
-
-.action-toggle-view:active,
-.action-toggle-view.active {
-    // color: white;
-    // opacity: 1;
-    // border-radius: 0px 5px 5px 0px;
-}
-
-.action-view-container > .action-toggle-view {
-    opacity: 0;
-    background: none;
-}
-
-.action:hover > .action-view-container > .action-toggle-view {
-    opacity: 1 !important;
-}
 
 .action:not(.program).showing-steps > .action-step-container > .action {
     margin-left: 15px;
 }
 
 /* ------------------- Action mapping ------------------- */
-.action-mapping-container {
-    background: #1b1b22;
-    display: flex;
-    margin-left: 20px;
-    justify-content: center;
-    // cursor: pointer;
+.action-mapping {
     transition: 0.2s;
+    display: grid;
+    margin-left: 20px;
+    background: #1b1b22;
+    min-width: 65px;
+    position: relative;
+    overflow: hidden;
 }
 
-.action-mapping-container:hover,
-.action-mapping-container:not(.hidden) {
+.action-mapping:hover {
     background: #202028;
 }
 
-.action.inline > .action-mapping-container {
-    display: none;
+.action-mapping:not(.is-hidden) {
+    // overflow-x: auto;
+    // overflow-y: hidden;
+    background: #202028;
 }
 
-.action-mapping {
-    transition: 0.2s;
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr;
+.action-mapping.is-hidden {
+    width: 4px;
+    min-width: 4px !important;
 }
 
-.action-mapping:not(.hidden) {
-    overflow: auto;
-}
-
-.action-mapping.hidden {
-    width: 2px;
-    min-width: 2px !important;
+.action-mapping.is-hidden > * {
     opacity: 0;
 }
 
-.action:hover > .action-mapping-container > .action-mapping.hidden {
-    width: 6px;
-    min-width: 6px !important;
+.action:hover > .action-mapping.is-hidden {
+    width: 8px;
+    min-width: 8px !important;
 }
 
 .action-mapping-step {
@@ -541,19 +330,6 @@
     color: white !important;
 }
 
-/* ----------------------- In-situ ---------------------- */
-.action.inline.in-situ {
-    position: absolute;
-}
-
-.action.in-situ > .action-step-container > .action-header > .action-pre-label {
-    display: none;
-}
-
-.action.in-situ > .action-step-container > .action-header > .action-label > span {
-    box-shadow: none;
-}
-
 .action-mapping-cursor {
     position: absolute;
     width: 2px;
@@ -592,7 +368,7 @@
     pointer-events: inherit;
 }
 
-.action.inline.temporal-overlap:not(.temporal-overlap-showing) {
+.action.is-inline.temporal-overlap:not(.temporal-overlap-showing) {
     display: none;
 }
 
@@ -614,9 +390,14 @@
 /* -------------------- Action proxy -------------------- */
 .action-proxy-container {
     display: flex;
+    margin: 5px;
 }
 
-.action-proxy-container.root {
+.action-proxy-container:not(:last-child) {
+    margin-bottom: 0px;
+}
+
+.action-mapping > .action-proxy-container {
     position: relative;
     left: 0px;
     grid-row-start: 1;
@@ -627,25 +408,22 @@
 }
 
 .action-proxy-container > .action-proxy-indicator {
-    background: #393947;
+    background: #31313a;
     border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    font-size: 10px;
-    font-family: Fira Code;
-    box-shadow: 0px 0px 3px 5px #202028;
+    // box-shadow: 0px 0px 3px 5px #202028;
 }
 
 .action-proxy-container.is-focused.is-focused-secondary > .action-proxy-indicator {
-    background: var(--s-color-4);
+    background: var(--s-color-0);
     opacity: 0.6;
 }
 
 .action-proxy-container.is-focused > .action-proxy-indicator {
-    background: var(--s-color-4);
     opacity: 1;
+    background: #7dd3fc30;
 }
 
 .action-proxy-steps {
@@ -677,8 +455,13 @@
 }
 
 .Test > .action-proxy-indicator {
-    height: 2px !important;
-    opacity: 0.5;
+    height: 10px !important;
+    width: 14px !important;
+}
+
+.Consequent > .action-proxy-indicator {
+    width: 23.48px !important;
+    height: 20.4px !important;
 }
 
 /* -------------------- Control flow -------------------- */
@@ -688,6 +471,7 @@ svg.control-flow-svg {
     position: absolute;
     top: 0px;
     left: 0px;
+    pointer-events: none;
 }
 
 @keyframes control-flow-show-stroke {
@@ -710,4 +494,47 @@ svg.control-flow-svg {
     stroke-dashoffset: 0;
     animation: showStroke 10s;
     animation-iteration-count: infinite;
+}
+
+/* ---------------- Action mapping break ---------------- */
+.action-mapping-break {
+    position: absolute;
+    width: 100%;
+    border-top: 2px solid #363649;
+}
+
+/* --------------------- Expressions -------------------- */
+.action.is-inline.is-expression {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background: #151519;
+}
+
+.action-header.is-hidden {
+    height: 0px;
+}
+
+.action-proxy-container.has-steps > .action-proxy-indicator {
+    background: #2828317a;
+    flex-direction: column;
+    align-items: flex-start;
+    width: auto !important;
+    height: auto !important;
+}
+
+.action-proxy-indicator.is-hovering {
+    background: #88d0f261;
+}
+
+.action-proxy-indicator.is-playing {
+    background: #88d0f261;
+}
+
+.action.is-playing > .action-step-container > .action-header {
+    background: #88d0f229;
+}
+
+.action.is-indented > .action-step-container > .action-header > .action-label {
+    margin-left: 44px;
 }

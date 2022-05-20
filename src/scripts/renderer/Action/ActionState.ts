@@ -14,30 +14,28 @@ export interface ActionState {
     }
     scale: number
 
-    spacingDelta: number
-    inline: boolean
-    inSitu: boolean
-
-    isFocusedStep: boolean
-    isSelected: boolean
-    isShowingView: boolean
+    // State
+    isInline: boolean
+    isIndented: boolean
+    isShowingSteps: boolean
+    isExpression: boolean
 }
 
 /* --------------------- Initializer -------------------- */
 let __ACTION_ID = 0
-export function createActionState(): ActionState {
-    return {
+export function createActionState(overrides: Partial<ActionState> = {}): ActionState {
+    const base: ActionState = {
         id: `Action(${++__ACTION_ID})`,
         position: {
             x: 0,
             y: 0,
         },
         scale: 1,
-        spacingDelta: 0,
-        inline: false,
-        inSitu: false,
-        isFocusedStep: false,
-        isSelected: false,
-        isShowingView: true,
+        isInline: false,
+        isIndented: false,
+        isShowingSteps: false,
+        isExpression: false,
     }
+
+    return { ...base, ...overrides }
 }

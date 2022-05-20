@@ -1,3 +1,4 @@
+import { clone } from '../../../../../utilities/objects'
 import { DataRenderer } from '../DataRenderer'
 import { DataState, TransformStyles } from '../DataState'
 
@@ -18,5 +19,7 @@ export class LiteralRenderer extends DataRenderer {
         } else {
             this.element.classList.remove('data-literal-string')
         }
+
+        this._cachedState = clone(data)
     }
 }

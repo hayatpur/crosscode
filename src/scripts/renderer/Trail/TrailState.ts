@@ -8,10 +8,13 @@ export enum TrailType {
     Create = 'Create',
     Move = 'Move',
     Delete = 'Delete',
+
+    PartialMove = 'PartialMove',
+    PartialCreate = 'PartialCreate',
 }
 
 export interface TrailState {
-    fromDataId?: string
+    fromDataIds?: string[]
     toDataId: string
     type: TrailType
 }

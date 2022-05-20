@@ -4,6 +4,8 @@ export class DataRenderer {
     element: HTMLDivElement
     array: DataRenderer[]
 
+    _cachedState: DataState | null = null
+
     constructor() {
         this.element = document.createElement('div')
         this.element.classList.add('data')

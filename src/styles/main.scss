@@ -49,8 +49,14 @@
 
 :root {
     --transition-type: cubic-bezier(0.21, -0.07, 0.32, 1.6);
-
     --focus-duration: 0.8s;
+}
+
+:root {
+    --code-font-family: 'Fira Code', monospace;
+    --code-font-size: 18px;
+    --code-font-letter-spacing: -0.5;
+    --code-font-line-height: 34px;
 }
 
 html {
@@ -73,7 +79,8 @@ body {
 }
 
 .tp-rotv {
-    background-color: var(--color-1) !important;
+    background: none !important;
+    box-shadow: none !important;
     font-family: Source Sans Pro !important;
     font-size: 13px !important;
 }
@@ -81,6 +88,33 @@ body {
 .tp-fldv_b,
 .tp-rotv_b {
     background-color: transparent !important;
+}
+
+.tp-fldv_m,
+.tp-rotv_m {
+    background: none !important;
+}
+
+.tp-fldv_t {
+    opacity: 0 !important;
+}
+
+.tp-rotv_b {
+    opacity: 0 !important;
+}
+
+.tp-lblv_l {
+    opacity: 0;
+}
+
+.tp-dfwv:hover .tp-lblv_l {
+    opacity: 1;
+}
+
+.tp-grlv_g,
+.tp-sglv_i,
+.tp-mllv_i {
+    background: none !important;
 }
 
 /* --------------------- SVG canvas --------------------- */

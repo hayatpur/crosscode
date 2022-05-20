@@ -110,7 +110,7 @@ export function declareVariable(
  */
 export function lookupVariable(environment: EnvironmentState, name: string): Accessor[] {
     for (let i = environment.scope.length - 1; i >= 0; i--) {
-        let scope = environment.scope[i]
+        const scope = environment.scope[i]
 
         if (name in scope.bindings) {
             return scope.bindings[name].location
@@ -129,7 +129,7 @@ export function lookupVariable(environment: EnvironmentState, name: string): Acc
  */
 export function cloneEnvironment(
     environment: EnvironmentState,
-    assignNewId: boolean = false
+    assignNewId = false
 ): EnvironmentState {
     return {
         _type: 'EnvironmentState',
@@ -303,7 +303,7 @@ export function resolve(
             }
         }
 
-        let data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[
+        const data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[
             accessor.value
         ]
 
@@ -344,8 +344,9 @@ export function resolvePath(
     if (path.length == 0) {
         return parent ?? root
     }
-    let resolution = resolve(root, path[0], srcId, parent, options)
-    let ret = resolvePath(root, path.slice(1), srcId, resolution, options)
+
+    const resolution = resolve(root, path[0], srcId, parent, options)
+    const ret = resolvePath(root, path.slice(1), srcId, resolution, options)
 
     return ret
 }
@@ -361,8 +362,8 @@ export function resolveFullPath(
         return [parent ?? root]
     }
 
-    let resolution = resolve(root, path[0], srcId, parent, options)
-    let ret = resolveFullPath(root, path.slice(1), srcId, resolution, options)
+    const resolution = resolve(root, path[0], srcId, parent, options)
+    const ret = resolveFullPath(root, path.slice(1), srcId, resolution, options)
 
     return [parent ?? root, ...ret]
 }
@@ -435,7 +436,8 @@ export function getMemoryLocation(
     parent: DataState | EnvironmentState | null = null
 ): { found: boolean; foundLocation: Accessor[] } {
     let search: { [id: string]: DataState } | { [id: number]: DataState } = {}
-    let isArray =
+
+    const isArray =
         parent != null &&
         instanceOfObjectData(parent) &&
         Array.isArray(parent.value) &&

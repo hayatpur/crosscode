@@ -1,4 +1,3 @@
-import { EnvironmentState } from '../../environment/EnvironmentState'
 import { Action } from '../Action/Action'
 import { TrailGroup } from '../Trail/TrailGroup'
 import { ViewController } from './ViewController'
@@ -9,26 +8,26 @@ import { createViewState, ViewState } from './ViewState'
 /*        View displays a series of program states        */
 /* ------------------------------------------------------ */
 export class View {
+    // Corresponding action
     action: Action
 
+    // State, renderer, controller
     state: ViewState
     renderer: ViewRenderer
     controller: ViewController
-    frames: EnvironmentState[] = []
-    trails: { [id: string]: TrailGroup } = {}
 
-    timeOffset: number = 0
+    // Like animation paths (that are acting on a given animation)
+    trails: TrailGroup[] = []
 
-    constructor(action: Action, timeOffset: number = 0) {
+    // Flag for if it needs to re-render
+    dirty: boolean = true
+
+    constructor(action: Action) {
         this.action = action
 
-        this.timeOffset = timeOffset
-
         this.state = createViewState()
-        this.renderer = new ViewRenderer()
+        this.renderer = new ViewRenderer(this)
         this.controller = new ViewController(this)
-
-        this.renderer.render(this)
     }
 
     /* ----------------------- Destroy ---------------------- */

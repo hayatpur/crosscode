@@ -4,6 +4,7 @@ import {
     AnimationTraceOperatorType,
     getAllBranches,
     getTrace,
+    traceChainsToString,
 } from '../../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
@@ -27,10 +28,8 @@ export class TrailGroup {
         this.execution = execution
 
         if (instanceOfExecutionGraph(execution)) {
-            console.log(execution.nodeData.type)
             const trailStates = getTrail(execution)
             for (const trailState of trailStates) {
-                // console.log(trailState)
                 const trail = new Trail(trailState, startEnvironment, endEnvironment, execution)
                 this.trails.push(trail)
             }
@@ -44,20 +43,6 @@ export class TrailGroup {
             trail.controller.updateTime(time)
         })
     }
-
-    render() {
-        this.trails.forEach((trail) => {
-            trail.renderer.render(trail)
-        })
-    }
-
-    // update(
-    //     execution: ExecutionGraph | ExecutionNode,
-    //     startEnvironment: EnvironmentRenderer,
-    //     endEnvironment: EnvironmentRenderer
-    // ) {
-
-    // }
 
     destroy() {
         this.trails.forEach((trail) => {
@@ -75,6 +60,8 @@ export class TrailGroup {
 
 export function getTrail(execution: ExecutionGraph) {
     const traces = getTrace(execution)
+    traceChainsToString(traces, true)
+
     const preDataKeys = getRelevantFlatData(execution.precondition).map((data) =>
         instanceOfData(data) ? data.id : data.name
     )
@@ -132,7 +119,7 @@ export function convertEndOperationsAndLeavesToTrails(
         AnimationTraceOperatorType.MoveAndPlace,
     ]
 
-    // Trace types
+    // Create types
     const createTypes: AnimationTraceOperatorType[] = [
         AnimationTraceOperatorType.CreateArray,
         AnimationTraceOperatorType.CreateLiteral,
@@ -143,18 +130,37 @@ export function convertEndOperationsAndLeavesToTrails(
     let effects: TrailState[] = []
     let creates: TrailState[] = []
 
+    // Partial move if multiple data affected it
+    let partial = leaves.length > 1
+
     for (let i = 0; i < endOperations.length; i++) {
         const op = endOperations[i]
         const leaf = leaves[i]
 
         if (effectTypes.includes(op.type)) {
             effects.push({
-                type: TrailType.Move,
-                fromDataId: leaf.value.id,
+                type: partial ? TrailType.PartialMove : TrailType.Move,
+                fromDataIds: [leaf.value.id],
                 toDataId: dataId,
             })
         }
     }
+
+    if (partial) {
+        effects.push({
+            type: TrailType.PartialCreate,
+            fromDataIds: leaves.map((leaf) => leaf.value?.id),
+            toDataId: dataId,
+        })
+    }
+
+    // if (effects.length > 1) {
+    //     // TODO: If for the same data
+    //     effects.forEach((effect) => {
+    //         effect.type = TrailType.PartialMove
+    //     })
+    //     // TODO: Transition in the data
+    // }
 
     if (effects.length == 0) {
         for (let i = 0; i < endOperations.length; i++) {

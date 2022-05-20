@@ -1,52 +1,45 @@
 import { Editor } from '../../editor/Editor'
-import { Executor } from '../../executor/Executor'
+import { isExpandable } from '../../utilities/action'
 import { createEl } from '../../utilities/dom'
-import { getNumericalValueOfStyle } from '../../utilities/math'
+import { Ticker } from '../../utilities/Ticker'
 import { Action } from './Action'
+import { getLeafSteps } from './Mapping/ControlFlow'
 
 /* ------------------------------------------------------ */
 /*                     Action Renderer                    */
 /* ------------------------------------------------------ */
 export class ActionRenderer {
+    action: Action
+
     // Parent element
     element: HTMLElement
+
+    // Container of all sub-steps
+    stepContainer: HTMLElement
 
     // Header
     header: HTMLElement
     headerLabel: HTMLElement
-    headerPreLabel: HTMLElement
+    headerLineLabel: HTMLElement
 
     // Footer
     footer: HTMLElement
     footerLabel: HTMLElement
-    footerPreLabel: HTMLElement
-
-    // Timeline
-    baseElement: HTMLElement
-
-    // Body contains a timeline
-    // body: HTMLElement
-    stepContainer: HTMLElement
-    viewContainer: HTMLElement
+    footerLineLabel: HTMLElement
 
     // Expandable
     expandButton: HTMLElement
 
-    // Controls
-    // controlsContainer: HTMLElement
-    // controls: HTMLElement[]
-
-    // View controls
-    // toggleView: HTMLElement
-    mappingContainer: HTMLElement
-
-    representationIndicatorContainer: HTMLElement
+    private _tickerId: string
 
     /* ----------------------- Create ----------------------- */
+    constructor(action: Action) {
+        this.action = action
 
-    constructor() {
         // Create dom elements
         this.create()
+
+        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
     }
 
     create() {
@@ -54,188 +47,105 @@ export class ActionRenderer {
 
         // Body
         this.stepContainer = createEl('div', 'action-step-container', this.element)
-        this.mappingContainer = createEl('div', 'action-mapping-container', this.element)
-        this.viewContainer = createEl('div', 'action-view-container', this.element)
 
         // Header
         this.header = createEl('div', 'action-header', this.stepContainer)
-        this.headerPreLabel = createEl('div', 'action-pre-label', this.header)
         this.headerLabel = createEl('div', 'action-label', this.header)
-
-        // Timeline
-        this.baseElement = createEl('div', 'action-base', this.element)
+        this.headerLineLabel = createEl('div', 'action-line-label', this.header)
 
         // Footer
         this.footer = createEl('div', 'action-footer', this.stepContainer)
-        this.footerPreLabel = createEl('div', 'action-pre-label', this.footer)
         this.footerLabel = createEl('div', 'action-label', this.footer)
+        this.footerLineLabel = createEl('div', 'action-line-label', this.footer)
 
-        this.expandButton = createEl('div', 'action-expand-button')
-
-        // Representation
-        this.representationIndicatorContainer = createEl(
-            'div',
-            'action-representation-indicator-container',
-            this.header
-        )
-
-        // Controls
-        // this.controlsContainer = createEl('div', 'action-controls', this.header)
-        // this.controls = []
-        // for (const label of ['A', 'B', 'C', 'D', 'E']) {
-        //     const control = createEl('div', 'action-control-button', this.controlsContainer)
-        //     control.innerHTML = label
-        //     control.classList.add(`hidden`)
-        //     this.controls.push(control)
-        // }
-
-        // View controls
-        // this.toggleView = createEl('div', 'action-toggle-view', this.viewContainer)
-        // this.toggleView.innerHTML = '<ion-icon name="chevron-back-outline"></ion-icon>'
+        if (isExpandable(this.action.execution)) {
+            this.expandButton = createEl('div', 'action-expand-button', this.element)
+        }
     }
 
     /* ----------------------- Render ----------------------- */
+    tick(dt: number) {
+        if (!this.action.dirty) return
 
-    render(action: Action) {
-        // Set label
-        // this.preLabel.innerHTML = action.execution.nodeData.preLabel ?? ''
+        this.updateClasses()
+        this.renderSteps()
+        this.action.representation.update()
+        this.action.mapping?.update()
 
-        // if (action.timeline.state.isRoot) {
-        //     // TODO Fix
-        //     this.preLabel.innerHTML = getLabelOfExecution(action.execution)
-        // }
-        // console.warn(action.state.isShowingView, action.execution.nodeData.type)
+        if (!this.action.state.isInline) {
+            this.action.view.controller.setFrames(
+                getLeafSteps(this.action.steps).map((step) => [
+                    step.execution.postcondition,
+                    step.state.id,
+                ]),
+                this.action.execution.precondition
+            )
+        }
 
-        this.updateClasses(action)
-
-        this.renderSteps(action)
-        this.renderViews(action)
-
-        // Update mapping
-        setTimeout(() => action.mapping?.render(), 100)
+        this.action.dirty = false
     }
 
-    updateClasses(action: Action) {
+    updateClasses() {
         // Set classes
-        action.execution.nodeData.type == 'Program'
-            ? this.element.classList.add('program')
-            : this.element.classList.remove('program')
+        this.action.execution.nodeData.type == 'Program'
+            ? this.element.classList.add('is-program')
+            : this.element.classList.remove('is-program')
 
-        action.steps.length > 0
-            ? this.element.classList.add('showing-steps')
-            : this.element.classList.remove('showing-steps')
+        this.action.steps.length > 0
+            ? this.element.classList.add('is-showing-steps')
+            : this.element.classList.remove('is-showing-steps')
 
-        action.state.inline
-            ? this.element.classList.add('inline')
-            : this.element.classList.remove('inline')
+        this.action.state.isInline
+            ? this.element.classList.add('is-inline')
+            : this.element.classList.remove('is-inline')
 
-        action.state.isFocusedStep
-            ? this.element.classList.add('focused-step')
-            : this.element.classList.remove('focused-step')
+        this.action.state.isExpression
+            ? this.element.classList.add('is-expression')
+            : this.element.classList.remove('is-expression')
 
-        action.state.isShowingView
-            ? this.element.classList.add('showing-view')
-            : this.element.classList.remove('showing-view')
-
-        action.state.inSitu
-            ? this.element.classList.add('in-situ')
-            : this.element.classList.remove('in-situ')
-
-        action.skipOver
-            ? this.element.classList.add('skip-over')
-            : this.element.classList.remove('skip-over')
+        this.action.state.isIndented
+            ? this.element.classList.add('is-indented')
+            : this.element.classList.remove('is-indented')
     }
 
-    renderSteps(action: Action) {
-        // Set position of steps and views
+    renderSteps() {
         this.stepContainer.innerHTML = ''
+
+        // Set position of steps and views
         this.stepContainer.appendChild(this.header)
-        this.stepContainer.appendChild(this.baseElement)
-        if (action.steps.length > 0) {
-            for (let i = 0; i < action.steps.length; i++) {
-                const step = action.steps[i]
 
-                if (step.state.inSitu) {
-                    // For statement
-                    if (action.execution.nodeData.type == 'ForStatement') {
-                        let headerSteps = new Set<string>(['Initial', 'Test', 'Update'])
-                        if (headerSteps.has(step.execution.nodeData.preLabel)) {
-                            this.stepContainer.appendChild(step.renderer.element)
-                            const stepBbox = Editor.instance.computeBoundingBoxForLoc(
-                                step.execution.nodeData.location
-                            )
-                            const parentBbox = Editor.instance.computeBoundingBoxForLoc(
-                                action.execution.nodeData.location
-                            )
+        if (this.action.steps.length > 0) {
+            let line = this.action.steps[0]?.execution.nodeData.location.end.line
 
-                            step.renderer.element.style.left = `${stepBbox.x - parentBbox.x + 17}px`
-                            step.renderer.element.style.top = `${stepBbox.y - parentBbox.y}px`
-                        } else {
-                            step.renderer.element.style.left = `30px`
-                            step.renderer.element.style.top = `35px`
-                        }
-                    }
-                    // Others
-                    else {
-                        this.stepContainer.appendChild(step.renderer.element)
-                        const stepBbox = Editor.instance.computeBoundingBoxForLoc(
-                            step.execution.nodeData.location
-                        )
-                        const parentBbox = Editor.instance.computeBoundingBoxForLoc(
-                            action.execution.nodeData.location
-                        )
+            for (let i = 0; i < this.action.steps.length; i++) {
+                const step = this.action.steps[i]
 
-                        const stepX = stepBbox.x - parentBbox.x
-                        const stepY = stepBbox.y - parentBbox.y
-
-                        step.renderer.element.style.left = `${stepX + 2}px`
-                        step.renderer.element.style.top = `${stepY}px`
-                    }
+                if (step.execution.nodeData.location.start.line > line + 1) {
+                    const newLine = createEl('div', 'action-step-newline', this.stepContainer)
+                    newLine.innerText = `${line + 1}`
                 }
-                if (step.state.inline) {
+
+                if (step.state.isExpression) {
                     this.stepContainer.appendChild(step.renderer.element)
 
-                    if (step instanceof Action && step.state.isFocusedStep) {
-                        // Move to where the focus is
-                        const area = action.interactionAreas.find(
-                            (area) => area.execution == step.execution
-                        )
-                        if (area) {
-                            const left = getNumericalValueOfStyle(area.element.style.left, 0)
-                            step.state.position.x = left
-                        }
-                    }
-                } else {
-                    // TODO: Why is this executing every frame?
-                    // console.warn('Rendering step')
-                    // Set position
-                    const thisBbox = this.element.getBoundingClientRect()
-                    const stepBbox = step.renderer.element.getBoundingClientRect()
-                    const vizBbox = Executor.instance.visualization.element.getBoundingClientRect()
-                    const camera = Executor.instance.visualization.camera
+                    const stepBbox = Editor.instance.computeBoundingBoxForLoc(
+                        step.execution.nodeData.location
+                    )
+                    const parentBbox = Editor.instance.computeBoundingBoxForLoc(
+                        this.action.execution.nodeData.location
+                    )
 
-                    step.state.position.x =
-                        thisBbox.x + thisBbox.width - vizBbox.x - camera.state.position.x + 100
-                    step.state.position.y = Executor.instance.visualization.root.state.position.y
-                    step.renderer.render(step)
-                    // camera.state.position.y
+                    step.renderer.element.style.left = `${stepBbox.x - parentBbox.x + 2}px`
+                    step.renderer.element.style.top = `${stepBbox.y - parentBbox.y}px`
+                } else if (step.state.isInline) {
+                    this.stepContainer.appendChild(step.renderer.element)
                 }
+
+                line = step.execution.nodeData.location.end.line
             }
         }
+
         this.stepContainer.appendChild(this.footer)
-    }
-
-    renderViews(action: Action) {
-        // Set position of steps and views
-        this.viewContainer.innerHTML = ''
-
-        if (action.state.isShowingView) {
-            // View
-            for (let i = 0; i < action.views.length; i++) {
-                const view = action.views[i]
-                this.viewContainer.appendChild(view.renderer.element)
-            }
-        }
     }
 
     /* ----------------------- Destroy ---------------------- */
@@ -243,14 +153,18 @@ export class ActionRenderer {
     destroy() {
         this.element.remove()
 
+        Ticker.instance.removeTickFrom(this._tickerId)
+
         this.element = null
 
         this.header = null
         this.headerLabel = null
-        this.headerPreLabel = null
+        this.headerLineLabel = null
 
         this.footer = null
         this.footerLabel = null
-        this.footerPreLabel = null
+        this.footerLineLabel = null
+
+        this.stepContainer = null
     }
 }

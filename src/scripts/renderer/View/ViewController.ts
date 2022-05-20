@@ -1,3 +1,7 @@
+import { EnvironmentState } from '../../environment/EnvironmentState'
+import { Action } from '../Action/Action'
+import { TrailGroup } from '../Trail/TrailGroup'
+import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
 import { View } from './View'
 
 export class ViewController {
@@ -7,50 +11,64 @@ export class ViewController {
 
     constructor(view: View) {
         this.view = view
-
-        this.setFrames()
     }
 
-    setFrames() {
-        this.view.frames = []
-
-        // Start with the frames of the action
-        const allSteps = this.view.action.getAllFrames()
-
-        this.view.frames.push(this.view.action.execution.precondition)
-        allSteps.forEach((step) => this.view.frames.push(step.execution.postcondition))
-        this.view.frames.push(this.view.action.execution.postcondition)
-
-        this.view.renderer.render(this.view)
-
-        console.log('Setting frames...', this.view.frames.length)
+    createStep() {
+        const renderer = new EnvironmentRenderer()
+        this.view.renderer.element.appendChild(renderer.element)
+        return renderer
     }
 
-    toggleHidden() {
-        this.view.renderer.element.classList.toggle('hidden')
-    }
+    /* -------------------- Modify State -------------------- */
+    setFrames(frames: [env: EnvironmentState, actionId: string][], preFrame: EnvironmentState) {
+        console.log('Updating frames...', frames.length)
+        /* -------------------- Update frames ------------------- */
 
-    // setExecutions(frames: EnvironmentState[], filter?: string[]) {
-    //     this.view.frames = frames
-    //     this.view.renderer.render(this.view, filter)
-    // }
+        this.view.state.frames = frames.map(([env, actionId]) => env)
+        this.view.renderer.syncFrames()
+
+        this.view.state.preFrame = preFrame
+
+        /* -------------------- Update trails ------------------- */
+
+        // Clean up existing ones
+        Object.values(this.view.trails).forEach((trail) => trail.destroy())
+
+        this.view.trails = []
+
+        // TODO: Trails
+        for (let i = 0; i < frames.length; i++) {
+            const [env, actionId] = frames[i]
+            const action = Action.all[actionId]
+
+            const trailGroup = new TrailGroup(
+                action.execution,
+                i == 0 ? this.view.renderer.preRenderer : this.view.renderer.renderedFrames[i - 1],
+                this.view.renderer.renderedFrames[i]
+            )
+            this.view.trails.push(trailGroup)
+        }
+
+        // Update dirty flag
+        this.view.dirty = true
+    }
 
     /* ------------------------ Focus ----------------------- */
 
     secondaryFocus(dataIds: Set<string>) {
-        for (const env of this.view.renderer.environmentRenderers) {
+        for (const env of this.view.renderer.renderedFrames) {
             env.secondaryFocus(dataIds)
         }
     }
 
     focus(dataIds: Set<string>) {
-        for (const env of this.view.renderer.environmentRenderers) {
+        for (const env of this.view.renderer.renderedFrames) {
             env.focus(dataIds)
         }
     }
 
     clearFocus() {
-        for (const env of this.view.renderer.environmentRenderers) {
+        for (const env of this.view.renderer.renderedFrames) {
             env.clearFocus()
         }
     }

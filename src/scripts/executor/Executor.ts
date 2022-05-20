@@ -85,7 +85,7 @@ export class Executor {
 
         // const [output, url] = animationToString(this.execution, 0, { first: false }, true)
         // console.log(url)
-        this.visualization = new Visualization(this.execution)
+        this.visualization = new Visualization()
         this.visualization.createRoot(this.execution)
 
         // TODO: Maintain layout from last time

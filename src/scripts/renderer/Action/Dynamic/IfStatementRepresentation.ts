@@ -1,15 +1,32 @@
 import * as monaco from 'monaco-editor'
 import { Editor } from '../../../editor/Editor'
 import { Action } from '../Action'
+import { Representation } from './Representation'
 
-/* ------------------------------------------------------ */
-/*              Abstract representation class             */
-/* ------------------------------------------------------ */
-export class Representation {
-    action: Action
+export class IfStatementRepresentation extends Representation {
+    isExpanded: boolean = false
 
     constructor(action: Action) {
-        this.action = action
+        super(action)
+
+        action.controller.createSteps()
+
+        action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
+
+        action.renderer.expandButton.addEventListener('click', () => {
+            // Create steps
+            if (!this.isExpanded) {
+                const body = this.action.steps[1]
+                body.controller.createSteps()
+                action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-down-outline"></ion-icon>`
+                this.isExpanded = true
+            } else {
+                const body = this.action.steps[1]
+                body.controller.destroySteps()
+                action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
+                this.isExpanded = false
+            }
+        })
     }
 
     update() {
@@ -33,10 +50,11 @@ export class Representation {
         let footerLineNumbers = null
         let headerLineNumbers = this.action.execution.nodeData.location.start.line.toString()
 
-        if (this.action.state.isExpression && this.action.state.isInline) {
-            // Inline expression
-            headerLineNumbers = ''
-        }
+        // If statement
+        let upTill = headerLabel.substring(0, headerLabel.indexOf('{')).trim()
+        headerLabel = `${upTill} {`
+        footerLabel = '}'
+        footerLineNumbers = `${(this.action.execution.nodeData.location.end.line + 1).toString()}`
 
         // Set the line numbers
         this.action.renderer.headerLineLabel.innerText = headerLineNumbers
