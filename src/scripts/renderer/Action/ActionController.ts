@@ -30,19 +30,26 @@ export class ActionController {
             this.action.steps.push(action)
         }
 
+        this.action.state.isShowingSteps = true
+
         if (!this.action.state.isInline) {
             // Update the mapping
             this.action.mapping.dirty = true
 
             // Update the view
-            this.action.view.controller.setFrames(
-                this.action.steps.map((step) => [step.execution.postcondition, step.state.id]),
-                this.action.execution.precondition
-            )
+            this.updateFrames()
         }
 
         getActionSpatialRoot(this.action).dirty = true
         this.action.dirty = true
+    }
+
+    updateFrames() {
+        // TODO Dynamic mapping!
+        this.action.view.controller.setFrames(
+            this.action.representation.getFrames(),
+            this.action.execution.precondition
+        )
     }
 
     destroySteps() {

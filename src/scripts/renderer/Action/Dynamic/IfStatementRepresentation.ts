@@ -1,5 +1,6 @@
 import * as monaco from 'monaco-editor'
 import { Editor } from '../../../editor/Editor'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { Action } from '../Action'
 import { Representation } from './Representation'
 
@@ -76,6 +77,13 @@ export class IfStatementRepresentation extends Representation {
                 }
             })
         }
+    }
+
+    getFrames(): [env: EnvironmentState, actionId: string][] {
+        const steps = this.action.steps.filter((item, i) => i != 0)
+        console.log('Getting if statement frames...', steps.length)
+
+        return steps.map((step) => [step.execution.postcondition, step.state.id])
     }
 
     destroy() {}

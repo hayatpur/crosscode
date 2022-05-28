@@ -136,7 +136,7 @@
     height: 10px;
     border-radius: 50%;
     position: absolute;
-    background: var(--s-color-2);
+    background: var(--s-color-3);
     top: 27px;
     z-index: 1;
     left: 15px;
@@ -149,7 +149,7 @@
 
     margin-top: 6px;
 
-    transform: scale(1);
+    transform: scale(0.7);
 }
 
 .action:not(.is-inline):not(.program) > .action-cursor {
@@ -158,12 +158,12 @@
 
 .action-cursor:hover {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(0.8);
 }
 
 .action-cursor.is-dragging {
     opacity: 1;
-    transform: scale(0.8);
+    transform: scale(0.6);
 }
 
 /* -------------------- Expand button ------------------- */
@@ -200,7 +200,7 @@
     display: grid;
     margin-left: 20px;
     background: #1b1b22;
-    min-width: 65px;
+    min-width: 110px;
     position: relative;
     overflow: hidden;
 }
@@ -210,9 +210,8 @@
 }
 
 .action-mapping:not(.is-hidden) {
-    // overflow-x: auto;
-    // overflow-y: hidden;
     background: #202028;
+    padding-left: 10px;
 }
 
 .action-mapping.is-hidden {
@@ -389,41 +388,15 @@
 
 /* -------------------- Action proxy -------------------- */
 .action-proxy-container {
-    display: flex;
-    margin: 5px;
-}
-
-.action-proxy-container:not(:last-child) {
-    margin-bottom: 0px;
-}
-
-.action-mapping > .action-proxy-container {
     position: relative;
-    left: 0px;
+
+    display: grid;
     grid-row-start: 1;
     grid-column-start: 1;
-    // background: #ffffff0f;
-    align-items: center;
-    padding: 0px 10px;
-}
 
-.action-proxy-container > .action-proxy-indicator {
-    background: #31313a;
+    background: var(--color-2);
     border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    // box-shadow: 0px 0px 3px 5px #202028;
-}
-
-.action-proxy-container.is-focused.is-focused-secondary > .action-proxy-indicator {
-    background: var(--s-color-0);
-    opacity: 0.6;
-}
-
-.action-proxy-container.is-focused > .action-proxy-indicator {
-    opacity: 1;
-    background: #7dd3fc30;
+    box-shadow: 0px 0px 5px 4px #202028;
 }
 
 .action-proxy-steps {
@@ -434,34 +407,72 @@
     margin-bottom: 12px;
 }
 
-.action-proxy-container > .action-proxy-steps {
+.action-proxy-container.has-steps {
+    background: #31313a5c;
+    box-shadow: none !important;
+}
+
+.action-proxy-container > .action-proxy-container {
+    // box-shadow: 0px 0px 5px 4px #26262f;
+    box-shadow: none;
 }
 
 /* ----------------- AST Specific Styles ---------------- */
 
-.Body > .action-proxy-indicator {
-    height: 18px !important;
-    width: 59px !important;
+// .Body > .action-proxy-indicator {
+//     height: 18px !important;
+//     width: 59px !important;
+// }
+
+// .Update > .action-proxy-indicator {
+//     height: 2px !important;
+//     opacity: 0.5;
+// }
+
+// .Initial > .action-proxy-indicator {
+//     height: 2px !important;
+//     opacity: 0.5;
+// }
+
+.action-proxy-container.Test {
+    height: 15px !important;
+    width: 15px !important;
+    left: 6px !important;
+    top: -6px !important;
+    box-shadow: none;
+    background: #323d3f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.Update > .action-proxy-indicator {
-    height: 2px !important;
-    opacity: 0.5;
+.action-proxy-container.Test > ion-icon.md.hydrated {
+    font-size: 10px;
+    --ionicon-stroke-width: 79px;
+    color: #6ee7b7;
 }
 
-.Initial > .action-proxy-indicator {
-    height: 2px !important;
-    opacity: 0.5;
+.action-proxy-container.Consequent:not(.has-steps) {
+    width: 40px !important;
+    height: 40px !important;
+    top: 16px !important;
+    left: 6px !important;
 }
 
-.Test > .action-proxy-indicator {
-    height: 10px !important;
-    width: 14px !important;
+._IfStatement > .action-proxy-indicator {
+    background: none !important;
+    padding-left: 17px;
+    box-shadow: none !important;
 }
 
-.Consequent > .action-proxy-indicator {
-    width: 23.48px !important;
-    height: 20.4px !important;
+._IfStatement > .action-proxy-indicator::before {
+    content: 'if';
+    font-family: var(--code-font-family);
+    font-size: 14px;
+    position: absolute;
+    top: 3px;
+    opacity: 0.8;
+    left: -3px;
 }
 
 /* -------------------- Control flow -------------------- */
@@ -488,11 +499,12 @@ svg.control-flow-svg {
 
 .control-flow-path {
     fill: none;
-    stroke: #393947;
+    stroke: var(--s-color-3);
     stroke-width: 1.5px;
-    stroke-dasharray: 4px 5px;
+    stroke-dasharray: 10px 2px;
     stroke-dashoffset: 0;
     animation: showStroke 10s;
+    opacity: 0.4;
     animation-iteration-count: infinite;
 }
 
@@ -513,26 +525,6 @@ svg.control-flow-svg {
 
 .action-header.is-hidden {
     height: 0px;
-}
-
-.action-proxy-container.has-steps > .action-proxy-indicator {
-    background: #2828317a;
-    flex-direction: column;
-    align-items: flex-start;
-    width: auto !important;
-    height: auto !important;
-}
-
-.action-proxy-indicator.is-hovering {
-    background: #88d0f261;
-}
-
-.action-proxy-indicator.is-playing {
-    background: #88d0f261;
-}
-
-.action.is-playing > .action-step-container > .action-header {
-    background: #88d0f229;
 }
 
 .action.is-indented > .action-step-container > .action-header > .action-label {

@@ -60,14 +60,14 @@ export class ViewRenderer {
             const proxy = steps[i].proxy
 
             const start = proxy.timeOffset
-            const end = start + proxy.indicator.getBoundingClientRect().height
+            const end = start + proxy.element.getBoundingClientRect().height
             candidate = i
 
             if (time >= start) {
                 amount = Math.min(remap(time, start, end, 0, 1), 1)
                 if (time <= end) {
                     proxy.action.renderer.element.classList.add('is-playing')
-                    proxy.indicator.classList.add('is-playing')
+                    proxy.element.classList.add('is-playing')
                 }
 
                 break
@@ -77,17 +77,13 @@ export class ViewRenderer {
         for (let i = 0; i < steps.length; i++) {
             if (i != candidate) {
                 steps[i].proxy.action.renderer.element.classList.remove('is-playing')
-                steps[i].proxy.indicator.classList.remove('is-playing')
+                steps[i].proxy.element.classList.remove('is-playing')
             }
         }
-
-        // console.log(candidate, amount)
 
         if (candidate == -1) {
             return
         }
-
-        // if (!this.view.dirty) return
 
         // Show the current frame
         for (let i = 0; i < this.renderedFrames.length; i++) {

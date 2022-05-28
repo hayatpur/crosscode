@@ -1,5 +1,6 @@
 import * as monaco from 'monaco-editor'
 import { Editor } from '../../../editor/Editor'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { Action } from '../Action'
 
 /* ------------------------------------------------------ */
@@ -57,6 +58,19 @@ export class Representation {
                     this.action.renderer.footerLabel.innerHTML = result
                 }
             })
+        }
+    }
+
+    // Get frames should call get frames of each step.
+    getFrames(): [env: EnvironmentState, actionId: string][] {
+        if (this.action.steps.length == 0) {
+            return [[this.action.execution.postcondition, this.action.state.id]]
+        } else {
+            const frames = []
+            for (const step of this.action.steps) {
+                frames.push(...step.representation.getFrames())
+            }
+            return frames
         }
     }
 

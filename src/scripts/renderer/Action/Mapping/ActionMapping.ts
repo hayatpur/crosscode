@@ -81,15 +81,14 @@ export class ActionMapping {
         /* --------------- Update proxy positions --------------- */
         const thisBbox = this.element.getBoundingClientRect()
 
-        for (const [stepId, proxy] of Object.entries(this.proxySteps)) {
-            const step = this.action.steps.find((step) => step.execution.id === stepId)
+        // for (const [stepId, proxy] of Object.entries(this.proxySteps)) {
+        //     const step = this.action.steps.find((step) => step.execution.id === stepId)
 
-            const bbox = step.renderer.element.getBoundingClientRect()
-            const bboxHeader = step.renderer.header.getBoundingClientRect()
+        //     const bbox = step.renderer.element.getBoundingClientRect()
 
-            proxy.element.style.top = `${bbox.top - thisBbox.y}px`
-            proxy.element.style.height = `${bbox.height}px`
-        }
+        //     proxy.element.style.top = `${bbox.top - thisBbox.y}px`
+        //     proxy.element.style.height = `${bbox.height}px`
+        // }
 
         /* -------------------- Update breaks ------------------- */
         for (let i = 0; i < this.breaks.length; i++) {

@@ -3,7 +3,6 @@ import { isExpandable } from '../../utilities/action'
 import { createEl } from '../../utilities/dom'
 import { Ticker } from '../../utilities/Ticker'
 import { Action } from './Action'
-import { getLeafSteps } from './Mapping/ControlFlow'
 
 /* ------------------------------------------------------ */
 /*                     Action Renderer                    */
@@ -73,13 +72,7 @@ export class ActionRenderer {
         this.action.mapping?.update()
 
         if (!this.action.state.isInline) {
-            this.action.view.controller.setFrames(
-                getLeafSteps(this.action.steps).map((step) => [
-                    step.execution.postcondition,
-                    step.state.id,
-                ]),
-                this.action.execution.precondition
-            )
+            this.action.controller.updateFrames()
         }
 
         this.action.dirty = false

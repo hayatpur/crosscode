@@ -21,9 +21,7 @@ export class ViewController {
 
     /* -------------------- Modify State -------------------- */
     setFrames(frames: [env: EnvironmentState, actionId: string][], preFrame: EnvironmentState) {
-        console.log('Updating frames...', frames.length)
         /* -------------------- Update frames ------------------- */
-
         this.view.state.frames = frames.map(([env, actionId]) => env)
         this.view.renderer.syncFrames()
 
@@ -33,7 +31,6 @@ export class ViewController {
 
         // Clean up existing ones
         Object.values(this.view.trails).forEach((trail) => trail.destroy())
-
         this.view.trails = []
 
         // TODO: Trails
@@ -54,7 +51,6 @@ export class ViewController {
     }
 
     /* ------------------------ Focus ----------------------- */
-
     secondaryFocus(dataIds: Set<string>) {
         for (const env of this.view.renderer.renderedFrames) {
             env.secondaryFocus(dataIds)

@@ -113,7 +113,7 @@ export class ActionMappingCursor {
                 const proxy = steps[i].proxy
 
                 const start = proxy.timeOffset
-                const end = start + proxy.indicator.getBoundingClientRect().height
+                const end = start + proxy.element.getBoundingClientRect().height
 
                 candidate = i
 

@@ -28,11 +28,11 @@ export class ActionInteractionArea {
 
         // Hover
         this.element.addEventListener('mouseenter', (e: MouseEvent) => {
-            this.parentAction.proxy.indicator.classList.add('is-hovering')
+            this.parentAction.proxy.element.classList.add('is-hovering')
         })
 
         this.element.addEventListener('mouseleave', (e: MouseEvent) => {
-            this.parentAction.proxy.indicator.classList.remove('is-hovering')
+            this.parentAction.proxy.element.classList.remove('is-hovering')
         })
     }
 
@@ -79,7 +79,7 @@ export class ActionInteractionArea {
         const paddingY = 0
 
         // Set size
-        this.element.style.width = `${bbox.width + paddingX * 2}px`
+        this.element.style.width = `${bbox.width + paddingX * 2 + 9}px`
         this.element.style.height = `${bbox.height + paddingY * 2}px`
 
         // Set position relative to parent

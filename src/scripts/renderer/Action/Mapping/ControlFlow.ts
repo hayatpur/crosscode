@@ -43,7 +43,7 @@ export class ControlFlow {
 
     update() {
         // Get all control flow points
-        const controlFlowPoints = [[20, 0]]
+        const controlFlowPoints = [[26, 0]]
 
         const containerBbox = this.container.getBoundingClientRect()
 
@@ -72,7 +72,7 @@ export class ControlFlow {
             const next = steps[0]
             if (next == null) return
 
-            const nextIndicatorBBox = next.proxy.indicator.getBoundingClientRect()
+            const nextIndicatorBBox = next.proxy.element.getBoundingClientRect()
 
             // const dx = Math.abs(nextIndicatorBBox.x - point.x + 30)
             const dy = Math.abs(nextIndicatorBBox.y - point.y)

@@ -4,7 +4,6 @@ import {
     AnimationTraceOperatorType,
     getAllBranches,
     getTrace,
-    traceChainsToString,
 } from '../../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
@@ -60,7 +59,7 @@ export class TrailGroup {
 
 export function getTrail(execution: ExecutionGraph) {
     const traces = getTrace(execution)
-    traceChainsToString(traces, true)
+    // traceChainsToString(traces, true)
 
     const preDataKeys = getRelevantFlatData(execution.precondition).map((data) =>
         instanceOfData(data) ? data.id : data.name

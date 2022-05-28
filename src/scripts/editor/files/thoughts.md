@@ -453,3 +453,6 @@ What does it mean for a collection of CSs to learn?
 Previous: seperated two underlying components of attention competion, one governing representation, based on how realiable a CS is at predicting a US, and one genering learning, based on how uncertain to the quatnaative prediction made of a US by a (reliable or unrealiable) CS.
 
 Goal: provide rational accounts for sensory attention
+
+
+
