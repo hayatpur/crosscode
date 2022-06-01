@@ -79,6 +79,14 @@ export class ViewRenderer {
                 steps[i].proxy.action.renderer.element.classList.remove('is-playing')
                 steps[i].proxy.element.classList.remove('is-playing')
             }
+
+            if (i < candidate) {
+                steps[i].proxy.action.renderer.element.classList.add('has-played')
+                steps[i].proxy.element.classList.add('has-played')
+            } else {
+                steps[i].proxy.action.renderer.element.classList.remove('has-played')
+                steps[i].proxy.element.classList.remove('has-played')
+            }
         }
 
         if (candidate == -1) {

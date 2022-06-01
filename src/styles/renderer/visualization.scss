@@ -45,7 +45,7 @@
     right: 40px;
     bottom: 40px;
     background: #ffffff03;
-    border-radius: 7px;
+    border-radius: var(--border-radius);
     border: 1px solid var(--color-1);
     overflow: hidden;
     // display: none;

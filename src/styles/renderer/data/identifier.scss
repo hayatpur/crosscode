@@ -1,6 +1,6 @@
 .identifier {
     font-size: 12px;
-    border-radius: 5px;
+    border-radius: var(--border-radius);
     font-family: var(--code-font-family);
     font-weight: 300;
     color: white;

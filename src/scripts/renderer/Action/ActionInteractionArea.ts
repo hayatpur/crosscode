@@ -19,7 +19,8 @@ export class ActionInteractionArea {
         this.parentAction = parentAction
         this.execution = execution
 
-        this.create()
+        this.element = createEl('div', 'action-interaction-area')
+        this.parentAction.renderer.header.appendChild(this.element)
 
         // Click
         this.element.addEventListener('click', (e: MouseEvent) => {
@@ -38,17 +39,14 @@ export class ActionInteractionArea {
 
     clicked(e: MouseEvent) {}
 
-    create() {
-        this.element = createEl('div', 'action-interaction-area')
-
+    tick(dt: number) {
         // Parent has been destroyed
         if (this.parentAction.renderer == null) {
             return
         }
 
-        this.parentAction.renderer.header.appendChild(this.element)
-
         const loc = this.execution.nodeData.location
+
         let bbox = Editor.instance.computeBoundingBoxForLoc(loc)
 
         let parentBbox = Editor.instance.computeBoundingBoxForLoc(
@@ -66,13 +64,24 @@ export class ActionInteractionArea {
             this.element.classList.add('itself')
         }
 
+        console.log(this.parentAction.execution.nodeData.type)
+
         if (parentLoc.end.line - parentLoc.start.line > 1) {
             if (this.execution.id == this.parentAction.execution.id) {
                 bbox = this.parentAction.renderer.headerLabel.getBoundingClientRect()
+                const footer = this.parentAction.renderer.footer.getBoundingClientRect()
+                bbox.height += footer.y + footer.height - (bbox.y + bbox.height)
+                bbox.height -= 6
                 parentBbox = bbox
             } else {
                 return
             }
+        }
+
+        const indentOffset = 20
+        if (this.parentAction.state.isIndented) {
+            bbox.x += indentOffset
+            bbox.width -= indentOffset
         }
 
         const paddingX = 0

@@ -125,7 +125,7 @@
 .editor-selection {
     position: absolute;
     background: #e9e9e9a4;
-    border-radius: 5px;
+    border-radius: var(--border-radius);
     mix-blend-mode: multiply;
 }
 

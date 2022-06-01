@@ -20,6 +20,8 @@ export class ActionMappingCursor {
     private prevMouse: { x: number; y: number }
     targetTime: number = 0
 
+    private _speed: number = 0.2
+
     /* ----------------------- Create ----------------------- */
     constructor(mapping: ActionMapping) {
         this.mapping = mapping
@@ -48,7 +50,7 @@ export class ActionMappingCursor {
 
                 this.targetTime = Math.min(
                     this.targetTime,
-                    this.mapping.controlFlow.flowPath.getTotalLength() + 6
+                    this.mapping.controlFlow.flowPath.getTotalLength() - 6
                 )
 
                 this.prevMouse = { x: e.x, y: e.y }
@@ -100,15 +102,15 @@ export class ActionMappingCursor {
         // If not grabbing, then gravitate towards next action
         const view = this.mapping.action.view
 
-        if (!this.dragging) {
-            const time = this.mapping.time
+        const time = this.mapping.time
+        const steps = getLeafSteps(view.action.steps)
 
+        if (!this.dragging) {
             let candidate = 0
             let amount = 0
             let nextOffset = 0
 
             // Find the closest frame
-            const steps = getLeafSteps(view.action.steps)
             for (let i = steps.length - 1; i >= 0; i--) {
                 const proxy = steps[i].proxy
 
@@ -133,7 +135,28 @@ export class ActionMappingCursor {
                 // this.mapping.time = Math.min(this.mapping.time, nextOffset - 0.01)
             }
         } else {
-            this.mapping.time = lerp(this.mapping.time, this.targetTime, 0.1)
+            // Find if it is on a frame currently
+            let isOnFrame = false
+
+            for (let i = steps.length - 1; i >= 0; i--) {
+                const proxy = steps[i].proxy
+
+                const start = proxy.timeOffset
+                const end = start + proxy.element.getBoundingClientRect().height
+
+                if (time >= start && time <= end) {
+                    isOnFrame = true
+                    break
+                }
+            }
+
+            if (!isOnFrame) {
+                this._speed = lerp(this._speed, 0.1, 0.3)
+            } else {
+                this._speed = lerp(this._speed, 0.05, 0.3)
+            }
+
+            this.mapping.time = lerp(this.mapping.time, this.targetTime, this._speed)
         }
     }
 

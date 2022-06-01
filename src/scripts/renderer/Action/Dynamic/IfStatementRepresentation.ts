@@ -1,6 +1,5 @@
 import * as monaco from 'monaco-editor'
 import { Editor } from '../../../editor/Editor'
-import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { Action } from '../Action'
 import { Representation } from './Representation'
 
@@ -10,24 +9,24 @@ export class IfStatementRepresentation extends Representation {
     constructor(action: Action) {
         super(action)
 
-        action.controller.createSteps()
+        // action.controller.createSteps()
 
-        action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
+        // action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
 
-        action.renderer.expandButton.addEventListener('click', () => {
-            // Create steps
-            if (!this.isExpanded) {
-                const body = this.action.steps[1]
-                body.controller.createSteps()
-                action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-down-outline"></ion-icon>`
-                this.isExpanded = true
-            } else {
-                const body = this.action.steps[1]
-                body.controller.destroySteps()
-                action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
-                this.isExpanded = false
-            }
-        })
+        // action.renderer.expandButton.addEventListener('click', () => {
+        //     // Create steps
+        //     if (!this.isExpanded) {
+        //         const body = this.action.steps[1]
+        //         body.controller.createSteps()
+        //         action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-down-outline"></ion-icon>`
+        //         this.isExpanded = true
+        //     } else {
+        //         const body = this.action.steps[1]
+        //         body.controller.destroySteps()
+        //         action.renderer.expandButton.innerHTML = `<ion-icon name="chevron-forward-outline"></ion-icon>`
+        //         this.isExpanded = false
+        //     }
+        // })
     }
 
     update() {
@@ -50,6 +49,8 @@ export class IfStatementRepresentation extends Representation {
         let footerLabel = null
         let footerLineNumbers = null
         let headerLineNumbers = this.action.execution.nodeData.location.start.line.toString()
+        // headerLineNumbers +=
+        //     '\n' + (this.action.execution.nodeData.location.start.line + 1).toString()
 
         // If statement
         let upTill = headerLabel.substring(0, headerLabel.indexOf('{')).trim()
@@ -77,13 +78,6 @@ export class IfStatementRepresentation extends Representation {
                 }
             })
         }
-    }
-
-    getFrames(): [env: EnvironmentState, actionId: string][] {
-        const steps = this.action.steps.filter((item, i) => i != 0)
-        console.log('Getting if statement frames...', steps.length)
-
-        return steps.map((step) => [step.execution.postcondition, step.state.id])
     }
 
     destroy() {}

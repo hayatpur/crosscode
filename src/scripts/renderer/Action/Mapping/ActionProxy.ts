@@ -50,6 +50,10 @@ export class ActionProxy {
         }
         const parentBbox = this.action.renderer.element.parentElement.getBoundingClientRect()
 
+        // if (this.action.execution.nodeData.type == 'IfStatement') {
+        //     console.log(bbox.height)
+        // }
+
         const heightMultiplier = 0.6
         const widthMultiplier = 0.4
 
@@ -141,6 +145,6 @@ export class ActionProxy {
 
     getControlFlowPoints() {
         const bbox = this.element.getBoundingClientRect()
-        return [[bbox.x + 10, bbox.y + bbox.height / 2]]
+        return [[bbox.x + 10, bbox.y + bbox.height]]
     }
 }

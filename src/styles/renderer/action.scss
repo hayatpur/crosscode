@@ -23,6 +23,8 @@
     line-height: var(--code-font-line-height);
     position: relative;
     user-select: none;
+    pointer-events: none;
+    z-index: 1;
 }
 
 /* ------------------------ Body ------------------------ */
@@ -49,7 +51,7 @@
     left: 0px;
 
     border: var(--action-border);
-    border-radius: 7px;
+    border-radius: var(--border-radius);
 
     background: var(--color-10);
 }
@@ -112,13 +114,13 @@
 .action-interaction-area {
     position: absolute;
     opacity: 0.08;
-    border-radius: 0px;
     background: #fff;
     margin-top: 4px;
-    opacity: 0;
-    background: #88d0f226;
-    border-radius: 5px;
-    mix-blend-mode: hard-light;
+    opacity: 0.5;
+    background: #31313a;
+    border-radius: var(--border-radius);
+    /* mix-blend-mode: lighten; */
+    transition: 0.2s;
     // background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='5' ry='5' stroke='%237DD3FC4F' stroke-width='1' stroke-dasharray='4%2c 4' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
 }
 
@@ -130,13 +132,18 @@
     opacity: 1;
 }
 
+.action.is-playing > .action-step-container > .action-header > .action-interaction-area {
+    opacity: 1;
+    background: #29324c;
+}
+
 /* ----------------------- Cursor ----------------------- */
 .action-cursor {
     width: 10px;
     height: 10px;
     border-radius: 50%;
     position: absolute;
-    background: var(--s-color-3);
+    background: var(--s-color-0);
     top: 27px;
     z-index: 1;
     left: 15px;
@@ -210,7 +217,7 @@
 }
 
 .action-mapping:not(.is-hidden) {
-    background: #202028;
+    background: var(--color-2);
     padding-left: 10px;
 }
 
@@ -233,7 +240,7 @@
     width: 5px;
     height: 15px;
     background: #383847;
-    border-radius: 7px;
+    border-radius: var(--border-radius);
     margin-left: -2.5px;
     margin-top: 9px;
     opacity: 0;
@@ -299,7 +306,7 @@
     /* height: 10px; */
 
     margin: 0px 3px;
-    border-radius: 5px;
+    border-radius: var(--border-radius);
     display: flex;
     align-items: center;
     padding: 2px 6px;
@@ -394,9 +401,11 @@
     grid-row-start: 1;
     grid-column-start: 1;
 
-    background: var(--color-2);
-    border-radius: 5px;
-    box-shadow: 0px 0px 5px 4px #202028;
+    background: var(--color-3);
+    border-radius: var(--border-radius);
+    box-shadow: 0px 0px 5px 4px var(--color-2);
+    transition-property: background, box-shadow;
+    transition-duration: 0.2s;
 }
 
 .action-proxy-steps {
@@ -408,8 +417,8 @@
 }
 
 .action-proxy-container.has-steps {
-    background: #31313a5c;
-    box-shadow: none !important;
+    background: none;
+    box-shadow: 0px 0px 0px 1px #ffffff12 !important;
 }
 
 .action-proxy-container > .action-proxy-container {
@@ -440,9 +449,10 @@
     left: 6px !important;
     top: -6px !important;
     box-shadow: none;
-    background: #323d3f;
+    background: #1b1b2200;
     display: flex;
     align-items: center;
+    border-radius: 50%;
     justify-content: center;
 }
 
@@ -450,6 +460,10 @@
     font-size: 10px;
     --ionicon-stroke-width: 79px;
     color: #6ee7b7;
+    transform: translate(2px, -2px);
+    background: #1b1b22;
+    border-radius: 50%;
+    margin: 2px;
 }
 
 .action-proxy-container.Consequent:not(.has-steps) {
@@ -499,12 +513,12 @@ svg.control-flow-svg {
 
 .control-flow-path {
     fill: none;
-    stroke: var(--s-color-3);
+    stroke: var(--color-6);
     stroke-width: 1.5px;
-    stroke-dasharray: 10px 2px;
+    stroke-dasharray: 15px 2px;
     stroke-dashoffset: 0;
     animation: showStroke 10s;
-    opacity: 0.4;
+    opacity: 0.2;
     animation-iteration-count: infinite;
 }
 
@@ -520,7 +534,6 @@ svg.control-flow-svg {
     position: absolute;
     top: 0px;
     left: 0px;
-    background: #151519;
 }
 
 .action-header.is-hidden {
@@ -529,4 +542,21 @@ svg.control-flow-svg {
 
 .action.is-indented > .action-step-container > .action-header > .action-label {
     margin-left: 44px;
+}
+
+.action-proxy-container.is-playing {
+    background: #353d50;
+}
+
+.action.is-showing-steps
+    > .action-step-container
+    > .action-header
+    > .action-interaction-area.itself {
+    background: none;
+    box-shadow: 0px 0px 0px 1px #ffffff2b;
+    transform: scale(1.1);
+}
+
+.action-proxy-container._IfStatement.Statement.has-steps {
+    transform: translateX(-6px);
 }

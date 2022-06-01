@@ -64,6 +64,8 @@ export class ActionRenderer {
 
     /* ----------------------- Render ----------------------- */
     tick(dt: number) {
+        this.action.interactionArea?.tick(dt)
+
         if (!this.action.dirty) return
 
         this.updateClasses()
