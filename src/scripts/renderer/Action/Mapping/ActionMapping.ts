@@ -1,3 +1,5 @@
+import { Editor } from '../../../editor/Editor'
+import { Executor } from '../../../executor/Executor'
 import { createEl } from '../../../utilities/dom'
 import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
@@ -8,16 +10,11 @@ import { ControlFlow } from './ControlFlow'
 export class ActionMapping {
     element: HTMLElement
 
-    // Root action
-    action: Action
-
     // Action proxies
-    proxySteps: { [stepId: string]: ActionProxy } = {}
-
-    // State
-    isHidden: boolean = false
+    actionProxies: { [id: string]: ActionProxy } = {}
 
     // Break indices (occurs between actions[index] and actions[index + 1])
+    // TODO: More generalizable layout
     breaks: number[] = []
     breakElements: HTMLElement[] = []
 
@@ -30,15 +27,8 @@ export class ActionMapping {
     // Other
     private _tickerId: string
 
-    // Flag for if it needs to re-render
-    dirty: boolean = true
-
-    constructor(action: Action) {
-        this.action = action
+    constructor() {
         this.create()
-        // this.addBreak(0)
-
-        this.hide()
 
         this.element.addEventListener('click', (e) => {
             if (
@@ -47,21 +37,28 @@ export class ActionMapping {
                 !(e.target as HTMLElement).classList.contains('action-proxy-container')
             )
                 return
-
-            if (this.isHidden) {
-                this.show()
-            } else {
-                // TODO
-                // this.hide()
-            }
         })
 
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
 
-        this.controlFlow = new ControlFlow(this)
-
         // Create cursor
-        this.cursor = new ActionMappingCursor(this)
+        setTimeout(() => {
+            this.controlFlow = new ControlFlow(this)
+            this.cursor = new ActionMappingCursor(this)
+
+            // Update frames
+            const program = Executor.instance.visualization.program
+            Executor.instance.visualization.view.setFrames(
+                program.representation.getFrames(),
+                program.execution.precondition
+            )
+        }, 0)
+
+        this.updateProxies()
+    }
+
+    getProxyOfAction(action: Action) {
+        return ActionProxy.all[action.state.id]
     }
 
     addBreak(index: number) {
@@ -71,66 +68,54 @@ export class ActionMapping {
         this.breakElements.push(breakEl)
     }
 
-    updateSteps() {}
-
     create() {
-        this.element = createEl('div', 'action-mapping', this.action.renderer.element)
+        this.element = createEl('div', 'action-mapping', document.body)
+
+        const margin = Editor.instance.getMaxWidth() + 70
+        this.element.style.left = `${margin}px`
     }
 
     tick(dt: number) {
         /* --------------- Update proxy positions --------------- */
-        const thisBbox = this.element.getBoundingClientRect()
-
-        // for (const [stepId, proxy] of Object.entries(this.proxySteps)) {
-        //     const step = this.action.steps.find((step) => step.execution.id === stepId)
-
+        // const thisBbox = this.element.getBoundingClientRect()
+        // const steps = Executor.instance.visualization.program.steps
+        // for (const [stepId, proxy] of Object.entries(this.actionProxies)) {
+        //     const step = steps.find((step) => step.execution.id === stepId)
         //     const bbox = step.renderer.element.getBoundingClientRect()
-
         //     proxy.element.style.top = `${bbox.top - thisBbox.y}px`
         //     proxy.element.style.height = `${bbox.height}px`
         // }
-
         /* -------------------- Update breaks ------------------- */
-        for (let i = 0; i < this.breaks.length; i++) {
-            const breakElement = this.breakElements[i]
-            const breakIndex = this.breaks[i]
-
-            const step = this.action.steps[breakIndex]
-            const nextStep = this.action.steps[breakIndex + 1]
-
-            if (nextStep == null) {
-                continue
-            }
-
-            const proxy = this.proxySteps[step.execution.id]
-            const nextProxy = this.proxySteps[nextStep.execution.id]
-
-            if (proxy == null || nextProxy == null) {
-                continue
-            }
-
-            const bbox = proxy.element.getBoundingClientRect()
-            const nextBbox = nextProxy.element.getBoundingClientRect()
-
-            breakElement.style.top = `${(bbox.bottom + nextBbox.top) / 2 - thisBbox.y}px`
-        }
-
-        if (!this.dirty) return
-
-        this.update()
+        // for (let i = 0; i < this.breaks.length; i++) {
+        //     const breakElement = this.breakElements[i]
+        //     const breakIndex = this.breaks[i]
+        //     const step = this.action.steps[breakIndex]
+        //     const nextStep = this.action.steps[breakIndex + 1]
+        //     if (nextStep == null) {
+        //         continue
+        //     }
+        //     const proxy = this.proxySteps[step.execution.id]
+        //     const nextProxy = this.proxySteps[nextStep.execution.id]
+        //     if (proxy == null || nextProxy == null) {
+        //         continue
+        //     }
+        //     const bbox = proxy.element.getBoundingClientRect()
+        //     const nextBbox = nextProxy.element.getBoundingClientRect()
+        //     breakElement.style.top = `${(bbox.bottom + nextBbox.top) / 2 - thisBbox.y}px`
+        // }
     }
 
-    update() {
+    updateProxies() {
         /* ------------------- Update proxies ------------------- */
-        // TODO: This doesn't need to be reactive. Call a method like createSteps() instead.
         const hits: Set<string> = new Set()
+        const steps = Executor.instance.visualization.program.steps
 
-        for (const step of this.action.steps) {
-            let proxy = this.proxySteps[step.execution.id]
+        for (const step of steps) {
+            let proxy = this.actionProxies[step.execution.id]
 
             if (proxy == null) {
                 proxy = new ActionProxy(step)
-                this.proxySteps[step.execution.id] = proxy
+                this.actionProxies[step.execution.id] = proxy
                 this.element.appendChild(proxy.element)
             }
 
@@ -140,26 +125,14 @@ export class ActionMapping {
         }
 
         // Remove unused proxies
-        for (const stepId of Object.keys(this.proxySteps)) {
+        for (const stepId of Object.keys(this.actionProxies)) {
             if (!hits.has(stepId)) {
-                this.proxySteps[stepId].element.remove()
-                delete this.proxySteps[stepId]
+                this.actionProxies[stepId].element.remove()
+                delete this.actionProxies[stepId]
             }
         }
 
-        this.controlFlow.update()
-
-        this.dirty = false
-    }
-
-    hide() {
-        this.isHidden = true
-        this.element.classList.add('is-hidden')
-    }
-
-    show() {
-        this.isHidden = false
-        this.element.classList.remove('is-hidden')
+        this.controlFlow?.update()
     }
 
     duration() {
@@ -169,10 +142,24 @@ export class ActionMapping {
     /* ----------------------- Destroy ---------------------- */
     destroy() {
         this.element.remove()
+        this.element = null
+
+        for (const proxy of Object.values(this.actionProxies)) {
+            proxy.destroy()
+        }
+        this.actionProxies = null
+
+        this.breakElements.forEach((breakEl) => {
+            breakEl.remove()
+        })
+        this.breakElements = null
+
+        this.controlFlow?.destroy()
+        this.controlFlow = null
+
+        this.cursor?.destroy()
+        this.cursor = null
 
         Ticker.instance.removeTickFrom(this._tickerId)
-
-        this.element = null
-        this.action = null
     }
 }

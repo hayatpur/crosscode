@@ -3,6 +3,13 @@
 /* ------------------------------------------------------ */
 
 .view {
+    position: absolute;
+    left: 100px;
+    top: 100px;
+}
+
+/* ------------------- Stack container ------------------ */
+.view-stack-container {
     position: relative;
 
     align-items: center;
@@ -13,27 +20,12 @@
     transition: 0.2s;
 }
 
-.view:last-child {
+.view-stack-container:last-child {
     margin-bottom: 0px;
 }
 
-.view:first-child {
+.view-stack-container:first-child {
     margin-top: 0px;
-}
-
-/* ----------------------- Hidden ----------------------- */
-
-.view.is-hidden {
-    opacity: 0;
-    height: 4px;
-    width: 20px;
-    margin-bottom: 0px;
-    padding-bottom: 0px;
-    padding-top: 0px;
-    background: none;
-    box-shadow: none;
-    border: none;
-    overflow: hidden;
 }
 
 /* --------------------- Environment -------------------- */
@@ -56,7 +48,7 @@
     border-right: none;
 }
 
-.view.is-hidden > .environment {
+.view-stack-container.is-hidden > .environment {
     opacity: 0;
 }
 
@@ -93,16 +85,11 @@ svg.environment-svg {
     // width: 0px;
 }
 
-.view.inactive {
-    filter: saturate(0);
-    opacity: 0.2;
-}
-
-.action-view-container > .view:not(:last-child) {
+.view-stack-container:not(:last-child) {
     border-bottom: 1px solid var(--color-3);
 }
 
-.action-view-container > .view:not(:last-child):not(.inactive) {
+.view-stack-container:not(:last-child):not(.inactive) {
     border-bottom: 1px solid #2c2c3499;
 }
 

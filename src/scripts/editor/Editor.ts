@@ -4,14 +4,15 @@ import * as monaco from 'monaco-editor'
 export class Editor {
     // Singleton
     static instance: Editor
+    parent: HTMLElement
 
     monaco: monaco.editor.IStandaloneCodeEditor
+
+    // Callbacks
     onSelectionUpdate: Set<(e: monaco.editor.ICursorSelectionChangedEvent) => void>
     onChangeContent: Set<() => void>
-    spacings: WeakMap<object, any>
-    parent: HTMLElement
+
     dragSelections: HTMLDivElement[] = []
-    lenses: { [id: string]: monaco.IDisposable } = {}
 
     constructor() {
         // Singleton
@@ -66,9 +67,6 @@ export class Editor {
         // Callbacks
         this.onSelectionUpdate = new Set()
         this.onChangeContent = new Set()
-
-        // Editor spacings
-        this.spacings = new WeakMap()
 
         // document.fonts.ready.then(() => monaco.editor.remeasureFonts());
 
@@ -141,8 +139,10 @@ export class Editor {
     }
 
     computeBoundingBox(ln: number) {
-        const lines = document.body.getElementsByClassName('view-lines')[0]
-        const line = lines.children[ln - 1]
+        const lines = [...document.body.getElementsByClassName('view-lines')[0].children]
+        lines.sort((a, b) => a.getBoundingClientRect().y - b.getBoundingClientRect().y)
+
+        const line = lines[ln - 1]
 
         return line?.children[0].getBoundingClientRect()
     }
@@ -168,7 +168,6 @@ export class Editor {
         const max_x = Math.max(start.x + start.width, end.x + end.width)
 
         let y = min_y
-        // let x = min_x + Math.min(location.start.column, location.end.column) * charWidth
         let x = min_x + Math.min(location.start.column, location.end.column) * charWidth
 
         let height = end.y + end.height - start.y
@@ -181,6 +180,8 @@ export class Editor {
             const lineBbox = Editor.instance.computeBoundingBox(line)
             width = Math.max(width, lineBbox.width)
         }
+
+        // console.log(x, y, width, height)
 
         return { x: x, y: y, width: width, height: height }
     }
@@ -249,103 +250,9 @@ export class Editor {
         }
     }
 
-    setSpacingAtLine(line: number, spacing: number, origin: object) {
-        if (!this.spacings.has(origin)) {
-            this.spacings.set(origin, {})
-        }
-
-        if (
-            this.spacings.get(origin)[line] != null &&
-            this.spacings.get(origin)[line].spacing == spacing
-        ) {
-            return
-        }
-
-        const editor = this
-
-        this.monaco.changeViewZones(function (changeAccessor) {
-            const domElement = document.createElement('div')
-            domElement.classList.add('section-spacing')
-
-            // let space = 0;
-
-            // for (const [origin, spaces] of Object.entries(editor.spacings)) {
-            //     if (spaces[line] != null) {
-            //         space += spaces[line];
-            //     }
-            // }
-
-            if (editor.spacings.get(origin)[line] != null) {
-                changeAccessor.removeZone(editor.spacings.get(origin)[line].id)
-            }
-
-            const id = changeAccessor.addZone({
-                afterLineNumber: line,
-                heightInPx: spacing,
-                domNode: domElement,
-                suppressMouseDown: true,
-            })
-
-            editor.spacings.get(origin)[line] = { id, spacing }
-        })
-    }
-
     getLineDom(ln: number) {
         const lines = document.body.getElementsByClassName('view-lines')[0]
         return lines.children[ln - 1]
-    }
-
-    clearLens(id: string) {
-        this.lenses[id]?.dispose()
-    }
-
-    clearLenses() {
-        Object.values(this.lenses).forEach((lens) => lens.dispose())
-        this.lenses = {}
-    }
-
-    createLens(label: string, line: number, id: string) {
-        this.lenses[id]?.dispose()
-
-        // return;
-        const disposable = monaco.languages.registerCodeLensProvider('javascript', {
-            provideCodeLenses: function (model, token) {
-                return {
-                    lenses: [
-                        {
-                            range: {
-                                startLineNumber: line,
-                                startColumn: 1,
-                                endLineNumber: line + 1,
-                                endColumn: 1,
-                            },
-                            id: 'First Line',
-                            command: {
-                                id: null,
-                                title: label,
-                            },
-                        },
-                    ],
-                    dispose: () => {},
-                }
-            },
-
-            resolveCodeLens: function (model, codeLens, token) {
-                return codeLens
-            },
-        })
-
-        this.lenses[id] = disposable
-    }
-
-    static dispose() {
-        const editor = Editor.instance
-
-        for (const { id } of Object.values(editor.spacings)) {
-            editor.monaco.changeViewZones(function (changeAccessor) {
-                changeAccessor.removeZone(id)
-            })
-        }
     }
 
     getMaxWidth() {

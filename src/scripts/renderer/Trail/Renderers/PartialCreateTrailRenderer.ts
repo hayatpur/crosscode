@@ -54,6 +54,8 @@ export class PartialCreateTrailRenderer extends TrailRenderer {
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {
+        super.destroy()
         this.prevCopy?.destroy()
+        this.prevCopy = null
     }
 }

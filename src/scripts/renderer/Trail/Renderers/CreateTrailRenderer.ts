@@ -54,6 +54,7 @@ export class CreateTrailRenderer extends TrailRenderer {
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {
+        super.destroy()
         this.prevCopy?.destroy()
     }
 }

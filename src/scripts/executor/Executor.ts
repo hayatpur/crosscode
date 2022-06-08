@@ -4,10 +4,10 @@ import * as ESTree from 'estree'
 import { Pane } from 'tweakpane'
 import { Editor } from '../editor/Editor'
 import { createEnvironment } from '../environment/environment'
+import { EnvironmentState } from '../environment/EnvironmentState'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { Visualization } from '../renderer/Visualization/Visualization'
 import { Compiler } from '../transpiler/Compiler'
-import { Ticker } from '../utilities/Ticker'
 
 /* ------------------------------------------------------ */
 /*            Executes and visualizes the code            */
@@ -24,6 +24,8 @@ export class Executor {
     visualization: Visualization
     fpsGraph: any
 
+    firstCompilation = true
+
     constructor(editor: Editor) {
         // Singleton
         Executor.instance = this
@@ -35,11 +37,13 @@ export class Executor {
         let typingTimer: number
         this.editor.onChangeContent.add(() => {
             clearTimeout(typingTimer)
-            typingTimer = setTimeout(this.compile.bind(this), 500)
-        })
+            const delay = this.firstCompilation ? 500 : 5
+            typingTimer = setTimeout(() => {
+                this.compile()
+            }, delay)
 
-        // Bind update (delay to make sure the editor has finished loading)
-        setTimeout(() => Ticker.instance.registerTick(this.tick.bind(this)), 1000)
+            this.firstCompilation = false
+        })
 
         // Setup parameters
         this.setupParams()
@@ -48,10 +52,10 @@ export class Executor {
     /* --------------------- Compilation -------------------- */
 
     reset() {
-        this.execution = null
-
         this.visualization?.destroy()
         this.visualization = undefined
+
+        this.execution = null
     }
 
     compile() {
@@ -66,35 +70,33 @@ export class Executor {
                 ecmaVersion: 2017,
             }) as ESTree.Node
         } catch (e) {
-            console.error(e)
+            console.warn(e)
             return
         }
 
         // TODO: Check for runtime errors before visualizing code
 
         // Construct dynamic AST
-        const env = createEnvironment()
-        this.execution = Compiler.compile(ast, env, {
-            outputRegister: [],
-            locationHint: [],
-        })
+        let env: EnvironmentState
+        try {
+            const env = createEnvironment()
+            this.execution = Compiler.compile(ast, env, {
+                outputRegister: [],
+                locationHint: [],
+            })
+        } catch (e) {
+            console.warn(e)
+            return
+        }
 
         console.log('[Executor] Finished compiling ...')
         console.log('\tAnimation', this.execution)
         console.log('\tEnvironment', env)
 
-        // const [output, url] = animationToString(this.execution, 0, { first: false }, true)
-        // console.log(url)
         this.visualization = new Visualization()
-        this.visualization.createRoot(this.execution)
+        this.visualization.createProgram(this.execution)
 
         // TODO: Maintain layout from last time
-    }
-
-    /* ------------------------ Tick ------------------------ */
-
-    tick(dt: number = 10) {
-        if (this.execution == null) return
     }
 
     /* --------------------- Parameters --------------------- */

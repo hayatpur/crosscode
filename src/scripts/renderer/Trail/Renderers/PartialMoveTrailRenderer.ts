@@ -57,6 +57,9 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {
+        super.destroy()
+
         this.movementTrace.remove()
+        this.movementTrace = null
     }
 }

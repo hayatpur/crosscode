@@ -1,14 +1,10 @@
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
-import { createRepresentation, isExpression } from '../../utilities/action'
-import { View } from '../View/View'
-import { ActionController } from './ActionController'
-import { ActionInteractionArea } from './ActionInteractionArea'
+import { Executor } from '../../executor/Executor'
+import { createRepresentation, getExecutionSteps } from '../../utilities/action'
 import { ActionRenderer } from './ActionRenderer'
 import { ActionState, createActionState } from './ActionState'
 import { Representation } from './Dynamic/Representation'
-import { ActionMapping } from './Mapping/ActionMapping'
-import { ActionProxy } from './Mapping/ActionProxy'
 
 /* ------------------------------------------------------ */
 /*    An Action visualizes a node in program execution    */
@@ -25,25 +21,9 @@ export class Action {
     // State, renderer, controller
     state: ActionState
     renderer: ActionRenderer
-    controller: ActionController
 
     // Sub-steps
     steps: Action[] = []
-
-    // View
-    view: View
-
-    // Source-code to view mapping
-    mapping: ActionMapping
-
-    // Interaction areas
-    interactionArea: ActionInteractionArea
-
-    // Proxy in the mapping
-    proxy: ActionProxy
-
-    // Flag for if it needs to re-render
-    dirty: boolean = true
 
     // Representation
     representation: Representation
@@ -57,43 +37,78 @@ export class Action {
         this.parent = parent
         this.state = createActionState(options)
 
-        if (isExpression(this.execution)) {
-            this.state.isExpression = true
-        }
-
         Action.all[this.state.id] = this
 
-        this.renderer = new ActionRenderer(this)
-        this.controller = new ActionController(this)
         this.representation = createRepresentation(this)
+        this.renderer = new ActionRenderer(this)
+    }
 
-        // Create interaction area (on source code)
-        if (this.state.isInline) {
-            this.interactionArea = new ActionInteractionArea(this, this.execution)
+    /* ------------------------ Steps ----------------------- */
+    createSteps() {
+        if (this.state.isShowingSteps) {
+            console.warn('Steps already created! Destroying existing.')
+            this.steps.forEach((step) => step.destroy())
         }
 
-        // Create mapping for source-code to view
-        if (!this.state.isInline) {
-            this.mapping = new ActionMapping(this)
+        this.steps = []
+
+        let steps = getExecutionSteps(this.execution)
+
+        for (let i = 0; i < steps.length; i++) {
+            const action = new Action(steps[i], this)
+            this.steps.push(action)
         }
 
-        // Create a view
-        if (!this.state.isInline) {
-            this.view = new View(this)
+        this.state.isShowingSteps = true
+
+        this.renderer.update()
+        Executor.instance.visualization.mapping?.updateProxies()
+        const program = Executor.instance.visualization.program
+        Executor.instance.visualization.view?.setFrames(
+            program.representation.getFrames(),
+            program.execution.precondition
+        )
+    }
+
+    destroySteps() {
+        this.steps.forEach((step) => step.destroy())
+        this.steps = []
+
+        this.state.isShowingSteps = false
+
+        this.renderer.update()
+        Executor.instance.visualization.mapping?.updateProxies()
+        const program = Executor.instance.visualization.program
+        Executor.instance.visualization.view?.setFrames(
+            program.representation.getFrames(),
+            program.execution.precondition
+        )
+    }
+
+    removeStep(step: Action) {
+        const index = this.steps.indexOf(step)
+        if (index > -1) {
+            this.steps.splice(index, 1)
+        } else {
+            console.warn('Step not found!')
         }
     }
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {
+        this.renderer.destroy()
+        this.renderer = null
+
+        this.steps.forEach((step) => step.destroy())
+        this.steps = null
+
+        this.representation.destroy()
+        this.representation = null
+
         delete Action.all[this.state.id]
 
-        this.controller.destroy()
-        this.renderer.destroy()
-        this.mapping?.destroy()
-
-        // TODO Destroy interaction areas
-
-        this.renderer = null
-        this.controller = null
+        this.state = null
+        this.parent = null
+        this.execution = null
     }
 }

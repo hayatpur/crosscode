@@ -10,18 +10,6 @@ import { Representation } from '../renderer/Action/Dynamic/Representation'
 /* ------------------------------------------------------ */
 
 /**
- * @param action
- * @returns abstraction depth of the action
- */
-// export function getDepth(action: Action | ActionBundle): number {
-//     if (action.steps.length == 0) {
-//         return 1
-//     } else {
-//         return 1 + Math.max(...action.steps.map((step) => getDepth(step)))
-//     }
-// }
-
-/**
  * @param parent
  * @returns leaf actions of the parent
  */
@@ -82,7 +70,6 @@ export function queryAllAction(action: Action, query: (animation: Action) => boo
 
 export function createRepresentation(action: Action) {
     let representation: typeof Representation = null
-    console.log(action.execution.nodeData.type)
     switch (action.execution.nodeData.type) {
         case 'IfStatement':
             representation = IfStatementRepresentation
@@ -156,14 +143,6 @@ export function getActionRoot(action: Action) {
     return root
 }
 
-export function getActionSpatialRoot(action: Action) {
-    let root = action
-    while (root.parent != null && root.state.isInline) {
-        root = root.parent
-    }
-    return root
-}
-
 export function getExecutionSteps(
     execution: ExecutionGraph | ExecutionNode
 ): (ExecutionGraph | ExecutionNode)[] {
@@ -172,4 +151,18 @@ export function getExecutionSteps(
     } else {
         return []
     }
+}
+
+export function getLeafSteps(steps: Action[]): Action[] {
+    const result: Action[] = []
+
+    for (const action of steps) {
+        if (action.steps.length > 0) {
+            result.push(...getLeafSteps(action.steps))
+        } else {
+            result.push(action)
+        }
+    }
+
+    return result
 }

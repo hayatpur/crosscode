@@ -15,10 +15,7 @@ export interface ActionState {
     scale: number
 
     // State
-    isInline: boolean
-    isIndented: boolean
     isShowingSteps: boolean
-    isExpression: boolean
 }
 
 /* --------------------- Initializer -------------------- */
@@ -31,10 +28,7 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
             y: 0,
         },
         scale: 1,
-        isInline: false,
-        isIndented: false,
         isShowingSteps: false,
-        isExpression: false,
     }
 
     return { ...base, ...overrides }

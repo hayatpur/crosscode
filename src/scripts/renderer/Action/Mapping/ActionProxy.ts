@@ -1,12 +1,11 @@
 import { createEl } from '../../../utilities/dom'
-import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
 
 export class ActionProxy {
+    static all: { [id: string]: ActionProxy } = {}
+
     // Container of this things indicator and it's steps
     element: HTMLElement
-    // indicator: HTMLElement
-    // text: HTMLElement
 
     // Corresponding action
     action: Action
@@ -17,82 +16,45 @@ export class ActionProxy {
     // Time in control flow
     timeOffset: number = 0
 
-    private _tickerId: string
-
-    dirty: boolean = true
+    static heightMultiplier = 0.6
+    static widthMultiplier = 0.4
 
     constructor(action: Action) {
         this.action = action
-        this.action.proxy = this
+
+        ActionProxy.all[action.state.id] = this
 
         this.create()
+        this.update()
 
-        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+        this.element.addEventListener('click', (e) => {
+            if (this.action.state.isShowingSteps) {
+                this.action.destroySteps()
+            } else {
+                this.action.createSteps()
+            }
+
+            e.stopPropagation()
+            e.preventDefault()
+        })
     }
 
     create() {
-        this.element = createEl('div', 'action-proxy-container')
-        this.element.classList.add(`_${this.action.execution.nodeData.type}`)
-        this.element.classList.add(`${this.action.execution.nodeData.preLabel}`)
-
-        // this.indicator = createEl('div', 'action-proxy-indicator', this.element)
-    }
-
-    /* ----------------------- Update ----------------------- */
-    tick(dt: number) {
-        // Update own position
-        let bbox: DOMRect = null
-
-        if (this.action.state.isShowingSteps) {
-            bbox = this.action.renderer.stepContainer.getBoundingClientRect()
-        } else {
-            bbox = this.action.interactionArea.element.getBoundingClientRect()
-        }
-        const parentBbox = this.action.renderer.element.parentElement.getBoundingClientRect()
-
-        // if (this.action.execution.nodeData.type == 'IfStatement') {
-        //     console.log(bbox.height)
-        // }
-
-        const heightMultiplier = 0.6
-        const widthMultiplier = 0.4
-
-        const y = bbox.top - parentBbox.y
-        const x = bbox.left - parentBbox.x
-
-        this.element.style.top = `${
-            y * (this.action.parent.state.isInline ? heightMultiplier : 1) +
-            (bbox.height * (1 - heightMultiplier)) / 2
-        }px`
-        this.element.style.left = `${x * widthMultiplier}px`
-        this.element.style.height = `${bbox.height * heightMultiplier}px`
-        this.element.style.width = `${bbox.width * widthMultiplier}px`
-
-        if (!this.dirty) return
-
-        this.update()
-
-        this.dirty = false
-
-        /* ------------- Specialized representations ------------ */
-        if (this.action.execution.nodeData.preLabel == 'Test') {
-            if (!this.action.state.isShowingSteps) {
-                this.element.innerHTML = `<ion-icon name="checkmark-outline"></ion-icon>`
-            } else {
-                // TODO
-            }
-        }
+        const classes = [
+            'action-proxy-container',
+            `_${this.action.execution.nodeData.type?.replace(' ', '-')}`,
+            `${this.action.execution.nodeData.preLabel?.replace(' ', '-')}`,
+        ]
+        this.element = createEl('div', classes)
     }
 
     update() {
         const hits: Set<string> = new Set()
 
         // Update classes
-        if (this.action.steps.length > 0) {
-            this.element.classList.add('has-steps')
-        } else {
-            this.element.classList.remove('has-steps')
-        }
+        this.action.steps.length > 0
+            ? this.element.classList.add('has-steps')
+            : this.element.classList.remove('has-steps')
 
         // Update steps
         for (const step of this.action.steps) {
@@ -117,12 +79,8 @@ export class ActionProxy {
             }
         }
 
-        // Update indicator
-        // let labelBbox = this.action.renderer.headerLabel.getBoundingClientRect()
-        // let bbox = this.action.renderer.element.getBoundingClientRect()
-        // const multiplier = this.action.steps.length == 0 ? 1 : 1
-        // this.indicator.style.width = `${labelBbox.width * 0.4 * multiplier}px`
-        // this.indicator.style.height = `${bbox.height * 0.5 * multiplier}px`
+        // Update own visual
+        this.action.representation.updateProxyVisual(this)
     }
 
     /* ------------------------ Focus ----------------------- */
@@ -145,6 +103,13 @@ export class ActionProxy {
 
     getControlFlowPoints() {
         const bbox = this.element.getBoundingClientRect()
-        return [[bbox.x + 10, bbox.y + bbox.height]]
+        return [[bbox.x + bbox.width / 2, bbox.y + bbox.height / 2]]
+    }
+
+    destroy() {
+        delete ActionProxy.all[this.action.state.id]
+
+        this.element.remove()
+        this.element = null
     }
 }

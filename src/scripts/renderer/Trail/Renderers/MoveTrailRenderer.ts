@@ -97,11 +97,20 @@ export class MoveTrailRenderer extends TrailRenderer {
         x -= endBbox.x + endBbox.width / 2 - environmentBbox.x
         y -= endBbox.y + endBbox.height / 2 - environmentBbox.y
         end.style.transform = `translate(${x}px, ${y}px)`
+
+        // if (this.trail.time > 0 && this.trail.time < 1) {
+        //     console.log('Moving...', this.trail.state)
+        //     console.log(end)
+        // }
     }
 
     /* ---------------------- Destroy --------------------- */
     destroy() {
+        super.destroy()
         this.movementTrace.remove()
         this.prevCopy?.destroy()
+
+        this.movementTrace = null
+        this.prevCopy = null
     }
 }

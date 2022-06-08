@@ -1,7 +1,7 @@
-import * as monaco from 'monaco-editor'
-import { Editor } from '../../../editor/Editor'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { Action } from '../Action'
+import { ActionRenderer, getActionCoordinates } from '../ActionRenderer'
+import { ActionProxy } from '../Mapping/ActionProxy'
 
 /* ------------------------------------------------------ */
 /*              Abstract representation class             */
@@ -13,52 +13,39 @@ export class Representation {
         this.action = action
     }
 
-    update() {
-        this.setSourceCodeOfExecution()
+    update() {}
+
+    updateActionVisual(renderer: ActionRenderer) {
+        const loc = this.action.execution.nodeData.location
+        const bbox = getActionCoordinates(loc, this.action.parent?.execution.nodeData.location)
+
+        renderer.element.style.left = `${bbox.x}px`
+        renderer.element.style.top = `${bbox.y}px`
+        renderer.element.style.width = `${bbox.width}px`
+        renderer.element.style.height = `${bbox.height}px`
     }
 
-    setSourceCodeOfExecution() {
-        // Header
-        const range = this.action.execution.nodeData.location
-        let headerLabel = Editor.instance.monaco.getModel().getValueInRange({
-            startLineNumber: range.start.line,
-            startColumn: range.start.column + 1,
-            endLineNumber: range.end.line,
-            endColumn: range.end.column + 1,
-        })
+    updateProxyVisual(proxy: ActionProxy) {
+        const bbox = proxy.action.renderer.element.getBoundingClientRect()
+        const parentBbox = proxy.action.renderer.element.parentElement.getBoundingClientRect()
 
-        this.action.renderer.footerLineLabel.innerText = ''
-        this.action.renderer.footerLabel.innerText = ''
+        let y = bbox.top - parentBbox.y
+        let x = bbox.left - parentBbox.x
 
-        let footerLabel = null
-        let footerLineNumbers = null
-        let headerLineNumbers = this.action.execution.nodeData.location.start.line.toString()
+        let height = bbox.height * ActionProxy.heightMultiplier
+        let width = bbox.width * ActionProxy.widthMultiplier
 
-        if (this.action.state.isExpression && this.action.state.isInline) {
-            // Inline expression
-            headerLineNumbers = ''
+        // y offset is 0 if the action is a child
+        if (proxy.action.parent.execution.nodeData.type == 'Program') {
+            y += (bbox.height - height) / 2
         }
 
-        // Set the line numbers
-        this.action.renderer.headerLineLabel.innerText = headerLineNumbers
-        if (footerLineNumbers != null) {
-            this.action.renderer.footerLineLabel.innerText = footerLineNumbers
-        }
+        x *= ActionProxy.widthMultiplier
 
-        // Render labels
-        monaco.editor.colorize(headerLabel, 'javascript', {}).then((result) => {
-            if (this.action?.renderer?.headerLabel != null) {
-                this.action.renderer.headerLabel.innerHTML = result
-            }
-        })
-
-        if (footerLabel != null) {
-            monaco.editor.colorize(footerLabel, 'javascript', {}).then((result) => {
-                if (this.action?.renderer?.footerLabel != null) {
-                    this.action.renderer.footerLabel.innerHTML = result
-                }
-            })
-        }
+        proxy.element.style.top = `${y}px`
+        proxy.element.style.left = `${x}px`
+        proxy.element.style.height = `${height}px`
+        proxy.element.style.width = `${width}px`
     }
 
     // Get frames should call get frames of each step.
@@ -74,5 +61,7 @@ export class Representation {
         }
     }
 
-    destroy() {}
+    destroy() {
+        this.action = null
+    }
 }

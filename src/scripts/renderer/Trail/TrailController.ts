@@ -8,7 +8,6 @@ export class TrailController {
 
     constructor(trail: Trail) {
         this.trail = trail
-
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
     }
 

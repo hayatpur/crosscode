@@ -15,6 +15,6 @@ export class TrailRenderer {
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {
-        console.warn('Destroy not implemented for', this)
+        this.trail = null
     }
 }

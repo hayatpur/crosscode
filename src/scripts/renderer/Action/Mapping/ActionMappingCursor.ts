@@ -1,10 +1,11 @@
 import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
+import { Executor } from '../../../executor/Executor'
+import { getLeafSteps } from '../../../utilities/action'
 import { createEl } from '../../../utilities/dom'
 import { lerp } from '../../../utilities/math'
 import { Ticker } from '../../../utilities/Ticker'
 import { ActionMapping } from './ActionMapping'
-import { getLeafSteps } from './ControlFlow'
 
 export class ActionMappingCursor {
     element: HTMLElement
@@ -12,9 +13,6 @@ export class ActionMappingCursor {
 
     private _tickerId: string
     _currentFocus: ExecutionGraph | ExecutionNode
-
-    // Flag for if it needs to re-render
-    dirty: boolean = true
 
     dragging: boolean = false
     private prevMouse: { x: number; y: number }
@@ -50,7 +48,7 @@ export class ActionMappingCursor {
 
                 this.targetTime = Math.min(
                     this.targetTime,
-                    this.mapping.controlFlow.flowPath.getTotalLength() - 6
+                    this.mapping.controlFlow.flowPath.getTotalLength()
                 )
 
                 this.prevMouse = { x: e.x, y: e.y }
@@ -92,44 +90,36 @@ export class ActionMappingCursor {
 
     /* ----------------------- Update ----------------------- */
     tick(dt: number) {
+        const initTime = this.mapping.time
+
         // console.log('T:', this.mapping.time)
         // Move time along control flow path
         const controlFlow = this.mapping.controlFlow
         const { x, y } = controlFlow.flowPath.getPointAtLength(this.mapping.time)
         this.element.style.left = `${x - 5}px`
-        this.element.style.top = `${y - 5}px`
-
+        this.element.style.top = `${y - 10}px`
         // If not grabbing, then gravitate towards next action
-        const view = this.mapping.action.view
-
         const time = this.mapping.time
-        const steps = getLeafSteps(view.action.steps)
-
+        const steps = getLeafSteps(Executor.instance.visualization.program.steps)
         if (!this.dragging) {
             let candidate = 0
             let amount = 0
             let nextOffset = 0
-
             // Find the closest frame
             for (let i = steps.length - 1; i >= 0; i--) {
-                const proxy = steps[i].proxy
-
+                const proxy = this.mapping.getProxyOfAction(steps[i])
                 const start = proxy.timeOffset
                 const end = start + proxy.element.getBoundingClientRect().height
-
                 candidate = i
-
                 if (time >= start) {
                     nextOffset = end
                     amount = end - start
                     break
                 }
             }
-
             if (candidate == -1) {
                 return
             }
-
             if (amount > 0) {
                 this.mapping.time = lerp(time, nextOffset, 0.1)
                 // this.mapping.time = Math.min(this.mapping.time, nextOffset - 0.01)
@@ -137,26 +127,26 @@ export class ActionMappingCursor {
         } else {
             // Find if it is on a frame currently
             let isOnFrame = false
-
             for (let i = steps.length - 1; i >= 0; i--) {
-                const proxy = steps[i].proxy
-
+                const proxy = this.mapping.getProxyOfAction(steps[i])
                 const start = proxy.timeOffset
                 const end = start + proxy.element.getBoundingClientRect().height
-
                 if (time >= start && time <= end) {
                     isOnFrame = true
                     break
                 }
             }
-
             if (!isOnFrame) {
                 this._speed = lerp(this._speed, 0.1, 0.3)
             } else {
                 this._speed = lerp(this._speed, 0.05, 0.3)
             }
-
             this.mapping.time = lerp(this.mapping.time, this.targetTime, this._speed)
+        }
+
+        // If time changed, then update
+        if (this.mapping.time != initTime) {
+            Executor.instance.visualization.view.renderer.update()
         }
     }
 

@@ -9,6 +9,7 @@
     height: 100%;
     padding: 2rem;
     padding-top: 7rem;
+    // pointer-events: none;
 }
 
 /* ----------------------- Monaco ----------------------- */
@@ -93,7 +94,7 @@
 
 .monaco-editor .cursors-layer .cursor {
     // background-color: var(--color-6) !important;
-    transition-property: top, left;
+    // transition-property: top, left;
     // transition: 0.1s;
     // opacity: 0.5;
     height: 20px !important;

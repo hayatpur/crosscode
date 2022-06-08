@@ -1,7 +1,6 @@
 import { resolvePath } from '../../../environment/environment'
 import {
     Accessor,
-    AccessorType,
     EnvironmentState,
     IdentifierState,
     instanceOfEnvironment,
@@ -249,34 +248,34 @@ export class EnvironmentRenderer {
         }
 
         // Add register label to the RHS of the data
-        const keys = Object.keys(this.dataRenderers)
-        keys.reverse() // SO HACKY - FIX
-        for (const id of keys) {
-            if (!dataHits.has(id)) {
-                const dataRenderer = this.dataRenderers[id]
-                if (dataRenderer == null) continue
+        // const keys = Object.keys(this.dataRenderers)
+        // keys.reverse() // SO HACKY - FIX
+        // for (const id of keys) {
+        //     if (!dataHits.has(id)) {
+        //         const dataRenderer = this.dataRenderers[id]
+        //         if (dataRenderer == null) continue
 
-                const name = 'Return Value'
+        //         const name = 'Return Value'
 
-                if (!(name in this.identifierRenderers)) {
-                    const renderer = new IdentifierRenderer()
-                    dataRenderer.column.children[0].appendChild(renderer.element)
+        //         if (!(name in this.identifierRenderers)) {
+        //             const renderer = new IdentifierRenderer()
+        //             dataRenderer.column.children[0].appendChild(renderer.element)
 
-                    this.identifierRenderers[name] = renderer
-                }
+        //             this.identifierRenderers[name] = renderer
+        //         }
 
-                hits.add(name)
+        //         hits.add(name)
 
-                this.identifierRenderers[name].setState({
-                    name,
-                    location: [{ type: AccessorType.ID, value: id }],
-                })
+        //         this.identifierRenderers[name].setState({
+        //             name,
+        //             location: [{ type: AccessorType.ID, value: id }],
+        //         })
 
-                this.identifierRenderers[name].element.classList.add('ret')
+        //         this.identifierRenderers[name].element.classList.add('ret')
 
-                break
-            }
-        }
+        //         break
+        //     }
+        // }
 
         // Remove hits that aren't used
         for (const [name, renderer] of Object.entries(this.identifierRenderers)) {

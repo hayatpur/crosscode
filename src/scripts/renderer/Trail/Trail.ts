@@ -48,6 +48,11 @@ export class Trail {
 
         this.controller = null
         this.renderer = null
+
+        this.startEnvironment = null
+        this.endEnvironment = null
+        this.execution = null
+        this.state = null
     }
 }
 
