@@ -45,6 +45,7 @@ export class ActionProxy {
             `_${this.action.execution.nodeData.type?.replace(' ', '-')}`,
             `${this.action.execution.nodeData.preLabel?.replace(' ', '-')}`,
         ]
+
         this.element = createEl('div', classes)
     }
 
@@ -81,6 +82,15 @@ export class ActionProxy {
 
         // Update own visual
         this.action.representation.updateProxyVisual(this)
+
+        /* ------------- Specialized representations ------------ */
+        if (this.action.execution.nodeData.preLabel == 'Test') {
+            if (!this.action.state.isShowingSteps) {
+                this.element.innerHTML = `<ion-icon name="checkmark-outline"></ion-icon>`
+            } else {
+                // TODO
+            }
+        }
     }
 
     /* ------------------------ Focus ----------------------- */

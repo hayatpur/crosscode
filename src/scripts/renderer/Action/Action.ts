@@ -60,14 +60,7 @@ export class Action {
         }
 
         this.state.isShowingSteps = true
-
-        this.renderer.update()
-        Executor.instance.visualization.mapping?.updateProxies()
-        const program = Executor.instance.visualization.program
-        Executor.instance.visualization.view?.setFrames(
-            program.representation.getFrames(),
-            program.execution.precondition
-        )
+        this.update()
     }
 
     destroySteps() {
@@ -76,6 +69,12 @@ export class Action {
 
         this.state.isShowingSteps = false
 
+        this.update()
+    }
+
+    /* ----------------------- Update ----------------------- */
+
+    update() {
         this.renderer.update()
         Executor.instance.visualization.mapping?.updateProxies()
         const program = Executor.instance.visualization.program

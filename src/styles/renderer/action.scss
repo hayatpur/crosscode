@@ -29,6 +29,10 @@
     background: none;
 }
 
+.action:not(.is-showing-steps) {
+    border: 1px solid #ffffff14;
+}
+
 /* ----------------------- Mapping ---------------------- */
 .action-mapping {
     // transition: 0.2s;
@@ -56,6 +60,8 @@
     transition-property: background, box-shadow, transform;
     transition-duration: 0.2s;
     cursor: pointer;
+
+    border: 1px solid #ffffff30;
 }
 
 .action-proxy-container:hover {
@@ -72,6 +78,7 @@
 
 .action-proxy-container.has-steps {
     background: none;
+    border: none;
     box-shadow: 0px 0px 0px 1px #ffffff12 !important;
 }
 
@@ -82,65 +89,33 @@
 
 /* ----------------- AST Specific Styles ---------------- */
 
-// .Body > .action-proxy-indicator {
-//     height: 18px !important;
-//     width: 59px !important;
-// }
-
-// .Update > .action-proxy-indicator {
-//     height: 2px !important;
-//     opacity: 0.5;
-// }
-
-// .Initial > .action-proxy-indicator {
-//     height: 2px !important;
-//     opacity: 0.5;
-// }
-
 .action-proxy-container.Test {
-    // height: 15px !important;
-    // width: 15px !important;
-    // left: 6px !important;
-    // top: -6px !important;
-    // box-shadow: none;
-    // background: #1b1b2200;
-    // display: flex;
-    // align-items: center;
-    // border-radius: 50%;
-    // justify-content: center;
+    height: 15px !important;
+    width: 15px !important;
+    box-shadow: none;
+    background: #6ee7b70f !important;
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    justify-content: center;
+    border: 1px solid #6ee7b752;
+    backdrop-filter: blur(5px);
+}
+
+.action-proxy-container.Test.is-playing {
+    background: #6ee7b729 !important;
 }
 
 .action-proxy-container.Test > ion-icon.md.hydrated {
     font-size: 10px;
     --ionicon-stroke-width: 79px;
     color: #6ee7b7;
-    transform: translate(2px, -2px);
-    background: #1b1b22;
-    border-radius: 50%;
-    margin: 2px;
-}
-
-.action-proxy-container.Consequent:not(.has-steps) {
-    width: 40px !important;
-    height: 40px !important;
-    top: 16px !important;
-    left: 6px !important;
 }
 
 ._IfStatement > .action-proxy-indicator {
     background: none !important;
     padding-left: 17px;
     box-shadow: none !important;
-}
-
-._IfStatement > .action-proxy-indicator::before {
-    content: 'if';
-    font-family: var(--code-font-family);
-    font-size: 14px;
-    position: absolute;
-    top: 3px;
-    opacity: 0.8;
-    left: -3px;
 }
 
 /* -------------------- Control flow -------------------- */
@@ -201,19 +176,6 @@ svg.control-flow-svg {
 
 .action-proxy-container.is-playing {
     background: #353d50;
-}
-
-.action.is-showing-steps
-    > .action-step-container
-    > .action-header
-    > .action-interaction-area.itself {
-    background: none;
-    box-shadow: 0px 0px 0px 1px #ffffff2b;
-    transform: scale(1.1);
-}
-
-.action-proxy-container._IfStatement.Statement.has-steps {
-    transform: translateX(-6px);
 }
 
 /* -------------------- Action cursor ------------------- */

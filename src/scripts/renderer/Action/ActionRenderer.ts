@@ -1,5 +1,6 @@
-import * as ESTree from 'estree'
 import { Editor } from '../../editor/Editor'
+import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { createEl } from '../../utilities/dom'
 import { Action } from './Action'
 
@@ -56,22 +57,68 @@ export class ActionRenderer {
 }
 
 export function getActionCoordinates(
-    location: ESTree.SourceLocation,
-    parentLocation: ESTree.SourceLocation | null
+    execution: ExecutionGraph | ExecutionNode,
+    parentExecution: ExecutionGraph | ExecutionNode
 ) {
-    let bbox = Editor.instance.computeBoundingBoxForLoc(location)
+    if (execution.nodeData.type == 'BlockStatement') {
+        let parentBbox = parentExecution
+            ? getActionCoordinates(parentExecution, null)
+            : { x: 0, y: 0, width: 0, height: 0 }
 
-    let parentBbox = parentLocation
-        ? Editor.instance.computeBoundingBoxForLoc(parentLocation)
-        : { x: 0, y: 0, width: 0, height: 0 }
+        let bbox: {
+            x: number
+            y: number
+            width: number
+            height: number
+        } = { x: 0, y: 0, width: 0, height: 0 }
 
-    const paddingX = 0
-    const paddingY = 0
+        execution = execution as ExecutionGraph
 
-    return {
-        width: bbox.width + paddingX * 2 + 10, // TODO Why us there an offset?
-        height: bbox.height + paddingY * 2,
-        x: bbox.x - parentBbox.x - paddingX,
-        y: bbox.y - parentBbox.y - paddingY,
+        if (execution.vertices.length == 0) {
+            bbox.x = parentBbox.x
+            bbox.y = parentBbox.y
+        } else {
+            bbox = getActionCoordinates(execution.vertices[0], null)
+
+            let altBbox = {
+                minX: bbox.x,
+                minY: bbox.y,
+                maxX: bbox.x + bbox.width,
+                maxY: bbox.y + bbox.height,
+            }
+
+            for (let i = 1; i < execution.vertices.length; i++) {
+                const pBbox = getActionCoordinates(execution.vertices[i], null)
+                altBbox.minX = Math.min(altBbox.minX, pBbox.x)
+                altBbox.minY = Math.min(altBbox.minY, pBbox.y)
+                altBbox.maxX = Math.max(altBbox.maxX, pBbox.x + pBbox.width)
+                altBbox.maxY = Math.max(altBbox.maxY, pBbox.y + pBbox.height)
+            }
+
+            bbox.x = altBbox.minX
+            bbox.y = altBbox.minY
+            bbox.width = altBbox.maxX - altBbox.minX
+            bbox.height = altBbox.maxY - altBbox.minY
+        }
+
+        return {
+            width: bbox.width,
+            height: bbox.height,
+            x: bbox.x - parentBbox.x,
+            y: bbox.y - parentBbox.y,
+        }
+    } else {
+        let bbox = Editor.instance.computeBoundingBoxForLoc(execution.nodeData.location)
+
+        let parentBbox = parentExecution
+            ? getActionCoordinates(parentExecution, null)
+            : { x: 0, y: 0, width: 0, height: 0 }
+
+        return {
+            width: bbox.width + 10, // TODO Why us there an offset?
+            height: bbox.height,
+            x: bbox.x - parentBbox.x,
+            y: bbox.y - parentBbox.y,
+        }
     }
 }

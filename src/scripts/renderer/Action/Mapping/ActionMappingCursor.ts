@@ -98,9 +98,11 @@ export class ActionMappingCursor {
         const { x, y } = controlFlow.flowPath.getPointAtLength(this.mapping.time)
         this.element.style.left = `${x - 5}px`
         this.element.style.top = `${y - 10}px`
+
         // If not grabbing, then gravitate towards next action
         const time = this.mapping.time
         const steps = getLeafSteps(Executor.instance.visualization.program.steps)
+
         if (!this.dragging) {
             let candidate = 0
             let amount = 0

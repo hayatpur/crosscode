@@ -65,17 +65,12 @@ export class ControlFlow {
             const point = this.flowPath.getPointAtLength(t)
             point.x += pathBbox.left
             point.y += pathBbox.top
-            document.getElementById('test').style.top = `${point.y}px`
-            document.getElementById('test').style.left = `${point.x}px`
 
             const next = leafSteps[0]
             if (next == null) return
 
             const proxy = Executor.instance.visualization.mapping.getProxyOfAction(next)
             const nextIndicatorBBox = proxy.element.getBoundingClientRect()
-
-            // const dx = Math.abs(nextIndicatorBBox.x + nextIndicatorBBox.width / 2 - point.x + 20)
-            // const dy = Math.abs(nextIndicatorBBox.y + nextIndicatorBBox.height / 2 - point.y)
 
             if (
                 bboxContains(nextIndicatorBBox, {
@@ -85,7 +80,6 @@ export class ControlFlow {
                     height: 1,
                 })
             ) {
-                console.log('Recomputing..')
                 leafSteps.shift()
                 proxy.timeOffset = t
             }

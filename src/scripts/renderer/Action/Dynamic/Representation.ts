@@ -13,16 +13,16 @@ export class Representation {
         this.action = action
     }
 
-    update() {}
-
     updateActionVisual(renderer: ActionRenderer) {
-        const loc = this.action.execution.nodeData.location
-        const bbox = getActionCoordinates(loc, this.action.parent?.execution.nodeData.location)
+        const bbox = getActionCoordinates(this.action.execution, this.action.parent?.execution)
 
-        renderer.element.style.left = `${bbox.x}px`
-        renderer.element.style.top = `${bbox.y}px`
-        renderer.element.style.width = `${bbox.width}px`
-        renderer.element.style.height = `${bbox.height}px`
+        const paddingX = this.action.state.isShowingSteps ? 0 : 0
+        const paddingY = this.action.state.isShowingSteps ? 0 : 0
+
+        renderer.element.style.left = `${bbox.x - paddingX}px`
+        renderer.element.style.top = `${bbox.y - paddingY}px`
+        renderer.element.style.width = `${bbox.width + paddingX * 2}px`
+        renderer.element.style.height = `${bbox.height + paddingY * 2}px`
     }
 
     updateProxyVisual(proxy: ActionProxy) {
@@ -38,6 +38,8 @@ export class Representation {
         // y offset is 0 if the action is a child
         if (proxy.action.parent.execution.nodeData.type == 'Program') {
             y += (bbox.height - height) / 2
+        } else {
+            y *= ActionProxy.heightMultiplier
         }
 
         x *= ActionProxy.widthMultiplier
