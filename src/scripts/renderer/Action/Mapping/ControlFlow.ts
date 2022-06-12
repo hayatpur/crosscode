@@ -49,9 +49,15 @@ export class ControlFlow {
             controlFlowPoints.push(...points)
         }
 
-        if (controlFlowPoints.length > 1) {
-            const x = controlFlowPoints[1][0]
-            controlFlowPoints[0][0] = x
+        // End point
+        controlFlowPoints.push([10, this.mapping.element.getBoundingClientRect().bottom])
+
+        if (controlFlowPoints.length > 2) {
+            const sx = controlFlowPoints[1][0]
+            controlFlowPoints[0][0] = sx
+
+            const ex = controlFlowPoints[controlFlowPoints.length - 2][0]
+            controlFlowPoints[controlFlowPoints.length - 1][0] = ex
         }
 
         const d = catmullRomSolve(controlFlowPoints.flat(), 0)

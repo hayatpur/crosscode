@@ -12,7 +12,7 @@
     display: flex;
     position: absolute;
 
-    background: #31313a5f;
+    // background: #31313a5f;
 
     border-radius: var(--border-radius);
 
@@ -21,7 +21,7 @@
 
 .action.is-showing-steps {
     background: none;
-    box-shadow: 0px 0px 0px 1px #ffffff12 !important;
+    // box-shadow: 0px 0px 0px 1px #ffffff12 !important;
 }
 
 .action.is-program {
@@ -30,7 +30,7 @@
 }
 
 .action:not(.is-showing-steps) {
-    border: 1px solid #ffffff14;
+    // border: 1px solid #ffffff14;
 }
 
 /* ----------------------- Mapping ---------------------- */
@@ -40,9 +40,15 @@
     margin-left: 20px;
     min-width: 110px;
     position: absolute;
-    top: 115px;
+    padding-top: 115px;
     left: 0px;
+    top: 0px;
+    padding: 115px 20px;
     height: -webkit-fill-available;
+
+    border-left: 1px solid #ffffff12;
+    border-right: 1px solid #ffffff17;
+    background: var(--color-2);
 }
 
 /* -------------------- Action proxy -------------------- */
@@ -55,7 +61,7 @@
 
     background: var(--color-3);
     border-radius: var(--border-radius);
-    box-shadow: 0px 0px 5px 4px var(--color-10);
+    box-shadow: 0px 0px 5px 4px var(--color-2);
     transform: scale(1);
     transition-property: background, box-shadow, transform;
     transition-duration: 0.2s;
@@ -102,6 +108,10 @@
     backdrop-filter: blur(5px);
 }
 
+.action-proxy-container._FunctionDeclaration {
+    opacity: 0;
+}
+
 .action-proxy-container.Test.is-playing {
     background: #6ee7b729 !important;
 }
@@ -118,6 +128,10 @@
     box-shadow: none !important;
 }
 
+.action.is-playing {
+    background: #6bc8fd0d;
+}
+
 /* -------------------- Control flow -------------------- */
 svg.control-flow-svg {
     width: 100%;
@@ -126,7 +140,6 @@ svg.control-flow-svg {
     top: 0px;
     left: 0px;
     pointer-events: none;
-    z-index: -1;
 }
 
 @keyframes control-flow-show-stroke {
@@ -212,7 +225,7 @@ svg.control-flow-svg {
 
     margin-top: 6px;
 
-    transform: scale(0.7);
+    transform: scale(1.2);
 }
 
 .action:not(.is-inline):not(.program) > .action-cursor {
@@ -221,12 +234,12 @@ svg.control-flow-svg {
 
 .action-cursor:hover {
     opacity: 1;
-    transform: scale(0.8);
+    transform: scale(1);
 }
 
 .action-cursor.is-dragging {
     opacity: 1;
-    transform: scale(0.6);
+    transform: scale(0.8);
 }
 
 .action-proxy-container.has-steps {

@@ -33,7 +33,7 @@ export class ViewRenderer {
 
     create() {
         this.element = createEl('div', 'view', document.body)
-        const margin = Editor.instance.getMaxWidth() + 200
+        const margin = Editor.instance.getMaxWidth() + 300
         this.element.style.left = `${margin}px`
 
         this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')

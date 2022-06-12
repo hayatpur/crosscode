@@ -126,7 +126,8 @@ export class ActionMappingCursor {
             }
 
             if (amount > 0) {
-                this.mapping.time = lerp(time, nextOffset, 0.1)
+                this._speed = lerp(this._speed, 0.05, 0.3)
+                this.mapping.time = lerp(time, nextOffset, this._speed)
                 // this.mapping.time = Math.min(this.mapping.time, nextOffset - 0.01)
             }
         } else {

@@ -42,8 +42,7 @@ export class PartialCreateTrailRenderer extends TrailRenderer {
             prev.element.style.transform = `translate(${-pt - offset}px, ${pt + offset}px) scale(${
                 1 - (pt + offset) / 35
             })`
-            prev.element.style.opacity = `${Math.max(0.2, 1 - amount)}`
-            // prev.element.style.opacity = `${Math.max(0, 1 - 0.8 * amount - (0.1 * offset) / 5)}`
+            prev.element.style.opacity = `${Math.max(0.1, 1 - amount)}`
             prev.element.style.filter = `saturate(${Math.max(0, 1 - 2 * amount)})`
         }
 
