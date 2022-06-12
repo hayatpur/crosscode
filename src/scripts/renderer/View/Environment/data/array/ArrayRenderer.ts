@@ -6,7 +6,12 @@ import { IndexRenderer } from './IndexRenderer'
 
 export class ArrayRenderer extends DataRenderer {
     dataRenderers: {
-        [id: string]: { renderer: DataRenderer; index: IndexRenderer; comma: HTMLElement }
+        [id: string]: {
+            hole: HTMLElement
+            renderer: DataRenderer
+            index: IndexRenderer
+            comma: HTMLElement
+        }
     } = {}
     closingBrace: HTMLDivElement
     openingBrace: HTMLDivElement
@@ -48,11 +53,14 @@ export class ArrayRenderer extends DataRenderer {
                 const comma = createEl('div', 'data-array-comma')
                 comma.innerText = ','
 
-                this.dataRenderers[item.id] = { renderer, index, comma }
+                const hole = createEl('div', 'hole')
+                hole.append(renderer.element)
+
+                this.dataRenderers[item.id] = { hole, renderer, index, comma }
             }
 
             hits.add(item.id)
-            this.element.append(this.dataRenderers[item.id].renderer.element)
+            this.element.append(this.dataRenderers[item.id].hole)
             if (i < items.length - 1) {
                 this.element.append(this.dataRenderers[item.id].comma)
             }

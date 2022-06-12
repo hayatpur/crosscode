@@ -1,116 +1,175 @@
+import { getMemoryLocation, resolvePath } from '../../../environment/environment'
+import {
+    AccessorType,
+    EnvironmentState,
+    instanceOfEnvironment,
+    Residual,
+} from '../../../environment/EnvironmentState'
+import { Executor } from '../../../executor/Executor'
 import { getCurvedArrow, reflow } from '../../../utilities/dom'
 import { remap } from '../../../utilities/math'
-import { DataState } from '../../View/Environment/data/DataState'
-import { LiteralRenderer } from '../../View/Environment/data/literal/LiteralRenderer'
+import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
 import { Trail } from '../Trail'
 import { TrailRenderer } from './TrailRenderer'
 
 export class MoveTrailRenderer extends TrailRenderer {
-    movementTrace: SVGPathElement
-
-    // Copy of previous state
-    private prevCopy: LiteralRenderer | null
+    trace: SVGPathElement
 
     /* ----------------------- Create ----------------------- */
     constructor(trail: Trail) {
         super(trail)
 
         // Create movement trace
-        this.movementTrace = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        this.movementTrace.classList.add('action-mapping-connection', 'trail-move')
-        trail.endEnvironment.svg.appendChild(this.movementTrace)
-
-        const prev = this.trail.startEnvironment.getAllChildRenderers()[this.trail.state.toDataId]
-
-        if (prev != null) {
-            this.prevCopy = new LiteralRenderer()
-
-            const cache = prev._cachedState as DataState
-            this.prevCopy.setState(cache)
-
-            this.prevCopy.element.classList.add('is-free')
-            document.body.appendChild(this.prevCopy.element)
-        }
+        this.trace = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        this.trace.classList.add('action-mapping-connection', 'trail-move')
+        Executor.instance.visualization.view.renderer.svg.appendChild(this.trace)
     }
 
     /* ---------------------- Animation --------------------- */
-    update() {
-        if (this.prevCopy != null) {
-            const prev =
-                this.trail.startEnvironment.getAllChildRenderers()[this.trail.state.toDataId]
-            const bbox = prev.element.getBoundingClientRect()
-            this.prevCopy.element.style.top = `${bbox.top}px`
-            this.prevCopy.element.style.left = `${bbox.left}px`
+    update(amount: number, environment: EnvironmentRenderer) {
+        /* ---------------------- Old data ---------------------- */
+        const prev = environment.getResidualOf(this.trail.state.toDataId, this.trail.time)
 
-            const t = remap(this.trail.time, 0, 1, 0, 5)
-            this.prevCopy.element.style.transform = `translate(${-t}px, ${t}px)`
-            this.prevCopy.element.style.opacity = `${Math.max(0, 1 - this.trail.time)}`
-            this.prevCopy.element.style.filter = `saturate(${Math.max(0, 1 - 2 * this.trail.time)})`
+        if (prev != null) {
+            const pt = remap(amount, 0, 1, 0, 5)
+            let offset = 0
+            let hit = false
+            for (let i = 0; i < prev.element.parentElement.childElementCount; i++) {
+                const child = prev.element.parentElement.children[i]
+                if (hit) {
+                    offset++
+                }
 
-            if (t == 0 || t == 1) {
-                this.prevCopy.element.style.opacity = '0'
+                if (child == prev.element) {
+                    hit = true
+                }
             }
+            offset *= 5
+
+            prev.element.style.transform = `translate(${-pt - offset}px, ${pt + offset}px) scale(${
+                1 - (pt + offset) / 35
+            })`
+            prev.element.style.opacity = `${Math.max(0.2, 1 - amount)}`
+            prev.element.style.filter = `saturate(${Math.max(0, 1 - 2 * amount)})`
         }
 
+        /* ---------------------- New data ---------------------- */
         // Update path
-        if (this.trail.time == 0) {
-            this.movementTrace.classList.add('hidden')
+        if (amount == 0) {
+            this.trace.classList.add('hidden')
         } else {
-            this.movementTrace.classList.remove('hidden')
+            this.trace.classList.remove('hidden')
         }
 
-        const start =
-            this.trail.startEnvironment.getAllChildRenderers()[this.trail.state.fromDataIds[0]]
-                .element
-        const end =
-            this.trail.endEnvironment.getAllChildRenderers()[this.trail.state.toDataId].element
+        const start = environment.getResidualOf(this.trail.state.fromDataIds[0], this.trail.time)
+        const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
 
-        // Reset transformation
-        end.style.transform = ''
-        reflow(end)
+        end.element.style.transform = ''
+        reflow(end.element)
 
-        const environmentBbox = this.trail.endEnvironment.element.getBoundingClientRect()
-        const startBbox = start.getBoundingClientRect()
-        const endBbox = end.getBoundingClientRect()
+        const viewBbox =
+            Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
+        const environmentBbox = environment.element.getBoundingClientRect()
+        const startBbox = start.element.getBoundingClientRect()
+        const endBbox = end.element.getBoundingClientRect()
 
-        this.movementTrace.setAttribute(
+        this.trace.setAttribute(
             'd',
             getCurvedArrow(
-                startBbox.x + startBbox.width / 2 - environmentBbox.x,
-                startBbox.y + startBbox.height / 2 - environmentBbox.y,
-                endBbox.x + endBbox.width / 2 - environmentBbox.x,
-                endBbox.y + endBbox.height / 2 - environmentBbox.y
+                startBbox.x + startBbox.width / 2 - viewBbox.x,
+                startBbox.y + startBbox.height / 2 - viewBbox.y,
+                endBbox.x + endBbox.width / 2 - viewBbox.x,
+                endBbox.y + endBbox.height / 2 - viewBbox.y,
+                startBbox.x > endBbox.x
             )
         )
 
-        this.movementTrace.style.strokeDasharray = `${this.movementTrace.getTotalLength()}`
-        this.movementTrace.style.strokeDashoffset = `${
-            this.movementTrace.getTotalLength() -
-            this.trail.time * this.movementTrace.getTotalLength()
+        this.trace.style.strokeDasharray = `${this.trace.getTotalLength()}`
+        this.trace.style.strokeDashoffset = `${
+            this.trace.getTotalLength() - amount * this.trace.getTotalLength()
         }`
-
-        let { x, y } = this.movementTrace.getPointAtLength(
-            this.trail.time * this.movementTrace.getTotalLength()
-        )
+        let { x, y } = this.trace.getPointAtLength(amount * this.trace.getTotalLength())
 
         // Update transform
         x -= endBbox.x + endBbox.width / 2 - environmentBbox.x
         y -= endBbox.y + endBbox.height / 2 - environmentBbox.y
-        end.style.transform = `translate(${x}px, ${y}px)`
+        end.element.style.transform = `translate(${x}px, ${y}px)`
+    }
 
-        // if (this.trail.time > 0 && this.trail.time < 1) {
-        //     console.log('Moving...', this.trail.state)
-        //     console.log(end)
-        // }
+    postUpdate(amount: number, environment: EnvironmentRenderer) {
+        if (amount == 1) {
+            const start = environment.getResidualOf(
+                this.trail.state.fromDataIds[0],
+                this.trail.time
+            )
+            const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
+            const viewBbox =
+                Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
+
+            const startBbox = start.element.getBoundingClientRect()
+            const endBbox = end.element.getBoundingClientRect()
+
+            this.trace.setAttribute(
+                'd',
+                getCurvedArrow(
+                    startBbox.x + startBbox.width / 2 - viewBbox.x,
+                    startBbox.y + startBbox.height / 2 - viewBbox.y,
+                    endBbox.x + endBbox.width / 2 - viewBbox.x,
+                    endBbox.y + endBbox.height / 2 - viewBbox.y,
+
+                    startBbox.x > endBbox.x
+                )
+            )
+
+            if (
+                start.element.classList.contains('is-residual') ||
+                end.element.classList.contains('is-residual')
+            ) {
+                this.trace.style.opacity = `0.4`
+            } else {
+                this.trace.style.opacity = `1`
+            }
+
+            // if (
+            //     start.element.classList.contains('is-residual') &&
+            //     end.element.classList.contains('is-residual')
+            // ) {
+            //     this.trace.style.stroke = `url(#fade_both)`
+            // } else if (start.element.classList.contains('is-residual')) {
+            //     this.trace.style.stroke = `url(#fade_start)`
+            // } else if (end.element.classList.contains('is-residual')) {
+            //     this.trace.style.stroke = `url(#fade_end)`
+            // } else {
+            //     this.trace.style.stroke = `var(--path-color)`
+            // }
+        }
+    }
+
+    computeResidual(environment: EnvironmentState): Residual | null {
+        const prev = resolvePath(
+            environment,
+            [{ type: AccessorType.ID, value: this.trail.state.toDataId }],
+            null
+        )
+
+        if (instanceOfEnvironment(prev)) {
+            return null
+        }
+
+        return {
+            data: prev,
+            location: getMemoryLocation(environment, prev).foundLocation,
+        }
+    }
+
+    applyTimestamps(environment: EnvironmentState) {
+        environment.timestamps[this.trail.state.toDataId] = this.trail.time
     }
 
     /* ---------------------- Destroy --------------------- */
     destroy() {
         super.destroy()
-        this.movementTrace.remove()
-        this.prevCopy?.destroy()
-
-        this.movementTrace = null
-        this.prevCopy = null
+        this.trace.remove()
+        this.trace = null
     }
 }

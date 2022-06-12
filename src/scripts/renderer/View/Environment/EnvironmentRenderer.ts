@@ -28,9 +28,9 @@ export class EnvironmentRenderer {
 
     dataRenderers: { [id: string]: { data: DataRenderer; column: HTMLElement } } = {}
     identifierRenderers: { [id: string]: IdentifierRenderer } = {}
+    residualRenderers: { [id: string]: DataRenderer }[] = []
 
-    // SVG overlay
-    svg: SVGElement
+    timestamps: { [id: string]: number } = {}
 
     private environmentCache: string = null
     private filterCache: string = null
@@ -42,9 +42,6 @@ export class EnvironmentRenderer {
 
     create() {
         this.element = createEl('div', 'environment')
-        this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-        this.element.appendChild(this.svg)
-        this.svg.classList.add('environment-svg')
     }
 
     /* ----------------------- Render ----------------------- */
@@ -57,8 +54,11 @@ export class EnvironmentRenderer {
             return
         }
 
+        this.timestamps = environment.timestamps
+
         this.renderMemory(environment, filter)
         this.renderIdentifiers(environment, filter)
+        this.renderResiduals(environment, filter)
 
         // Update caches
         this.environmentCache = JSON.stringify(environment)
@@ -108,12 +108,6 @@ export class EnvironmentRenderer {
 
         memory = memory.filter((data) => data.frame >= hardScope || data.frame == 1)
 
-        // memory = memory.filter((data) => {
-        //     return ws.includes(data.id) || rs.includes(data.id)
-        // })
-
-        // memory.reverse()
-
         // Render references
         let references = Object.values(state.memory)
             .filter((m) => m != null)
@@ -123,6 +117,7 @@ export class EnvironmentRenderer {
             references = references.filter((data) => filter.includes(data.id))
         }
 
+        // Render references
         for (const reference of references) {
             const data = resolvePath(state, reference.value as Accessor[], null)
             if (instanceOfEnvironment(data)) continue
@@ -134,11 +129,13 @@ export class EnvironmentRenderer {
             if (renderer == null) {
                 renderer = { column: null, data: null }
                 renderer.column = createEl('div', 'environment-column', this.element)
+
                 createEl('div', 'identifier-row', renderer.column)
                 createEl('div', 'data-row', renderer.column)
-                renderer.data = createDataRenderer(data)
+                createEl('div', 'hole', renderer.column.children[1] as HTMLElement)
 
-                renderer.column.children[1].append(renderer.data.element)
+                renderer.data = createDataRenderer(data)
+                renderer.column.children[1].children[0].append(renderer.data.element)
 
                 this.dataRenderers[data.id] = renderer
             }
@@ -155,11 +152,13 @@ export class EnvironmentRenderer {
             if (renderer == null) {
                 renderer = { column: null, data: null }
                 renderer.column = createEl('div', 'environment-column', this.element)
+
                 createEl('div', 'identifier-row', renderer.column)
                 createEl('div', 'data-row', renderer.column)
-                renderer.data = createDataRenderer(data)
+                createEl('div', 'hole', renderer.column.children[1] as HTMLElement)
 
-                renderer.column.children[1].append(renderer.data.element)
+                renderer.data = createDataRenderer(data)
+                renderer.column.children[1].children[0].append(renderer.data.element)
 
                 this.dataRenderers[data.id] = renderer
             }
@@ -195,14 +194,6 @@ export class EnvironmentRenderer {
                 const data = resolvePath(state, scope.bindings[name].location, null)
                 const dataRenderer = this.dataRenderers[data.id]
                 if (dataRenderer == null) continue // Ignore dangling references
-
-                // if (filter != null) {
-                //     if (!filter.includes(data.id)) continue
-                // }
-
-                // if (!ws.includes(data.id) && !rs.includes(data.id)) {
-                //     continue
-                // }
 
                 let renderer = this.identifierRenderers[name]
                 if (renderer == null) {
@@ -247,36 +238,6 @@ export class EnvironmentRenderer {
             }
         }
 
-        // Add register label to the RHS of the data
-        // const keys = Object.keys(this.dataRenderers)
-        // keys.reverse() // SO HACKY - FIX
-        // for (const id of keys) {
-        //     if (!dataHits.has(id)) {
-        //         const dataRenderer = this.dataRenderers[id]
-        //         if (dataRenderer == null) continue
-
-        //         const name = 'Return Value'
-
-        //         if (!(name in this.identifierRenderers)) {
-        //             const renderer = new IdentifierRenderer()
-        //             dataRenderer.column.children[0].appendChild(renderer.element)
-
-        //             this.identifierRenderers[name] = renderer
-        //         }
-
-        //         hits.add(name)
-
-        //         this.identifierRenderers[name].setState({
-        //             name,
-        //             location: [{ type: AccessorType.ID, value: id }],
-        //         })
-
-        //         this.identifierRenderers[name].element.classList.add('ret')
-
-        //         break
-        //     }
-        // }
-
         // Remove hits that aren't used
         for (const [name, renderer] of Object.entries(this.identifierRenderers)) {
             if (!hits.has(name)) {
@@ -284,6 +245,78 @@ export class EnvironmentRenderer {
                 renderer.element.remove()
                 delete this.identifierRenderers[name]
             }
+        }
+    }
+
+    renderResiduals(state: EnvironmentState, filter?: string[]) {
+        // Hit test
+        const hits = new Set()
+
+        // Remove data that is no longer in the view
+        // TODO: Use hits to do this smartly
+        for (let i = 0; i < this.residualRenderers.length; i++) {
+            for (const [id, renderer] of Object.entries(this.residualRenderers[i])) {
+                renderer.destroy()
+                renderer.element.remove()
+                delete this.residualRenderers[id]
+            }
+        }
+
+        this.residualRenderers = []
+
+        // TODO: Filter
+        // if (filter != null) {
+        // memory = memory.filter((data) => filter.includes(data.id))
+        // }
+
+        for (let time = 0; time < state.residuals.length; time++) {
+            const residuals = state.residuals[time]
+            this.residualRenderers[time] = {}
+
+            for (const residual of residuals) {
+                const locationData = resolvePath(state, residual.location, null) as DataState
+                const locationRenderer = this.getAllChildRenderers()[locationData.id]
+                const hole = locationRenderer.element.parentElement
+
+                let residualRenderer = this.residualRenderers[time][`${time}-${residual.data.id}`]
+
+                // Create renderer if not theres
+                if (residualRenderer == null) {
+                    residualRenderer = createDataRenderer(residual.data)
+                    hole.appendChild(residualRenderer.element)
+                    residualRenderer.element.classList.add('is-residual')
+
+                    this.residualRenderers[time][`${time}-${residual.data.id}`] = residualRenderer
+                }
+
+                hits.add(`${time}-${residual.data.id}`)
+                residualRenderer.setState(residual.data)
+            }
+        }
+    }
+
+    getResidualOf(dataId: string, time: number): DataRenderer | IdentifierRenderer {
+        if (time < 0) {
+            return null
+        }
+
+        /* ------------------ Look in residual ------------------ */
+        for (let i = time; i < this.residualRenderers.length; i++) {
+            const residuals = this.residualRenderers[i]
+            for (const [id, renderer] of Object.entries(residuals)) {
+                if (id.split('-')[1] == dataId) {
+                    return renderer
+                }
+            }
+        }
+
+        /* ----- Make sure there are no residuals after time ---- */
+
+        /* ------------------ Look in data ------------------ */
+        if (this.timestamps[dataId] >= time) {
+            return null
+        } else {
+            return this.getAllChildRenderers()[dataId]
         }
     }
 
@@ -356,7 +389,7 @@ export class EnvironmentRenderer {
 /* ------------------------------------------------------ */
 /*                    Helper functions                    */
 /* ------------------------------------------------------ */
-export function createDataRenderer(data: DataState) {
+export function createDataRenderer(data: DataState): DataRenderer {
     if (instanceOfPrimitiveData(data)) {
         const mapping = {
             [DataType.Literal]: LiteralRenderer,

@@ -39,6 +39,11 @@ export interface Scope {
 
 export interface EnvironmentTransform extends Transform {}
 
+export interface Residual {
+    data: DataState
+    location: Accessor[]
+}
+
 export interface EnvironmentState {
     _type: 'EnvironmentState'
 
@@ -50,6 +55,12 @@ export interface EnvironmentState {
 
     // Temporary data
     registers: { [name: string]: DataState }
+
+    // Residual data (indexed with time)
+    residuals: Residual[][]
+
+    // ID map of timestamp of each data
+    timestamps: { [id: string]: number }
 
     id: string
 }

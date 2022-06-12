@@ -14,6 +14,10 @@
     opacity: 0 !important;
 }
 
+.data-row {
+    position: relative;
+}
+
 /* ------------------------ Focus ----------------------- */
 .data.secondary-focused {
     color: var(--s-color-3);
@@ -21,4 +25,18 @@
 
 .data.is-free {
     position: absolute;
+}
+
+/* ---------------------- Residual ---------------------- */
+.data.is-residual {
+    position: absolute;
+    transform: translate(-3px, 3px);
+    filter: saturate(0);
+    opacity: 0.2;
+    top: 0px;
+    left: 0px;
+}
+
+.hole {
+    position: relative;
 }

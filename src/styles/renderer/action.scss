@@ -189,7 +189,7 @@ svg.control-flow-svg {
 /* ----------------------- Trails ----------------------- */
 .action-mapping-connection {
     fill: #0000;
-    stroke: #383847;
+    stroke: var(--path-color);
     stroke-width: 1px;
 }
 

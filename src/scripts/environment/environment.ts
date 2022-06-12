@@ -44,8 +44,10 @@ export function createEnvironment(): EnvironmentState {
             //     true
             // ),
         },
+        residuals: [],
         registers: {},
         id: `Env(${++CUR_ENV_ID})`,
+        timestamps: {},
     }
 }
 
@@ -137,6 +139,8 @@ export function cloneEnvironment(
         memory: clone(environment.memory),
         registers: clone(environment.registers),
         id: assignNewId ? `Env(${++CUR_ENV_ID})` : environment.id,
+        residuals: clone(environment.residuals),
+        timestamps: clone(environment.timestamps),
     }
 }
 

@@ -17,7 +17,7 @@ export class ActionProxy {
     timeOffset: number = 0
 
     static heightMultiplier = 0.6
-    static widthMultiplier = 0.4
+    static widthMultiplier = 0.3
 
     constructor(action: Action) {
         this.action = action

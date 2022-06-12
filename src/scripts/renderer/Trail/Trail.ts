@@ -5,8 +5,10 @@ import { CreateTrailRenderer } from './Renderers/CreateTrailRenderer'
 import { MoveTrailRenderer } from './Renderers/MoveTrailRenderer'
 import { PartialCreateTrailRenderer } from './Renderers/PartialCreateTrailRenderer'
 import { PartialMoveTrailRenderer } from './Renderers/PartialMoveTrailRenderer'
+// import { MoveTrailRenderer } from './Renderers/MoveTrailRenderer'
+// import { PartialCreateTrailRenderer } from './Renderers/PartialCreateTrailRenderer'
+// import { PartialMoveTrailRenderer } from './Renderers/PartialMoveTrailRenderer'
 import { TrailRenderer } from './Renderers/TrailRenderer'
-import { TrailController } from './TrailController'
 import { TrailState, TrailType } from './TrailState'
 
 /* ------------------------------------------------------ */
@@ -14,43 +16,30 @@ import { TrailState, TrailType } from './TrailState'
 /* ------------------------------------------------------ */
 export class Trail {
     state: TrailState
-    controller: TrailController
     renderer: TrailRenderer
-
-    startEnvironment: EnvironmentRenderer
-    endEnvironment: EnvironmentRenderer
-
     execution: ExecutionGraph | ExecutionNode
 
-    time: number = 0
+    time: number
 
-    constructor(
-        state: TrailState,
-        startEnvironment: EnvironmentRenderer,
-        endEnvironment: EnvironmentRenderer,
-        execution: ExecutionGraph | ExecutionNode
-    ) {
+    _tickerId: string
+
+    constructor(state: TrailState, execution: ExecutionGraph | ExecutionNode, time: number) {
         this.state = state
-
         this.execution = execution
-
-        this.startEnvironment = startEnvironment
-        this.endEnvironment = endEnvironment
-
-        this.controller = new TrailController(this)
         this.renderer = createTrailRenderer(this)
+        this.time = time
+    }
+
+    /* ----------------------- Update ----------------------- */
+    update(amount: number, environment: EnvironmentRenderer) {
+        this.renderer.update(amount, environment)
     }
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {
-        this.controller.destroy()
         this.renderer.destroy()
-
-        this.controller = null
         this.renderer = null
 
-        this.startEnvironment = null
-        this.endEnvironment = null
         this.execution = null
         this.state = null
     }
@@ -67,6 +56,6 @@ export function createTrailRenderer(trail: Trail) {
         case TrailType.PartialMove:
             return new PartialMoveTrailRenderer(trail)
         default:
-            throw new Error('Unsupported trail type')
+            throw new Error(`Unsupported trail type ${trail.state.type}`)
     }
 }

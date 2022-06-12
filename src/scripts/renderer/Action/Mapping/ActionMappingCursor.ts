@@ -48,7 +48,7 @@ export class ActionMappingCursor {
 
                 this.targetTime = Math.min(
                     this.targetTime,
-                    this.mapping.controlFlow.flowPath.getTotalLength()
+                    this.mapping.controlFlow.flowPath.getTotalLength() + 5
                 )
 
                 this.prevMouse = { x: e.x, y: e.y }
@@ -107,6 +107,7 @@ export class ActionMappingCursor {
             let candidate = 0
             let amount = 0
             let nextOffset = 0
+
             // Find the closest frame
             for (let i = steps.length - 1; i >= 0; i--) {
                 const proxy = this.mapping.getProxyOfAction(steps[i])
@@ -119,9 +120,11 @@ export class ActionMappingCursor {
                     break
                 }
             }
+
             if (candidate == -1) {
                 return
             }
+
             if (amount > 0) {
                 this.mapping.time = lerp(time, nextOffset, 0.1)
                 // this.mapping.time = Math.min(this.mapping.time, nextOffset - 0.01)

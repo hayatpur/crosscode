@@ -1,3 +1,4 @@
+import { EnvironmentState, Residual } from '../../environment/EnvironmentState'
 import {
     AnimationTraceChain,
     AnimationTraceOperator,
@@ -19,17 +20,13 @@ export class TrailGroup {
     trails: Trail[] = []
     execution: ExecutionGraph | ExecutionNode
 
-    constructor(
-        execution: ExecutionGraph | ExecutionNode,
-        startEnvironment: EnvironmentRenderer,
-        endEnvironment: EnvironmentRenderer
-    ) {
+    constructor(execution: ExecutionGraph | ExecutionNode, time: number) {
         this.execution = execution
 
         if (instanceOfExecutionGraph(execution)) {
             const trailStates = getTrail(execution)
             for (const trailState of trailStates) {
-                const trail = new Trail(trailState, startEnvironment, endEnvironment, execution)
+                const trail = new Trail(trailState, execution, time)
                 this.trails.push(trail)
             }
         } else {
@@ -37,9 +34,33 @@ export class TrailGroup {
         }
     }
 
-    updateTime(time: number) {
+    updateTime(amount: number, environment: EnvironmentRenderer) {
         this.trails.forEach((trail) => {
-            trail.controller.updateTime(time)
+            trail.update(amount, environment)
+        })
+    }
+
+    postUpdate(amount: number, environment: EnvironmentRenderer) {
+        this.trails.forEach((trail) => {
+            trail.renderer.postUpdate(amount, environment)
+        })
+    }
+
+    computeResidual(environment: EnvironmentState): Residual[] {
+        const residual: Residual[] = []
+        this.trails.forEach((trail) => {
+            const trailResidual = trail.renderer.computeResidual(environment)
+            if (trailResidual != null) {
+                residual.push(trailResidual)
+            }
+        })
+
+        return residual
+    }
+
+    applyTimestamps(environment: EnvironmentState) {
+        this.trails.forEach((trail) => {
+            trail.renderer.applyTimestamps(environment)
         })
     }
 
