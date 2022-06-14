@@ -48,6 +48,8 @@ export class CreateTrailRenderer extends TrailRenderer {
         /* ---------------------- New data ---------------------- */
         const t = remap(amount, 0, 1, 5, 0)
 
+        // console.log(environment)
+
         const data = environment.getResidualOf(
             this.trail.state.toDataId,
             this.trail.time + 1

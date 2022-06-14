@@ -73,10 +73,18 @@ export class Action {
     }
 
     /* ----------------------- Update ----------------------- */
-
     update() {
         this.renderer.update()
-        Executor.instance.visualization.mapping?.updateProxies()
+
+        if (Executor.instance.visualization.mapping != null) {
+            Executor.instance.visualization.mapping.updateProxies()
+            const time = Executor.instance.visualization.mapping.time
+            Executor.instance.visualization.mapping.time = 0
+            setTimeout(() => {
+                Executor.instance.visualization.mapping.time = time
+            })
+        }
+
         const program = Executor.instance.visualization.program
         Executor.instance.visualization.view?.setFrames(
             program.representation.getFrames(),

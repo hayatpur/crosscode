@@ -3,10 +3,11 @@
 /* ------------------------------------------------------ */
 
 .view {
-    position: absolute;
-    left: 100px;
-    top: 100px;
     height: 100%;
+    width: 100%;
+    left: 0px;
+    top: 0px;
+    position: relative;
 }
 
 /* ------------------- Stack container ------------------ */
@@ -111,4 +112,16 @@ svg.environment-svg {
 .view-stack.is-before > .environment:last-child > .environment-column {
     opacity: 0.2;
     filter: saturate(0);
+}
+
+.environment-container {
+    width: fit-content;
+    position: absolute;
+    left: 30px;
+    top: 0px;
+    transition: 1s;
+}
+
+.environment-container.will-play {
+    filter: saturate(0) brightness(0.5);
 }

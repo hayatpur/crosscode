@@ -1,3 +1,4 @@
+import { Editor } from '../../editor/Editor'
 import { Executor } from '../../executor/Executor'
 import { getLeafSteps } from '../../utilities/action'
 import { createEl } from '../../utilities/dom'
@@ -20,19 +21,20 @@ export class ViewRenderer {
 
     // Stack container
     renderers: EnvironmentRenderer[] = []
+
+    // Each container organizes a renderer, TODO: why do I need a container?
     containers: HTMLElement[] = []
 
     /* ----------------------- Create ----------------------- */
     constructor(view: View) {
         this.view = view
-
         this.create()
     }
 
     create() {
-        this.element = createEl('div', 'view', Executor.instance.visualization.container)
-        // const margin = Editor.instance.getMaxWidth() + 300
-        // this.element.style.left = `${margin}px`
+        this.element = createEl('div', 'view', document.body)
+        const margin = Editor.instance.getMaxWidth() + 300
+        this.element.style.left = `${margin}px`
 
         this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         this.element.appendChild(this.svg)
@@ -95,61 +97,36 @@ export class ViewRenderer {
         /* --------------- Show the current frame --------------- */
 
         /* -------------------- Apply breaks -------------------- */
+        // for (let i = 0; i < mapping.breaks.length; i++) {
+        //     const breakpoint = mapping.breaks[i]
+        //     const renderer = this.createEnvironmentRenderer()
+        //     this.renderers.push(this.createEnvironmentRenderer())
+        // }
 
         /* -------------------- Apply trails -------------------- */
-        const candidateBreakIndex = mapping.getBreakIndexOfFrameIndex(candidate)
-        console.log(candidateBreakIndex)
-        this.renderers[candidateBreakIndex].render(this.view.state.frames[candidate])
-
         for (let i = 0; i < this.view.trails.length; i++) {
-            const breakIndex = mapping.getBreakIndexOfFrameIndex(i)
             const trails = this.view.trails[i]
+            let renderer = this.renderers[0] // TODO
+
             if (i < candidate) {
-                trails.updateTime(1, this.renderers[breakIndex])
+                trails.updateTime(1, renderer)
             } else if (i > candidate) {
                 // trails.updateTime(0, this.renderer)
             } else {
-                trails.updateTime(amount, this.renderers[breakIndex])
+                trails.updateTime(amount, renderer)
             }
         }
 
         for (let i = 0; i < this.view.trails.length; i++) {
-            const breakIndex = mapping.getBreakIndexOfFrameIndex(i)
             const trails = this.view.trails[i]
+            let renderer = this.renderers[0] // TODO
+
             if (i < candidate) {
-                trails.postUpdate(1, this.renderers[breakIndex])
+                trails.postUpdate(1, renderer)
             } else if (i > candidate) {
-                trails.postUpdate(0, this.renderers[breakIndex])
+                trails.postUpdate(0, renderer)
             } else {
-                trails.postUpdate(amount, this.renderers[breakIndex])
-            }
-        }
-
-        /* ----------- Update position of containers ------------ */
-        for (let i = 0; i < this.containers.length; i++) {
-            const container = this.containers[i]
-            // const breakIndex = mapping.breaks[i] ?? steps.length - 1
-            // const prevBreakIndex = mapping.breaks[i - 1] ?? 0
-
-            // If candidate is in the same break
-            if (candidateBreakIndex == i) {
-                const activeAction = mapping.getProxyOfAction(steps[candidate])
-                const activeActionBbox = activeAction.element.getBoundingClientRect()
-                container.style.top = `${
-                    activeActionBbox.top +
-                    activeActionBbox.height / 2 -
-                    container.getBoundingClientRect().height / 2
-                }px`
-
-                container.classList.remove('will-play')
-                container.classList.remove('has-played')
-            } else if (candidateBreakIndex < i) {
-                // const activeAction = mapping.getProxyOfAction(steps[candidate])
-                container.classList.add('will-play')
-                container.classList.remove('has-played')
-            } else {
-                container.classList.add('has-played')
-                container.classList.remove('will-play')
+                trails.postUpdate(amount, renderer)
             }
         }
     }
@@ -166,53 +143,28 @@ export class ViewRenderer {
         /* ------------------ Destroy existing ------------------ */
         this.renderers.forEach((renderer) => renderer?.destroy())
         this.renderers = []
-
         this.containers.forEach((container) => container.remove())
         this.containers = []
 
         /* --------------------- Create new --------------------- */
-        const mapping = Executor.instance.visualization.mapping
+        const breaks = Executor.instance.visualization.mapping.breaks ?? []
 
-        // Create containers
-        for (let i = 0; i < mapping.breaks.length + 1; i++) {
-            const container = createEl('div', 'environment-container')
-            this.containers.push(container)
-            this.element.appendChild(container)
-        }
-
-        // Create renderers
-        for (let i = 0; i < mapping.breaks.length + 1; i++) {
+        // Create a renderer for each break + 1
+        for (let i = 0; i < breaks.length + 1; i++) {
             const renderer = this.createEnvironmentRenderer()
             this.renderers.push(renderer)
-
-            const container = this.containers[i]
-            container.appendChild(renderer.element)
         }
 
-        // this.element.appendChild(this.renderers[0].element)
-
-        /* ----------- Place breaks at right position ----------- */
-        const steps = getLeafSteps(Executor.instance.visualization.program.steps)
-        for (let i = 0; i < mapping.breaks.length; i++) {
-            const actionToBreakOn = steps[mapping.breaks[i]]
-            const actionToBreakOnBbox = actionToBreakOn.renderer.element.getBoundingClientRect()
-
-            const nextAction = steps[mapping.breaks[i] + 1]
-            const nextActionBbox = nextAction?.renderer.element.getBoundingClientRect()
-
-            if (nextActionBbox != null) {
-                mapping.breakElements[i].style.top = `${
-                    (actionToBreakOnBbox.bottom + nextActionBbox.top) / 2
-                }px`
-            } else {
-                mapping.breakElements[i].style.top = `${actionToBreakOnBbox.bottom + 20}px`
-            }
+        // Organize them into containers
+        for (let i = 0; i < breaks.length + 1; i++) {
+            const container = createEl('div', 'environment-container', this.element)
+            container.appendChild(this.renderers[i].element)
         }
     }
 
     /* ----------------------- Destroy ---------------------- */
     destroy() {
-        this.renderers.forEach((renderer) => renderer.destroy())
+        this.renderers.forEach((renderer) => renderer?.destroy())
         this.renderers = null
 
         this.element.remove()

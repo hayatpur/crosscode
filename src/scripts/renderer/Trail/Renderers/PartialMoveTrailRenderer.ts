@@ -24,10 +24,10 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
         const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
 
         if (end == null || start == null) {
-            this.trace.style.display = `none`
+            this.trace.classList.add('hidden')
             return
         } else {
-            this.trace.style.display = `inherit`
+            this.trace.classList.remove('hidden')
         }
 
         end.element.style.transform = ''
@@ -116,6 +116,11 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
             // } else {
             //     this.trace.style.stroke = `var(--path-color)`
             // }
+        }
+
+        // Update path
+        if (amount == 0) {
+            this.trace.classList.add('hidden')
         }
     }
 

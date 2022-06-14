@@ -35,20 +35,15 @@
 
 /* ----------------------- Mapping ---------------------- */
 .action-mapping {
-    // transition: 0.2s;
     display: grid;
-    margin-left: 20px;
-    min-width: 110px;
-    position: absolute;
-    padding-top: 115px;
-    left: 0px;
-    top: 0px;
+    width: 110px;
     padding: 115px 20px;
     height: -webkit-fill-available;
 
     border-left: 1px solid #ffffff12;
     border-right: 1px solid #ffffff17;
     background: var(--color-2);
+    position: relative;
 }
 
 /* -------------------- Action proxy -------------------- */
@@ -112,6 +107,10 @@
     opacity: 0;
 }
 
+path.action-mapping-connection.hidden {
+    opacity: 0 !important;
+}
+
 .action-proxy-container.Test.is-playing {
     background: #6ee7b729 !important;
 }
@@ -169,7 +168,7 @@ svg.control-flow-svg {
 .action-mapping-break {
     position: absolute;
     width: 100%;
-    border-top: 2px solid #363649;
+    border-top: 1px solid #363649;
 }
 
 /* --------------------- Expressions -------------------- */

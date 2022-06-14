@@ -55,11 +55,7 @@ export class MoveTrailRenderer extends TrailRenderer {
 
         /* ---------------------- New data ---------------------- */
         // Update path
-        if (amount == 0) {
-            this.trace.classList.add('hidden')
-        } else {
-            this.trace.classList.remove('hidden')
-        }
+        this.trace.classList.remove('hidden')
 
         const start = environment.getResidualOf(this.trail.state.fromDataIds[0], this.trail.time)
         const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
@@ -69,7 +65,6 @@ export class MoveTrailRenderer extends TrailRenderer {
 
         const viewBbox =
             Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
-        const environmentBbox = environment.element.getBoundingClientRect()
         const startBbox = start.element.getBoundingClientRect()
         const endBbox = end.element.getBoundingClientRect()
 
@@ -91,6 +86,8 @@ export class MoveTrailRenderer extends TrailRenderer {
         let { x, y } = this.trace.getPointAtLength(amount * this.trace.getTotalLength())
 
         // Update transform
+        const environmentBbox =
+            environment.element.parentElement.parentElement.getBoundingClientRect()
         x -= endBbox.x + endBbox.width / 2 - environmentBbox.x
         y -= endBbox.y + endBbox.height / 2 - environmentBbox.y
         end.element.style.transform = `translate(${x}px, ${y}px)`
@@ -141,6 +138,11 @@ export class MoveTrailRenderer extends TrailRenderer {
             // } else {
             //     this.trace.style.stroke = `var(--path-color)`
             // }
+        }
+
+        // Update path
+        if (amount == 0) {
+            this.trace.classList.add('hidden')
         }
     }
 

@@ -1,4 +1,3 @@
-import { Editor } from '../../../editor/Editor'
 import { Executor } from '../../../executor/Executor'
 import { createEl } from '../../../utilities/dom'
 import { Ticker } from '../../../utilities/Ticker'
@@ -29,6 +28,7 @@ export class ActionMapping {
 
     constructor() {
         this.create()
+        this.addBreak(1)
 
         this.element.addEventListener('click', (e) => {
             if (
@@ -47,14 +47,19 @@ export class ActionMapping {
             this.cursor = new ActionMappingCursor(this)
 
             // Update frames
-            const program = Executor.instance.visualization.program
-            Executor.instance.visualization.view.setFrames(
-                program.representation.getFrames(),
-                program.execution.precondition
-            )
+            Executor.instance.visualization.program.update()
         }, 0)
 
         this.updateProxies()
+    }
+
+    getBreakIndexOfFrameIndex(index: number) {
+        for (let i = 0; i < this.breaks.length; i++) {
+            if (this.breaks[i] >= index) {
+                return i
+            }
+        }
+        return this.breaks.length
     }
 
     getProxyOfAction(action: Action) {
@@ -64,15 +69,17 @@ export class ActionMapping {
     addBreak(index: number) {
         this.breaks.push(index)
 
-        const breakEl = createEl('div', 'action-mapping-break', this.element)
+        const breakEl = createEl('div', 'action-mapping-break', this.element.parentElement)
         this.breakElements.push(breakEl)
     }
 
     create() {
-        this.element = createEl('div', 'action-mapping', document.body)
+        this.element = createEl('div', 'action-mapping')
+        const container = Executor.instance.visualization.container
+        container.insertBefore(this.element, container.firstChild)
 
-        const margin = Editor.instance.getMaxWidth() + 70
-        this.element.style.left = `${margin}px`
+        // const margin = Editor.instance.getMaxWidth() + 70
+        // this.element.style.left = `${margin}px`
     }
 
     tick(dt: number) {

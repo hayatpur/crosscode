@@ -115,7 +115,7 @@ export function getActionCoordinates(
             : { x: 0, y: 0, width: 0, height: 0 }
 
         return {
-            width: bbox.width + 10, // TODO Why us there an offset?
+            width: bbox.width + 10, // TODO Why us there an offset? Because monaco offsets after load
             height: bbox.height,
             x: bbox.x - parentBbox.x,
             y: bbox.y - parentBbox.y,
