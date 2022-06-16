@@ -6,11 +6,11 @@ import {
     Residual,
 } from '../../../environment/EnvironmentState'
 import { Executor } from '../../../executor/Executor'
-import { getCurvedArrow, reflow } from '../../../utilities/dom'
-import { remap } from '../../../utilities/math'
+import { getPerfectArrow, reflow } from '../../../utilities/dom'
+import { getNumericalValueOfStyle } from '../../../utilities/math'
 import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
 import { Trail } from '../Trail'
-import { TrailRenderer } from './TrailRenderer'
+import { TrailRenderer, updateResidual } from './TrailRenderer'
 
 export class MoveTrailRenderer extends TrailRenderer {
     trace: SVGPathElement
@@ -31,26 +31,7 @@ export class MoveTrailRenderer extends TrailRenderer {
         const prev = environment.getResidualOf(this.trail.state.toDataId, this.trail.time)
 
         if (prev != null) {
-            const pt = remap(amount, 0, 1, 0, 5)
-            let offset = 0
-            let hit = false
-            for (let i = 0; i < prev.element.parentElement.childElementCount; i++) {
-                const child = prev.element.parentElement.children[i]
-                if (hit) {
-                    offset++
-                }
-
-                if (child == prev.element) {
-                    hit = true
-                }
-            }
-            offset *= 5
-
-            prev.element.style.transform = `translate(${-pt - offset}px, ${pt + offset}px) scale(${
-                1 - (pt + offset) / 35
-            })`
-            prev.element.style.opacity = `${Math.max(0.1, 1 - amount)}`
-            prev.element.style.filter = `saturate(${Math.max(0, 1 - 2 * amount)})`
+            updateResidual(amount, prev)
         }
 
         /* ---------------------- New data ---------------------- */
@@ -70,12 +51,11 @@ export class MoveTrailRenderer extends TrailRenderer {
 
         this.trace.setAttribute(
             'd',
-            getCurvedArrow(
+            getPerfectArrow(
                 startBbox.x + startBbox.width / 2 - viewBbox.x,
                 startBbox.y + startBbox.height / 2 - viewBbox.y,
                 endBbox.x + endBbox.width / 2 - viewBbox.x,
-                endBbox.y + endBbox.height / 2 - viewBbox.y,
-                startBbox.x > endBbox.x
+                endBbox.y + endBbox.height / 2 - viewBbox.y
             )
         )
 
@@ -100,44 +80,35 @@ export class MoveTrailRenderer extends TrailRenderer {
                 this.trail.time
             )
             const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
+
+            if (end == null || start == null) {
+                return
+            }
+
             const viewBbox =
                 Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
-
             const startBbox = start.element.getBoundingClientRect()
             const endBbox = end.element.getBoundingClientRect()
 
             this.trace.setAttribute(
                 'd',
-                getCurvedArrow(
+                getPerfectArrow(
                     startBbox.x + startBbox.width / 2 - viewBbox.x,
                     startBbox.y + startBbox.height / 2 - viewBbox.y,
                     endBbox.x + endBbox.width / 2 - viewBbox.x,
-                    endBbox.y + endBbox.height / 2 - viewBbox.y,
-                    startBbox.x > endBbox.x
+                    endBbox.y + endBbox.height / 2 - viewBbox.y
                 )
             )
 
-            if (
-                start.element.classList.contains('is-residual') ||
-                end.element.classList.contains('is-residual')
-            ) {
-                this.trace.style.opacity = `0.4`
-            } else {
-                this.trace.style.opacity = `1`
-            }
+            this.trace.style.strokeDasharray = `${this.trace.getTotalLength()}`
+            this.trace.style.strokeDashoffset = `${
+                this.trace.getTotalLength() - 1 * this.trace.getTotalLength()
+            }`
 
-            // if (
-            //     start.element.classList.contains('is-residual') &&
-            //     end.element.classList.contains('is-residual')
-            // ) {
-            //     this.trace.style.stroke = `url(#fade_both)`
-            // } else if (start.element.classList.contains('is-residual')) {
-            //     this.trace.style.stroke = `url(#fade_start)`
-            // } else if (end.element.classList.contains('is-residual')) {
-            //     this.trace.style.stroke = `url(#fade_end)`
-            // } else {
-            //     this.trace.style.stroke = `var(--path-color)`
-            // }
+            this.trace.style.opacity = `${
+                getNumericalValueOfStyle(end.element.style.opacity, 1) *
+                getNumericalValueOfStyle(start.element.style.opacity, 1)
+            }`
         }
 
         // Update path
@@ -145,6 +116,8 @@ export class MoveTrailRenderer extends TrailRenderer {
             this.trace.classList.add('hidden')
         }
     }
+
+    alwaysUpdate(environment: EnvironmentRenderer) {}
 
     computeResidual(environment: EnvironmentState): Residual | null {
         const prev = resolvePath(

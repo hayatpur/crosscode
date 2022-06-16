@@ -1,6 +1,7 @@
-let a = 5
-let b = 2
+let array = [5, 2, 7, 1, 6]
+let n = array.length
 
-if (a > b) {
-    a = b
+// Shift to right
+for (let i = 1; i < n; i++) {
+    array[i] = array[i - 1]
 }

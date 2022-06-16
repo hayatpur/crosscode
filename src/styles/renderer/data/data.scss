@@ -30,7 +30,6 @@
 /* ---------------------- Residual ---------------------- */
 .data.is-residual {
     position: absolute;
-    transform: translate(-3px, 3px);
     filter: saturate(0);
     opacity: 0.2;
     top: 0px;

@@ -16,17 +16,18 @@
 
     border-radius: var(--border-radius);
 
+    transition: 0.2s;
     z-index: -1;
 }
 
 .action.is-showing-steps {
-    background: none;
+    // background: none;
     // box-shadow: 0px 0px 0px 1px #ffffff12 !important;
 }
 
 .action.is-program {
     box-shadow: none !important;
-    background: none;
+    // background: none;
 }
 
 .action:not(.is-showing-steps) {
@@ -36,7 +37,7 @@
 /* ----------------------- Mapping ---------------------- */
 .action-mapping {
     display: grid;
-    width: 110px;
+    width: fit-content;
     padding: 115px 20px;
     height: -webkit-fill-available;
 
@@ -91,10 +92,8 @@
 /* ----------------- AST Specific Styles ---------------- */
 
 .action-proxy-container.Test {
-    height: 15px !important;
-    width: 15px !important;
     box-shadow: none;
-    background: #6ee7b70f !important;
+    background: #0d3c2a !important;
     display: flex;
     align-items: center;
     border-radius: 5px;
@@ -128,7 +127,7 @@ path.action-mapping-connection.hidden {
 }
 
 .action.is-playing {
-    background: #6bc8fd0d;
+    background: #6f97dc3b;
 }
 
 /* -------------------- Control flow -------------------- */
@@ -187,7 +186,7 @@ svg.control-flow-svg {
 }
 
 .action-proxy-container.is-playing {
-    background: #353d50;
+    background: #49629c;
 }
 
 /* -------------------- Action cursor ------------------- */

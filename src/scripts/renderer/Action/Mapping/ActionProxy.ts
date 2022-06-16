@@ -1,8 +1,11 @@
+import * as ESTree from 'estree'
 import { createEl } from '../../../utilities/dom'
+import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
 
 export class ActionProxy {
     static all: { [id: string]: ActionProxy } = {}
+    static stacks: { [location: string]: ActionProxy[] } = {}
 
     // Container of this things indicator and it's steps
     element: HTMLElement
@@ -16,13 +19,16 @@ export class ActionProxy {
     // Time in control flow
     timeOffset: number = 0
 
-    static heightMultiplier = 0.6
-    static widthMultiplier = 0.3
+    static heightMultiplier = 0.8
+    static widthMultiplier = 0.5
+
+    private _tickerId: string
 
     constructor(action: Action) {
         this.action = action
 
         ActionProxy.all[action.state.id] = this
+        ActionProxy.addToStack(this)
 
         this.create()
         this.update()
@@ -37,6 +43,8 @@ export class ActionProxy {
             e.stopPropagation()
             e.preventDefault()
         })
+
+        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
     }
 
     create() {
@@ -47,6 +55,40 @@ export class ActionProxy {
         ]
 
         this.element = createEl('div', classes)
+
+        // Find stack
+        let stack = ActionProxy.stacks[locationToKey(this.action.execution.nodeData.location)]
+        const depth = stack.length - 1
+        // this.element.style.transform = `translate(${depth * 2}px, ${depth * 2}px)`
+    }
+
+    tick(dt: number) {
+        // Organize stacks
+        for (const [key, stack] of Object.entries(ActionProxy.stacks)) {
+            let isPlayingIndex = -1
+
+            for (let i = 0; i < stack.length; i++) {
+                const proxy = stack[i]
+                if (proxy.element.classList.contains('is-playing')) {
+                    isPlayingIndex = i
+                    break
+                }
+            }
+
+            if (isPlayingIndex == -1) {
+                isPlayingIndex = 0
+            }
+
+            for (let i = 0; i < stack.length; i++) {
+                const proxy = stack[i]
+                if (i != isPlayingIndex) {
+                    proxy.element.style.opacity = `0`
+                } else {
+                    proxy.element.style.opacity = `1`
+                }
+                // proxy.element.style.transform = `translate(${i * 2}px, ${i * 2}px)`
+            }
+        }
     }
 
     update() {
@@ -119,7 +161,41 @@ export class ActionProxy {
     destroy() {
         delete ActionProxy.all[this.action.state.id]
 
+        ActionProxy.removeFromStack(this)
+        delete ActionProxy.stacks[locationToKey(this.action.execution.nodeData.location)]
+
+        Ticker.instance.removeTickFrom(this._tickerId)
+
         this.element.remove()
         this.element = null
     }
+
+    static addToStack(proxy: ActionProxy) {
+        const key = locationToKey(proxy.action.execution.nodeData.location)
+        if (ActionProxy.stacks[key] == null) {
+            ActionProxy.stacks[key] = []
+        }
+
+        ActionProxy.stacks[key].push(proxy)
+    }
+
+    static removeFromStack(proxy: ActionProxy) {
+        const key = locationToKey(proxy.action.execution.nodeData.location)
+        const stack = ActionProxy.stacks[key]
+
+        if (stack == null) {
+            return
+        }
+
+        const index = stack.indexOf(proxy)
+        if (index == -1) {
+            return
+        }
+
+        stack.splice(index, 1)
+    }
+}
+
+export function locationToKey(location: ESTree.SourceLocation) {
+    return `${location.start.line}:${location.start.column}:${location.end.line}:${location.end.column}`
 }

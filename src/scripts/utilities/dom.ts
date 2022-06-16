@@ -1,6 +1,5 @@
 import * as CurvedArrows from 'curved-arrows'
 import * as PerfectArrows from 'perfect-arrows'
-import { Executor } from '../executor/Executor'
 
 export function reflow(el: HTMLElement) {
     void el?.offsetHeight
@@ -128,8 +127,9 @@ export function getPerfectArrow(x0: number, y0: number, x1: number, y1: number) 
         padEnd: 0,
         padStart: 0,
         flip: x0 > x1,
-        // stretchMin: Executor.instance.PARAMS.a * 100,
-        stretchMax: Executor.instance.PARAMS.b * 1000,
+        // bow: Executor.instance.PARAMS.c * 10,
+        // stretch: Executor.instance.PARAMS.d * 10,
+        straights: false,
     })
     return `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`
 }

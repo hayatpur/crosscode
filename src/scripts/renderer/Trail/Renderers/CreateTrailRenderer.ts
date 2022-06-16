@@ -9,7 +9,7 @@ import { remap } from '../../../utilities/math'
 import { DataRenderer } from '../../View/Environment/data/DataRenderer'
 import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
 import { Trail } from '../Trail'
-import { TrailRenderer } from './TrailRenderer'
+import { TrailRenderer, updateResidual } from './TrailRenderer'
 
 export class CreateTrailRenderer extends TrailRenderer {
     /* ----------------------- Create ----------------------- */
@@ -21,28 +21,8 @@ export class CreateTrailRenderer extends TrailRenderer {
     update(amount: number, environment: EnvironmentRenderer) {
         /* ---------------------- Old data ---------------------- */
         const prev = environment.getResidualOf(this.trail.state.toDataId, this.trail.time)
-
         if (prev != null) {
-            const pt = remap(amount, 0, 1, 0, 5)
-            let offset = 0
-            let hit = false
-            for (let i = 0; i < prev.element.parentElement.childElementCount; i++) {
-                const child = prev.element.parentElement.children[i]
-                if (hit) {
-                    offset++
-                }
-
-                if (child == prev.element) {
-                    hit = true
-                }
-            }
-            offset *= 5
-
-            prev.element.style.transform = `translate(${-pt - offset}px, ${pt + offset}px) scale(${
-                1 - (pt + offset) / 35
-            })`
-            prev.element.style.opacity = `${Math.max(0.1, 1 - amount)}`
-            prev.element.style.filter = `saturate(${Math.max(0, 1 - 2 * amount)})`
+            updateResidual(amount, prev)
         }
 
         /* ---------------------- New data ---------------------- */

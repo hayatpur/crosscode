@@ -28,7 +28,7 @@ export class ActionMapping {
 
     constructor() {
         this.create()
-        this.addBreak(1)
+        // this.addBreak(1)
 
         this.element.addEventListener('click', (e) => {
             if (
@@ -140,6 +140,9 @@ export class ActionMapping {
         }
 
         this.controlFlow?.update()
+        // setInterval(() => {
+        //     this.controlFlow?.update()
+        // }, 0)
     }
 
     duration() {

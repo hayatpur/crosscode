@@ -1,6 +1,6 @@
 import { Editor } from '../../editor/Editor'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { ExecutionNode, NodeData } from '../../execution/primitive/ExecutionNode'
 import { createEl } from '../../utilities/dom'
 import { Action } from './Action'
 
@@ -58,9 +58,10 @@ export class ActionRenderer {
 
 export function getActionCoordinates(
     execution: ExecutionGraph | ExecutionNode,
-    parentExecution: ExecutionGraph | ExecutionNode
+    parentExecution: ExecutionGraph | ExecutionNode,
+    blockTreatment = true
 ) {
-    if (execution.nodeData.type == 'BlockStatement') {
+    if (execution.nodeData.type == 'BlockStatement' && blockTreatment) {
         let parentBbox = parentExecution
             ? getActionCoordinates(parentExecution, null)
             : { x: 0, y: 0, width: 0, height: 0 }
@@ -101,6 +102,11 @@ export function getActionCoordinates(
             bbox.height = altBbox.maxY - altBbox.minY
         }
 
+        if (execution.vertices.some((v) => isChunk(v.nodeData))) {
+            const indentation = execution.nodeData.location.start.column
+            bbox.width -= indentation * 4
+        }
+
         return {
             width: bbox.width,
             height: bbox.height,
@@ -114,11 +120,21 @@ export function getActionCoordinates(
             ? getActionCoordinates(parentExecution, null)
             : { x: 0, y: 0, width: 0, height: 0 }
 
+        if (parentExecution?.nodeData.type == 'BlockStatement' && isChunk(execution.nodeData)) {
+            const indentation = execution.nodeData.location.start.column
+            bbox.width -= indentation * 10
+        }
+
         return {
-            width: bbox.width + 10, // TODO Why us there an offset? Because monaco offsets after load
+            width: bbox.width, // TODO Why us there an offset? Because monaco offsets after load
             height: bbox.height,
             x: bbox.x - parentBbox.x,
             y: bbox.y - parentBbox.y,
         }
     }
+}
+
+export function isChunk(nodeData: NodeData) {
+    const chunks = new Set(['IfStatement', 'WhileStatement', 'DoWhileStatement', 'ForStatement'])
+    return chunks.has(nodeData.type)
 }
