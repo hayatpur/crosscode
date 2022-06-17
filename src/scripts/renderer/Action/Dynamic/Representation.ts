@@ -1,5 +1,4 @@
 import { EnvironmentState } from '../../../environment/EnvironmentState'
-import { NodeData } from '../../../execution/primitive/ExecutionNode'
 import { Action } from '../Action'
 import { ActionRenderer, getActionCoordinates } from '../ActionRenderer'
 import { ActionProxy } from '../Mapping/ActionProxy'
@@ -16,17 +15,6 @@ export class Representation {
 
     updateActionVisual(renderer: ActionRenderer) {
         const bbox = getActionCoordinates(this.action.execution, this.action.parent?.execution)
-
-        // const startingColumn = this.action.execution.nodeData.location.start.column
-        // const parentStartingColumn =
-        //     this.action.parent?.execution?.nodeData.location.start.column ?? startingColumn
-
-        // if (
-        //     isIndenting(this.action.execution.nodeData) &&
-        //     startingColumn - parentStartingColumn > 0
-        // ) {
-        //     bbox.width -= 40
-        // }
 
         const paddingX = this.action.state.isShowingSteps ? 0 : 0
         const paddingY = this.action.state.isShowingSteps ? 0 : 0
@@ -78,13 +66,4 @@ export class Representation {
     destroy() {
         this.action = null
     }
-}
-
-function isIndenting(nodeData: NodeData) {
-    return (
-        nodeData.type == 'BlockStatement' ||
-        nodeData.type == 'Program' ||
-        nodeData.type == 'FunctionDeclaration' ||
-        nodeData.type == 'IfStatement'
-    )
 }

@@ -1,7 +1,7 @@
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { Action } from '../renderer/Action/Action'
-import { BlockStatementRepresentation } from '../renderer/Action/Dynamic/BlockStatementRepresentation'
+import { ForStatementRepresentation } from '../renderer/Action/Dynamic/ForStatementRepresentation'
 import { IfStatementRepresentation } from '../renderer/Action/Dynamic/IfStatementRepresentation'
 import { Representation } from '../renderer/Action/Dynamic/Representation'
 
@@ -80,15 +80,15 @@ export function createRepresentation(action: Action) {
         // case 'FunctionCall':
         //     representation = FunctionCallRepresentation
         //     break
-        // case 'ForStatement':
-        //     representation = ForStatementRepresentation
-        //     break
+        case 'ForStatement':
+            representation = ForStatementRepresentation
+            break
         // case 'Program':
         //     representation = BlockStatementRepresentation
         //     break
-        case 'BlockStatement':
-            representation = BlockStatementRepresentation
-            break
+        // case 'BlockStatement':
+        //     representation = BlockStatementRepresentation
+        //     break
         // case 'WhileStatement':
         //     representation = WhileStatementRepresentation
         //     break

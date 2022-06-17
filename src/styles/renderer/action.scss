@@ -146,9 +146,16 @@ svg.control-flow-svg {
 
 .control-flow-path {
     fill: none;
-    stroke: var(--color-6);
+    stroke: #49494e;
     stroke-width: 1px;
-    opacity: 0.2;
+}
+
+.control-flow-path-overlay {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1px;
+    stroke-dasharray: 5;
+    opacity: 0.05;
 }
 
 .control-flow-path-completed {
@@ -240,10 +247,63 @@ svg.control-flow-svg {
     background: none;
 }
 
-.action-proxy-container:not(.has-steps) {
+.action-proxy-container {
     z-index: 1;
 }
 
 .action-proxy-container:nth-child(even) {
     z-index: 1;
+}
+
+/* -------------------- Stack button -------------------- */
+.stack-button {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    right: -20px;
+    top: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 5px;
+    transition: 0.2s;
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.action-proxy-container:hover > .stack-button {
+    opacity: 0.8;
+}
+
+.stack-button:hover {
+    transform: scale(1.1);
+}
+
+.stack-button:active,
+.stack-button.is-active {
+    transform: scale(0.9);
+    opacity: 1 !important;
+    color: var(--s-color-4);
+}
+
+.action-proxy-container._ForStatement.showing-stack {
+    box-shadow: 0px 0px 0px 0.5px #9981ff7d !important;
+    display: flex;
+    flex-direction: column;
+    height: fit-content !important;
+    z-index: 1;
+}
+
+.action-proxy-container._ForStatement.showing-stack > .out-of-view {
+    opacity: 1;
+}
+
+.action-proxy-container._ForStatement.showing-stack > .action-proxy-container {
+    position: relative;
+    top: 0px !important;
+    margin-bottom: 5px !important;
+}
+
+svg.control-flow-svg.control-flow-svg-overlay {
+    z-index: 5;
 }
