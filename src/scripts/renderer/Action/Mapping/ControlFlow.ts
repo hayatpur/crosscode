@@ -11,7 +11,9 @@ export class ControlFlow {
     mapping: ActionMapping
 
     container: SVGElement
+
     flowPath: SVGPathElement
+    flowPathCompleted: SVGPathElement
 
     private _tickerId: string
 
@@ -29,6 +31,11 @@ export class ControlFlow {
         this.flowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
         this.flowPath.classList.add('control-flow-path')
         this.container.appendChild(this.flowPath)
+
+        // Create completed path
+        this.flowPathCompleted = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        this.flowPathCompleted.classList.add('control-flow-path-completed')
+        this.container.appendChild(this.flowPathCompleted)
 
         this.update()
     }
@@ -60,8 +67,13 @@ export class ControlFlow {
             controlFlowPoints[controlFlowPoints.length - 1][0] = ex
         }
 
-        const d = catmullRomSolve(controlFlowPoints.flat(), 0)
+        const d = catmullRomSolve(controlFlowPoints.flat(), 0.5)
         this.flowPath.setAttribute('d', d)
+
+        // Update completed flow path
+        this.flowPathCompleted.setAttribute('d', d)
+        this.flowPathCompleted.style.strokeDasharray = `${this.flowPath.getTotalLength()}`
+        this.flowPathCompleted.style.strokeDashoffset = `${this.flowPath.getTotalLength()}`
 
         // Update timings of step proxies
         const leafSteps = getLeafSteps(steps)

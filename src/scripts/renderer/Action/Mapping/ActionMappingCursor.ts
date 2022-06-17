@@ -153,6 +153,12 @@ export class ActionMappingCursor {
         // If time changed, then update
         if (this.mapping.time != initTime) {
             Executor.instance.visualization.view.renderer.update()
+
+            // Update flow path
+            const controlFlow = this.mapping.controlFlow
+            controlFlow.flowPathCompleted.style.strokeDashoffset = `${
+                controlFlow.flowPath.getTotalLength() - this.mapping.time
+            }`
         }
     }
 

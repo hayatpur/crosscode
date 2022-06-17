@@ -20,18 +20,8 @@
     z-index: -1;
 }
 
-.action.is-showing-steps {
-    // background: none;
-    // box-shadow: 0px 0px 0px 1px #ffffff12 !important;
-}
-
 .action.is-program {
     box-shadow: none !important;
-    // background: none;
-}
-
-.action:not(.is-showing-steps) {
-    // border: 1px solid #ffffff14;
 }
 
 /* ----------------------- Mapping ---------------------- */
@@ -58,8 +48,9 @@
     background: var(--color-3);
     border-radius: var(--border-radius);
     box-shadow: 0px 0px 5px 4px var(--color-2);
+
     transform: scale(1);
-    transition-property: background, box-shadow, transform;
+    transition-property: background, transform;
     transition-duration: 0.2s;
     cursor: pointer;
 
@@ -84,25 +75,22 @@
     box-shadow: 0px 0px 0px 1px #ffffff12 !important;
 }
 
-.action-proxy-container > .action-proxy-container {
-    // box-shadow: 0px 0px 5px 4px #26262f;
-    box-shadow: none;
-}
-
 /* ----------------- AST Specific Styles ---------------- */
 
 .action-proxy-container.Test {
     box-shadow: none;
-    background: #0d3c2a !important;
     display: flex;
     align-items: center;
     border-radius: 5px;
     justify-content: center;
-    border: 1px solid #6ee7b752;
-    backdrop-filter: blur(5px);
 }
 
 .action-proxy-container._FunctionDeclaration {
+    opacity: 0;
+}
+
+.out-of-view {
+    pointer-events: none;
     opacity: 0;
 }
 
@@ -111,7 +99,7 @@ path.action-mapping-connection.hidden {
 }
 
 .action-proxy-container.Test.is-playing {
-    background: #6ee7b729 !important;
+    background: #293d3b !important;
 }
 
 .action-proxy-container.Test > ion-icon.md.hydrated {
@@ -128,6 +116,10 @@ path.action-mapping-connection.hidden {
 
 .action.is-playing {
     background: #6f97dc3b;
+}
+
+.action-proxy-container._ForStatement.Statement.has-steps {
+    padding-top: 13px;
 }
 
 /* -------------------- Control flow -------------------- */
@@ -155,12 +147,15 @@ svg.control-flow-svg {
 .control-flow-path {
     fill: none;
     stroke: var(--color-6);
-    stroke-width: 1.5px;
-    stroke-dasharray: 15px 2px;
-    stroke-dashoffset: 0;
-    animation: showStroke 10s;
+    stroke-width: 1px;
     opacity: 0.2;
-    animation-iteration-count: infinite;
+}
+
+.control-flow-path-completed {
+    fill: none;
+    stroke: var(--s-color-0);
+    stroke-width: 1.5px;
+    opacity: 0.5;
 }
 
 /* ---------------- Action mapping break ---------------- */
@@ -186,7 +181,8 @@ svg.control-flow-svg {
 }
 
 .action-proxy-container.is-playing {
-    background: #49629c;
+    background: #28333f;
+    box-shadow: 0px 0px 0px 0.5px #7dd3fccf, 0px 0px 5px 4px var(--color-2);
 }
 
 /* -------------------- Action cursor ------------------- */
@@ -245,5 +241,9 @@ svg.control-flow-svg {
 }
 
 .action-proxy-container:not(.has-steps) {
+    z-index: 1;
+}
+
+.action-proxy-container:nth-child(even) {
     z-index: 1;
 }

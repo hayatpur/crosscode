@@ -20,7 +20,7 @@ export class ActionProxy {
     timeOffset: number = 0
 
     static heightMultiplier = 0.8
-    static widthMultiplier = 0.5
+    static widthMultiplier = 0.4
 
     private _tickerId: string
 
@@ -82,9 +82,9 @@ export class ActionProxy {
             for (let i = 0; i < stack.length; i++) {
                 const proxy = stack[i]
                 if (i != isPlayingIndex) {
-                    proxy.element.style.opacity = `0`
+                    proxy.element.classList.add('out-of-view')
                 } else {
-                    proxy.element.style.opacity = `1`
+                    proxy.element.classList.remove('out-of-view')
                 }
                 // proxy.element.style.transform = `translate(${i * 2}px, ${i * 2}px)`
             }
