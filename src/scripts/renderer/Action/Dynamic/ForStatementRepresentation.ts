@@ -11,7 +11,7 @@ export class ForStatementRepresentation extends Representation {
 
         this.stackButton = document.createElement('div')
         this.stackButton.classList.add('stack-button')
-        this.stackButton.innerHTML = `<ion-icon name="expand"></ion-icon>`
+        this.stackButton.innerHTML = `V`
 
         // Add stack button to proxy
         setTimeout(() => {

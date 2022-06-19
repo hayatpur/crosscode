@@ -36,10 +36,15 @@ export class MoveTrailRenderer extends TrailRenderer {
 
         /* ---------------------- New data ---------------------- */
         // Update path
-        this.trace.classList.remove('hidden')
-
         const start = environment.getResidualOf(this.trail.state.fromDataIds[0], this.trail.time)
         const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
+
+        if (end == null || start == null) {
+            this.trace.classList.add('hidden')
+            return
+        } else {
+            this.trace.classList.remove('hidden')
+        }
 
         end.element.style.transform = ''
         reflow(end.element)

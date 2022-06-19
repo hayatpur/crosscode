@@ -81,11 +81,11 @@ export class ActionProxy {
 
             for (let i = 0; i < stack.length; i++) {
                 const proxy = stack[i]
-                if (i != isPlayingIndex) {
-                    proxy.element.classList.add('out-of-view')
-                } else {
-                    proxy.element.classList.remove('out-of-view')
-                }
+                // if (i != isPlayingIndex) {
+                //     proxy.element.classList.add('out-of-view')
+                // } else {
+                //     proxy.element.classList.remove('out-of-view')
+                // }
                 // proxy.element.style.transform = `translate(${i * 2}px, ${i * 2}px)`
             }
         }
@@ -128,7 +128,11 @@ export class ActionProxy {
         /* ------------- Specialized representations ------------ */
         if (this.action.execution.nodeData.preLabel == 'Test') {
             if (!this.action.state.isShowingSteps) {
-                this.element.innerHTML = `<ion-icon name="checkmark-outline"></ion-icon>`
+                const memory = Object.values(this.action.execution.postcondition.memory)
+                const value = memory[memory.length - 1].value
+                this.element.classList.add(`_Test_${value}`)
+                const icon = value ? 'checkmark-outline' : 'close-outline'
+                this.element.innerHTML = `<ion-icon name="${icon}"></ion-icon>`
             } else {
                 // TODO
             }

@@ -1,3 +1,4 @@
+import { Howl } from 'howler'
 import { Executor } from '../../executor/Executor'
 import { getLeafSteps } from '../../utilities/action'
 import { createEl } from '../../utilities/dom'
@@ -22,11 +23,26 @@ export class ViewRenderer {
     renderers: EnvironmentRenderer[] = []
     containers: HTMLElement[] = []
 
+    forwards: Howl
+    backwards: Howl
+
     /* ----------------------- Create ----------------------- */
     constructor(view: View) {
         this.view = view
 
         this.create()
+
+        this.forwards = new Howl({
+            src: [
+                './src/assets/material_product_sounds/ogg/03 Primary System Sounds/ui_tap-variant-01.ogg',
+            ],
+        })
+
+        this.backwards = new Howl({
+            src: [
+                './src/assets/material_product_sounds/ogg/03 Primary System Sounds/navigation_backward-selection.ogg',
+            ],
+        })
     }
 
     create() {
@@ -58,12 +74,21 @@ export class ViewRenderer {
         for (let i = steps.length - 1; i >= 0; i--) {
             const proxy = mapping.getProxyOfAction(steps[i])
             const start = proxy.timeOffset
-            const end = start + proxy.element.getBoundingClientRect().height
+            const end = start + proxy.element.getBoundingClientRect().height // TODO: Fix end point calculation
             candidate = i
 
             if (time >= start) {
                 amount = Math.min(remap(time, start, end, 0, 1), 1)
                 if (time <= end) {
+                    if (!proxy.element.classList.contains('is-playing')) {
+                        // if (proxy.element.classList.contains('has-played')) {
+                        //     this.backwards.play()
+                        // } else {
+                        this.forwards.rate(Math.max(0.5, 4 - Math.abs(start - end) / 20))
+                        this.forwards.play()
+                        // }
+                    }
+
                     proxy.action.renderer.element.classList.add('is-playing')
                     proxy.element.classList.add('is-playing')
                 }

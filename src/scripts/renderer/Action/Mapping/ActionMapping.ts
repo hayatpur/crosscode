@@ -82,35 +82,7 @@ export class ActionMapping {
         // this.element.style.left = `${margin}px`
     }
 
-    tick(dt: number) {
-        /* --------------- Update proxy positions --------------- */
-        // const thisBbox = this.element.getBoundingClientRect()
-        // const steps = Executor.instance.visualization.program.steps
-        // for (const [stepId, proxy] of Object.entries(this.actionProxies)) {
-        //     const step = steps.find((step) => step.execution.id === stepId)
-        //     const bbox = step.renderer.element.getBoundingClientRect()
-        //     proxy.element.style.top = `${bbox.top - thisBbox.y}px`
-        //     proxy.element.style.height = `${bbox.height}px`
-        // }
-        /* -------------------- Update breaks ------------------- */
-        // for (let i = 0; i < this.breaks.length; i++) {
-        //     const breakElement = this.breakElements[i]
-        //     const breakIndex = this.breaks[i]
-        //     const step = this.action.steps[breakIndex]
-        //     const nextStep = this.action.steps[breakIndex + 1]
-        //     if (nextStep == null) {
-        //         continue
-        //     }
-        //     const proxy = this.proxySteps[step.execution.id]
-        //     const nextProxy = this.proxySteps[nextStep.execution.id]
-        //     if (proxy == null || nextProxy == null) {
-        //         continue
-        //     }
-        //     const bbox = proxy.element.getBoundingClientRect()
-        //     const nextBbox = nextProxy.element.getBoundingClientRect()
-        //     breakElement.style.top = `${(bbox.bottom + nextBbox.top) / 2 - thisBbox.y}px`
-        // }
-    }
+    tick(dt: number) {}
 
     updateProxies() {
         /* ------------------- Update proxies ------------------- */
@@ -140,9 +112,6 @@ export class ActionMapping {
         }
 
         this.controlFlow?.update()
-        // setInterval(() => {
-        //     this.controlFlow?.update()
-        // }, 0)
     }
 
     duration() {

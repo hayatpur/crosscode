@@ -1,6 +1,7 @@
 import { EnvironmentState, Residual } from '../../../environment/EnvironmentState'
 import { Executor } from '../../../executor/Executor'
-import { getCurvedArrow, reflow } from '../../../utilities/dom'
+import { getPerfectArrow, reflow } from '../../../utilities/dom'
+import { getNumericalValueOfStyle } from '../../../utilities/math'
 import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
 import { Trail } from '../Trail'
 import { TrailRenderer } from './TrailRenderer'
@@ -35,18 +36,16 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
 
         const viewBbox =
             Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
-        const environmentBbox = environment.element.getBoundingClientRect()
         const startBbox = start.element.getBoundingClientRect()
         const endBbox = end.element.getBoundingClientRect()
 
         this.trace.setAttribute(
             'd',
-            getCurvedArrow(
+            getPerfectArrow(
                 startBbox.x + startBbox.width / 2 - viewBbox.x,
                 startBbox.y + startBbox.height / 2 - viewBbox.y,
                 endBbox.x + endBbox.width / 2 - viewBbox.x,
-                endBbox.y + endBbox.height / 2 - viewBbox.y,
-                startBbox.x > endBbox.x
+                endBbox.y + endBbox.height / 2 - viewBbox.y
             )
         )
 
@@ -57,6 +56,7 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
         let { x, y } = this.trace.getPointAtLength(amount * this.trace.getTotalLength())
 
         // Update transform
+        const environmentBbox = environment.element.getBoundingClientRect()
         x -= endBbox.x + endBbox.width / 2 - environmentBbox.x
         y -= endBbox.y + endBbox.height / 2 - environmentBbox.y
         end.element.style.transform = `translate(${x}px, ${y}px)`
@@ -71,51 +71,36 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
             const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
 
             if (end == null || start == null) {
-                this.trace.style.display = `none`
+                this.trace.classList.add('hidden')
                 return
             } else {
-                this.trace.style.display = `inherit`
+                this.trace.classList.remove('hidden')
             }
 
             const viewBbox =
                 Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
-
             const startBbox = start.element.getBoundingClientRect()
             const endBbox = end.element.getBoundingClientRect()
 
             this.trace.setAttribute(
                 'd',
-                getCurvedArrow(
+                getPerfectArrow(
                     startBbox.x + startBbox.width / 2 - viewBbox.x,
                     startBbox.y + startBbox.height / 2 - viewBbox.y,
                     endBbox.x + endBbox.width / 2 - viewBbox.x,
-                    endBbox.y + endBbox.height / 2 - viewBbox.y,
-
-                    startBbox.x > endBbox.x
+                    endBbox.y + endBbox.height / 2 - viewBbox.y
                 )
             )
 
-            if (
-                start.element.classList.contains('is-residual') ||
-                end.element.classList.contains('is-residual')
-            ) {
-                this.trace.style.opacity = `0.4`
-            } else {
-                this.trace.style.opacity = `1`
-            }
+            this.trace.style.strokeDasharray = `${this.trace.getTotalLength()}`
+            this.trace.style.strokeDashoffset = `${
+                this.trace.getTotalLength() - 1 * this.trace.getTotalLength()
+            }`
 
-            // if (
-            //     start.element.classList.contains('is-residual') &&
-            //     end.element.classList.contains('is-residual')
-            // ) {
-            //     this.trace.style.stroke = `url(#fade_both)`
-            // } else if (start.element.classList.contains('is-residual')) {
-            //     this.trace.style.stroke = `url(#fade_start)`
-            // } else if (end.element.classList.contains('is-residual')) {
-            //     this.trace.style.stroke = `url(#fade_end)`
-            // } else {
-            //     this.trace.style.stroke = `var(--path-color)`
-            // }
+            this.trace.style.opacity = `${Math.min(
+                getNumericalValueOfStyle(end.element.style.opacity, 1),
+                getNumericalValueOfStyle(start.element.style.opacity, 1)
+            )}`
         }
 
         // Update path

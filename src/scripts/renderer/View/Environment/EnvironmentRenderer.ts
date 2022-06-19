@@ -272,9 +272,17 @@ export class EnvironmentRenderer {
         for (let time = 0; time < state.residuals.length; time++) {
             const residuals = state.residuals[time]
             this.residualRenderers[time] = {}
+            const toRemove: Set<number> = new Set()
 
-            for (const residual of residuals) {
-                const locationData = resolvePath(state, residual.location, null) as DataState
+            for (let k = 0; k < residuals.length; k++) {
+                const residual = residuals[k]
+                const locationData = resolvePath(state, residual.location, null)
+
+                if (instanceOfEnvironment(locationData)) {
+                    toRemove.add(k)
+                    continue
+                }
+
                 const locationRenderer = this.getAllChildRenderers()[locationData.id]
                 const hole = locationRenderer.element.parentElement
 
@@ -291,6 +299,20 @@ export class EnvironmentRenderer {
 
                 hits.add(`${time}-${residual.data.id}`)
                 residualRenderer.setState(residual.data)
+            }
+
+            for (let k = residuals.length - 1; k >= 0; k--) {
+                if (toRemove.has(k)) {
+                    const renderer = this.residualRenderers[time][`${time}-${residuals[k].data.id}`]
+
+                    if (renderer != null) {
+                        renderer.destroy()
+                        renderer.element.remove()
+                        delete this.residualRenderers[time][`${time}-${residuals[k].data.id}`]
+                    }
+
+                    residuals.splice(k, 1)
+                }
             }
         }
     }

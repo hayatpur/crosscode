@@ -75,6 +75,10 @@
     box-shadow: 0px 0px 0px 1px #ffffff12 !important;
 }
 
+.action.is-playing {
+    background: #6f97dc3b;
+}
+
 /* ----------------- AST Specific Styles ---------------- */
 
 .action-proxy-container.Test {
@@ -98,24 +102,32 @@ path.action-mapping-connection.hidden {
     opacity: 0 !important;
 }
 
-.action-proxy-container.Test.is-playing {
+.action-proxy-container.Test._Test_true.is-playing {
     background: #293d3b !important;
+    box-shadow: 0px 0px 0px 0.5px #7dfc8ecf, 0px 0px 5px 4px var(--color-2);
 }
 
-.action-proxy-container.Test > ion-icon.md.hydrated {
+.action-proxy-container.Test._Test_false.is-playing {
+    background: #3d2929 !important;
+    box-shadow: 0px 0px 0px 0.5px #fc7d7dcf, 0px 0px 5px 4px var(--color-2);
+}
+
+.action-proxy-container.Test._Test_true > ion-icon.md.hydrated {
     font-size: 10px;
     --ionicon-stroke-width: 79px;
     color: #6ee7b7;
+}
+
+.action-proxy-container.Test._Test_false > ion-icon.md.hydrated {
+    font-size: 10px;
+    --ionicon-stroke-width: 79px;
+    color: #e76e6e;
 }
 
 ._IfStatement > .action-proxy-indicator {
     background: none !important;
     padding-left: 17px;
     box-shadow: none !important;
-}
-
-.action.is-playing {
-    background: #6f97dc3b;
 }
 
 .action-proxy-container._ForStatement.Statement.has-steps {
@@ -283,11 +295,9 @@ svg.control-flow-svg {
 .stack-button.is-active {
     transform: scale(0.9);
     opacity: 1 !important;
-    color: var(--s-color-4);
 }
 
 .action-proxy-container._ForStatement.showing-stack {
-    box-shadow: 0px 0px 0px 0.5px #9981ff7d !important;
     display: flex;
     flex-direction: column;
     height: fit-content !important;
@@ -296,6 +306,7 @@ svg.control-flow-svg {
 
 .action-proxy-container._ForStatement.showing-stack > .out-of-view {
     opacity: 1;
+    pointer-events: inherit;
 }
 
 .action-proxy-container._ForStatement.showing-stack > .action-proxy-container {

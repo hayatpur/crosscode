@@ -311,6 +311,10 @@ export function resolve(
             accessor.value
         ]
 
+        if (data == null) {
+            return root
+        }
+
         if (data.type == DataType.ID) {
             if (options.noResolvingId) {
                 return data

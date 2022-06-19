@@ -20,6 +20,7 @@
         "curved-arrows": "^0.1.0",
         "eaz": "^1.0.2",
         "gradient-path": "^2.1.0",
+        "howler": "^2.2.3",
         "immutable": "^4.0.0",
         "javascript-lp-solver": "^0.4.24",
         "monaco-editor": "^0.25.2",
@@ -35,6 +36,7 @@
     },
     "devDependencies": {
         "@tweakpane/core": "^1.0.8",
+        "@types/howler": "^2.2.7",
         "@typescript-eslint/eslint-plugin": "^5.22.0",
         "@typescript-eslint/parser": "^5.22.0",
         "css-loader": "^5.2.6",
