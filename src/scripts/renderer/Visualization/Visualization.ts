@@ -46,6 +46,9 @@ export class Visualization {
         this.view.destroy()
         this.program.destroy()
 
+        this.container.remove()
+        this.container = null
+
         this.program = null
         this.mapping = null
         this.view = null

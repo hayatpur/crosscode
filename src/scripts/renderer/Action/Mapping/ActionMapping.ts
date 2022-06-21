@@ -8,6 +8,7 @@ import { ControlFlow } from './ControlFlow'
 
 export class ActionMapping {
     element: HTMLElement
+    lanes: HTMLElement[] = []
 
     // Action proxies
     actionProxies: { [id: string]: ActionProxy } = {}
@@ -78,8 +79,23 @@ export class ActionMapping {
         const container = Executor.instance.visualization.container
         container.insertBefore(this.element, container.firstChild)
 
+        // Default lane
+        this.createLane('Program')
+
         // const margin = Editor.instance.getMaxWidth() + 70
         // this.element.style.left = `${margin}px`
+    }
+
+    createLane(label = 'Unknown') {
+        const lane = createEl('div', 'action-mapping-lane', this.element)
+        this.lanes.push(lane)
+
+        const labelEl = createEl('div', 'action-mapping-lane-label', lane)
+        labelEl.innerText = label
+    }
+
+    appendProxy(proxy: ActionProxy) {
+        this.lanes[0].appendChild(proxy.element)
     }
 
     tick(dt: number) {}
@@ -95,7 +111,7 @@ export class ActionMapping {
             if (proxy == null) {
                 proxy = new ActionProxy(step)
                 this.actionProxies[step.execution.id] = proxy
-                this.element.appendChild(proxy.element)
+                this.lanes[this.lanes.length - 1].appendChild(proxy.element)
             }
 
             proxy.update()

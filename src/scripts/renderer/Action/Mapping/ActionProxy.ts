@@ -1,6 +1,7 @@
 import * as ESTree from 'estree'
 import { Executor } from '../../../executor/Executor'
 import { createEl } from '../../../utilities/dom'
+import { Keyboard } from '../../../utilities/Keyboard'
 import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
 
@@ -40,7 +41,15 @@ export class ActionProxy {
             if (this.action.state.isShowingSteps) {
                 this.action.destroySteps()
             } else {
+                if (this.action.execution.nodeData.type == 'CallExpression') {
+                    Executor.instance.visualization.mapping.createLane('Function Call')
+                }
+
                 this.action.createSteps()
+
+                Executor.instance.visualization.mapping.lanes[1].append(
+                    Object.values(this.steps)[1].element
+                )
             }
 
             e.stopPropagation()
@@ -50,6 +59,10 @@ export class ActionProxy {
         // Peek timer
         let peekTimer: number
         this.element.addEventListener('mouseenter', () => {
+            if (!Keyboard.instance.isPressed('Shift')) {
+                return
+            }
+
             clearTimeout(peekTimer)
             const delay = 1000
 
