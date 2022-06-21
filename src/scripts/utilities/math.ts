@@ -15,6 +15,15 @@ export function lerp(a: number, b: number, t: number) {
     return a * (1 - t) + t * b
 }
 
+export function overLerp(a: number, b: number, t: number, over: number = 5) {
+    // const sign = Math.sign(b - a)
+    if (a < b) {
+        return Math.min(lerp(a, b + over, t), b)
+    } else {
+        return Math.max(lerp(a, b - over, t), b)
+    }
+}
+
 export function lerp2(a: Vector, b: Vector, t: number) {
     return {
         x: lerp(a.x, b.x, t),

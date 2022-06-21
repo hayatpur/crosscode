@@ -14,10 +14,10 @@ export class ForStatementRepresentation extends Representation {
         this.stackButton.innerHTML = `V`
 
         // Add stack button to proxy
-        setTimeout(() => {
-            const proxy = Executor.instance.visualization.mapping.getProxyOfAction(action)
-            proxy.element.appendChild(this.stackButton)
-        }, 0)
+        // setTimeout(() => {
+        //     const proxy = Executor.instance.visualization.mapping.getProxyOfAction(action)
+        //     proxy.element.appendChild(this.stackButton)
+        // }, 0)
 
         this.stackButton.addEventListener('click', (e) => {
             this.isShowingStack = !this.isShowingStack
@@ -45,5 +45,22 @@ export class ForStatementRepresentation extends Representation {
         }
 
         Executor.instance.visualization.program.update()
+    }
+
+    getControlFlow() {
+        if (this.action.steps.length == 0) {
+            return super.getControlFlow()
+        } else {
+            // const controlFlowPoints = []
+
+            const proxy = Executor.instance.visualization.mapping.getProxyOfAction(this.action)
+            const bbox = proxy.element.getBoundingClientRect()
+            const controlFlowPoints = [[bbox.x + 10, bbox.y + bbox.height / 2]]
+
+            for (const step of this.action.steps) {
+                controlFlowPoints.push(...step.representation.getControlFlow())
+            }
+            return controlFlowPoints
+        }
     }
 }

@@ -263,10 +263,6 @@ svg.control-flow-svg {
     z-index: 1;
 }
 
-.action-proxy-container:nth-child(even) {
-    z-index: 1;
-}
-
 /* -------------------- Stack button -------------------- */
 .stack-button {
     width: 20px;
@@ -317,4 +313,10 @@ svg.control-flow-svg {
 
 svg.control-flow-svg.control-flow-svg-overlay {
     z-index: 5;
+}
+
+.action-proxy-container.is-hovering {
+    // transform: scale(1.1);
+    filter: brightness(1.2);
+    background-color: #202028;
 }

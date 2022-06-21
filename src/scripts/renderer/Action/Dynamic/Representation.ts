@@ -1,4 +1,5 @@
 import { EnvironmentState } from '../../../environment/EnvironmentState'
+import { Executor } from '../../../executor/Executor'
 import { Action } from '../Action'
 import { ActionRenderer, getActionCoordinates } from '../ActionRenderer'
 import { ActionProxy } from '../Mapping/ActionProxy'
@@ -60,6 +61,29 @@ export class Representation {
                 frames.push(...step.representation.getFrames())
             }
             return frames
+        }
+    }
+
+    getControlFlow(): number[][] {
+        if (this.action.steps.length > 0) {
+            const controlFlowPoints = []
+            for (const step of this.action.steps) {
+                controlFlowPoints.push(...step.representation.getControlFlow())
+            }
+            return controlFlowPoints
+        } else {
+            const proxy = Executor.instance.visualization.mapping.getProxyOfAction(this.action)
+            const bbox = proxy.element.getBoundingClientRect()
+
+            if (this.action.execution.nodeData.preLabel == 'Body') {
+                return [
+                    [bbox.x + 60, bbox.y + bbox.height / 2],
+                    [bbox.x + bbox.width + 20, bbox.y + bbox.height / 2],
+                    [bbox.x + bbox.width + 20, bbox.y + bbox.height / 2 - 27.5],
+                ]
+            }
+
+            return [[bbox.x + 10, bbox.y + bbox.height / 2]]
         }
     }
 

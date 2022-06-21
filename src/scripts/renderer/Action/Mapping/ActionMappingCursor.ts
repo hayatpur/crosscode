@@ -3,7 +3,7 @@ import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { Executor } from '../../../executor/Executor'
 import { getLeafSteps } from '../../../utilities/action'
 import { createEl } from '../../../utilities/dom'
-import { lerp } from '../../../utilities/math'
+import { lerp, overLerp } from '../../../utilities/math'
 import { Ticker } from '../../../utilities/Ticker'
 import { ActionMapping } from './ActionMapping'
 
@@ -19,6 +19,9 @@ export class ActionMappingCursor {
     targetTime: number = 0
 
     private _speed: number = 0.2
+
+    isStatic: boolean = false
+    isHovering: boolean = false
 
     /* ----------------------- Create ----------------------- */
     constructor(mapping: ActionMapping) {
@@ -103,7 +106,8 @@ export class ActionMappingCursor {
         const time = this.mapping.time
         const steps = getLeafSteps(Executor.instance.visualization.program.steps)
 
-        if (!this.dragging) {
+        // console.log('Gets here.', !this.dragging)
+        if (!this.dragging && !this.isHovering) {
             let candidate = 0
             let amount = 0
             let nextOffset = 0
@@ -127,10 +131,10 @@ export class ActionMappingCursor {
 
             if (amount > 0) {
                 this._speed = lerp(this._speed, 0.05, 0.3)
-                this.mapping.time = lerp(time, nextOffset, this._speed)
+                this.mapping.time = overLerp(time, nextOffset, this._speed)
                 // this.mapping.time = Math.min(this.mapping.time, nextOffset - 0.01)
             }
-        } else {
+        } else if (!this.isHovering) {
             // Find if it is on a frame currently
             let isOnFrame = false
             for (let i = steps.length - 1; i >= 0; i--) {
@@ -147,11 +151,18 @@ export class ActionMappingCursor {
             } else {
                 this._speed = lerp(this._speed, 0.05, 0.3)
             }
-            this.mapping.time = lerp(this.mapping.time, this.targetTime, this._speed)
+            this.mapping.time = overLerp(this.mapping.time, this.targetTime, this._speed)
+        } else {
+            this.mapping.time += dt * 0.05
+
+            this.mapping.time = Math.min(
+                this.mapping.time,
+                this.mapping.controlFlow.flowPath.getTotalLength() + 5
+            )
         }
 
         // If time changed, then update
-        if (this.mapping.time != initTime) {
+        if (this.mapping.time != initTime || this.isHovering) {
             Executor.instance.visualization.view.renderer.update()
 
             // Update flow path
@@ -159,6 +170,10 @@ export class ActionMappingCursor {
             controlFlow.flowPathCompleted.style.strokeDashoffset = `${
                 controlFlow.flowPath.getTotalLength() - this.mapping.time
             }`
+
+            this.isStatic = false
+        } else {
+            this.isStatic = true
         }
     }
 

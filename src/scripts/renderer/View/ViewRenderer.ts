@@ -84,7 +84,7 @@ export class ViewRenderer {
                         // if (proxy.element.classList.contains('has-played')) {
                         //     this.backwards.play()
                         // } else {
-                        this.forwards.rate(Math.max(0.5, 4 - Math.abs(start - end) / 20))
+                        this.forwards.rate(Math.max(0.5, 3 - Math.abs(start - end) / 20))
                         this.forwards.play()
                         // }
                     }

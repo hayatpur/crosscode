@@ -54,19 +54,15 @@ export class ControlFlow {
 
     update() {
         // Get all control flow points
+        // let controlFlowPath = 'M 10 0'
+        let t = performance.now()
         const controlFlowPoints = [[10, 0]]
         const containerBbox = this.container.getBoundingClientRect()
-        const steps = Executor.instance.visualization.program.steps
 
-        for (const step of getLeafSteps(steps)) {
-            const points = Executor.instance.visualization.mapping
-                .getProxyOfAction(step)
-                .getControlFlowPoints()
-
-            points.forEach((point) => (point[0] -= containerBbox.left))
-            points.forEach((point) => (point[1] -= containerBbox.top))
-            controlFlowPoints.push(...points)
-        }
+        const points = Executor.instance.visualization.program.representation.getControlFlow()
+        points.forEach((point) => (point[0] -= containerBbox.left))
+        points.forEach((point) => (point[1] -= containerBbox.top))
+        controlFlowPoints.push(...points)
 
         // End point
         controlFlowPoints.push([10, this.mapping.element.getBoundingClientRect().bottom])
@@ -79,8 +75,8 @@ export class ControlFlow {
             controlFlowPoints[controlFlowPoints.length - 1][0] = ex
         }
 
-        const t = performance.now()
-        const d = catmullRomSolve(controlFlowPoints.flat(), 0.5)
+        // const t = performance.now()
+        const d = catmullRomSolve(controlFlowPoints.flat(), 0)
         this.flowPath.setAttribute('d', d)
 
         // Update completed flow path
@@ -92,7 +88,7 @@ export class ControlFlow {
         this.flowPathOverlay.setAttribute('d', d)
 
         // Update timings of step proxies
-        const leafSteps = getLeafSteps(steps)
+        const leafSteps = getLeafSteps(Executor.instance.visualization.program.steps)
         const pathBbox = this.flowPath.parentElement.getBoundingClientRect()
 
         for (let t = 0; t < this.flowPath.getTotalLength(); t += 1) {

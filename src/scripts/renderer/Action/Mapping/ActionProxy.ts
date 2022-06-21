@@ -1,4 +1,5 @@
 import * as ESTree from 'estree'
+import { Executor } from '../../../executor/Executor'
 import { createEl } from '../../../utilities/dom'
 import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
@@ -24,6 +25,8 @@ export class ActionProxy {
 
     private _tickerId: string
 
+    private _isHovering: boolean = false
+
     constructor(action: Action) {
         this.action = action
 
@@ -44,7 +47,53 @@ export class ActionProxy {
             e.preventDefault()
         })
 
+        // Peek timer
+        let peekTimer: number
+        this.element.addEventListener('mouseenter', () => {
+            clearTimeout(peekTimer)
+            const delay = 1000
+
+            peekTimer = setTimeout(() => {
+                if (!this.action.state.isShowingSteps) {
+                    this.hover()
+                }
+            }, delay)
+        })
+
+        this.element.addEventListener('mouseleave', () => {
+            clearTimeout(peekTimer)
+            this.unHover()
+        })
+
         this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+    }
+
+    hover() {
+        if (this._isHovering) return
+        this._isHovering = true
+
+        this.element.classList.add('is-hovering')
+
+        const mapping = Executor.instance.visualization.mapping
+        mapping.cursor.isHovering = true
+
+        mapping.time = this.timeOffset
+
+        // Create children
+        this.action.createSteps()
+    }
+
+    unHover() {
+        if (!this._isHovering) return
+        this._isHovering = false
+
+        this.element.classList.remove('is-hovering')
+
+        const mapping = Executor.instance.visualization.mapping
+        mapping.cursor.isHovering = false
+
+        // Destroy children
+        this.action.destroySteps()
     }
 
     create() {
@@ -63,6 +112,14 @@ export class ActionProxy {
     }
 
     tick(dt: number) {
+        if (this._isHovering) {
+            const mapping = Executor.instance.visualization.mapping
+
+            if (mapping.cursor.isStatic) {
+                mapping.time = this.timeOffset
+            }
+        }
+
         // Organize stacks
         for (const [key, stack] of Object.entries(ActionProxy.stacks)) {
             let isPlayingIndex = -1
@@ -79,6 +136,7 @@ export class ActionProxy {
                 isPlayingIndex = 0
             }
 
+            // Apply out-of-view
             for (let i = 0; i < stack.length; i++) {
                 const proxy = stack[i]
                 // if (i != isPlayingIndex) {
@@ -137,29 +195,6 @@ export class ActionProxy {
                 // TODO
             }
         }
-    }
-
-    /* ------------------------ Focus ----------------------- */
-    clearFocus() {
-        this.element.classList.remove('is-focused')
-    }
-
-    unfocus() {
-        this.element.classList.remove('is-focused')
-        this.element.classList.remove('is-focused-secondary')
-    }
-
-    focus(secondary = false) {
-        this.element.classList.add('is-focused')
-
-        if (secondary) {
-            this.element.classList.add('is-focused-secondary')
-        }
-    }
-
-    getControlFlowPoints() {
-        const bbox = this.element.getBoundingClientRect()
-        return [[bbox.x + bbox.width / 2, bbox.y + bbox.height / 2]]
     }
 
     destroy() {
