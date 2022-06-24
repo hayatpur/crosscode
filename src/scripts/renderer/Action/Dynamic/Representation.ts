@@ -35,6 +35,7 @@ export class Representation {
 
         let height = bbox.height * ActionProxy.heightMultiplier
         let width = bbox.width * ActionProxy.widthMultiplier
+        width = Math.max(10, width)
 
         // y offset is 0 if the action is a child
         if (proxy.action.parent.execution.nodeData.type == 'Program') {

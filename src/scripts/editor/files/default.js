@@ -1,13 +1,14 @@
-function avg(l) {
-    let s = 0
-    let n = l.length
+let array = [5, 2, 7, 1, 6]
+let n = array.length
 
-    for (let i = 0; i < n; i = i + 1) {
-        s = s + l[i]
+// Insertion sort
+for (let i = 1; i < n; i++) {
+    let key = array[i]
+    let j = i - 1
+
+    while (j >= 0 && array[j] > key) {
+        array[j + 1] = array[j]
+        j = j - 1
     }
-
-    return s / n
+    array[j + 1] = key
 }
-
-let lst = [1, 5, 6, 10]
-let k = avg(lst)

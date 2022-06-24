@@ -47,9 +47,9 @@ export class ActionProxy {
 
                 this.action.createSteps()
 
-                Executor.instance.visualization.mapping.lanes[1].append(
-                    Object.values(this.steps)[1].element
-                )
+                // Executor.instance.visualization.mapping.lanes[1].append(
+                //     Object.values(this.steps)[1].element
+                // )
             }
 
             e.stopPropagation()

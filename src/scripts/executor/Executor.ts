@@ -1,5 +1,5 @@
-import acorn = require('acorn')
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials'
+import acorn from 'acorn'
 import * as ESTree from 'estree'
 import { Pane } from 'tweakpane'
 import { Editor } from '../editor/Editor'
@@ -13,18 +13,17 @@ import { Compiler } from '../transpiler/Compiler'
 /*            Executes and visualizes the code            */
 /* ------------------------------------------------------ */
 export class Executor {
+    // Singleton
     static instance: Executor = null
 
+    // User code editor
     editor: Editor = null
 
-    // Dynamic execution of user code
+    // Execution trace of user code
     execution: ExecutionGraph
 
     // Visualization of execution
     visualization: Visualization
-    fpsGraph: any
-
-    firstCompilation = true
 
     constructor(editor: Editor) {
         // Singleton
@@ -33,33 +32,25 @@ export class Executor {
         // General
         this.editor = editor
 
-        // Live programming: update after 0.5s of no keyboard activity
+        /* --- Live programming: update after 0.5s of activity -- */
         let typingTimer: number
+        let firstCompilation = true
         this.editor.onChangeContent.add(() => {
             clearTimeout(typingTimer)
-            const delay = this.firstCompilation ? 500 : 5
+            const delay = firstCompilation ? 500 : 5
             typingTimer = setTimeout(() => {
                 this.compile()
             }, delay)
 
-            this.firstCompilation = false
+            firstCompilation = false
         })
 
-        // Setup parameters
-        this.setupParams()
-    }
-
-    /* --------------------- Compilation -------------------- */
-
-    reset() {
-        this.visualization?.destroy()
-        this.visualization = undefined
-
-        this.execution = null
+        // Setup tweakpane
+        this.setupTweakpane()
     }
 
     compile() {
-        // Reset visualization
+        /* ----------------- Reset visualization ---------------- */
         this.reset()
 
         // Construct static AST
@@ -99,6 +90,12 @@ export class Executor {
         // TODO: Maintain layout from last time
     }
 
+    reset() {
+        this.visualization?.destroy()
+        this.visualization = undefined
+        this.execution = null
+    }
+
     /* --------------------- Parameters --------------------- */
 
     PARAMS: {
@@ -121,14 +118,14 @@ export class Executor {
         focus: false,
     }
 
-    setupParams() {
+    setupTweakpane() {
         const pane = new Pane({
             title: 'Info',
             expanded: true,
         })
         pane.registerPlugin(EssentialsPlugin)
 
-        this.fpsGraph = pane.addBlade({
+        const fpsGraph = pane.addBlade({
             view: 'fpsgraph',
             label: 'FPS',
             lineCount: 2,
