@@ -37,16 +37,15 @@ export function instanceOfExecutionGraph(animation: any): animation is Execution
     return animation._type == 'ExecutionGraph'
 }
 
+let __EXECUTION_GRAPH_ID = 0
 export function createExecutionGraph(
     nodeData: NodeData,
     options: { isGroup?: boolean } = {}
 ): ExecutionGraph {
-    if (this.id == undefined) this.id = 0
-
     return {
         // Meta info
         _type: 'ExecutionGraph',
-        id: `AG(${++this.id})`,
+        id: `AG(${++__EXECUTION_GRAPH_ID})`,
         nodeData: options.isGroup ? getEmptyNodeData(nodeData) : nodeData,
 
         // Invariant to abstraction info

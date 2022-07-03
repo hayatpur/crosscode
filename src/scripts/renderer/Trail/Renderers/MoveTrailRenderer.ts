@@ -19,6 +19,10 @@ export class MoveTrailRenderer extends TrailRenderer {
     constructor(trail: Trail) {
         super(trail)
 
+        if (Executor.instance.visualization?.view == null) {
+            throw new Error('View is not initialized')
+        }
+
         // Create movement trace
         this.trace = document.createElementNS('http://www.w3.org/2000/svg', 'path')
         this.trace.classList.add('action-mapping-connection', 'trail-move')
@@ -110,10 +114,10 @@ export class MoveTrailRenderer extends TrailRenderer {
                 this.trace.getTotalLength() - 1 * this.trace.getTotalLength()
             }`
 
-            this.trace.style.opacity = `${
-                getNumericalValueOfStyle(end.element.style.opacity, 1) *
+            this.trace.style.opacity = `${Math.max(
+                getNumericalValueOfStyle(end.element.style.opacity, 1),
                 getNumericalValueOfStyle(start.element.style.opacity, 1)
-            }`
+            )}`
         }
 
         // Update path

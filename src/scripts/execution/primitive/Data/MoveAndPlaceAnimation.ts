@@ -14,9 +14,11 @@ import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
  * Move and place animation or just place if the from
  * is not defined.
  */
-export interface MoveAndPlaceAnimation extends ExecutionNode {
+export interface MoveAndPlaceAnimation extends Omit<ExecutionNode, 'apply'> {
     inputSpecifier: Accessor[]
     outputSpecifier: Accessor[]
+
+    apply: (animation: MoveAndPlaceAnimation, environment: EnvironmentState) => void
 }
 
 function apply(animation: MoveAndPlaceAnimation, environment: EnvironmentState) {
@@ -53,7 +55,7 @@ function apply(animation: MoveAndPlaceAnimation, environment: EnvironmentState) 
 function computeReadAndWrites(
     animation: MoveAndPlaceAnimation,
     inputData: DataInfo,
-    outputData: DataInfo
+    outputData: DataInfo | null
 ) {
     animation._reads = [inputData]
     animation._writes = outputData ? [outputData, inputData] : [inputData]
@@ -64,7 +66,7 @@ export function moveAndPlaceAnimation(
     outputSpecifier: Accessor[]
 ): MoveAndPlaceAnimation {
     return {
-        ...createExecutionNode(null),
+        ...createExecutionNode(),
         _name: 'MoveAndPlaceAnimation',
 
         name: `Move data at ${accessorsToString(inputSpecifier)} onto ${accessorsToString(

@@ -1,7 +1,7 @@
 import { Editor } from '../../editor/Editor'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode, NodeData } from '../../execution/primitive/ExecutionNode'
-import { createEl } from '../../utilities/dom'
+import { createElement } from '../../utilities/dom'
 import { Action } from './Action'
 
 /* ------------------------------------------------------ */
@@ -22,7 +22,7 @@ export class ActionRenderer {
     }
 
     create() {
-        this.element = createEl('div', 'action')
+        this.element = createElement('div', 'action')
 
         if (this.action.parent) {
             this.action.parent.renderer.element.appendChild(this.element)
@@ -58,7 +58,7 @@ export class ActionRenderer {
 
 export function getActionCoordinates(
     execution: ExecutionGraph | ExecutionNode,
-    parentExecution: ExecutionGraph | ExecutionNode,
+    parentExecution?: ExecutionGraph | ExecutionNode,
     blockTreatment = true
 ) {
     if (execution.nodeData.type == 'BlockStatement' && blockTreatment) {

@@ -1,9 +1,10 @@
 import * as ESTree from 'estree'
+import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { Executor } from '../../../executor/Executor'
-import { createEl } from '../../../utilities/dom'
+import { createElement } from '../../../utilities/dom'
 import { Keyboard } from '../../../utilities/Keyboard'
 import { Ticker } from '../../../utilities/Ticker'
-import { Action } from '../Action'
+import { Action, createSteps, destroySteps } from '../Action'
 
 export class ActionProxy {
     static all: { [id: string]: ActionProxy } = {}
@@ -34,18 +35,29 @@ export class ActionProxy {
         ActionProxy.all[action.state.id] = this
         ActionProxy.addToStack(this)
 
-        this.create()
+        const classes = [
+            'action-proxy-container',
+            `_${this.action.execution.nodeData.type?.replace(' ', '-')}`,
+            `${this.action.execution.nodeData.preLabel?.replace(' ', '-')}`,
+        ]
+
+        this.element = createElement('div', classes)
+
+        // Find stack
+        // let stack = ActionProxy.stacks[locationToKey(this.action.execution.nodeData.location as ESTree.SourceLocation)]
+        // const depth = stack.length - 1
+
         this.update()
 
         this.element.addEventListener('click', (e) => {
             if (this.action.state.isShowingSteps) {
-                this.action.destroySteps()
+                destroySteps(this.action)
             } else {
-                if (this.action.execution.nodeData.type == 'CallExpression') {
-                    Executor.instance.visualization.mapping.createLane('Function Call')
-                }
+                // if (this.action.execution.nodeData.type == 'CallExpression') {
+                //     Executor.instance.visualization.mapping.createLane('Function Call')
+                // }
 
-                this.action.createSteps()
+                createSteps(this.action)
 
                 // Executor.instance.visualization.mapping.lanes[1].append(
                 //     Object.values(this.steps)[1].element
@@ -57,7 +69,7 @@ export class ActionProxy {
         })
 
         // Peek timer
-        let peekTimer: number
+        let peekTimer: NodeJS.Timeout
         this.element.addEventListener('mouseenter', () => {
             if (!Keyboard.instance.isPressed('Shift')) {
                 return
@@ -93,7 +105,7 @@ export class ActionProxy {
         mapping.time = this.timeOffset
 
         // Create children
-        this.action.createSteps()
+        createSteps(this.action)
     }
 
     unHover() {
@@ -106,22 +118,7 @@ export class ActionProxy {
         mapping.cursor.isHovering = false
 
         // Destroy children
-        this.action.destroySteps()
-    }
-
-    create() {
-        const classes = [
-            'action-proxy-container',
-            `_${this.action.execution.nodeData.type?.replace(' ', '-')}`,
-            `${this.action.execution.nodeData.preLabel?.replace(' ', '-')}`,
-        ]
-
-        this.element = createEl('div', classes)
-
-        // Find stack
-        let stack = ActionProxy.stacks[locationToKey(this.action.execution.nodeData.location)]
-        const depth = stack.length - 1
-        // this.element.style.transform = `translate(${depth * 2}px, ${depth * 2}px)`
+        destroySteps(this.action)
     }
 
     tick(dt: number) {
@@ -152,11 +149,11 @@ export class ActionProxy {
             // Apply out-of-view
             for (let i = 0; i < stack.length; i++) {
                 const proxy = stack[i]
-                // if (i != isPlayingIndex) {
-                //     proxy.element.classList.add('out-of-view')
-                // } else {
-                //     proxy.element.classList.remove('out-of-view')
-                // }
+                if (i != isPlayingIndex) {
+                    proxy.element.classList.add('out-of-view')
+                } else {
+                    proxy.element.classList.remove('out-of-view')
+                }
                 // proxy.element.style.transform = `translate(${i * 2}px, ${i * 2}px)`
             }
         }
@@ -199,7 +196,7 @@ export class ActionProxy {
         /* ------------- Specialized representations ------------ */
         if (this.action.execution.nodeData.preLabel == 'Test') {
             if (!this.action.state.isShowingSteps) {
-                const memory = Object.values(this.action.execution.postcondition.memory)
+                const memory = Object.values((this.action.execution.postcondition as EnvironmentState).memory)
                 const value = memory[memory.length - 1].value
                 this.element.classList.add(`_Test_${value}`)
                 const icon = value ? 'checkmark-outline' : 'close-outline'
@@ -214,16 +211,16 @@ export class ActionProxy {
         delete ActionProxy.all[this.action.state.id]
 
         ActionProxy.removeFromStack(this)
-        delete ActionProxy.stacks[locationToKey(this.action.execution.nodeData.location)]
+        delete ActionProxy.stacks[locationToKey(this.action.execution.nodeData.location as ESTree.SourceLocation)]
 
         Ticker.instance.removeTickFrom(this._tickerId)
 
-        this.element.remove()
-        this.element = null
+        this.element?.remove()
+        // this.element = null
     }
 
     static addToStack(proxy: ActionProxy) {
-        const key = locationToKey(proxy.action.execution.nodeData.location)
+        const key = locationToKey(proxy.action.execution.nodeData.location as ESTree.SourceLocation)
         if (ActionProxy.stacks[key] == null) {
             ActionProxy.stacks[key] = []
         }
@@ -232,7 +229,7 @@ export class ActionProxy {
     }
 
     static removeFromStack(proxy: ActionProxy) {
-        const key = locationToKey(proxy.action.execution.nodeData.location)
+        const key = locationToKey(proxy.action.execution.nodeData.location as ESTree.SourceLocation)
         const stack = ActionProxy.stacks[key]
 
         if (stack == null) {

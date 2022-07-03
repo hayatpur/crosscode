@@ -1,10 +1,5 @@
 import { createPrimitiveData, replaceDataWith } from '../../../environment/data'
-import {
-    addDataAt,
-    getMemoryLocation,
-    removeAt,
-    resolvePath,
-} from '../../../environment/environment'
+import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
 import { Accessor, AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import {
     DataState,
@@ -24,24 +19,19 @@ export interface FindMember extends ExecutionNode {
 
 function apply(animation: FindMember, environment: EnvironmentState) {
     // Get object
-    const object = resolvePath(
-        environment,
-        animation.objectRegister,
-        `${animation.id}_Object`
-    ) as DataState
-    if (!instanceOfObjectData(object)) {
+    const object = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`) as DataState
+
+    if (!instanceOfObjectData(object) && !(typeof object.value === 'string')) {
         throw new Error(`${animation.id}_Object is not an object`)
     }
 
     const objectLocation = getMemoryLocation(environment, object).foundLocation
 
     // Get property
-    const property = resolvePath(
-        environment,
-        animation.propertyRegister,
-        `${animation.id}_Property`
-    ) as DataState
+    const property = resolvePath(environment, animation.propertyRegister, `${animation.id}_Property`) as DataState
     const propertyLocation = getMemoryLocation(environment, property).foundLocation
+
+    console.log('Property', property)
 
     // Get original data
     let original = resolvePath(
@@ -49,6 +39,8 @@ function apply(animation: FindMember, environment: EnvironmentState) {
         [...objectLocation, { type: AccessorType.Index, value: property.value as string }],
         `${animation.id}_MemberFunction`
     ) as DataState | Function
+
+    console.log('Original', original)
 
     let originalModified = false
 
@@ -71,15 +63,9 @@ function apply(animation: FindMember, environment: EnvironmentState) {
     removeAt(environment, getMemoryLocation(environment, property).foundLocation)
 
     // Remove object (reference)
-    const objectReference = resolvePath(
-        environment,
-        animation.objectRegister,
-        `${animation.id}_Object`,
-        null,
-        {
-            noResolvingReference: true,
-        }
-    ) as DataState
+    const objectReference = resolvePath(environment, animation.objectRegister, `${animation.id}_Object`, null, {
+        noResolvingReference: true,
+    }) as DataState
     const objectReferenceLocation = getMemoryLocation(environment, objectReference).foundLocation
     removeAt(environment, getMemoryLocation(environment, objectReference).foundLocation, {
         noResolvingReference: true,
@@ -105,15 +91,8 @@ function apply(animation: FindMember, environment: EnvironmentState) {
     )
 
     // Point the output register to the newly created data
-    const outputRegister = resolvePath(
-        environment,
-        animation.outputRegister,
-        `${animation.id}_Floating`
-    ) as DataState
-    replaceDataWith(
-        outputRegister,
-        createPrimitiveData(DataType.ID, original.id, `${animation.id}_OutputRegister`)
-    )
+    const outputRegister = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState
+    replaceDataWith(outputRegister, createPrimitiveData(DataType.ID, original.id, `${animation.id}_OutputRegister`))
 }
 
 function computeReadAndWrites(

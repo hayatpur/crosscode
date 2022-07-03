@@ -15,20 +15,21 @@ export class ObjectRenderer extends DataRenderer {
 
     setState(data: DataState) {
         const obj = data.value as { [id: string]: DataState }
-
         const hits = new Set()
 
+        // Need to do both data *and* key as separate things
         for (const [key, value] of Object.entries(obj)) {
+            const storeKey = `${value.id}@${key}`
+
             // Create renderer if not there
-            if (!(key in this.dataRenderers)) {
+            if (!(storeKey in this.dataRenderers)) {
                 const renderer = new ObjectItemRenderer()
-                this.dataRenderers[key] = renderer
-                this.element.append(renderer.element)
+                this.dataRenderers[storeKey] = renderer
             }
 
-            hits.add(key)
-            this.element.append(this.dataRenderers[key].element)
-            this.dataRenderers[key].setState(key, value)
+            hits.add(storeKey)
+            this.element.append(this.dataRenderers[storeKey].element)
+            this.dataRenderers[storeKey].setState(key, value)
         }
 
         // Remove data that are no longer in the view
@@ -53,12 +54,14 @@ export class ObjectRenderer extends DataRenderer {
     getAllChildRenderers() {
         let renderers: { [id: string]: DataRenderer } = {}
         for (const [id, item] of Object.entries(this.dataRenderers)) {
-            renderers[id] = item.dataRenderer
+            renderers[id.split('@')[0]] = item.dataRenderer
             renderers = {
                 ...renderers,
                 ...item.dataRenderer.getAllChildRenderers(),
             }
         }
+
+        // console.log('The whole thing:', renderers, this.dataRenderers)
         return renderers
     }
 

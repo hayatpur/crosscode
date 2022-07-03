@@ -1,30 +1,25 @@
 import { Editor } from './scripts/editor/Editor'
-import { Executor } from './scripts/executor/Executor'
+import { compileExecutor, Executor } from './scripts/executor/Executor'
 import './styles/main.scss'
 import './styles/themes/dark.scss'
 
-// @ts-ignore
-self.MonacoEnvironment = {
-    getWorkerUrl: function (moduleId, label) {
-        if (label === 'json') {
-            return './json.worker.bundle.js'
-        }
-        if (label === 'css' || label === 'scss' || label === 'less') {
-            return './css.worker.bundle.js'
-        }
-        if (label === 'html' || label === 'handlebars' || label === 'razor') {
-            return './html.worker.bundle.js'
-        }
-        if (label === 'typescript' || label === 'javascript') {
-            return './ts.worker.bundle.js'
-        }
-        return './editor.worker.bundle.js'
-    },
-}
-
 function main() {
     const editor = new Editor()
-    const executor = new Executor(editor)
+    const executor = new Executor()
+
+    /* --- Live programming: update after 0.5s of activity -- */
+    let typingTimer: any
+    let firstCompilation = true
+    editor.onChangeContent.add(() => {
+        clearTimeout(typingTimer)
+
+        const delay = firstCompilation ? 500 : 5 // Stagger on first execution to allow time for monaco to load
+        typingTimer = setTimeout(() => {
+            compileExecutor(executor, editor.getValue())
+        }, delay)
+
+        firstCompilation = false
+    })
 }
 
 main()

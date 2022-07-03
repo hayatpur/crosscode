@@ -2,10 +2,10 @@ import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { Executor } from '../../../executor/Executor'
 import { getLeafSteps } from '../../../utilities/action'
-import { createEl } from '../../../utilities/dom'
+import { createElement } from '../../../utilities/dom'
 import { lerp, overLerp } from '../../../utilities/math'
 import { Ticker } from '../../../utilities/Ticker'
-import { ActionMapping } from './ActionMapping'
+import { ActionMapping, getProxyOfAction } from './ActionMapping'
 
 export class ActionMappingCursor {
     element: HTMLElement
@@ -49,10 +49,7 @@ export class ActionMappingCursor {
                     this.targetTime = 0
                 }
 
-                this.targetTime = Math.min(
-                    this.targetTime,
-                    this.mapping.controlFlow.flowPath.getTotalLength() + 5
-                )
+                this.targetTime = Math.min(this.targetTime, this.mapping.controlFlow.flowPath.getTotalLength() + 5)
 
                 this.prevMouse = { x: e.x, y: e.y }
                 e.stopPropagation()
@@ -88,7 +85,7 @@ export class ActionMappingCursor {
     }
 
     create() {
-        this.element = createEl('div', 'action-cursor', this.mapping.element)
+        this.element = createElement('div', 'action-cursor', this.mapping.element)
     }
 
     /* ----------------------- Update ----------------------- */
@@ -114,7 +111,7 @@ export class ActionMappingCursor {
 
             // Find the closest frame
             for (let i = steps.length - 1; i >= 0; i--) {
-                const proxy = this.mapping.getProxyOfAction(steps[i])
+                const proxy = getProxyOfAction(steps[i])
                 const start = proxy.timeOffset
                 const end = start + proxy.element.getBoundingClientRect().height
                 candidate = i
@@ -138,7 +135,7 @@ export class ActionMappingCursor {
             // Find if it is on a frame currently
             let isOnFrame = false
             for (let i = steps.length - 1; i >= 0; i--) {
-                const proxy = this.mapping.getProxyOfAction(steps[i])
+                const proxy = getProxyOfAction(steps[i])
                 const start = proxy.timeOffset
                 const end = start + proxy.element.getBoundingClientRect().height
                 if (time >= start && time <= end) {
@@ -151,14 +148,14 @@ export class ActionMappingCursor {
             } else {
                 this._speed = lerp(this._speed, 0.05, 0.3)
             }
-            this.mapping.time = overLerp(this.mapping.time, this.targetTime, this._speed)
+
+            const xDelta = Math.abs(this.prevMouse.x - this.element.getBoundingClientRect().x)
+            const xMult = Math.exp(-xDelta / 100)
+
+            this.mapping.time = overLerp(this.mapping.time, this.targetTime, this._speed * xMult)
         } else {
             this.mapping.time += dt * 0.05
-
-            this.mapping.time = Math.min(
-                this.mapping.time,
-                this.mapping.controlFlow.flowPath.getTotalLength() + 5
-            )
+            this.mapping.time = Math.min(this.mapping.time, this.mapping.controlFlow.flowPath.getTotalLength() + 5)
         }
 
         // If time changed, then update

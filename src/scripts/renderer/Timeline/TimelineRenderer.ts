@@ -1,4 +1,4 @@
-// import { createEl } from '../../utilities/dom'
+// import { createElement } from '../../utilities/dom'
 // import { Timeline } from './Timeline'
 
 // /* ------------------------------------------------------ */
@@ -17,10 +17,10 @@
 //     }
 
 //     create() {
-//         this.element = createEl('div', 'timeline')
-//         this.baseElement = createEl('div', 'timeline-base', this.element)
-//         // this.movingCursorElement = createEl('div', 'timeline-moving-cursor', this.element)
-//         // this.cursorElement = createEl('div', 'timeline-cursor', this.element)
+//         this.element = createElement('div', 'timeline')
+//         this.baseElement = createElement('div', 'timeline-base', this.element)
+//         // this.movingCursorElement = createElement('div', 'timeline-moving-cursor', this.element)
+//         // this.cursorElement = createElement('div', 'timeline-cursor', this.element)
 //     }
 
 //     /* ----------------------- Render ----------------------- */

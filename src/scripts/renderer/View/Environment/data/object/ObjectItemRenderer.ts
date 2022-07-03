@@ -21,6 +21,7 @@ export class ObjectItemRenderer {
 
         this.keyRenderer.innerText = key
 
+        this.element.innerHTML = ''
         this.element.append(this.keyRenderer)
         this.element.append(this.dataRenderer.element)
     }

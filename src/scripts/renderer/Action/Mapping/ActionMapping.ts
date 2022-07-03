@@ -1,6 +1,5 @@
 import { Executor } from '../../../executor/Executor'
-import { createEl } from '../../../utilities/dom'
-import { Ticker } from '../../../utilities/Ticker'
+import { createElement } from '../../../utilities/dom'
 import { Action } from '../Action'
 import { ActionMappingCursor } from './ActionMappingCursor'
 import { ActionProxy } from './ActionProxy'
@@ -8,7 +7,6 @@ import { ControlFlow } from './ControlFlow'
 
 export class ActionMapping {
     element: HTMLElement
-    lanes: HTMLElement[] = []
 
     // Action proxies
     actionProxies: { [id: string]: ActionProxy } = {}
@@ -19,28 +17,19 @@ export class ActionMapping {
     breakElements: HTMLElement[] = []
 
     // Control flow
-    controlFlow: ControlFlow
+    controlFlow!: ControlFlow
     time: number = 0
 
-    cursor: ActionMappingCursor
-
-    // Other
-    private _tickerId: string
+    cursor!: ActionMappingCursor
 
     constructor() {
-        this.create()
-        // this.addBreak(1)
+        // Early binding
+        Executor.instance.visualization.mapping = this
 
-        this.element.addEventListener('click', (e) => {
-            if (
-                e.target !== this.element &&
-                e.target !== this.element.parentElement &&
-                !(e.target as HTMLElement).classList.contains('action-proxy-container')
-            )
-                return
-        })
-
-        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+        // Create element
+        this.element = createElement('div', 'action-mapping')
+        const container = Executor.instance.visualization.container
+        container.insertBefore(this.element, container.firstChild)
 
         // Create cursor
         setTimeout(() => {
@@ -51,110 +40,94 @@ export class ActionMapping {
             Executor.instance.visualization.program.update()
         }, 0)
 
-        this.updateProxies()
+        // Update proxies
+        updateMappingProxies(this)
     }
 
-    getBreakIndexOfFrameIndex(index: number) {
-        for (let i = 0; i < this.breaks.length; i++) {
-            if (this.breaks[i] >= index) {
-                return i
-            }
-        }
-        return this.breaks.length
-    }
-
-    getProxyOfAction(action: Action) {
-        return ActionProxy.all[action.state.id]
-    }
-
-    addBreak(index: number) {
-        this.breaks.push(index)
-
-        const breakEl = createEl('div', 'action-mapping-break', this.element.parentElement)
-        this.breakElements.push(breakEl)
-    }
-
-    create() {
-        this.element = createEl('div', 'action-mapping')
-        const container = Executor.instance.visualization.container
-        container.insertBefore(this.element, container.firstChild)
-
-        // Default lane
-        this.createLane('Program')
-
-        // const margin = Editor.instance.getMaxWidth() + 70
-        // this.element.style.left = `${margin}px`
-    }
-
-    createLane(label = 'Unknown') {
-        const lane = createEl('div', 'action-mapping-lane', this.element)
-        this.lanes.push(lane)
-
-        const labelEl = createEl('div', 'action-mapping-lane-label', lane)
-        labelEl.innerText = label
-    }
-
-    appendProxy(proxy: ActionProxy) {
-        this.lanes[0].appendChild(proxy.element)
-    }
-
-    tick(dt: number) {}
-
-    updateProxies() {
-        /* ------------------- Update proxies ------------------- */
-        const hits: Set<string> = new Set()
-        const steps = Executor.instance.visualization.program.steps
-
-        for (const step of steps) {
-            let proxy = this.actionProxies[step.execution.id]
-
-            if (proxy == null) {
-                proxy = new ActionProxy(step)
-                this.actionProxies[step.execution.id] = proxy
-                this.lanes[this.lanes.length - 1].appendChild(proxy.element)
-            }
-
-            proxy.update()
-
-            hits.add(step.execution.id)
-        }
-
-        // Remove unused proxies
-        for (const stepId of Object.keys(this.actionProxies)) {
-            if (!hits.has(stepId)) {
-                this.actionProxies[stepId].element.remove()
-                delete this.actionProxies[stepId]
-            }
-        }
-
-        this.controlFlow?.update()
-    }
-
-    duration() {
-        return this.controlFlow.flowPath.getTotalLength()
-    }
-
-    /* ----------------------- Destroy ---------------------- */
     destroy() {
         this.element.remove()
-        this.element = null
 
         for (const proxy of Object.values(this.actionProxies)) {
             proxy.destroy()
         }
-        this.actionProxies = null
 
         this.breakElements.forEach((breakEl) => {
             breakEl.remove()
         })
-        this.breakElements = null
 
-        this.controlFlow?.destroy()
-        this.controlFlow = null
-
-        this.cursor?.destroy()
-        this.cursor = null
-
-        Ticker.instance.removeTickFrom(this._tickerId)
+        this.controlFlow.destroy()
+        this.cursor.destroy()
     }
+}
+
+/**
+ * Updates action proxies inside the mapping.
+ * @param mapping
+ */
+export function updateMappingProxies(mapping: ActionMapping) {
+    const hits: Set<string> = new Set() // Keep track of hit proxies to discard them later
+
+    // Update proxies
+    for (const step of Executor.instance.visualization.program.steps) {
+        if (mapping.actionProxies[step.execution.id] == null) {
+            mapping.actionProxies[step.execution.id] = new ActionProxy(step)
+            mapping.element.append(mapping.actionProxies[step.execution.id].element)
+        }
+
+        mapping.actionProxies[step.execution.id].update()
+        hits.add(step.execution.id)
+    }
+
+    // Discard unused proxies
+    for (const stepId of Object.keys(mapping.actionProxies)) {
+        if (!hits.has(stepId)) {
+            mapping.actionProxies[stepId].element.remove()
+            delete mapping.actionProxies[stepId]
+        }
+    }
+
+    // Update control flow
+    mapping.controlFlow?.update()
+}
+
+/**
+ * Updates action proxies inside the mapping.
+ * @param mapping
+ * @param index
+ */
+export function getBreakIndexOfFrameIndex(mapping: ActionMapping, index: number): number {
+    for (let i = 0; i < mapping.breaks.length; i++) {
+        if (mapping.breaks[i] >= index) {
+            return i
+        }
+    }
+    return mapping.breaks.length
+}
+
+/**
+ * @param action
+ * @returns proxy for the given action.
+ */
+export function getProxyOfAction(action: Action) {
+    return ActionProxy.all[action.state.id]
+}
+
+/**
+ * @param mapping Action mapping
+ * @param index Index of the frame
+ */
+export function addBreakToMapping(mapping: ActionMapping, index: number) {
+    mapping.breaks.push(index)
+
+    const breakEl = createElement('div', 'action-mapping-break', mapping.element.parentElement as HTMLElement)
+    mapping.breakElements.push(breakEl)
+}
+
+/**
+ * Adds the proxy element to the mapping.
+ * @param proxy Action proxy
+ * @param mapping Action mapping
+ */
+export function appendProxyToMapping(proxy: ActionProxy, mapping: ActionMapping) {
+    mapping.element.appendChild(proxy.element)
 }

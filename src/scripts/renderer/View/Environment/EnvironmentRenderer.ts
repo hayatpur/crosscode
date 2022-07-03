@@ -6,15 +6,10 @@ import {
     instanceOfEnvironment,
 } from '../../../environment/EnvironmentState'
 import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
-import { createEl } from '../../../utilities/dom'
+import { createElement } from '../../../utilities/dom'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
-import {
-    DataState,
-    DataType,
-    instanceOfObjectData,
-    instanceOfPrimitiveData,
-} from './data/DataState'
+import { DataState, DataType, instanceOfObjectData, instanceOfPrimitiveData } from './data/DataState'
 import { LiteralRenderer } from './data/literal/LiteralRenderer'
 import { ObjectRenderer } from './data/object/ObjectRenderer'
 import { FunctionRenderer } from './data/reference/FunctionRenderer'
@@ -41,7 +36,7 @@ export class EnvironmentRenderer {
     }
 
     create() {
-        this.element = createEl('div', 'environment')
+        this.element = createElement('div', 'environment')
     }
 
     /* ----------------------- Render ----------------------- */
@@ -128,11 +123,11 @@ export class EnvironmentRenderer {
             // Create renderer if not there
             if (renderer == null) {
                 renderer = { column: null, data: null }
-                renderer.column = createEl('div', 'environment-column', this.element)
+                renderer.column = createElement('div', 'environment-column', this.element)
 
-                createEl('div', 'identifier-row', renderer.column)
-                createEl('div', 'data-row', renderer.column)
-                createEl('div', 'hole', renderer.column.children[1] as HTMLElement)
+                createElement('div', 'identifier-row', renderer.column)
+                createElement('div', 'data-row', renderer.column)
+                createElement('div', 'hole', renderer.column.children[1] as HTMLElement)
 
                 renderer.data = createDataRenderer(data)
                 renderer.column.children[1].children[0].append(renderer.data.element)
@@ -151,11 +146,11 @@ export class EnvironmentRenderer {
             // Create renderer if not there
             if (renderer == null) {
                 renderer = { column: null, data: null }
-                renderer.column = createEl('div', 'environment-column', this.element)
+                renderer.column = createElement('div', 'environment-column', this.element)
 
-                createEl('div', 'identifier-row', renderer.column)
-                createEl('div', 'data-row', renderer.column)
-                createEl('div', 'hole', renderer.column.children[1] as HTMLElement)
+                createElement('div', 'identifier-row', renderer.column)
+                createElement('div', 'data-row', renderer.column)
+                createElement('div', 'hole', renderer.column.children[1] as HTMLElement)
 
                 renderer.data = createDataRenderer(data)
                 renderer.column.children[1].children[0].append(renderer.data.element)

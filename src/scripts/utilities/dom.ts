@@ -134,69 +134,53 @@ export function getPerfectArrow(x0: number, y0: number, x1: number, y1: number) 
     return `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`
 }
 
-export function createEl(
-    tag: string,
-    classes: string[] | string = [],
-    parent: HTMLElement | null = null
-) {
+export function createElement(tag: string, classes: string[] | string = [], parent?: Element) {
     const el = document.createElement(tag)
+
     if (Array.isArray(classes)) {
         el.classList.add(...classes)
     } else {
         el.classList.add(classes)
     }
-    if (parent) {
+
+    if (parent != undefined) {
         parent.appendChild(el)
     }
+
     return el
 }
 
-export function createPath(
-    classes: string[] | string = [],
-    parent: HTMLElement | null = null
-): {
-    path: SVGPathElement
-    svg: SVGElement
-} {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+export function createSVGElement(classes: string[] | string = [], parent?: Element) {
+    const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+
     if (Array.isArray(classes)) {
-        svg.classList.add(...classes)
+        svgEl.classList.add(...classes)
     } else {
-        svg.classList.add(classes)
+        svgEl.classList.add(classes)
     }
 
-    if (parent) {
-        parent.appendChild(svg)
+    if (parent != undefined) {
+        parent.appendChild(svgEl)
     }
 
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-    svg.appendChild(path)
-
-    return { path, svg }
+    return svgEl
 }
 
-export function createGlobalPath(
+export function createPathElement(
     classes: string[] | string = [],
-    layer: 'top' | 'bottom' = 'bottom'
+    parent?: Element
 ): SVGPathElement {
-    // const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path')
 
-    // if (parent) {
-    //     parent.appendChild(svg)
-    // }
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
     if (Array.isArray(classes)) {
-        path.classList.add(...classes)
+        pathEl.classList.add(...classes)
     } else {
-        path.classList.add(classes)
+        pathEl.classList.add(classes)
     }
 
-    const svg =
-        layer == 'top'
-            ? document.querySelector('.svg-canvas.top')
-            : document.querySelector('.svg-canvas.bottom')
-    svg.appendChild(path)
+    if (parent != undefined) {
+        parent.appendChild(pathEl)
+    }
 
-    return path
+    return pathEl
 }

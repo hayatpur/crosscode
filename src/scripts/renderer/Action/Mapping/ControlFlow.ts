@@ -1,8 +1,8 @@
 import { Executor } from '../../../executor/Executor'
 import { getLeafSteps } from '../../../utilities/action'
+import { createPathElement, createSVGElement } from '../../../utilities/dom'
 import { bboxContains, catmullRomSolve } from '../../../utilities/math'
-import { Ticker } from '../../../utilities/Ticker'
-import { ActionMapping } from './ActionMapping'
+import { ActionMapping, getProxyOfAction } from './ActionMapping'
 
 /* ------------------------------------------------------ */
 /*                      Control flow                      */
@@ -17,45 +17,25 @@ export class ControlFlow {
     flowPathCompleted: SVGPathElement
     flowPathOverlay: SVGPathElement
 
-    private _tickerId: string
-
     dirty: boolean = true
 
     constructor(mapping: ActionMapping) {
         this.mapping = mapping
 
-        // Create container
-        this.container = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-        this.container.classList.add('control-flow-svg')
-        mapping.element.appendChild(this.container)
+        // Containers
+        this.container = createSVGElement('control-flow-svg', mapping.element)
+        this.overlayContainer = createSVGElement(['control-flow-svg', 'control-flow-svg-overlay'], mapping.element)
 
-        // Create overlay container
-        this.overlayContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-        this.overlayContainer.classList.add('control-flow-svg', 'control-flow-svg-overlay')
-        mapping.element.appendChild(this.overlayContainer)
-
-        // Create path
-        this.flowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        this.flowPath.classList.add('control-flow-path')
-        this.container.appendChild(this.flowPath)
-
-        // Create completed path
-        this.flowPathCompleted = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        this.flowPathCompleted.classList.add('control-flow-path-completed')
-        this.overlayContainer.appendChild(this.flowPathCompleted)
-
-        // Create overlay path
-        this.flowPathOverlay = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        this.flowPathOverlay.classList.add('control-flow-path-overlay')
-        this.overlayContainer.appendChild(this.flowPathOverlay)
+        // Paths
+        this.flowPath = createPathElement('control-flow-path', this.container)
+        this.flowPathCompleted = createPathElement('control-flow-path-completed', this.container)
+        this.flowPathOverlay = createPathElement('control-flow-path-overlay', this.overlayContainer)
 
         this.update()
     }
 
     update() {
         // Get all control flow points
-        // let controlFlowPath = 'M 10 0'
-        let t = performance.now()
         const controlFlowPoints = [[10, 0]]
         const containerBbox = this.container.getBoundingClientRect()
 
@@ -89,7 +69,7 @@ export class ControlFlow {
 
         // Update timings of step proxies
         const leafSteps = getLeafSteps(Executor.instance.visualization.program.steps)
-        const pathBbox = this.flowPath.parentElement.getBoundingClientRect()
+        const pathBbox = this.container.getBoundingClientRect()
 
         for (let t = 0; t < this.flowPath.getTotalLength(); t += 1) {
             const point = this.flowPath.getPointAtLength(t)
@@ -99,7 +79,7 @@ export class ControlFlow {
             const next = leafSteps[0]
             if (next == null) break
 
-            const proxy = Executor.instance.visualization.mapping.getProxyOfAction(next)
+            const proxy = getProxyOfAction(next)
             const nextIndicatorBBox = proxy.element.getBoundingClientRect()
 
             if (
@@ -114,15 +94,9 @@ export class ControlFlow {
                 proxy.timeOffset = t
             }
         }
-
-        console.log(
-            `Catmull-Rom solve time: ${performance.now() - t}ms`,
-            this.flowPath.getTotalLength()
-        )
     }
 
     destroy() {
-        Ticker.instance.removeTickFrom(this._tickerId)
         this.container.remove()
     }
 }

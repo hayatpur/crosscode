@@ -1,12 +1,11 @@
-import { Easing } from 'eaz'
 import * as ESTree from 'estree'
 import { Accessor, EnvironmentState } from '../../environment/EnvironmentState'
 import { DataInfo } from '../graph/ExecutionGraph'
 
 export interface NodeData {
-    location: ESTree.SourceLocation
-    type: string
-    preLabel: string
+    location?: ESTree.SourceLocation
+    type?: string
+    preLabel?: string
 }
 
 export interface ChunkNodeData extends NodeData {}
@@ -45,11 +44,11 @@ export interface ExecutionNode {
     name: string // Name of operation
     id: string
 
-    precondition: EnvironmentState
-    postcondition: EnvironmentState
+    precondition: EnvironmentState | null
+    postcondition: EnvironmentState | null
 
-    _reads: DataInfo[]
-    _writes: DataInfo[]
+    _reads: DataInfo[] | null
+    _writes: DataInfo[] | null
     nodeData: NodeData
 
     apply: (animation: ExecutionNode, environment: EnvironmentState) => void
@@ -59,22 +58,15 @@ export function instanceOfExecutionNode(animation: any): animation is ExecutionN
     return animation._type == 'ExecutionNode'
 }
 
-export function createExecutionNode(
-    nodeData: NodeData = {
-        location: null,
-        type: null,
-        preLabel: null,
-    }
-): ExecutionNode {
-    Easing.cubic
-    if (this.id == undefined) this.id = 0
+let __EXECUTION_NODE_ID = 0
+export function createExecutionNode(nodeData: NodeData = {}): ExecutionNode {
     return {
         _type: 'ExecutionNode',
 
         _name: 'ExecutionNode',
         name: 'Animation Node',
 
-        id: `AN(${++this.id})`,
+        id: `AN(${++__EXECUTION_NODE_ID})`,
         precondition: null,
         postcondition: null,
 
@@ -85,9 +77,4 @@ export function createExecutionNode(
 
         apply: () => console.warn('[ExecutionNode] Non-implemented apply callback'),
     }
-}
-
-function ParametricBlend(t: number) {
-    const sqt = t * t
-    return sqt / (2.0 * (sqt - t) + 1.0)
 }

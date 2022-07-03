@@ -59,10 +59,7 @@ export function createIdentifier(name: string, location: Accessor[]): Identifier
  * Push an empty scope into the environment.
  * @param environment
  */
-export function createScope(
-    environment: EnvironmentState,
-    scopeType: ScopeType = ScopeType.Default
-) {
+export function createScope(environment: EnvironmentState, scopeType: ScopeType = ScopeType.Default) {
     environment.scope.push({ bindings: {}, type: scopeType })
 }
 
@@ -97,10 +94,7 @@ export function declareVariable(
     location: Accessor[],
     shouldBeGlobal = false
 ) {
-    environment.scope[environment.scope.length - 1].bindings[name] = createIdentifier(
-        name,
-        location
-    )
+    environment.scope[environment.scope.length - 1].bindings[name] = createIdentifier(name, location)
     // updateLayout(environment);
 }
 
@@ -129,10 +123,7 @@ export function lookupVariable(environment: EnvironmentState, name: string): Acc
  * @param environment
  * @returns Returns a deep clone of the environment
  */
-export function cloneEnvironment(
-    environment: EnvironmentState,
-    assignNewId = false
-): EnvironmentState {
+export function cloneEnvironment(environment: EnvironmentState, assignNewId = false): EnvironmentState {
     return {
         _type: 'EnvironmentState',
         scope: clone(environment.scope),
@@ -252,30 +243,17 @@ export function resolve(
         } else if (registerData.type == DataType.Register) {
             return registerData
         } else {
-            console.error(
-                'Invalid register type, has to be either ID or Register',
-                registerData.type
-            )
+            console.error('Invalid register type, has to be either ID or Register', registerData.type)
         }
     } else if (accessor.type == AccessorType.ID) {
-        const search = [
-            ...(instanceOfData(parent)
-                ? (parent.value as DataState[])
-                : Object.values(parent.memory)),
-        ]
+        const search = [...(instanceOfData(parent) ? (parent.value as DataState[]) : Object.values(parent.memory))]
 
         while (search.length > 0) {
             const data = search.shift()
             if (data == null) continue
 
             if (data.id == accessor.value) {
-                return resolvePath(
-                    root,
-                    getMemoryLocation(root, data).foundLocation,
-                    srcId,
-                    null,
-                    options
-                )
+                return resolvePath(root, getMemoryLocation(root, data).foundLocation, srcId, null, options)
             } else if (instanceOfObjectData(data)) {
                 if (Array.isArray(data.value)) {
                     search.push(...(data.value as DataState[]))
@@ -307,9 +285,7 @@ export function resolve(
             }
         }
 
-        const data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[
-            accessor.value
-        ]
+        const data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[accessor.value]
 
         if (data == null) {
             return root
@@ -345,7 +321,7 @@ export function resolve(
 export function resolvePath(
     root: EnvironmentState,
     path: Accessor[],
-    srcId: string,
+    srcId: string | null,
     parent: DataState | EnvironmentState | null = null,
     options: { noResolvingId?: boolean; noResolvingReference?: boolean } = {}
 ): DataState | EnvironmentState {
@@ -389,8 +365,7 @@ export function addDataAt(
     }
 
     if (instanceOfData(origin)) {
-        if (!instanceOfObjectData(origin))
-            throw new Error('[Data] Invalid addAt, trying to add to a non-addable type')
+        if (!instanceOfObjectData(origin)) throw new Error('[Data] Invalid addAt, trying to add to a non-addable type')
 
         // No path specified, push it into memory
         if (path.length == 0) {
@@ -445,15 +420,15 @@ export function getMemoryLocation(
 ): { found: boolean; foundLocation: Accessor[] } {
     let search: { [id: string]: DataState } | { [id: number]: DataState } = {}
 
-    const isArray =
-        parent != null &&
-        instanceOfObjectData(parent) &&
-        Array.isArray(parent.value) &&
-        parent.frame >= 0
+    const isArray = parent != null && instanceOfObjectData(parent) && Array.isArray(parent.value) && parent.frame >= 0
+    const isObject = parent != null && instanceOfObjectData(parent) && parent.frame >= 0
 
     if (isArray) {
         // Array
         search = (parent as DataState).value as DataState[]
+    } else if (isObject) {
+        // Object
+        search = (parent as DataState).value as { [key: string]: DataState }
     } else if (parent == null) {
         // Whole memory
         search = root.memory

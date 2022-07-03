@@ -5,7 +5,7 @@ export class Ticker {
     static instance: Ticker
 
     // List of tick callbacks
-    private callbacks: { [id: string]: (dt?: number) => void } = {}
+    private callbacks: { [id: string]: (dt: number) => void } = {}
     private time = 0
     private currId = 0
 
@@ -29,12 +29,12 @@ export class Ticker {
         requestAnimationFrame(tick)
     }
 
-    registerTick(callback: (dt?: number) => void) {
+    registerTick(callback: (dt: number) => void) {
         this.currId++
         return this.registerTickFrom(callback, `Ticker_${this.currId}`)
     }
 
-    registerTickFrom(callback: (dt?: number) => void, from: string) {
+    registerTickFrom(callback: (dt: number) => void, from: string) {
         this.callbacks[from] = callback
         return from
     }

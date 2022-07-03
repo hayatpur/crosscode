@@ -25,6 +25,8 @@ export function MemberExpression(
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
     graph.precondition = clone(environment)
 
+    console.log('Gets here', ast)
+
     // Create a register which'll *point* to the location of object
     const objectRegister = [{ type: AccessorType.Register, value: `${graph.id}_Object` }]
     const object = Compiler.compile(ast.object, environment, {

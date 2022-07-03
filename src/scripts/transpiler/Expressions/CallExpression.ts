@@ -1,13 +1,8 @@
-import acorn = require('acorn')
 import * as ESTree from 'estree'
 import { cleanUpRegister, resolvePath } from '../../environment/environment'
 import { Accessor, AccessorType, EnvironmentState } from '../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../execution/execution'
-import {
-    createExecutionGraph,
-    ExecutionGraph,
-    instanceOfExecutionGraph,
-} from '../../execution/graph/ExecutionGraph'
+import { createExecutionGraph, ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { consumeDataAnimation } from '../../execution/primitive/Data/ConsumeDataAnimation'
 import {
     ControlOutput,
@@ -23,11 +18,7 @@ import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 import { FunctionCall } from '../Functions/FunctionCall'
 
-export function CallExpression(
-    ast: ESTree.CallExpression,
-    environment: EnvironmentState,
-    context: ExecutionContext
-) {
+export function CallExpression(ast: ESTree.CallExpression, environment: EnvironmentState, context: ExecutionContext) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
     graph.precondition = clone(environment)
 
@@ -105,6 +96,7 @@ export function CallExpression(
                 feed: false,
                 outputRegister: objectRegister,
             })
+            // console.log(resolvePath(environment, objectRegister, null))
             // addVertex(graph, objectLookup, {
             //     nodeData: getNodeData(ast.callee.object),
             // })
@@ -112,11 +104,10 @@ export function CallExpression(
             objectRegister = null
         }
 
-        const nativeFunction = lookupNativeFunctionAnimation(lookupDataValue.name)(
-            objectRegister,
-            registers,
-            context.outputRegister
-        )
+        const nativeFunction = lookupNativeFunctionAnimation(
+            lookupDataValue.name,
+            resolvePath(environment, objectRegister, null)
+        )(objectRegister, registers, context.outputRegister)
         bodyGraph = nativeFunction
         addVertex(graph, nativeFunction, { nodeData: getNodeData(ast) })
         applyExecutionNode(nativeFunction, environment)
@@ -159,23 +150,15 @@ export function CallExpression(
         }
 
         const consume = consumeDataAnimation(registers[i])
-        // addVertex(graph, consume, { nodeData: getNodeData(ast) })
         applyExecutionNode(consume, environment)
         cleanUpRegister(environment, registers[i][0].value)
     }
 
     if (instanceOfExecutionGraph(bodyGraph) && bodyGraph.vertices.length > 1) {
         graph.vertices[0].postcondition = clone(bodyGraph.vertices[0].postcondition)
-        // graph.vertices[1].nodeData.location = ast.loc
     }
 
-    // graph.vertices[0].postcondition =
-    //     instanceOfExecutionGraph(bodyGraph) && bodyGraph.vertices.length > 1
-    //         ? clone(bodyGraph.vertices[0].postcondition)
-    //         : clone(bodyGraph.precondition)
     graph.postcondition = clone(environment)
-    // bodyGraph.postcondition = clone(environment)
-    // return bodyGraph
 
     graph.nodeData.type = 'CallExpression'
     return graph
@@ -186,5 +169,6 @@ export function lookupNativeFunctionAnimation(name: string) {
         push: ArrayPushAnimation,
         concat: ArrayConcatAnimation,
         floor: FloorAnimation,
+        // split: SplitAnimation,
     }[name]
 }

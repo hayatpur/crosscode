@@ -1,145 +1,121 @@
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials'
-import acorn from 'acorn'
-import * as ESTree from 'estree'
 import { Pane } from 'tweakpane'
-import { Editor } from '../editor/Editor'
 import { createEnvironment } from '../environment/environment'
 import { EnvironmentState } from '../environment/EnvironmentState'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { Visualization } from '../renderer/Visualization/Visualization'
 import { Compiler } from '../transpiler/Compiler'
+import { getAST } from '../utilities/executor'
 
 /* ------------------------------------------------------ */
 /*            Executes and visualizes the code            */
 /* ------------------------------------------------------ */
 export class Executor {
     // Singleton
-    static instance: Executor = null
-
-    // User code editor
-    editor: Editor = null
+    static instance: Executor
 
     // Execution trace of user code
-    execution: ExecutionGraph
+    execution!: ExecutionGraph
 
     // Visualization of execution
-    visualization: Visualization
+    visualization!: Visualization
 
-    constructor(editor: Editor) {
+    constructor() {
         // Singleton
         Executor.instance = this
 
-        // General
-        this.editor = editor
-
-        /* --- Live programming: update after 0.5s of activity -- */
-        let typingTimer: number
-        let firstCompilation = true
-        this.editor.onChangeContent.add(() => {
-            clearTimeout(typingTimer)
-            const delay = firstCompilation ? 500 : 5
-            typingTimer = setTimeout(() => {
-                this.compile()
-            }, delay)
-
-            firstCompilation = false
-        })
-
         // Setup tweakpane
-        this.setupTweakpane()
-    }
-
-    compile() {
-        /* ----------------- Reset visualization ---------------- */
-        this.reset()
-
-        // Construct static AST
-        let ast: ESTree.Node = null
-        try {
-            ast = acorn.parse(this.editor.getValue(), {
-                locations: true,
-                ecmaVersion: 2017,
-            }) as ESTree.Node
-        } catch (e) {
-            console.warn(e)
-            return
-        }
-
-        // TODO: Check for runtime errors before visualizing code
-
-        // Construct dynamic AST
-        let env: EnvironmentState
-        try {
-            const env = createEnvironment()
-            this.execution = Compiler.compile(ast, env, {
-                outputRegister: [],
-                locationHint: [],
-            })
-        } catch (e) {
-            console.warn(e)
-            return
-        }
-
-        console.log('[Executor] Finished compiling ...')
-        console.log('\tAnimation', this.execution)
-        console.log('\tEnvironment', env)
-
-        this.visualization = new Visualization()
-        this.visualization.createProgram(this.execution)
-
-        // TODO: Maintain layout from last time
-    }
-
-    reset() {
-        this.visualization?.destroy()
-        this.visualization = undefined
-        this.execution = null
+        setupTweakpane(this)
     }
 
     /* --------------------- Parameters --------------------- */
-
     PARAMS: {
         a: number
         b: number
         c: number
         d: number
-        focus: boolean
-        ms: number
-        mx: number
-        my: number
     } = {
         a: 0.5,
         b: 0.5,
         c: 0.5,
         d: 0.5,
-        ms: 0.5,
-        mx: 0.5,
-        my: 0.5,
-        focus: false,
+    }
+    fpsGraph: any
+}
+
+/**
+ * Resets executor to blank visualization.
+ * @param executor Executor
+ */
+export function resetExecutor(executor: Executor) {
+    executor.visualization?.destroy()
+    executor.visualization = null
+}
+
+/**
+ * Compiles user code and visualizes the execution.
+ * @param executor Executor
+ * @param code User code
+ */
+export function compileExecutor(executor: Executor, code: string) {
+    /* ----------------- Reset visualization ---------------- */
+    resetExecutor(executor)
+
+    // Construct static AST
+    let { ast, errors } = getAST(code)
+    if (ast == null || errors.length > 0) {
+        console.warn(errors)
+        return
     }
 
-    setupTweakpane() {
-        const pane = new Pane({
-            title: 'Info',
-            expanded: true,
+    // Construct dynamic AST
+    let env: EnvironmentState
+    try {
+        env = createEnvironment()
+        executor.execution = Compiler.compile(ast, env, {
+            outputRegister: [],
+            locationHint: [],
         })
-        pane.registerPlugin(EssentialsPlugin)
+    } catch (e) {
+        console.warn(e)
+        return
+    }
 
-        const fpsGraph = pane.addBlade({
-            view: 'fpsgraph',
-            label: 'FPS',
-            lineCount: 2,
-        })
+    console.log('[Executor] Finished compiling ...')
+    console.log('\tAnimation', executor.execution)
+    console.log('\tEnvironment', env)
 
-        const folder = pane.addFolder({
-            title: 'Parameters',
-            expanded: false,
+    executor.visualization = new Visualization(executor.execution)
+
+    // TODO: Maintain layout from last time
+}
+
+/**
+ * Sets up parameter tweaking and FPS indicator through tweakpane.
+ * @param executor
+ */
+export function setupTweakpane(executor: Executor) {
+    const pane = new Pane({
+        title: 'Info',
+        expanded: true,
+    })
+    pane.registerPlugin(EssentialsPlugin)
+
+    executor.fpsGraph = pane.addBlade({
+        view: 'fpsgraph',
+        label: 'FPS',
+        lineCount: 2,
+    })
+
+    const folder = pane.addFolder({
+        title: 'Parameters',
+        expanded: false,
+    })
+
+    for (const key of Object.keys(executor.PARAMS)) {
+        folder.addInput(executor.PARAMS, key as any, {
+            min: 0,
+            max: 1,
         })
-        for (const key of Object.keys(this.PARAMS)) {
-            folder.addInput(this.PARAMS, key as any, {
-                min: 0,
-                max: 1,
-            })
-        }
     }
 }

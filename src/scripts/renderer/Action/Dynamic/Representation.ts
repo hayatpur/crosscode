@@ -1,7 +1,7 @@
 import { EnvironmentState } from '../../../environment/EnvironmentState'
-import { Executor } from '../../../executor/Executor'
 import { Action } from '../Action'
 import { ActionRenderer, getActionCoordinates } from '../ActionRenderer'
+import { getProxyOfAction } from '../Mapping/ActionMapping'
 import { ActionProxy } from '../Mapping/ActionProxy'
 
 /* ------------------------------------------------------ */
@@ -27,8 +27,10 @@ export class Representation {
     }
 
     updateProxyVisual(proxy: ActionProxy) {
-        const bbox = proxy.action.renderer.element.getBoundingClientRect()
-        const parentBbox = proxy.action.renderer.element.parentElement.getBoundingClientRect()
+        const actionElement = proxy.action.renderer.element
+
+        const bbox = actionElement.getBoundingClientRect()
+        const parentBbox = (actionElement.parentElement as HTMLElement).getBoundingClientRect()
 
         let y = bbox.top - parentBbox.y
         let x = bbox.left - parentBbox.x
@@ -38,7 +40,7 @@ export class Representation {
         width = Math.max(10, width)
 
         // y offset is 0 if the action is a child
-        if (proxy.action.parent.execution.nodeData.type == 'Program') {
+        if (proxy.action.parent?.execution.nodeData.type == 'Program') {
             y += (bbox.height - height) / 2
         } else {
             y *= ActionProxy.heightMultiplier
@@ -55,7 +57,7 @@ export class Representation {
     // Get frames should call get frames of each step.
     getFrames(): [env: EnvironmentState, actionId: string][] {
         if (this.action.steps.length == 0) {
-            return [[this.action.execution.postcondition, this.action.state.id]]
+            return [[this.action.execution.postcondition as EnvironmentState, this.action.state.id]]
         } else {
             const frames = []
             for (const step of this.action.steps) {
@@ -73,7 +75,7 @@ export class Representation {
             }
             return controlFlowPoints
         } else {
-            const proxy = Executor.instance.visualization.mapping.getProxyOfAction(this.action)
+            const proxy = getProxyOfAction(this.action)
             const bbox = proxy.element.getBoundingClientRect()
 
             if (this.action.execution.nodeData.preLabel == 'Body') {
@@ -88,7 +90,5 @@ export class Representation {
         }
     }
 
-    destroy() {
-        this.action = null
-    }
+    destroy() {}
 }

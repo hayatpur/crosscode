@@ -1,10 +1,5 @@
 import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import {
-    AccessorType,
-    EnvironmentState,
-    instanceOfEnvironment,
-    Residual,
-} from '../../../environment/EnvironmentState'
+import { AccessorType, EnvironmentState, instanceOfEnvironment, Residual } from '../../../environment/EnvironmentState'
 import { remap } from '../../../utilities/math'
 import { DataRenderer } from '../../View/Environment/data/DataRenderer'
 import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
@@ -27,13 +22,7 @@ export class CreateTrailRenderer extends TrailRenderer {
 
         /* ---------------------- New data ---------------------- */
         const t = remap(amount, 0, 1, 5, 0)
-
-        // console.log(environment)
-
-        const data = environment.getResidualOf(
-            this.trail.state.toDataId,
-            this.trail.time + 1
-        ) as DataRenderer
+        const data = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1) as DataRenderer
 
         if (amount == 1 && data == null) {
             // Has been destroyed
@@ -51,11 +40,7 @@ export class CreateTrailRenderer extends TrailRenderer {
      * @returns
      */
     computeResidual(environment: EnvironmentState): Residual | null {
-        const prev = resolvePath(
-            environment,
-            [{ type: AccessorType.ID, value: this.trail.state.toDataId }],
-            null
-        )
+        const prev = resolvePath(environment, [{ type: AccessorType.ID, value: this.trail.state.toDataId }], null)
 
         if (instanceOfEnvironment(prev)) {
             return null

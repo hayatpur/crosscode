@@ -1,4 +1,4 @@
-import { createEl } from '../../../../../utilities/dom'
+import { createElement } from '../../../../../utilities/dom'
 import { createDataRenderer } from '../../EnvironmentRenderer'
 import { DataRenderer } from '../DataRenderer'
 import { DataState } from '../DataState'
@@ -50,10 +50,10 @@ export class ArrayRenderer extends DataRenderer {
             if (!(item.id in this.dataRenderers)) {
                 const renderer = createDataRenderer(item)
                 const index = new IndexRenderer()
-                const comma = createEl('div', 'data-array-comma')
+                const comma = createElement('div', 'data-array-comma')
                 comma.innerText = ','
 
-                const hole = createEl('div', 'hole')
+                const hole = createElement('div', 'hole')
                 hole.append(renderer.element)
 
                 this.dataRenderers[item.id] = { hole, renderer, index, comma }
@@ -66,11 +66,7 @@ export class ArrayRenderer extends DataRenderer {
             }
             this.dataRenderers[item.id].renderer.setState(item)
 
-            this.dataRenderers[item.id].index.setState(
-                i,
-                this.dataRenderers[item.id].renderer.element,
-                this.element
-            )
+            this.dataRenderers[item.id].index.setState(i, this.dataRenderers[item.id].renderer.element, this.element)
             updateIndexClasses(this.dataRenderers[item.id].renderer.element, i, items.length)
         }
 

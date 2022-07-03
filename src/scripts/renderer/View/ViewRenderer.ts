@@ -1,8 +1,9 @@
 import { Howl } from 'howler'
 import { Executor } from '../../executor/Executor'
 import { getLeafSteps } from '../../utilities/action'
-import { createEl } from '../../utilities/dom'
+import { createElement, createSVGElement } from '../../utilities/dom'
 import { remap } from '../../utilities/math'
+import { getBreakIndexOfFrameIndex, getProxyOfAction } from '../Action/Mapping/ActionMapping'
 import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
 import { View } from './View'
 
@@ -24,35 +25,17 @@ export class ViewRenderer {
     containers: HTMLElement[] = []
 
     forwards: Howl
-    backwards: Howl
 
     /* ----------------------- Create ----------------------- */
     constructor(view: View) {
         this.view = view
 
-        this.create()
+        this.element = createElement('div', 'view', Executor.instance.visualization.container)
+        this.svg = createSVGElement('environment-svg', this.element)
 
         this.forwards = new Howl({
-            src: [
-                './src/assets/material_product_sounds/ogg/03 Primary System Sounds/ui_tap-variant-01.ogg',
-            ],
+            src: ['./src/assets/material_product_sounds/ogg/04 Secondary System Sounds/navigation_transition-left.ogg'],
         })
-
-        this.backwards = new Howl({
-            src: [
-                './src/assets/material_product_sounds/ogg/03 Primary System Sounds/navigation_backward-selection.ogg',
-            ],
-        })
-    }
-
-    create() {
-        this.element = createEl('div', 'view', Executor.instance.visualization.container)
-        // const margin = Editor.instance.getMaxWidth() + 300
-        // this.element.style.left = `${margin}px`
-
-        this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-        this.element.appendChild(this.svg)
-        this.svg.classList.add('environment-svg')
     }
 
     createEnvironmentRenderer() {
@@ -72,7 +55,7 @@ export class ViewRenderer {
         const steps = getLeafSteps(Executor.instance.visualization.program.steps)
 
         for (let i = steps.length - 1; i >= 0; i--) {
-            const proxy = mapping.getProxyOfAction(steps[i])
+            const proxy = getProxyOfAction(steps[i])
             const start = proxy.timeOffset
             const end = start + proxy.element.getBoundingClientRect().height // TODO: Fix end point calculation
             candidate = i
@@ -98,7 +81,7 @@ export class ViewRenderer {
 
         /* ------------------- Assign classes ------------------- */
         for (let i = 0; i < steps.length; i++) {
-            const proxy = mapping.getProxyOfAction(steps[i])
+            const proxy = getProxyOfAction(steps[i])
             if (i != candidate) {
                 proxy.action.renderer.element.classList.remove('is-playing')
                 proxy.element.classList.remove('is-playing')
@@ -122,11 +105,11 @@ export class ViewRenderer {
         /* -------------------- Apply breaks -------------------- */
 
         /* -------------------- Apply trails -------------------- */
-        const candidateBreakIndex = mapping.getBreakIndexOfFrameIndex(candidate)
+        const candidateBreakIndex = getBreakIndexOfFrameIndex(mapping, candidate)
         this.renderers[candidateBreakIndex].render(this.view.state.frames[candidate])
 
         for (let i = 0; i < this.view.trails.length; i++) {
-            const breakIndex = mapping.getBreakIndexOfFrameIndex(i)
+            const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
             const trails = this.view.trails[i]
             if (i < candidate) {
                 trails.updateTime(1, this.renderers[breakIndex])
@@ -138,7 +121,7 @@ export class ViewRenderer {
         }
 
         for (let i = 0; i < this.view.trails.length; i++) {
-            const breakIndex = mapping.getBreakIndexOfFrameIndex(i)
+            const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
             const trails = this.view.trails[i]
             if (i < candidate) {
                 trails.postUpdate(1, this.renderers[breakIndex])
@@ -151,11 +134,9 @@ export class ViewRenderer {
 
         for (let i = 0; i < this.view.trails.length; i++) {
             const trails = this.view.trails[i]
-            const breakIndex = mapping.getBreakIndexOfFrameIndex(i)
+            const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
 
-            trails.trails.forEach((trail) =>
-                trail.renderer.alwaysUpdate(this.renderers[breakIndex])
-            )
+            trails.trails.forEach((trail) => trail.renderer.alwaysUpdate(this.renderers[breakIndex]))
         }
 
         /* ----------- Update position of containers ------------ */
@@ -166,13 +147,11 @@ export class ViewRenderer {
 
             // If candidate is in the same break
             if (candidateBreakIndex == i) {
-                const activeAction = mapping.getProxyOfAction(steps[0])
+                const activeAction = getProxyOfAction(steps[0])
                 // const activeAction = mapping.getProxyOfAction(steps[candidate])
                 const activeActionBbox = activeAction.element.getBoundingClientRect()
                 container.style.top = `${
-                    activeActionBbox.top +
-                    activeActionBbox.height / 2 -
-                    container.getBoundingClientRect().height / 2
+                    activeActionBbox.top + activeActionBbox.height / 2 - container.getBoundingClientRect().height / 2
                 }px`
 
                 container.classList.remove('will-play')
@@ -208,7 +187,7 @@ export class ViewRenderer {
 
         // Create containers
         for (let i = 0; i < mapping.breaks.length + 1; i++) {
-            const container = createEl('div', 'environment-container')
+            const container = createElement('div', 'environment-container')
             this.containers.push(container)
             this.element.appendChild(container)
         }
@@ -232,9 +211,7 @@ export class ViewRenderer {
             const nextActionBbox = nextAction?.renderer.element.getBoundingClientRect()
 
             if (nextActionBbox != null) {
-                mapping.breakElements[i].style.top = `${
-                    (actionToBreakOnBbox.bottom + nextActionBbox.top) / 2
-                }px`
+                mapping.breakElements[i].style.top = `${(actionToBreakOnBbox.bottom + nextActionBbox.top) / 2}px`
             } else {
                 mapping.breakElements[i].style.top = `${actionToBreakOnBbox.bottom + 20}px`
             }
@@ -244,9 +221,6 @@ export class ViewRenderer {
     /* ----------------------- Destroy ---------------------- */
     destroy() {
         this.renderers.forEach((renderer) => renderer.destroy())
-        this.renderers = null
-
         this.element.remove()
-        this.element = null
     }
 }
