@@ -1,5 +1,6 @@
 import { Executor } from '../../../executor/Executor'
 import { createElement } from '../../../utilities/dom'
+import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
 import { ActionMappingCursor } from './ActionMappingCursor'
 import { ActionProxy } from './ActionProxy'
@@ -22,6 +23,10 @@ export class ActionMapping {
 
     cursor!: ActionMappingCursor
 
+    _tickerId: string
+
+    lanes: HTMLElement[] = []
+
     constructor() {
         // Early binding
         Executor.instance.visualization.mapping = this
@@ -30,6 +35,9 @@ export class ActionMapping {
         this.element = createElement('div', 'action-mapping')
         const container = Executor.instance.visualization.container
         container.insertBefore(this.element, container.firstChild)
+
+        // Create initial lane
+        this.createLane()
 
         // Create cursor
         setTimeout(() => {
@@ -42,6 +50,37 @@ export class ActionMapping {
 
         // Update proxies
         updateMappingProxies(this)
+
+        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+    }
+
+    createLane(label = 'Program') {
+        const lane = createElement('div', 'action-mapping-lane', this.element)
+        this.lanes.push(lane)
+
+        const labelEl = createElement('div', 'action-mapping-lane-label', lane)
+        labelEl.innerText = label
+    }
+
+    addElement(element: HTMLElement) {
+        this.lanes[this.lanes.length - 1].appendChild(element)
+    }
+
+    tick() {
+        // Get max width
+        // const bbox = this.element.getBoundingClientRect()
+        // let maxWidth = 0
+        // for (const child of Array.from(this.element.children)) {
+        //     if (
+        //         !child.classList.contains('action-proxy-container') &&
+        //         !child.classList.contains('action-mapping-lane')
+        //     ) {
+        //         continue
+        //     }
+        //     maxWidth = Math.max(maxWidth, child.getBoundingClientRect().right - bbox.left)
+        // }
+        // // Update width
+        // this.element.style.width = `${maxWidth + 20}px`
     }
 
     destroy() {
@@ -71,7 +110,7 @@ export function updateMappingProxies(mapping: ActionMapping) {
     for (const step of Executor.instance.visualization.program.steps) {
         if (mapping.actionProxies[step.execution.id] == null) {
             mapping.actionProxies[step.execution.id] = new ActionProxy(step)
-            mapping.element.append(mapping.actionProxies[step.execution.id].element)
+            mapping.addElement(mapping.actionProxies[step.execution.id].element)
         }
 
         mapping.actionProxies[step.execution.id].update()

@@ -31,11 +31,7 @@ import { VariableDeclarator } from './Statements/VariableDeclarator'
 /*     Compiles an execution graph from an ESTree AST.    */
 /* ------------------------------------------------------ */
 export class Compiler {
-    static compile(
-        ast: ESTree.Node,
-        environment: EnvironmentState,
-        context: ExecutionContext
-    ): ExecutionGraph {
+    static compile(ast: ESTree.Node, environment: EnvironmentState, context: ExecutionContext): ExecutionGraph {
         const mapping = {
             VariableDeclarator,
 
@@ -65,12 +61,12 @@ export class Compiler {
             UnaryExpression,
         }
 
-        if (mapping[`${ast.type}`] == null) {
-            console.warn(`Unknown type ${ast.type}`)
-            return
+        let type = `${ast.type}`
+        if (!(type in mapping)) {
+            throw new Error(`Unknown type ${ast.type}`)
         }
 
-        const node = new mapping[`${ast.type}`](ast, environment, context)
+        const node = mapping[type](ast, environment, context)
         return node
     }
 }
@@ -79,15 +75,15 @@ export class Compiler {
 /*                         Helpers                        */
 /* ------------------------------------------------------ */
 
-export function getNodeData(node: ESTree.Node | ESTree.Node[], preLabel: string = null): NodeData {
+export function getNodeData(node: ESTree.Node | ESTree.Node[], preLabel?: string): NodeData {
     if (Array.isArray(node)) {
         return {
-            location: getUnionOfLocations(node.map((n) => n.loc)),
+            location: getUnionOfLocations(node.map((n) => n.loc as ESTree.SourceLocation)),
             preLabel: preLabel,
             type: preLabel,
         }
     } else {
-        return { location: node.loc, type: node.type, preLabel }
+        return { location: node.loc as ESTree.SourceLocation | undefined, type: node.type, preLabel }
     }
 }
 

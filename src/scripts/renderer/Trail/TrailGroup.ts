@@ -90,6 +90,8 @@ export function getTrail(execution: ExecutionGraph) {
     )
     const trails: TrailState[] = []
 
+    console.log(traces)
+
     for (const trace of traces) {
         const endOperations = []
         const endLeaves = []
@@ -117,11 +119,7 @@ export function getTrail(execution: ExecutionGraph) {
         }
 
         // Convert end operation and leaves to a trail
-        const trailGroup: TrailState[] = convertEndOperationsAndLeavesToTrails(
-            trace.value.id,
-            endOperations,
-            endLeaves
-        )
+        const trailGroup: TrailState[] = convertEndOperationsAndLeavesToTrails(trace.value.id, endOperations, endLeaves)
         trails.push(...trailGroup)
     }
 

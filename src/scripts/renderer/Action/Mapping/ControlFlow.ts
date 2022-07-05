@@ -36,7 +36,7 @@ export class ControlFlow {
 
     update() {
         // Get all control flow points
-        const controlFlowPoints = [[10, 0]]
+        const controlFlowPoints = []
         const containerBbox = this.container.getBoundingClientRect()
 
         const points = Executor.instance.visualization.program.representation.getControlFlow()
@@ -45,15 +45,15 @@ export class ControlFlow {
         controlFlowPoints.push(...points)
 
         // End point
-        controlFlowPoints.push([10, this.mapping.element.getBoundingClientRect().bottom])
+        // controlFlowPoints.push([10, this.mapping.element.getBoundingClientRect().bottom])
 
-        if (controlFlowPoints.length > 2) {
-            const sx = controlFlowPoints[1][0]
-            controlFlowPoints[0][0] = sx
+        // if (controlFlowPoints.length > 1) {
+        //     // const sx = controlFlowPoints[1][0]
+        //     // controlFlowPoints[0][0] = sx
 
-            const ex = controlFlowPoints[controlFlowPoints.length - 2][0]
-            controlFlowPoints[controlFlowPoints.length - 1][0] = ex
-        }
+        //     const ex = controlFlowPoints[controlFlowPoints.length - 2][0]
+        //     controlFlowPoints[controlFlowPoints.length - 1][0] = ex
+        // }
 
         // const t = performance.now()
         const d = catmullRomSolve(controlFlowPoints.flat(), 0)

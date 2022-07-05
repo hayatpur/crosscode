@@ -26,7 +26,7 @@
 
 /* ----------------------- Mapping ---------------------- */
 .action-mapping {
-    display: grid;
+    display: flex;
     width: fit-content;
     height: -webkit-fill-available;
 
@@ -35,7 +35,7 @@
     background: var(--color-2);
     position: relative;
 
-    padding: 115px 20px;
+    // padding: 115px 20px;
 }
 
 /* -------------------- Action proxy -------------------- */
@@ -76,7 +76,7 @@
     box-shadow: 0px 0px 0px 1px #ffffff12 !important;
 }
 
-.action.is-playing {
+.action.is-playing:not(.is-showing-steps) {
     background: #6f97dc3b;
 }
 
@@ -207,28 +207,12 @@ svg.control-flow-svg {
 
 /* -------------------- Action cursor ------------------- */
 .action-cursor {
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    background: #fff;
-}
-
-/* ----------------------- Trails ----------------------- */
-.action-mapping-connection {
-    fill: #0000;
-    stroke: var(--path-color);
-    stroke-width: 1px;
-}
-
-/* ----------------------- Cursor ----------------------- */
-.action-cursor {
     width: 10px;
     height: 10px;
     border-radius: 50%;
     position: absolute;
     background: var(--s-color-0);
     top: 27px;
-    z-index: 1;
     left: 15px;
     cursor: pointer;
     opacity: 0.7;
@@ -242,6 +226,19 @@ svg.control-flow-svg {
     transform: scale(1.2);
     z-index: 100;
 }
+
+.action-cursor.proxy-is-hovering {
+    pointer-events: none;
+}
+
+/* ----------------------- Trails ----------------------- */
+.action-mapping-connection {
+    fill: #0000;
+    stroke: var(--path-color);
+    stroke-width: 1px;
+}
+
+/* ----------------------- Cursor ----------------------- */
 
 .action:not(.is-inline):not(.program) > .action-cursor {
     top: 58px;
@@ -318,9 +315,9 @@ svg.control-flow-svg.control-flow-svg-overlay {
 }
 
 .action-proxy-container.is-hovering {
-    // transform: scale(1.1);
+    transform: scaleX(1.05) scaleY(1.1);
     filter: brightness(1.2);
-    background-color: #202028;
+    // background-color: #202028;
 }
 
 .action-mapping-lane {
@@ -349,4 +346,8 @@ svg.control-flow-svg.control-flow-svg-overlay {
 .action-proxy-container._FunctionCall {
     top: 0px !important;
     left: 0px !important;
+}
+
+.action-proxy-container.is-hovering > .action-proxy-container {
+    // transform: scale(0.8);
 }

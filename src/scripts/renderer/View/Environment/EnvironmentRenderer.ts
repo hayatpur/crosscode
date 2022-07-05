@@ -27,15 +27,11 @@ export class EnvironmentRenderer {
 
     timestamps: { [id: string]: number } = {}
 
-    private environmentCache: string = null
-    private filterCache: string = null
+    private environmentCache: string = ''
+    private filterCache: string = ''
 
     /* ----------------------- Create ----------------------- */
     constructor() {
-        this.create()
-    }
-
-    create() {
         this.element = createElement('div', 'environment')
     }
 
@@ -76,7 +72,7 @@ export class EnvironmentRenderer {
             )
             .filter((data) => {
                 if (instanceOfPrimitiveData(data)) {
-                    return !data.value.toString().includes('[native code]')
+                    return !(data.value ?? '').toString().includes('[native code]')
                 } else if (data.builtin) {
                     return false
                 } else {

@@ -48,10 +48,6 @@ export class Visualization {
         this.view.destroy()
         this.program.destroy()
 
-        this.mapping = null
-        this.view = null
-        this.program = null
-
         this.container.remove()
     }
 }

@@ -7,6 +7,7 @@
         "postinstall": "patch-package"
     },
     "dependencies": {
+        "@formkit/auto-animate": "^1.0.0-beta.1",
         "@tweakpane/plugin-essentials": "^0.1.4",
         "@types/acorn": "^4.0.6",
         "@types/estree": "0.0.51",

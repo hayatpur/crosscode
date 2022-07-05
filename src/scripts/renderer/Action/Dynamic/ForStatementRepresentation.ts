@@ -1,5 +1,6 @@
 import { Executor } from '../../../executor/Executor'
 import { Action } from '../Action'
+import { getProxyOfAction } from '../Mapping/ActionMapping'
 import { Representation } from './Representation'
 
 export class ForStatementRepresentation extends Representation {
@@ -15,7 +16,7 @@ export class ForStatementRepresentation extends Representation {
 
         // Add stack button to proxy
         // setTimeout(() => {
-        //     const proxy = Executor.instance.visualization.mapping.getProxyOfAction(action)
+        //     const proxy = getProxyOfAction(action)
         //     proxy.element.appendChild(this.stackButton)
         // }, 0)
 
@@ -36,7 +37,7 @@ export class ForStatementRepresentation extends Representation {
     }
 
     updateStack() {
-        const proxy = Executor.instance.visualization.mapping.getProxyOfAction(this.action)
+        const proxy = getProxyOfAction(this.action)
 
         if (this.isShowingStack) {
             proxy.element.classList.add('showing-stack')
@@ -47,20 +48,20 @@ export class ForStatementRepresentation extends Representation {
         Executor.instance.visualization.program.update()
     }
 
-    getControlFlow() {
-        if (this.action.steps.length == 0) {
-            return super.getControlFlow()
-        } else {
-            // const controlFlowPoints = []
+    // getControlFlow() {
+    //     if (this.action.steps.length == 0) {
+    //         return super.getControlFlow()
+    //     } else {
+    //         // const controlFlowPoints = []
 
-            const proxy = Executor.instance.visualization.mapping.getProxyOfAction(this.action)
-            const bbox = proxy.element.getBoundingClientRect()
-            const controlFlowPoints = [[bbox.x + 10, bbox.y + bbox.height / 2]]
+    //         const proxy = getProxyOfAction(this.action)
+    //         const bbox = proxy.element.getBoundingClientRect()
+    //         const controlFlowPoints = [[bbox.x + 10, bbox.y + bbox.height / 2]]
 
-            for (const step of this.action.steps) {
-                controlFlowPoints.push(...step.representation.getControlFlow())
-            }
-            return controlFlowPoints
-        }
-    }
+    //         for (const step of this.action.steps) {
+    //             controlFlowPoints.push(...step.representation.getControlFlow())
+    //         }
+    //         return controlFlowPoints
+    //     }
+    // }
 }

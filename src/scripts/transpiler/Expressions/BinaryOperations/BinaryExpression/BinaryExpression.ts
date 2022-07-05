@@ -41,15 +41,10 @@ export function BinaryExpression(
     })
     addVertex(graph, right, { nodeData: getNodeData(ast.right, 'Right') })
 
-    const evaluate = binaryExpressionEvaluate(
-        leftRegister,
-        rightRegister,
-        ast.operator,
-        context.outputRegister
-    )
-    addVertex(graph, evaluate, {
-        nodeData: { ...getNodeData(ast, 'Evaluate'), type: 'BinaryExpressionEvaluate' },
-    })
+    const evaluate = binaryExpressionEvaluate(leftRegister, rightRegister, ast.operator, context.outputRegister)
+    // addVertex(graph, evaluate, {
+    //     nodeData: { ...getNodeData(ast, 'Evaluate'), type: 'BinaryExpressionEvaluate' },
+    // })
     applyExecutionNode(evaluate, environment)
 
     cleanUpRegister(environment, leftRegister[0].value)

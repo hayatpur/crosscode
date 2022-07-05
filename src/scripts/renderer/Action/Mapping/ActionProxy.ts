@@ -2,7 +2,6 @@ import * as ESTree from 'estree'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { Executor } from '../../../executor/Executor'
 import { createElement } from '../../../utilities/dom'
-import { Keyboard } from '../../../utilities/Keyboard'
 import { Ticker } from '../../../utilities/Ticker'
 import { Action, createSteps, destroySteps } from '../Action'
 
@@ -22,7 +21,7 @@ export class ActionProxy {
     // Time in control flow
     timeOffset: number = 0
 
-    static heightMultiplier = 0.8
+    static heightMultiplier = 1
     static widthMultiplier = 0.4
 
     private _tickerId: string
@@ -50,43 +49,45 @@ export class ActionProxy {
         this.update()
 
         this.element.addEventListener('click', (e) => {
-            if (this.action.state.isShowingSteps) {
+            if (this.action.state.isShowingSteps && !this._isHovering) {
                 destroySteps(this.action)
             } else {
-                // if (this.action.execution.nodeData.type == 'CallExpression') {
-                //     Executor.instance.visualization.mapping.createLane('Function Call')
-                // }
+                if (this._isHovering) {
+                    this.unHover()
+                }
 
                 createSteps(this.action)
-
-                // Executor.instance.visualization.mapping.lanes[1].append(
-                //     Object.values(this.steps)[1].element
-                // )
             }
 
             e.stopPropagation()
             e.preventDefault()
         })
 
-        // Peek timer
-        let peekTimer: NodeJS.Timeout
+        // Hover
         this.element.addEventListener('mouseenter', () => {
-            if (!Keyboard.instance.isPressed('Shift')) {
-                return
-            }
-
-            clearTimeout(peekTimer)
-            const delay = 1000
-
-            peekTimer = setTimeout(() => {
-                if (!this.action.state.isShowingSteps) {
-                    this.hover()
-                }
-            }, delay)
+            // if (Keyboard.instance.isPressed('Control')) {
+            //     // Parent is hovering, so navigate in control flow to this statement
+            //     const mapping = Executor.instance.visualization.mapping
+            //     mapping.cursor.targetTime = this.timeOffset
+            //     mapping.cursor.updatedTargetTime = true
+            // }
+            // const parentProxy = this.action.parent ? getProxyOfAction(this.action.parent) : null
+            // if (
+            //     !this._isHovering &&
+            //     !this.action.state.isShowingSteps &&
+            //     !Executor.instance.visualization.mapping.cursor.dragging
+            // ) {
+            //     // if (parentProxy == null || !parentProxy._isHovering) {
+            //     //     this.hover()
+            //     // } else {
+            //     // Parent is hovering, so navigate in control flow to this statement
+            //     const mapping = Executor.instance.visualization.mapping
+            //     mapping.cursor.targetTime = this.timeOffset
+            //     mapping.cursor.updatedTargetTime = true
+            // }
         })
 
         this.element.addEventListener('mouseleave', () => {
-            clearTimeout(peekTimer)
             this.unHover()
         })
 
@@ -98,7 +99,36 @@ export class ActionProxy {
         this._isHovering = true
 
         this.element.classList.add('is-hovering')
+        Executor.instance.visualization.mapping.cursor.element.classList.add('proxy-is-hovering')
 
+        // Create children
+        createSteps(this.action)
+    }
+
+    unHover(override = true) {
+        if (!this._isHovering) return
+        this._isHovering = false
+
+        this.element.classList.remove('is-hovering')
+        Executor.instance.visualization.mapping.cursor.element.classList.remove('proxy-is-hovering')
+
+        // If any of the children were expanded, then don't destroy steps
+        let shouldDestroySteps = override
+
+        for (const [, proxy] of Object.entries(this.steps)) {
+            if (proxy.action.state.isShowingSteps) {
+                shouldDestroySteps = false
+                break
+            }
+        }
+
+        // Destroy children
+        if (shouldDestroySteps) {
+            destroySteps(this.action)
+        }
+    }
+
+    peak() {
         const mapping = Executor.instance.visualization.mapping
         mapping.cursor.isHovering = true
 
@@ -108,12 +138,7 @@ export class ActionProxy {
         createSteps(this.action)
     }
 
-    unHover() {
-        if (!this._isHovering) return
-        this._isHovering = false
-
-        this.element.classList.remove('is-hovering')
-
+    unPeak() {
         const mapping = Executor.instance.visualization.mapping
         mapping.cursor.isHovering = false
 
@@ -122,13 +147,13 @@ export class ActionProxy {
     }
 
     tick(dt: number) {
-        if (this._isHovering) {
-            const mapping = Executor.instance.visualization.mapping
+        // if (this._isHovering) {
+        //     const mapping = Executor.instance.visualization.mapping
 
-            if (mapping.cursor.isStatic) {
-                mapping.time = this.timeOffset
-            }
-        }
+        //     if (mapping.cursor.isStatic) {
+        //         mapping.time = this.timeOffset
+        //     }
+        // }
 
         // Organize stacks
         for (const [key, stack] of Object.entries(ActionProxy.stacks)) {
@@ -147,15 +172,15 @@ export class ActionProxy {
             }
 
             // Apply out-of-view
-            for (let i = 0; i < stack.length; i++) {
-                const proxy = stack[i]
-                if (i != isPlayingIndex) {
-                    proxy.element.classList.add('out-of-view')
-                } else {
-                    proxy.element.classList.remove('out-of-view')
-                }
-                // proxy.element.style.transform = `translate(${i * 2}px, ${i * 2}px)`
-            }
+            // for (let i = 0; i < stack.length; i++) {
+            //     const proxy = stack[i]
+            //     if (i != isPlayingIndex) {
+            //         proxy.element.classList.add('out-of-view')
+            //     } else {
+            //         proxy.element.classList.remove('out-of-view')
+            //     }
+            //     // proxy.element.style.transform = `translate(${i * 2}px, ${i * 2}px)`
+            // }
         }
     }
 
@@ -174,7 +199,15 @@ export class ActionProxy {
             if (proxy == null) {
                 proxy = new ActionProxy(step)
                 this.steps[step.execution.id] = proxy
-                this.element.appendChild(proxy.element)
+
+                if (proxy.action.execution.nodeData.type == 'FunctionCall') {
+                    const mapping = Executor.instance.visualization.mapping
+                    // const execution = proxy.action.execution.nodeData.preLabel
+                    mapping.createLane(`${proxy.action.execution.nodeData.preLabel}`)
+                    mapping.addElement(proxy.element)
+                } else {
+                    this.element.appendChild(proxy.element)
+                }
             }
 
             proxy.update()

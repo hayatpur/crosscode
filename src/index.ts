@@ -13,7 +13,7 @@ function main() {
     editor.onChangeContent.add(() => {
         clearTimeout(typingTimer)
 
-        const delay = firstCompilation ? 500 : 5 // Stagger on first execution to allow time for monaco to load
+        const delay = firstCompilation ? 500 : 50 // Stagger on first execution to allow time for monaco to load
         typingTimer = setTimeout(() => {
             compileExecutor(executor, editor.getValue())
         }, delay)

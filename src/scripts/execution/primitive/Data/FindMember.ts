@@ -31,16 +31,12 @@ function apply(animation: FindMember, environment: EnvironmentState) {
     const property = resolvePath(environment, animation.propertyRegister, `${animation.id}_Property`) as DataState
     const propertyLocation = getMemoryLocation(environment, property).foundLocation
 
-    console.log('Property', property)
-
     // Get original data
     let original = resolvePath(
         environment,
         [...objectLocation, { type: AccessorType.Index, value: property.value as string }],
         `${animation.id}_MemberFunction`
     ) as DataState | Function
-
-    console.log('Original', original)
 
     let originalModified = false
 

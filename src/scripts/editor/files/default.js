@@ -1,5 +1,3 @@
-let list = []
-let alphabet = 'abcdefghijklmnopqrstuvwxyz'
-
-list.push(5)
-let aList = alphabet.split('')
+let x = 5
+let y = 2
+let z = x + y

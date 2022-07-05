@@ -3,6 +3,7 @@ import {
     DataType,
     instanceOfData,
     instanceOfObjectData,
+    instanceOfPrimitiveData,
     PrimitiveDataState,
 } from '../renderer/View/Environment/data/DataState'
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
@@ -24,12 +25,13 @@ export function createEnvironment(): EnvironmentState {
         _type: 'EnvironmentState',
         scope: [
             {
-                bindings: {},
-                //         Math: {
-                //             location: [{ type: AccessorType.Index, value: 'MathREF' }],
-                //             name: 'Math',
-                //         },
-                //     },
+                bindings: {
+                    // Math: {
+                    //     name: 'Math',
+                    //     location: [{ type: AccessorType.ID, value: 'Math' }],
+                    // },
+                },
+
                 type: ScopeType.Default,
             },
         ],
@@ -78,7 +80,11 @@ export function popScope(environment: EnvironmentState): Scope {
         }
     }
 
-    return environment.scope.pop()
+    if (environment.scope.length == 0) {
+        throw new Error('Cannot pop the last scope')
+    }
+
+    return environment.scope.pop() as Scope
 }
 
 /**
@@ -88,14 +94,8 @@ export function popScope(environment: EnvironmentState): Scope {
  * @param location location of where its stored
  * @param shouldBeGlobal whether it should be declared in the global scope (TODO)
  */
-export function declareVariable(
-    environment: EnvironmentState,
-    name: string,
-    location: Accessor[],
-    shouldBeGlobal = false
-) {
+export function declareVariable(environment: EnvironmentState, name: string, location: Accessor[]) {
     environment.scope[environment.scope.length - 1].bindings[name] = createIdentifier(name, location)
-    // updateLayout(environment);
 }
 
 /**
@@ -104,7 +104,7 @@ export function declareVariable(
  * @param name name of variable
  * @returns location of stored in the variable
  */
-export function lookupVariable(environment: EnvironmentState, name: string): Accessor[] {
+export function lookupVariable(environment: EnvironmentState, name: string): Accessor[] | null {
     for (let i = environment.scope.length - 1; i >= 0; i--) {
         const scope = environment.scope[i]
 
@@ -117,6 +117,8 @@ export function lookupVariable(environment: EnvironmentState, name: string): Acc
             i = 1
         }
     }
+
+    return null
 }
 
 /**
@@ -155,15 +157,15 @@ export function replaceEnvironmentWith(current: EnvironmentState, newEnv: Enviro
 export function removeAt(
     environment: EnvironmentState,
     location: Accessor[],
-    options: { noResolvingId?: boolean; noResolvingReference?: boolean } = null
+    options?: { noResolvingId?: boolean; noResolvingReference?: boolean }
 ) {
     const parentPath = location.slice(0, -1)
     const parent = resolvePath(environment, parentPath, null, null, options)
 
     const index = location[location.length - 1]
 
-    if (instanceOfData(parent)) {
-        delete parent.value[index.value]
+    if (instanceOfData(parent) && instanceOfObjectData(parent)) {
+        delete (parent.value as { [id: string | number]: DataState })[index.value]
     } else if (instanceOfEnvironment(parent)) {
         delete parent.memory[index.value]
     } else {
@@ -212,7 +214,7 @@ export function resolve(
     srcId: string,
     parent: DataState | EnvironmentState | null = null,
     options: { noResolvingId?: boolean; noResolvingReference?: boolean } = {}
-): DataState | EnvironmentState {
+): DataState | EnvironmentState | null {
     // By default, make focus the overall environment if none is specified
     if (parent == null) {
         parent = root
@@ -253,7 +255,13 @@ export function resolve(
             if (data == null) continue
 
             if (data.id == accessor.value) {
-                return resolvePath(root, getMemoryLocation(root, data).foundLocation, srcId, null, options)
+                return resolvePath(
+                    root,
+                    getMemoryLocation(root, data).foundLocation as Accessor[],
+                    srcId,
+                    null,
+                    options
+                )
             } else if (instanceOfObjectData(data)) {
                 if (Array.isArray(data.value)) {
                     search.push(...(data.value as DataState[]))
@@ -267,14 +275,14 @@ export function resolve(
     } else if (accessor.type == AccessorType.Symbol) {
         // Symbols are located in the root
         const accessors = lookupVariable(root, accessor.value as string)
-        return resolvePath(root, accessors, srcId, null, options)
+        return resolvePath(root, accessors as Accessor[], srcId, null, options)
     } else if (accessor.type == AccessorType.Index) {
         if (instanceOfObjectData(parent)) {
             if (Array.isArray(parent.value)) {
                 const value = parent.value as DataState[]
                 if (parseInt(accessor.value) >= value.length) {
-                    value[accessor.value] = createPrimitiveData(DataType.Literal, null, srcId)
-                    value[accessor.value].frame = parent.frame
+                    value[parseInt(accessor.value)] = createPrimitiveData(DataType.Literal, null, srcId)
+                    value[parseInt(accessor.value)].frame = parent.frame
                 }
             } else if (parent.constructor == Object) {
                 const value = parent.value as { [key: string]: DataState }
@@ -285,13 +293,19 @@ export function resolve(
             }
         }
 
-        const data = (instanceOfData(parent) ? (parent.value as DataState[]) : parent.memory)[accessor.value]
+        let data = null
+
+        if (instanceOfData(parent) && instanceOfObjectData(parent)) {
+            data = (parent.value as { [key: string | number]: DataState })[accessor.value]
+        } else if (instanceOfEnvironment(parent)) {
+            data = parent.memory[accessor.value]
+        }
 
         if (data == null) {
             return root
         }
 
-        if (data.type == DataType.ID) {
+        if (instanceOfPrimitiveData(data) && data.type == DataType.ID) {
             if (options.noResolvingId) {
                 return data
             } else {
@@ -306,7 +320,7 @@ export function resolve(
                     options
                 )
             }
-        } else if (data.type == DataType.Reference) {
+        } else if (instanceOfPrimitiveData(data) && data.type == DataType.Reference) {
             if (options.noResolvingReference) {
                 return data
             } else {
@@ -316,6 +330,8 @@ export function resolve(
 
         return data
     }
+
+    return null
 }
 
 export function resolvePath(
@@ -329,7 +345,7 @@ export function resolvePath(
         return parent ?? root
     }
 
-    const resolution = resolve(root, path[0], srcId, parent, options)
+    const resolution = resolve(root, path[0], srcId ?? 'NULL', parent, options)
     const ret = resolvePath(root, path.slice(1), srcId, resolution, options)
 
     return ret
@@ -358,7 +374,7 @@ export function addDataAt(
     path: Accessor[],
     srcId: string,
     origin: DataState | EnvironmentState | null = null
-): Accessor[] {
+): Accessor[] | null {
     // By default, make focus the overall environment if none is specified
     if (origin == null) {
         origin = root
@@ -374,7 +390,7 @@ export function addDataAt(
             } else {
                 throw new Error('[Data] Invalid addAt with no path')
             }
-            return
+            return null
         }
 
         const parentPath = path.slice(0, -1)
@@ -382,7 +398,7 @@ export function addDataAt(
 
         if (parent == origin) {
             const index = path[path.length - 1]
-            parent.value[index.value] = data
+            ;(parent.value as { [key: string | number]: DataState })[index.value] = data
             data.frame = origin.frame
         } else {
             addDataAt(root, data, path.slice(-2, -1), srcId, parent)
@@ -417,7 +433,7 @@ export function getMemoryLocation(
     data: DataState,
     location: Accessor[] = [],
     parent: DataState | EnvironmentState | null = null
-): { found: boolean; foundLocation: Accessor[] } {
+): { found: boolean; foundLocation: Accessor[] | null } {
     let search: { [id: string]: DataState } | { [id: number]: DataState } = {}
 
     const isArray = parent != null && instanceOfObjectData(parent) && Array.isArray(parent.value) && parent.frame >= 0
@@ -434,9 +450,15 @@ export function getMemoryLocation(
         search = root.memory
     }
 
+    search = search as { [id: string]: DataState }
+
     for (const k of Object.keys(search)) {
         // Check if this item is the data
-        if (search[k].id == data.id) {
+        const searchItem = isArray
+            ? (search as { [id: number]: DataState })[parseInt(k)]
+            : (search as { [id: string]: DataState })[k]
+
+        if (searchItem.id == data.id) {
             const acc = { type: AccessorType.Index, value: k }
 
             return {
@@ -450,7 +472,7 @@ export function getMemoryLocation(
             root,
             data,
             [...location, { type: AccessorType.Index, value: k }],
-            search[k]
+            searchItem
         )
 
         if (found) {
@@ -458,37 +480,21 @@ export function getMemoryLocation(
         }
     }
 
-    return { found: false, foundLocation: undefined }
+    return { found: false, foundLocation: null }
 }
 
 // Converts register IDs to memory counter-parts
-export function getTrueId(environment: EnvironmentState, id: string) {
+export function getTrueId(environment: EnvironmentState, id: string): string | null {
     const register = environment.registers[id]
     if (register == null || instanceOfObjectData(register)) return id
 
     if (register.type == DataType.ID) {
         return getTrueId(environment, register.value as string)
     }
+
+    return null
 }
 
 export function cleanUpRegister(environment: EnvironmentState, registerName: string) {
     delete environment.registers[registerName]
 }
-
-// export function getEmptyPosition(environment: EnvironmentState, id: string) {
-//     // Then it doesn't have a place yet
-//     // Find an empty space and put it there
-//     const placeholder = createData(DataType.Literal, '', `${id}_Placeholder`)
-
-//     const placeholderLocation = addDataAt(view, placeholder, [], `${id}_Placeholder`)
-//
-
-//     const transform = getRelativeLocation(
-//         placeholder.transform.rendered,
-//         environment.transform.rendered
-//     ) as DataMovementLocation
-
-//     removeAt(environment, placeholderLocation)
-
-//     return
-// }

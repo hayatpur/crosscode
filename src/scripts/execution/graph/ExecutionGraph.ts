@@ -23,8 +23,8 @@ export interface ExecutionGraph {
     nodeData: NodeData
 
     // General info
-    precondition: EnvironmentState
-    postcondition: EnvironmentState
+    precondition: EnvironmentState | null
+    postcondition: EnvironmentState | null
     isGroup: boolean
 
     // Animation info
@@ -38,10 +38,7 @@ export function instanceOfExecutionGraph(animation: any): animation is Execution
 }
 
 let __EXECUTION_GRAPH_ID = 0
-export function createExecutionGraph(
-    nodeData: NodeData,
-    options: { isGroup?: boolean } = {}
-): ExecutionGraph {
+export function createExecutionGraph(nodeData: NodeData, options: { isGroup?: boolean } = {}): ExecutionGraph {
     return {
         // Meta info
         _type: 'ExecutionGraph',

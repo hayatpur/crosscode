@@ -13,6 +13,7 @@ import {
 import { ArrayConcatAnimation } from '../../execution/primitive/Functions/Native/Array/ArrayConcatAnimation'
 import { ArrayPushAnimation } from '../../execution/primitive/Functions/Native/Array/ArrayPushAnimation'
 import { FloorAnimation } from '../../execution/primitive/Functions/Native/Math/FloorAnimation'
+import { SqrtAnimation } from '../../execution/primitive/Functions/Native/Math/SqrtAnimation'
 import { DataState } from '../../renderer/View/Environment/data/DataState'
 import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
@@ -104,10 +105,12 @@ export function CallExpression(ast: ESTree.CallExpression, environment: Environm
             objectRegister = null
         }
 
-        const nativeFunction = lookupNativeFunctionAnimation(
-            lookupDataValue.name,
-            resolvePath(environment, objectRegister, null)
-        )(objectRegister, registers, context.outputRegister)
+        const nativeFunction = lookupNativeFunctionAnimation(lookupDataValue.name)(
+            objectRegister,
+            registers,
+            context.outputRegister
+        )
+
         bodyGraph = nativeFunction
         addVertex(graph, nativeFunction, { nodeData: getNodeData(ast) })
         applyExecutionNode(nativeFunction, environment)
@@ -169,6 +172,7 @@ export function lookupNativeFunctionAnimation(name: string) {
         push: ArrayPushAnimation,
         concat: ArrayConcatAnimation,
         floor: FloorAnimation,
+        sqrt: SqrtAnimation,
         // split: SplitAnimation,
     }[name]
 }

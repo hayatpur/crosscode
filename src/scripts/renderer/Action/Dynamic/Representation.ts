@@ -37,7 +37,7 @@ export class Representation {
 
         let height = bbox.height * ActionProxy.heightMultiplier
         let width = bbox.width * ActionProxy.widthMultiplier
-        width = Math.max(10, width)
+        width = Math.max(20, width)
 
         // y offset is 0 if the action is a child
         if (proxy.action.parent?.execution.nodeData.type == 'Program') {
@@ -78,13 +78,13 @@ export class Representation {
             const proxy = getProxyOfAction(this.action)
             const bbox = proxy.element.getBoundingClientRect()
 
-            if (this.action.execution.nodeData.preLabel == 'Body') {
-                return [
-                    [bbox.x + 60, bbox.y + bbox.height / 2],
-                    [bbox.x + bbox.width + 20, bbox.y + bbox.height / 2],
-                    [bbox.x + bbox.width + 20, bbox.y + bbox.height / 2 - 27.5],
-                ]
-            }
+            // if (this.action.execution.nodeData.preLabel == 'Body') {
+            //     return [
+            //         [bbox.x + 60, bbox.y + bbox.height / 2],
+            //         [bbox.x + bbox.width + 20, bbox.y + bbox.height / 2],
+            //         [bbox.x + bbox.width + 20, bbox.y + bbox.height / 2 - 27.5],
+            //     ]
+            // }
 
             return [[bbox.x + 10, bbox.y + bbox.height / 2]]
         }

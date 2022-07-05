@@ -6,11 +6,7 @@ import { ControlOutput, ExecutionContext } from '../../execution/primitive/Execu
 import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 
-export function Program(
-    ast: ESTree.Program,
-    environment: EnvironmentState,
-    context: ExecutionContext
-) {
+export function Program(ast: ESTree.Program, environment: EnvironmentState, context: ExecutionContext) {
     const graph = createExecutionGraph(getNodeData(ast, 'Program'))
     graph.precondition = clone(environment)
 
@@ -22,7 +18,10 @@ export function Program(
             ...context,
             controlOutput,
         })
-        addVertex(graph, animation, { nodeData: getNodeData(statement, 'Statement') })
+
+        if (animation != null) {
+            addVertex(graph, animation, { nodeData: getNodeData(statement, 'Statement') })
+        }
     }
 
     graph.postcondition = clone(environment)

@@ -1,23 +1,20 @@
 import * as ESTree from 'estree'
 import { EnvironmentState } from '../../environment/EnvironmentState'
-import { addVertex, applyExecutionNode } from '../../execution/execution'
-import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import { applyExecutionNode } from '../../execution/execution'
 import { bindFunctionAnimation } from '../../execution/primitive/Binding/BindFunctionAnimation'
 import { ExecutionContext } from '../../execution/primitive/ExecutionNode'
-import { clone } from '../../utilities/objects'
-import { getNodeData } from '../Compiler'
 
 export function FunctionDeclaration(
     ast: ESTree.FunctionDeclaration,
     environment: EnvironmentState,
     context: ExecutionContext
 ) {
-    const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
-    graph.precondition = clone(environment)
+    // const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
+    // graph.precondition = clone(environment)
 
     // Allocate a place for variable that *points* to the register @TODO: support other initializations that identifier
     const bind = bindFunctionAnimation((ast.id as ESTree.Identifier).name, ast)
-    addVertex(graph, bind, { nodeData: getNodeData(ast.id) })
+    // addVertex(graph, bind, { nodeData: getNodeData(ast.id) })
     applyExecutionNode(bind, environment)
 
     // const FunctionCallInstance = (ast: ESTree.FunctionDeclaration, environment: EnvironmentState, context: ExecutionContext) => {
@@ -30,6 +27,6 @@ export function FunctionDeclaration(
     //     }
     // };
 
-    graph.postcondition = clone(environment)
-    return graph
+    // graph.postcondition = clone(environment)
+    return null
 }

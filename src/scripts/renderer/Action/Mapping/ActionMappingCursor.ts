@@ -22,6 +22,7 @@ export class ActionMappingCursor {
 
     isStatic: boolean = false
     isHovering: boolean = false
+    updatedTargetTime: boolean = false
 
     /* ----------------------- Create ----------------------- */
     constructor(mapping: ActionMapping) {
@@ -105,31 +106,40 @@ export class ActionMappingCursor {
 
         // console.log('Gets here.', !this.dragging)
         if (!this.dragging && !this.isHovering) {
-            let candidate = 0
-            let amount = 0
-            let nextOffset = 0
-
-            // Find the closest frame
-            for (let i = steps.length - 1; i >= 0; i--) {
-                const proxy = getProxyOfAction(steps[i])
-                const start = proxy.timeOffset
-                const end = start + proxy.element.getBoundingClientRect().height
-                candidate = i
-                if (time >= start) {
-                    nextOffset = end
-                    amount = end - start
-                    break
-                }
-            }
-
-            if (candidate == -1) {
-                return
-            }
-
-            if (amount > 0) {
+            if (this.updatedTargetTime) {
                 this._speed = lerp(this._speed, 0.05, 0.3)
-                this.mapping.time = overLerp(time, nextOffset, this._speed)
-                // this.mapping.time = Math.min(this.mapping.time, nextOffset - 0.01)
+                this.mapping.time = overLerp(this.mapping.time, this.targetTime, this._speed)
+
+                if (this.mapping.time == this.targetTime) {
+                    this.updatedTargetTime = false
+                }
+            } else {
+                let candidate = 0
+                let amount = 0
+                let nextOffset = 0
+
+                // Find the closest frame
+                for (let i = steps.length - 1; i >= 0; i--) {
+                    const proxy = getProxyOfAction(steps[i])
+                    const start = proxy.timeOffset
+                    const end = start + proxy.element.getBoundingClientRect().height
+                    candidate = i
+                    if (time >= start) {
+                        nextOffset = end
+                        amount = end - start
+                        break
+                    }
+                }
+
+                if (candidate == -1) {
+                    return
+                }
+
+                if (amount > 0) {
+                    this._speed = lerp(this._speed, 0.05, 0.3)
+                    this.mapping.time = overLerp(time, nextOffset, this._speed)
+                    // this.mapping.time = Math.min(this.mapping.time, nextOffset - 0.01)
+                }
             }
         } else if (!this.isHovering) {
             // Find if it is on a frame currently
