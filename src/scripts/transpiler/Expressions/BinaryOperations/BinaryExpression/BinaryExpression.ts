@@ -42,9 +42,12 @@ export function BinaryExpression(
     addVertex(graph, right, { nodeData: getNodeData(ast.right, 'Right') })
 
     const evaluate = binaryExpressionEvaluate(leftRegister, rightRegister, ast.operator, context.outputRegister)
-    // addVertex(graph, evaluate, {
-    //     nodeData: { ...getNodeData(ast, 'Evaluate'), type: 'BinaryExpressionEvaluate' },
-    // })
+    const location = ast.left.loc as ESTree.SourceLocation
+    location.end = (ast.right.loc as ESTree.SourceLocation).start
+    location.start = (ast.left.loc as ESTree.SourceLocation).end
+    addVertex(graph, evaluate, {
+        nodeData: { ...getNodeData(ast, 'Evaluate'), type: 'BinaryExpressionEvaluate', location },
+    })
     applyExecutionNode(evaluate, environment)
 
     cleanUpRegister(environment, leftRegister[0].value)

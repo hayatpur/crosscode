@@ -112,7 +112,7 @@ export class EnvironmentRenderer {
         for (const reference of references) {
             const data = resolvePath(state, reference.value as Accessor[], null)
             if (instanceOfEnvironment(data)) continue
-            // if (instanceOfPrimitiveData(data) && data.type == DataType.Function) continue
+            if (instanceOfPrimitiveData(data) && data.type == DataType.Function) continue
 
             let renderer = this.dataRenderers[data.id]
 
@@ -138,6 +138,7 @@ export class EnvironmentRenderer {
         // Render data
         for (const data of memory) {
             let renderer = this.dataRenderers[data.id]
+            if (instanceOfPrimitiveData(data) && data.type == DataType.Function) continue
 
             // Create renderer if not there
             if (renderer == null) {

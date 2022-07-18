@@ -1,13 +1,18 @@
+import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { Executor } from '../../../executor/Executor'
+import { getAbstractionPath } from '../../../utilities/action'
 import { createElement } from '../../../utilities/dom'
-import { Ticker } from '../../../utilities/Ticker'
 import { Action } from '../Action'
 import { ActionMappingCursor } from './ActionMappingCursor'
 import { ActionProxy } from './ActionProxy'
 import { ControlFlow } from './ControlFlow'
+import { Vessel } from './Vessel'
 
 export class ActionMapping {
     element: HTMLElement
+
+    frames: HTMLElement[] = []
 
     // Action proxies
     actionProxies: { [id: string]: ActionProxy } = {}
@@ -23,9 +28,7 @@ export class ActionMapping {
 
     cursor!: ActionMappingCursor
 
-    _tickerId: string
-
-    lanes: HTMLElement[] = []
+    vessel: Vessel
 
     constructor() {
         // Early binding
@@ -36,8 +39,9 @@ export class ActionMapping {
         const container = Executor.instance.visualization.container
         container.insertBefore(this.element, container.firstChild)
 
-        // Create initial lane
-        this.createLane()
+        // Initial vessel
+        this.vessel = new Vessel(Executor.instance.visualization.program.execution)
+        this.element.appendChild(this.vessel.element)
 
         // Create cursor
         setTimeout(() => {
@@ -50,41 +54,12 @@ export class ActionMapping {
 
         // Update proxies
         updateMappingProxies(this)
-
-        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
-    }
-
-    createLane(label = 'Program') {
-        const lane = createElement('div', 'action-mapping-lane', this.element)
-        this.lanes.push(lane)
-
-        const labelEl = createElement('div', 'action-mapping-lane-label', lane)
-        labelEl.innerText = label
-    }
-
-    addElement(element: HTMLElement) {
-        this.lanes[this.lanes.length - 1].appendChild(element)
-    }
-
-    tick() {
-        // Get max width
-        // const bbox = this.element.getBoundingClientRect()
-        // let maxWidth = 0
-        // for (const child of Array.from(this.element.children)) {
-        //     if (
-        //         !child.classList.contains('action-proxy-container') &&
-        //         !child.classList.contains('action-mapping-lane')
-        //     ) {
-        //         continue
-        //     }
-        //     maxWidth = Math.max(maxWidth, child.getBoundingClientRect().right - bbox.left)
-        // }
-        // // Update width
-        // this.element.style.width = `${maxWidth + 20}px`
     }
 
     destroy() {
         this.element.remove()
+
+        this.vessel.destroy()
 
         for (const proxy of Object.values(this.actionProxies)) {
             proxy.destroy()
@@ -110,7 +85,7 @@ export function updateMappingProxies(mapping: ActionMapping) {
     for (const step of Executor.instance.visualization.program.steps) {
         if (mapping.actionProxies[step.execution.id] == null) {
             mapping.actionProxies[step.execution.id] = new ActionProxy(step)
-            mapping.addElement(mapping.actionProxies[step.execution.id].element)
+            appendProxyToMapping(mapping.actionProxies[step.execution.id], mapping)
         }
 
         mapping.actionProxies[step.execution.id].update()
@@ -168,5 +143,45 @@ export function addBreakToMapping(mapping: ActionMapping, index: number) {
  * @param mapping Action mapping
  */
 export function appendProxyToMapping(proxy: ActionProxy, mapping: ActionMapping) {
-    mapping.element.appendChild(proxy.element)
+    // Find appropriate vessel
+    let vessel = mapping.vessel
+    let executionPath = getAbstractionPath(vessel.execution as ExecutionGraph, proxy.action.execution) as (
+        | ExecutionGraph
+        | ExecutionNode
+    )[]
+
+    if (executionPath == null) {
+        console.error('Could not find vessel for action', proxy.action)
+        return
+    }
+
+    // Find potential vessels
+    let intermediatePath = []
+    for (let i = 0; i < executionPath.length; i++) {
+        if (isVesselExecution(executionPath[i])) {
+            let next = vessel.vertices.find((v) => v.execution.id === executionPath[i].id)
+
+            // Create vessel if it doesn't exist
+            if (next == null) {
+                next = new Vessel(executionPath[i])
+                mapping.element.appendChild(next.element)
+
+                vessel.addVertex(next, { path: intermediatePath })
+            }
+
+            vessel = next
+        } else {
+            intermediatePath.push(executionPath[i])
+        }
+    }
+
+    // Add proxy to vessel, TODO: use path to abstract
+    vessel.addProxy(proxy)
+
+    // Add to that vessel
+    // mapping.vessel.addProxy(proxy)
+}
+
+export function isVesselExecution(execution: ExecutionGraph | ExecutionNode) {
+    return execution.nodeData.type === 'FunctionCall'
 }

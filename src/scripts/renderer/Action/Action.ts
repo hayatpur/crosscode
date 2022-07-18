@@ -55,7 +55,7 @@ export class Action {
         const mapping = visualization.mapping
 
         // Update mapping, resets time to 0 and then back
-        // TODO: make cleaner
+        // TODO: Make it cleaner, without having to reset time
         if (mapping != null) {
             updateMappingProxies(mapping)
             const time = mapping.time

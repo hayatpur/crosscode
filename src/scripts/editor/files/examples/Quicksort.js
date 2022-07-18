@@ -1,5 +1,5 @@
 function qs(array) {
-    if (array.length <= 1) {
+    if (array.length <= 2) {
         return array
     }
 
@@ -8,7 +8,7 @@ function qs(array) {
     let left = []
     let right = []
 
-    for (let i = 1; i < array.length - 1; i++) {
+    for (let i = 1; i < array.length - 1; i = i + 1) {
         if (array[i] < pivot) {
             left.push(array[i])
         } else {
@@ -23,5 +23,5 @@ function qs(array) {
     return l.concat(r)
 }
 
-let unsorted = [2, 4, 1, 3, 5, 0, 6]
+let unsorted = [4, -1, 7, 10, -3, 9, 1, 6, 3]
 let sorted = qs(unsorted)

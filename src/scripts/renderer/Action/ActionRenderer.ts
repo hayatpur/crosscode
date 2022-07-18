@@ -1,3 +1,4 @@
+import * as ESTree from 'estree'
 import { Editor } from '../../editor/Editor'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode, NodeData } from '../../execution/primitive/ExecutionNode'
@@ -16,55 +17,37 @@ export class ActionRenderer {
         this.action = action
 
         // Create dom elements
-        this.create()
-
-        this.update()
-    }
-
-    create() {
         this.element = createElement('div', 'action')
-
-        if (this.action.parent) {
+        if (this.action.parent != null) {
             this.action.parent.renderer.element.appendChild(this.element)
         } else {
             document.body.appendChild(this.element)
         }
-    }
 
-    updateClasses() {
-        this.action.state.isShowingSteps
-            ? this.element.classList.add('is-showing-steps')
-            : this.element.classList.remove('is-showing-steps')
-
-        this.action.execution.nodeData.type == 'Program'
-            ? this.element.classList.add('is-program')
-            : this.element.classList.remove('is-program')
+        this.update()
     }
 
     /* ----------------------- Render ----------------------- */
     update() {
-        this.updateClasses()
+        this.action.state.isShowingSteps
+            ? this.element.classList.add('is-showing-steps')
+            : this.element.classList.remove('is-showing-steps')
+
         this.action.representation.updateActionVisual(this)
     }
 
     /* ----------------------- Destroy ---------------------- */
-
     destroy() {
         this.element.remove()
-        this.element = null
-        this.action = null
     }
 }
 
 export function getActionCoordinates(
     execution: ExecutionGraph | ExecutionNode,
-    parentExecution?: ExecutionGraph | ExecutionNode,
-    blockTreatment = true
-) {
-    if (execution.nodeData.type == 'BlockStatement' && blockTreatment) {
-        let parentBbox = parentExecution
-            ? getActionCoordinates(parentExecution, null)
-            : { x: 0, y: 0, width: 0, height: 0 }
+    parentExecution?: ExecutionGraph | ExecutionNode
+): { x: number; y: number; width: number; height: number } {
+    if (execution.nodeData.type == 'BlockStatement') {
+        let parentBbox = parentExecution ? getActionCoordinates(parentExecution) : { x: 0, y: 0, width: 0, height: 0 }
 
         let bbox: {
             x: number
@@ -79,7 +62,7 @@ export function getActionCoordinates(
             bbox.x = parentBbox.x
             bbox.y = parentBbox.y
         } else {
-            bbox = getActionCoordinates(execution.vertices[0], null)
+            bbox = getActionCoordinates(execution.vertices[0])
 
             let altBbox = {
                 minX: bbox.x,
@@ -89,7 +72,7 @@ export function getActionCoordinates(
             }
 
             for (let i = 1; i < execution.vertices.length; i++) {
-                const pBbox = getActionCoordinates(execution.vertices[i], null)
+                const pBbox = getActionCoordinates(execution.vertices[i])
                 altBbox.minX = Math.min(altBbox.minX, pBbox.x)
                 altBbox.minY = Math.min(altBbox.minY, pBbox.y)
                 altBbox.maxX = Math.max(altBbox.maxX, pBbox.x + pBbox.width)
@@ -102,10 +85,10 @@ export function getActionCoordinates(
             bbox.height = altBbox.maxY - altBbox.minY
         }
 
-        if (execution.vertices.some((v) => isChunk(v.nodeData))) {
-            const indentation = execution.nodeData.location.start.column
-            bbox.width -= indentation * 4
-        }
+        // if (execution.vertices.some((v) => isChunk(v.nodeData))) {
+        //     const indentation = (execution.nodeData.location as ESTree.SourceLocation).start.column
+        //     bbox.width -= indentation * 4
+        // }
 
         return {
             width: bbox.width,
@@ -114,14 +97,15 @@ export function getActionCoordinates(
             y: bbox.y - parentBbox.y,
         }
     } else {
-        let bbox = Editor.instance.computeBoundingBoxForLoc(execution.nodeData.location)
+        const location = execution.nodeData.location as ESTree.SourceLocation
+        let bbox = Editor.instance.computeBoundingBoxForLoc(location)
 
-        let parentBbox = parentExecution
-            ? getActionCoordinates(parentExecution, null)
-            : { x: 0, y: 0, width: 0, height: 0 }
+        let parentBbox = parentExecution ? getActionCoordinates(parentExecution) : { x: 0, y: 0, width: 0, height: 0 }
 
-        if (parentExecution?.nodeData.type == 'BlockStatement' && isChunk(execution.nodeData)) {
-            const indentation = execution.nodeData.location.start.column
+        if (isChunk(execution.nodeData)) {
+            const indentation = location.start.column
+            // const charWidth = bbox.width / (location.end.column - location.start.column)
+            // console.log(charWidth)
             bbox.width -= indentation * 10
         }
 
@@ -136,5 +120,5 @@ export function getActionCoordinates(
 
 export function isChunk(nodeData: NodeData) {
     const chunks = new Set(['IfStatement', 'WhileStatement', 'DoWhileStatement', 'ForStatement'])
-    return chunks.has(nodeData.type)
+    return chunks.has(nodeData.type ?? '')
 }

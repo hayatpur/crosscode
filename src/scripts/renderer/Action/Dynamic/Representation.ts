@@ -1,4 +1,5 @@
 import { EnvironmentState } from '../../../environment/EnvironmentState'
+import { Executor } from '../../../executor/Executor'
 import { Action } from '../Action'
 import { ActionRenderer, getActionCoordinates } from '../ActionRenderer'
 import { getProxyOfAction } from '../Mapping/ActionMapping'
@@ -35,9 +36,21 @@ export class Representation {
         let y = bbox.top - parentBbox.y
         let x = bbox.left - parentBbox.x
 
+        // Offset by the first element in the vessel
+        const vessel = Executor.instance.visualization.mapping.vessel
+        const firstElement = vessel.proxies[0]?.action
+
+        if (firstElement && proxy.element.parentElement == vessel.element) {
+            const firstBbox = firstElement.renderer.element.getBoundingClientRect()
+
+            x -= firstBbox.left - parentBbox.x
+            y -= firstBbox.top - parentBbox.y
+        }
+
+        // Scale by the proxy scale
         let height = bbox.height * ActionProxy.heightMultiplier
         let width = bbox.width * ActionProxy.widthMultiplier
-        width = Math.max(20, width)
+        width = Math.max(10, width)
 
         // y offset is 0 if the action is a child
         if (proxy.action.parent?.execution.nodeData.type == 'Program') {
@@ -68,23 +81,30 @@ export class Representation {
     }
 
     getControlFlow(): number[][] {
+        const proxy = getProxyOfAction(this.action)
+        const bbox = proxy?.element.getBoundingClientRect() ?? { x: 0, y: 0, width: 0, height: 0 }
         if (this.action.steps.length > 0) {
-            const controlFlowPoints = []
+            const controlFlowPoints = [[bbox.x + 10, bbox.y]]
             for (const step of this.action.steps) {
                 controlFlowPoints.push(...step.representation.getControlFlow())
             }
+            controlFlowPoints.push([bbox.x + 10, bbox.y + bbox.height])
             return controlFlowPoints
         } else {
-            const proxy = getProxyOfAction(this.action)
-            const bbox = proxy.element.getBoundingClientRect()
+            // const proxy = getProxyOfAction(this.action)
+            // const bbox = proxy.element.getBoundingClientRect()
 
-            // if (this.action.execution.nodeData.preLabel == 'Body') {
-            //     return [
-            //         [bbox.x + 60, bbox.y + bbox.height / 2],
-            //         [bbox.x + bbox.width + 20, bbox.y + bbox.height / 2],
-            //         [bbox.x + bbox.width + 20, bbox.y + bbox.height / 2 - 27.5],
-            //     ]
-            // }
+            if (this.action.execution.nodeData.preLabel == 'Body') {
+                return [
+                    [bbox.x + 60, bbox.y + bbox.height / 2],
+                    [bbox.x + bbox.width, bbox.y + bbox.height / 2],
+                ]
+            } else if (this.action.execution.nodeData.type == 'FunctionCall') {
+                return [
+                    [bbox.x + bbox.width / 2, bbox.y],
+                    [bbox.x + bbox.width / 2, bbox.y + bbox.height],
+                ]
+            }
 
             return [[bbox.x + 10, bbox.y + bbox.height / 2]]
         }

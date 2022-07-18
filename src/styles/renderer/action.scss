@@ -35,7 +35,7 @@
     background: var(--color-2);
     position: relative;
 
-    // padding: 115px 20px;
+    padding: 115px 20px;
 }
 
 /* -------------------- Action proxy -------------------- */
@@ -320,29 +320,6 @@ svg.control-flow-svg.control-flow-svg-overlay {
     // background-color: #202028;
 }
 
-.action-mapping-lane {
-    height: 100%;
-    top: 0px;
-    position: relative;
-    width: 100%;
-    padding: 115px 20px;
-    display: grid;
-    border-left: 1px solid #ffffff14;
-}
-
-.action-mapping-lane-label {
-    position: absolute;
-    width: 100%;
-    top: 0px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-    font-size: 13px;
-    opacity: 0.5;
-    border-bottom: 1px solid #ffffff21;
-}
-
 .action-proxy-container._FunctionCall {
     top: 0px !important;
     left: 0px !important;
@@ -350,4 +327,46 @@ svg.control-flow-svg.control-flow-svg-overlay {
 
 .action-proxy-container.is-hovering > .action-proxy-container {
     // transform: scale(0.8);
+}
+
+.action-proxy-label {
+    white-space: pre;
+    position: absolute;
+    top: -25px;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* ----------------------- Vessel ----------------------- */
+.vessel {
+    display: grid;
+    width: fit-content;
+    height: fit-content;
+
+    position: relative;
+
+    border-radius: 5px;
+    box-shadow: 0px 0px 0px 1px var(--color-3);
+
+    top: 0px;
+    padding: 15px;
+    margin: 10px;
+}
+
+.vessel-label {
+    position: absolute;
+    pointer-events: none;
+    top: -30px;
+    opacity: 0.4;
+    font-weight: 300;
+    font-size: 14px;
+}
+
+.action-proxy-container._FunctionCall.Function-Call.has-steps {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.action.is-hovering {
+    background-color: rgba(255, 255, 255, 0.09);
 }

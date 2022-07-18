@@ -38,6 +38,7 @@ export class Visualization {
     createContainer() {
         const el = createElement('div', 'visualization-container', document.body)
         const margin = Editor.instance.getMaxWidth() + 70
+
         el.style.left = `${margin}px`
         return el
     }

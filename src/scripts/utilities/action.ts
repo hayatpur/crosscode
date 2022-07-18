@@ -18,7 +18,7 @@ export function getLeavesOfAction(parent: Action): Action[] {
     let candidates: Action[] = [parent]
 
     while (candidates.length > 0) {
-        const candidate = candidates.pop()
+        const candidate = candidates.pop() as Action
         if (candidate.steps.length == 0) {
             leaves.push(candidate)
             continue
@@ -39,7 +39,7 @@ export function getLeavesOfAction(parent: Action): Action[] {
  * @param query
  * @returns action that satisfies the query or null
  */
-export function queryAction(action: Action, query: (animation: Action) => boolean): Action {
+export function queryAction(action: Action, query: (animation: Action) => boolean): Action | null {
     if (query(action)) {
         return action
     }
@@ -69,7 +69,8 @@ export function queryAllAction(action: Action, query: (animation: Action) => boo
 }
 
 export function createRepresentation(action: Action) {
-    let representation: typeof Representation = null
+    let representation: typeof Representation = Representation
+
     switch (action.execution.nodeData.type) {
         case 'IfStatement':
             representation = IfStatementRepresentation
@@ -92,9 +93,6 @@ export function createRepresentation(action: Action) {
         // case 'WhileStatement':
         //     representation = WhileStatementRepresentation
         //     break
-        default:
-            representation = Representation
-            break
     }
 
     return new representation(action)
@@ -112,25 +110,8 @@ export function getAllSteps(action: Action): Action[] {
     return allSteps
 }
 
-export function isExpandable(execution: ExecutionGraph | ExecutionNode) {
-    const expandibleTypes = new Set([
-        'ForStatement',
-        'WhileStatement',
-        'IfStatement',
-        'FunctionCall',
-    ])
-
-    return expandibleTypes.has(execution.nodeData.type)
-}
-
-export function isExpression(execution: ExecutionGraph | ExecutionNode) {
-    const expressionTypes = new Set(['Test'])
-
-    return expressionTypes.has(execution.nodeData.preLabel)
-}
-
 export function getLabelOfExecution(execution: ExecutionGraph | ExecutionNode) {
-    return (instanceOfExecutionNode(execution) ? execution.name : execution.nodeData.type)
+    return (instanceOfExecutionNode(execution) ? execution.name : execution.nodeData.type ?? '')
         .replace(/([A-Z])/g, ' $1')
         .trim()
 }
@@ -143,9 +124,7 @@ export function getActionRoot(action: Action) {
     return root
 }
 
-export function getExecutionSteps(
-    execution: ExecutionGraph | ExecutionNode
-): (ExecutionGraph | ExecutionNode)[] {
+export function getExecutionSteps(execution: ExecutionGraph | ExecutionNode): (ExecutionGraph | ExecutionNode)[] {
     if (instanceOfExecutionGraph(execution)) {
         return execution.vertices
     } else {
@@ -165,4 +144,47 @@ export function getLeafSteps(steps: Action[]): Action[] {
     }
 
     return result
+}
+
+export function getAbstractionPath(
+    parent: ExecutionGraph,
+    target: ExecutionGraph | ExecutionNode
+): (ExecutionGraph | ExecutionNode)[] | null {
+    if (parent == target) {
+        return [parent]
+    }
+
+    if (instanceOfExecutionGraph(parent)) {
+        for (const vertex of parent.vertices) {
+            if (instanceOfExecutionNode(vertex)) continue
+
+            const ret = getAbstractionPath(vertex, target)
+
+            if (ret != null) {
+                return [parent, ...ret]
+            }
+        }
+    }
+
+    return null
+}
+
+export function queryExecutionGraph(
+    animation: ExecutionGraph | ExecutionNode,
+    query: (animation: ExecutionGraph | ExecutionNode) => boolean
+): ExecutionGraph | ExecutionNode {
+    if (query(animation)) {
+        return animation
+    }
+
+    if (instanceOfExecutionGraph(animation)) {
+        for (const vertex of animation.vertices) {
+            const ret = queryExecutionGraph(vertex, query)
+            if (ret != null) {
+                return ret
+            }
+        }
+    }
+
+    return null
 }

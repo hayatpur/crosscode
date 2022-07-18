@@ -1,9 +1,12 @@
 import * as ESTree from 'estree'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
+import { instanceOfExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { Executor } from '../../../executor/Executor'
 import { createElement } from '../../../utilities/dom'
+import { Keyboard } from '../../../utilities/Keyboard'
 import { Ticker } from '../../../utilities/Ticker'
 import { Action, createSteps, destroySteps } from '../Action'
+import { appendProxyToMapping } from './ActionMapping'
 
 export class ActionProxy {
     static all: { [id: string]: ActionProxy } = {}
@@ -21,12 +24,14 @@ export class ActionProxy {
     // Time in control flow
     timeOffset: number = 0
 
-    static heightMultiplier = 1
-    static widthMultiplier = 0.4
+    static heightMultiplier = 0.8
+    static widthMultiplier = 0.3
 
     private _tickerId: string
 
     private _isHovering: boolean = false
+
+    label: HTMLElement
 
     constructor(action: Action) {
         this.action = action
@@ -41,6 +46,9 @@ export class ActionProxy {
         ]
 
         this.element = createElement('div', classes)
+        this.label = createElement('div', 'action-proxy-label', this.element)
+        this.label.innerText = `${this.action.execution.nodeData.type}`
+        this.label.style.display = 'none'
 
         // Find stack
         // let stack = ActionProxy.stacks[locationToKey(this.action.execution.nodeData.location as ESTree.SourceLocation)]
@@ -65,29 +73,38 @@ export class ActionProxy {
 
         // Hover
         this.element.addEventListener('mouseenter', () => {
-            // if (Keyboard.instance.isPressed('Control')) {
-            //     // Parent is hovering, so navigate in control flow to this statement
-            //     const mapping = Executor.instance.visualization.mapping
-            //     mapping.cursor.targetTime = this.timeOffset
-            //     mapping.cursor.updatedTargetTime = true
-            // }
+            if (!this.action.state.isShowingSteps) {
+                this.action.renderer.element.classList.add('is-hovering')
+            }
+
+            if (Keyboard.instance.isPressed('Control')) {
+                // Parent is hovering, so navigate in control flow to this statement
+                const mapping = Executor.instance.visualization.mapping
+                mapping.cursor.targetTime = this.timeOffset
+                mapping.cursor.updatedTargetTime = true
+            }
+
             // const parentProxy = this.action.parent ? getProxyOfAction(this.action.parent) : null
-            // if (
-            //     !this._isHovering &&
-            //     !this.action.state.isShowingSteps &&
-            //     !Executor.instance.visualization.mapping.cursor.dragging
-            // ) {
-            //     // if (parentProxy == null || !parentProxy._isHovering) {
-            //     //     this.hover()
-            //     // } else {
-            //     // Parent is hovering, so navigate in control flow to this statement
-            //     const mapping = Executor.instance.visualization.mapping
-            //     mapping.cursor.targetTime = this.timeOffset
-            //     mapping.cursor.updatedTargetTime = true
-            // }
+            if (
+                !this._isHovering &&
+                !this.action.state.isShowingSteps &&
+                !Executor.instance.visualization.mapping.cursor.dragging
+            ) {
+                this.label.style.display = 'block'
+
+                // if (parentProxy == null || !parentProxy._isHovering) {
+                //     this.hover()
+                // } else {
+                // Parent is hovering, so navigate in control flow to this statement
+                // const mapping = Executor.instance.visualization.mapping
+                // mapping.cursor.targetTime = this.timeOffset
+                // mapping.cursor.updatedTargetTime = true
+            }
         })
 
         this.element.addEventListener('mouseleave', () => {
+            this.action.renderer.element.classList.remove('is-hovering')
+            this.label.style.display = 'none'
             this.unHover()
         })
 
@@ -202,11 +219,23 @@ export class ActionProxy {
 
                 if (proxy.action.execution.nodeData.type == 'FunctionCall') {
                     const mapping = Executor.instance.visualization.mapping
-                    // const execution = proxy.action.execution.nodeData.preLabel
-                    mapping.createLane(`${proxy.action.execution.nodeData.preLabel}`)
-                    mapping.addElement(proxy.element)
+
+                    // Automatically go down one level of abstraction
+
+                    appendProxyToMapping(proxy, mapping)
+                    createSteps(proxy.action)
+                } else if (proxy.action.execution.nodeData.type == 'IfStatement') {
+                    this.element.appendChild(proxy.element)
+                    createSteps(proxy.action)
                 } else {
                     this.element.appendChild(proxy.element)
+
+                    if (
+                        instanceOfExecutionGraph(proxy.action.execution) &&
+                        proxy.action.execution.vertices.length == 1
+                    ) {
+                        createSteps(proxy.action)
+                    }
                 }
             }
 
