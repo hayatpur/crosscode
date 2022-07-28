@@ -1,4 +1,4 @@
-import { Executor } from '../executor/Executor'
+import { ApplicationState } from '../ApplicationState'
 
 export class Ticker {
     // Singleton
@@ -7,7 +7,7 @@ export class Ticker {
     // List of tick callbacks
     private callbacks: { [id: string]: (dt: number) => void } = {}
     private time = 0
-    private currId = 0
+    private currID = 0
 
     static _initialize() {
         if (Ticker.instance) return
@@ -18,11 +18,11 @@ export class Ticker {
         const timer = this
 
         function tick(time: number) {
-            Executor.instance.fpsGraph.begin()
+            ApplicationState.visualization.fpsGraph.begin()
             const dt = time - timer.time
             Object.values(timer.callbacks).forEach((callback) => callback(dt))
             timer.time = time
-            Executor.instance.fpsGraph.end()
+            ApplicationState.visualization.fpsGraph.end()
             requestAnimationFrame(tick)
         }
 
@@ -30,8 +30,8 @@ export class Ticker {
     }
 
     registerTick(callback: (dt: number) => void) {
-        this.currId++
-        return this.registerTickFrom(callback, `Ticker_${this.currId}`)
+        this.currID++
+        return this.registerTickFrom(callback, `Ticker_${this.currID}`)
     }
 
     registerTickFrom(callback: (dt: number) => void, from: string) {

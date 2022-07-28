@@ -1,5 +1,13 @@
-import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { AccessorType, EnvironmentState, instanceOfEnvironment, Residual } from '../../../environment/EnvironmentState'
+import {
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
+import {
+    AccessorType,
+    EnvironmentState,
+    instanceOfEnvironment,
+    Residual,
+} from '../../../environment/EnvironmentState'
 import { remap } from '../../../utilities/math'
 import { DataRenderer } from '../../View/Environment/data/DataRenderer'
 import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
@@ -15,14 +23,20 @@ export class CreateTrailRenderer extends TrailRenderer {
     /* ----------------------- Animate ---------------------- */
     update(amount: number, environment: EnvironmentRenderer) {
         /* ---------------------- Old data ---------------------- */
-        const prev = environment.getResidualOf(this.trail.state.toDataId, this.trail.time)
+        const prev = environment.getResidualOf(
+            this.trail.state.toDataID,
+            this.trail.time
+        )
         if (prev != null) {
             updateResidual(amount, prev)
         }
 
         /* ---------------------- New data ---------------------- */
         const t = remap(amount, 0, 1, 5, 0)
-        const data = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1) as DataRenderer
+        const data = environment.getResidualOf(
+            this.trail.state.toDataID,
+            this.trail.time + 1
+        ) as DataRenderer
 
         if (amount == 1 && data == null) {
             // Has been destroyed
@@ -40,20 +54,30 @@ export class CreateTrailRenderer extends TrailRenderer {
      * @returns
      */
     computeResidual(environment: EnvironmentState): Residual | null {
-        const prev = resolvePath(environment, [{ type: AccessorType.ID, value: this.trail.state.toDataId }], null)
+        const prev = resolvePath(
+            environment,
+            [{ type: AccessorType.ID, value: this.trail.state.toDataID }],
+            null
+        )
 
         if (instanceOfEnvironment(prev)) {
             return null
         }
 
+        const location = getMemoryLocation(environment, prev).foundLocation
+
+        if (location == null) {
+            throw new Error('Location not found')
+        }
+
         return {
             data: prev,
-            location: getMemoryLocation(environment, prev).foundLocation,
+            location: location,
         }
     }
 
     applyTimestamps(environment: EnvironmentState) {
-        environment.timestamps[this.trail.state.toDataId] = this.trail.time
+        environment.timestamps[this.trail.state.toDataID] = this.trail.time
     }
 
     /* ----------------------- Destroy ---------------------- */

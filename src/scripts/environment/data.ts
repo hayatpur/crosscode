@@ -67,11 +67,11 @@ export function getDataClassNames(type: DataType): string[] {
 
 export function cloneData(
     data: DataState,
-    copyId: boolean = true,
-    srcId: string = null
+    copyID: boolean = true,
+    srcID: string = null
 ): DataState {
     const copy = clone(data)
-    copy.id = copyId ? data.id : srcId
+    copy.id = copyID ? data.id : srcID
     copy.builtin = false
     return copy
 }
@@ -94,7 +94,9 @@ export function replaceDataWith(
             if (Array.isArray(original.value)) {
                 original.value.forEach((el) => (el.frame = original.frame))
             } else {
-                Object.values(original.value).forEach((el) => (el.frame = original.frame))
+                Object.values(original.value).forEach(
+                    (el) => (el.frame = original.frame)
+                )
             }
         }
     }
@@ -102,7 +104,9 @@ export function replaceDataWith(
     original.builtin = false
 }
 
-export function convertIdentifierToLiteral(data: ESTree.Identifier): ESTree.Literal {
+export function convertIdentifierToLiteral(
+    data: ESTree.Identifier
+): ESTree.Literal {
     return {
         ...data,
         type: 'Literal',

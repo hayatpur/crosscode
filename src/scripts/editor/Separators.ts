@@ -4,7 +4,7 @@
 // export class Separators {
 //     static instance: Separators;
 //     separatorElements: {
-//         [viewId: string]: {
+//         [viewID: string]: {
 //             top: SVGPathElement;
 //             bottom: SVGPathElement;
 //             separator: SVGPathElement;

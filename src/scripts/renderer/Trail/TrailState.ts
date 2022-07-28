@@ -14,7 +14,7 @@ export enum TrailType {
 }
 
 export interface TrailState {
-    fromDataIds?: string[]
-    toDataId: string
+    fromDataIDs?: string[]
+    toDataID: string
     type: TrailType
 }

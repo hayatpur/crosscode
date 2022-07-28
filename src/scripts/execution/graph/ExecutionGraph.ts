@@ -12,7 +12,7 @@ export interface DataInfo {
 }
 
 export interface GlobalDataInfo {
-    location: { viewId: string; localLocation: Accessor[] }
+    location: { viewID: string; localLocation: Accessor[] }
     id: string
 }
 
@@ -33,12 +33,17 @@ export interface ExecutionGraph {
     parallelStarts: number[]
 }
 
-export function instanceOfExecutionGraph(animation: any): animation is ExecutionGraph {
+export function instanceOfExecutionGraph(
+    animation: any
+): animation is ExecutionGraph {
     return animation._type == 'ExecutionGraph'
 }
 
 let __EXECUTION_GRAPH_ID = 0
-export function createExecutionGraph(nodeData: NodeData, options: { isGroup?: boolean } = {}): ExecutionGraph {
+export function createExecutionGraph(
+    nodeData: NodeData,
+    options: { isGroup?: boolean } = {}
+): ExecutionGraph {
     return {
         // Meta info
         _type: 'ExecutionGraph',

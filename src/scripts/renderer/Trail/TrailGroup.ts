@@ -6,10 +6,16 @@ import {
     getAllBranches,
     getTrace,
 } from '../../execution/execution'
-import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
+import {
+    ExecutionGraph,
+    instanceOfExecutionGraph,
+} from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { instanceOfData } from '../View/Environment/data/DataState'
-import { EnvironmentRenderer, getRelevantFlatData } from '../View/Environment/EnvironmentRenderer'
+import {
+    EnvironmentRenderer,
+    getRelevantFlatData,
+} from '../View/Environment/EnvironmentRenderer'
 import { Trail } from './Trail'
 import { TrailState, TrailType } from './TrailState'
 
@@ -68,9 +74,6 @@ export class TrailGroup {
         this.trails.forEach((trail) => {
             trail.destroy()
         })
-
-        this.trails = null
-        this.execution = null
     }
 }
 
@@ -80,13 +83,16 @@ export class TrailGroup {
 
 export function getTrail(execution: ExecutionGraph) {
     const traces = getTrace(execution)
-    // traceChainsToString(traces, true)
 
-    const preDataKeys = getRelevantFlatData(execution.precondition).map((data) =>
-        instanceOfData(data) ? data.id : data.name
+    if (execution.precondition == null || execution.postcondition == null) {
+        throw new Error('Precondition or postcondition is null.')
+    }
+
+    const preDataKeys = getRelevantFlatData(execution.precondition).map(
+        (data) => (instanceOfData(data) ? data.id : data.name)
     )
-    const postDataKeys = getRelevantFlatData(execution.postcondition).map((data) =>
-        instanceOfData(data) ? data.id : data.name
+    const postDataKeys = getRelevantFlatData(execution.postcondition).map(
+        (data) => (instanceOfData(data) ? data.id : data.name)
     )
     const trails: TrailState[] = []
 
@@ -110,7 +116,10 @@ export function getTrail(execution: ExecutionGraph) {
             }
 
             const endLeaf = leaves[leaves.length - 1]
-            if (endLeaf?.value?.id != null && !preDataKeys.includes(endLeaf.value.id)) {
+            if (
+                endLeaf?.value?.id != null &&
+                !preDataKeys.includes(endLeaf.value.id)
+            ) {
                 continue
             }
 
@@ -119,7 +128,11 @@ export function getTrail(execution: ExecutionGraph) {
         }
 
         // Convert end operation and leaves to a trail
-        const trailGroup: TrailState[] = convertEndOperationsAndLeavesToTrails(trace.value.id, endOperations, endLeaves)
+        const trailGroup: TrailState[] = convertEndOperationsAndLeavesToTrails(
+            trace.value.id,
+            endOperations,
+            endLeaves
+        )
         trails.push(...trailGroup)
     }
 
@@ -127,7 +140,7 @@ export function getTrail(execution: ExecutionGraph) {
 }
 
 export function convertEndOperationsAndLeavesToTrails(
-    dataId: string,
+    dataID: string,
     endOperations: AnimationTraceOperator[],
     leaves: AnimationTraceChain[]
 ): TrailState[] {
@@ -158,8 +171,8 @@ export function convertEndOperationsAndLeavesToTrails(
         if (effectTypes.includes(op.type)) {
             effects.push({
                 type: partial ? TrailType.PartialMove : TrailType.Move,
-                fromDataIds: [leaf.value.id],
-                toDataId: dataId,
+                fromDataIDs: [leaf.value.id],
+                toDataID: dataID,
             })
         }
     }
@@ -167,18 +180,10 @@ export function convertEndOperationsAndLeavesToTrails(
     if (partial) {
         effects.push({
             type: TrailType.PartialCreate,
-            fromDataIds: leaves.map((leaf) => leaf.value?.id),
-            toDataId: dataId,
+            fromDataIDs: leaves.map((leaf) => leaf.value?.id),
+            toDataID: dataID,
         })
     }
-
-    // if (effects.length > 1) {
-    //     // TODO: If for the same data
-    //     effects.forEach((effect) => {
-    //         effect.type = TrailType.PartialMove
-    //     })
-    //     // TODO: Transition in the data
-    // }
 
     if (effects.length == 0) {
         for (let i = 0; i < endOperations.length; i++) {
@@ -188,43 +193,14 @@ export function convertEndOperationsAndLeavesToTrails(
             if (createTypes.includes(op.type) && creates.length === 0) {
                 creates.push({
                     type: TrailType.Create,
-                    toDataId: dataId,
+                    toDataID: dataID,
                 })
             }
         }
     }
 
-    // console.log(dataId, endOperations, leaves)
-    // console.log(effects, creates)
-    // console.log('==============================')
-
     return [...effects, ...creates]
 }
-
-// export function getTrails(parent: ExecutionGraph): TrailState[] {
-//     if (!parent.state.isShowingSteps) {
-//         return null
-//     }
-
-//     const leaves = getLeavesOfView(parent)
-//     let globalTraces: GlobalAnimationTraceChain[] = []
-
-//     const cache: Set<string> = new Set<string>()
-
-//     // Create trace from target to other leaves
-//     for (let i = leaves.length - 1; i >= 1; i--) {
-//         for (const trace of getGlobalTrace(parent, leaves, i)) {
-//             const hash = sha1(trace)
-//             if (cache.has(hash)) continue
-
-//             globalTraces.push(trace)
-
-//             cache.add(hash)
-//         }
-//     }
-
-//     return globalTraces
-// }
 
 export function getAllOperationsAndLeaves(
     chain: AnimationTraceChain

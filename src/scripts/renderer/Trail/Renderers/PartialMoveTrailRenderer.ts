@@ -1,5 +1,8 @@
-import { EnvironmentState, Residual } from '../../../environment/EnvironmentState'
-import { Executor } from '../../../executor/Executor'
+import { ApplicationState } from '../../../ApplicationState'
+import {
+    EnvironmentState,
+    Residual,
+} from '../../../environment/EnvironmentState'
 import { getPerfectArrow, reflow } from '../../../utilities/dom'
 import { getNumericalValueOfStyle } from '../../../utilities/math'
 import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
@@ -14,15 +17,28 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
         super(trail)
 
         // Create movement trace
-        this.trace = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        this.trace = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'path'
+        )
         this.trace.classList.add('action-mapping-connection', 'trail-move')
-        Executor.instance.visualization.view.renderer.svg.appendChild(this.trace)
+        ApplicationState.visualization.view?.svg.appendChild(this.trace)
     }
 
     /* ----------------------- Animate ---------------------- */
     update(amount: number, environment: EnvironmentRenderer) {
-        const start = environment.getResidualOf(this.trail.state.fromDataIds[0], this.trail.time)
-        const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
+        if (this.trail.state.fromDataIDs == undefined) {
+            throw new Error('fromDataIDs is undefined.')
+        }
+
+        const start = environment.getResidualOf(
+            this.trail.state.fromDataIDs[0],
+            this.trail.time
+        )
+        const end = environment.getResidualOf(
+            this.trail.state.toDataID,
+            this.trail.time + 1
+        )
 
         if (end == null || start == null) {
             this.trace.classList.add('hidden')
@@ -34,8 +50,12 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
         end.element.style.transform = ''
         reflow(end.element)
 
+        if (ApplicationState.visualization.view == undefined) {
+            throw new Error('View is not initialized')
+        }
+
         const viewBbox =
-            Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
+            ApplicationState.visualization.view.element.getBoundingClientRect()
         const startBbox = start.element.getBoundingClientRect()
         const endBbox = end.element.getBoundingClientRect()
 
@@ -53,7 +73,9 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
         this.trace.style.strokeDashoffset = `${
             this.trace.getTotalLength() - amount * this.trace.getTotalLength()
         }`
-        let { x, y } = this.trace.getPointAtLength(amount * this.trace.getTotalLength())
+        let { x, y } = this.trace.getPointAtLength(
+            amount * this.trace.getTotalLength()
+        )
 
         // Update transform
         const environmentBbox = environment.element.getBoundingClientRect()
@@ -63,12 +85,19 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
     }
 
     postUpdate(amount: number, environment: EnvironmentRenderer) {
+        if (this.trail.state.fromDataIDs == undefined) {
+            throw new Error('fromDataIDs is undefined.')
+        }
+
         if (amount == 1) {
             const start = environment.getResidualOf(
-                this.trail.state.fromDataIds[0],
+                this.trail.state.fromDataIDs[0],
                 this.trail.time
             )
-            const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
+            const end = environment.getResidualOf(
+                this.trail.state.toDataID,
+                this.trail.time + 1
+            )
 
             if (end == null || start == null) {
                 this.trace.classList.add('hidden')
@@ -77,8 +106,12 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
                 this.trace.classList.remove('hidden')
             }
 
+            if (ApplicationState.visualization.view == undefined) {
+                throw new Error('View is not initialized')
+            }
+
             const viewBbox =
-                Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
+                ApplicationState.visualization.view.element.getBoundingClientRect()
             const startBbox = start.element.getBoundingClientRect()
             const endBbox = end.element.getBoundingClientRect()
 
@@ -122,8 +155,6 @@ export class PartialMoveTrailRenderer extends TrailRenderer {
     /* ----------------------- Destroy ---------------------- */
     destroy() {
         super.destroy()
-
         this.trace.remove()
-        this.trace = null
     }
 }

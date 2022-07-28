@@ -2,26 +2,25 @@
 /*               Defines styles for actions               */
 /* ------------------------------------------------------ */
 
-:root {
-    --gutter-size: 40px;
-    --action-padding: 15px;
-    --action-border: 1px solid #2c2c345e;
-}
-
 .action {
     display: flex;
     position: absolute;
-
-    // background: #31313a5f;
-
     border-radius: var(--border-radius);
-
     transition: 0.2s;
     z-index: -1;
+    background: #23242b;
 }
 
-.action.is-program {
-    box-shadow: none !important;
+.action.is-showing-steps {
+    background: none;
+}
+
+.action.is-playing:not(.is-showing-steps) {
+    background: #6f97dc3b;
+}
+
+.action.is-hovering {
+    background-color: rgba(255, 255, 255, 0.09);
 }
 
 /* ----------------------- Mapping ---------------------- */
@@ -39,16 +38,14 @@
 }
 
 /* -------------------- Action proxy -------------------- */
-.action-proxy-container {
+.action-proxy {
     position: relative;
 
-    display: grid;
-    grid-row-start: 1;
-    grid-column-start: 1;
+    display: flex;
 
     background: var(--color-3);
     border-radius: var(--border-radius);
-    box-shadow: 0px 0px 5px 4px var(--color-2);
+    box-shadow: 0px 0px 3px 2px var(--color-2);
 
     transform: scale(1);
     transition-property: background, transform;
@@ -56,83 +53,131 @@
     cursor: pointer;
 
     border: 1px solid #ffffff30;
+
+    height: fit-content;
+    width: fit-content;
+
+    min-width: 20px;
+    min-height: 20px;
 }
 
-.action-proxy-container:hover {
+.action-proxy:hover {
     background: #434350;
 }
 
-.action-proxy-steps {
-    height: fit-content;
-}
-
-.action-proxy-iteration {
-    margin-bottom: 12px;
-}
-
-.action-proxy-container.has-steps {
+.action-proxy.is-showing-steps {
     background: none;
     border: none;
     box-shadow: 0px 0px 0px 1px #ffffff12 !important;
 }
 
-.action.is-playing:not(.is-showing-steps) {
-    background: #6f97dc3b;
-}
-
 /* ----------------- AST Specific Styles ---------------- */
 
-.action-proxy-container.Test {
+// If statement
+.action-proxy.Test {
     box-shadow: none;
     display: flex;
     align-items: center;
     border-radius: 5px;
     justify-content: center;
+
+    ._Test_true.is-playing {
+        background: #293d3b !important;
+        box-shadow: 0px 0px 0px 0.5px #7dfc8ecf, 0px 0px 5px 4px var(--color-2);
+    }
+
+    ._Test_false.is-playing {
+        background: #3d2929 !important;
+        box-shadow: 0px 0px 0px 0.5px #fc7d7dcf, 0px 0px 5px 4px var(--color-2);
+    }
+
+    ._Test_true > ion-icon.md.hydrated {
+        font-size: 10px;
+        --ionicon-stroke-width: 79px;
+        color: #6ee7b7;
+    }
+
+    ._Test_false > ion-icon.md.hydrated {
+        font-size: 10px;
+        --ionicon-stroke-width: 79px;
+        color: #e76e6e;
+    }
 }
 
-.action-proxy-container._FunctionDeclaration {
-    opacity: 0;
+.action-proxy.type-Program {
+    // min-width: 80px;
+    // min-height: 40px;
+
+    display: flex;
+    flex-direction: column;
 }
 
-.out-of-view {
-    pointer-events: none;
-    opacity: 0;
-}
-
-path.action-mapping-connection.hidden {
-    opacity: 0 !important;
-}
-
-.action-proxy-container.Test._Test_true.is-playing {
-    background: #293d3b !important;
-    box-shadow: 0px 0px 0px 0.5px #7dfc8ecf, 0px 0px 5px 4px var(--color-2);
-}
-
-.action-proxy-container.Test._Test_false.is-playing {
-    background: #3d2929 !important;
-    box-shadow: 0px 0px 0px 0.5px #fc7d7dcf, 0px 0px 5px 4px var(--color-2);
-}
-
-.action-proxy-container.Test._Test_true > ion-icon.md.hydrated {
-    font-size: 10px;
-    --ionicon-stroke-width: 79px;
-    color: #6ee7b7;
-}
-
-.action-proxy-container.Test._Test_false > ion-icon.md.hydrated {
-    font-size: 10px;
-    --ionicon-stroke-width: 79px;
-    color: #e76e6e;
-}
-
-._IfStatement > .action-proxy-indicator {
-    background: none !important;
-    padding-left: 17px;
+.action-proxy.type-VariableDeclaration {
+    flex-direction: row-reverse;
     box-shadow: none !important;
 }
 
-.action-proxy-container._ForStatement.Statement.has-steps {
+.action-proxy-equal-sign {
+    font-family: var(--code-font-family);
+    font-size: 14px;
+    margin: 0px 7px;
+}
+
+.action-proxy.type-Program.is-showing-steps {
+    padding: 10px;
+
+    > .action-proxy:not(:last-child) {
+        margin-bottom: 10px;
+    }
+
+    > .action-proxy-placeholder:not(:last-child) {
+        margin-bottom: 10px;
+    }
+}
+
+.action-proxy._FunctionDeclaration {
+    opacity: 0;
+}
+
+.action-proxy._ForStatement.Statement.has-steps {
     padding-top: 13px;
+}
+
+.action-proxy.type-Literal,
+.action-proxy.type-Identifier {
+    font-family: var(--code-font-family);
+    border: 1px solid #ffffff0f !important;
+    cursor: default !important;
+    justify-content: center;
+    align-items: center;
+    width: fit-content !important;
+    min-width: 15px;
+    padding: 3px;
+    font-size: 14px;
+}
+
+.type-ArrayExpression > div:not(:last-child).action-proxy,
+.type-ArrayExpression > div:not(:last-child).action-proxy-placeholder {
+    margin-right: 7px;
+}
+
+.action-proxy.pre-label-Name {
+    font-family: var(--code-font-family);
+    width: fit-content !important;
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-size: 14px;
+}
+
+.action-proxy.type-MemberExpression > .action-proxy:not(:last-child) {
+    margin-right: 8px;
+}
+
+/* --------------------- Out of view -------------------- */
+.out-of-view {
+    pointer-events: none;
+    opacity: 0;
 }
 
 /* -------------------- Control flow -------------------- */
@@ -143,6 +188,10 @@ svg.control-flow-svg {
     top: 0px;
     left: 0px;
     pointer-events: none;
+}
+
+svg.control-flow-svg.control-flow-svg-overlay {
+    z-index: 5;
 }
 
 @keyframes control-flow-show-stroke {
@@ -186,12 +235,6 @@ svg.control-flow-svg {
 }
 
 /* --------------------- Expressions -------------------- */
-.action.is-inline.is-expression {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-}
-
 .action-header.is-hidden {
     height: 0px;
 }
@@ -200,7 +243,7 @@ svg.control-flow-svg {
     margin-left: 44px;
 }
 
-.action-proxy-container.is-playing {
+.action-proxy.is-playing {
     background: #28333f;
     box-shadow: 0px 0px 0px 0.5px #7dd3fccf, 0px 0px 5px 4px var(--color-2);
 }
@@ -238,6 +281,10 @@ svg.control-flow-svg {
     stroke-width: 1px;
 }
 
+path.action-mapping-connection.hidden {
+    opacity: 0 !important;
+}
+
 /* ----------------------- Cursor ----------------------- */
 
 .action:not(.is-inline):not(.program) > .action-cursor {
@@ -254,119 +301,36 @@ svg.control-flow-svg {
     transform: scale(0.8);
 }
 
-.action-proxy-container.has-steps {
-    background: none;
-}
-
-.action-proxy-container {
+.action-proxy {
     z-index: 1;
 }
 
-/* -------------------- Stack button -------------------- */
-.stack-button {
-    width: 20px;
-    height: 20px;
-    position: absolute;
-    right: -20px;
-    top: 0px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-left: 5px;
-    transition: 0.2s;
-    opacity: 0;
-    transform: scale(0.8);
-}
-
-.action-proxy-container:hover > .stack-button {
-    opacity: 0.8;
-}
-
-.stack-button:hover {
-    transform: scale(1.1);
-}
-
-.stack-button:active,
-.stack-button.is-active {
-    transform: scale(0.9);
-    opacity: 1 !important;
-}
-
-.action-proxy-container._ForStatement.showing-stack {
-    display: flex;
-    flex-direction: column;
-    height: fit-content !important;
-    z-index: 1;
-}
-
-.action-proxy-container._ForStatement.showing-stack > .out-of-view {
-    opacity: 1;
-    pointer-events: inherit;
-}
-
-.action-proxy-container._ForStatement.showing-stack > .action-proxy-container {
-    position: relative;
-    top: 0px !important;
-    margin-bottom: 5px !important;
-}
-
-svg.control-flow-svg.control-flow-svg-overlay {
-    z-index: 5;
-}
-
-.action-proxy-container.is-hovering {
+.action-proxy.is-hovering {
     transform: scaleX(1.05) scaleY(1.1);
     filter: brightness(1.2);
-    // background-color: #202028;
-}
-
-.action-proxy-container._FunctionCall {
-    top: 0px !important;
-    left: 0px !important;
-}
-
-.action-proxy-container.is-hovering > .action-proxy-container {
-    // transform: scale(0.8);
 }
 
 .action-proxy-label {
     white-space: pre;
     position: absolute;
-    top: -25px;
+    right: calc(10px + 100%);
     opacity: 0.7;
     pointer-events: none;
-}
-
-/* ----------------------- Vessel ----------------------- */
-.vessel {
-    display: grid;
-    width: fit-content;
-    height: fit-content;
-
-    position: relative;
-
-    border-radius: 5px;
-    box-shadow: 0px 0px 0px 1px var(--color-3);
-
-    top: 0px;
-    padding: 15px;
-    margin: 10px;
-}
-
-.vessel-label {
-    position: absolute;
-    pointer-events: none;
-    top: -30px;
-    opacity: 0.4;
     font-weight: 300;
     font-size: 14px;
 }
 
-.action-proxy-container._FunctionCall.Function-Call.has-steps {
-    border: none !important;
-    box-shadow: none !important;
+/* ------------------ Proxy placeholder ----------------- */
+.action-proxy-placeholder {
+    background: var(--color-3);
+    border-radius: var(--border-radius);
+    cursor: initial;
 }
 
-.action.is-hovering {
-    background-color: rgba(255, 255, 255, 0.09);
+.action-proxy.is-spatial.is-showing-steps {
+    padding: 5px;
+}
+
+.action-mapping > .action-proxy {
+    margin: 10px;
 }

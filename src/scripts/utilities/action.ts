@@ -1,9 +1,17 @@
-import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
-import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
-import { Action } from '../renderer/Action/Action'
+import { ApplicationState } from '../ApplicationState'
+import {
+    ExecutionGraph,
+    instanceOfExecutionGraph,
+} from '../execution/graph/ExecutionGraph'
+import {
+    ExecutionNode,
+    instanceOfExecutionNode,
+} from '../execution/primitive/ExecutionNode'
+import { ActionState } from '../renderer/Action/Action'
 import { ForStatementRepresentation } from '../renderer/Action/Dynamic/ForStatementRepresentation'
 import { IfStatementRepresentation } from '../renderer/Action/Dynamic/IfStatementRepresentation'
 import { Representation } from '../renderer/Action/Dynamic/Representation'
+import { VariableDeclarationRepresentation } from '../renderer/Action/Dynamic/VariableDeclarationRepresentation'
 
 /* ------------------------------------------------------ */
 /*             Helper functions to for actions            */
@@ -13,21 +21,19 @@ import { Representation } from '../renderer/Action/Dynamic/Representation'
  * @param parent
  * @returns leaf actions of the parent
  */
-export function getLeavesOfAction(parent: Action): Action[] {
-    let leaves: Action[] = []
-    let candidates: Action[] = [parent]
+export function getLeavesOfAction(parent: ActionState): ActionState[] {
+    let leaves: ActionState[] = []
+    let candidates: ActionState[] = [parent]
 
     while (candidates.length > 0) {
-        const candidate = candidates.pop() as Action
-        if (candidate.steps.length == 0) {
+        const candidate = candidates.pop() as ActionState
+        if (candidate.vertices.length == 0) {
             leaves.push(candidate)
             continue
         }
 
-        for (const step of candidate.steps) {
-            if (step instanceof Action) {
-                candidates.push(step)
-            }
+        for (const stepID of candidate.vertices) {
+            candidates.push(ApplicationState.actions[stepID])
         }
     }
 
@@ -39,13 +45,16 @@ export function getLeavesOfAction(parent: Action): Action[] {
  * @param query
  * @returns action that satisfies the query or null
  */
-export function queryAction(action: Action, query: (animation: Action) => boolean): Action | null {
+export function queryAction(
+    action: ActionState,
+    query: (animation: ActionState) => boolean
+): ActionState | null {
     if (query(action)) {
         return action
     }
 
-    for (const step of action.steps) {
-        const ret = queryAction(step, query)
+    for (const stepID of action.vertices) {
+        const ret = queryAction(ApplicationState.actions[stepID], query)
         if (ret != null) {
             return ret
         }
@@ -54,56 +63,50 @@ export function queryAction(action: Action, query: (animation: Action) => boolea
     return null
 }
 
-export function queryAllAction(action: Action, query: (animation: Action) => boolean): Action[] {
+export function queryAllAction(
+    action: ActionState,
+    query: (animation: ActionState) => boolean
+): ActionState[] {
     const acc = []
 
     if (query(action)) {
         acc.push(action)
     }
 
-    for (const step of action.steps) {
-        acc.push(...queryAllAction(step, query))
+    for (const stepID of action.vertices) {
+        acc.push(...queryAllAction(ApplicationState.actions[stepID], query))
     }
 
     return acc
 }
 
-export function createRepresentation(action: Action) {
+export function createRepresentation(action: ActionState) {
     let representation: typeof Representation = Representation
 
-    switch (action.execution.nodeData.type) {
-        case 'IfStatement':
-            representation = IfStatementRepresentation
-            break
-        // case 'CallExpression':
-        //     representation = CallExpressionRepresentation
-        //     break
-        // case 'FunctionCall':
-        //     representation = FunctionCallRepresentation
-        //     break
-        case 'ForStatement':
-            representation = ForStatementRepresentation
-            break
-        // case 'Program':
-        //     representation = BlockStatementRepresentation
-        //     break
-        // case 'BlockStatement':
-        //     representation = BlockStatementRepresentation
-        //     break
-        // case 'WhileStatement':
-        //     representation = WhileStatementRepresentation
-        //     break
+    if (action.execution.nodeData.type == undefined) {
+        throw new Error('Action has no type.')
     }
 
-    return new representation(action)
+    const mapping: { [key: string]: typeof Representation } = {
+        IfStatement: IfStatementRepresentation,
+        ForStatement: ForStatementRepresentation,
+        VariableDeclaration: VariableDeclarationRepresentation,
+    }
+
+    if (action.execution.nodeData.type in mapping) {
+        representation = mapping[action.execution.nodeData.type]
+    }
+
+    return new representation()
 }
 
-export function getAllSteps(action: Action): Action[] {
+export function getAllSteps(action: ActionState): ActionState[] {
     const allSteps = []
 
-    let steps = action.steps
+    let steps = action.vertices
 
-    for (const step of steps) {
+    for (const stepID of steps) {
+        const step = ApplicationState.actions[stepID]
         allSteps.push(step, ...getAllSteps(step))
     }
 
@@ -111,33 +114,43 @@ export function getAllSteps(action: Action): Action[] {
 }
 
 export function getLabelOfExecution(execution: ExecutionGraph | ExecutionNode) {
-    return (instanceOfExecutionNode(execution) ? execution.name : execution.nodeData.type ?? '')
+    return (
+        instanceOfExecutionNode(execution)
+            ? execution.name
+            : execution.nodeData.type ?? ''
+    )
         .replace(/([A-Z])/g, ' $1')
         .trim()
 }
 
-export function getActionRoot(action: Action) {
+export function getActionRootID(action: ActionState) {
     let root = action
-    while (root.parent != null) {
-        root = root.parent
+    while (root.parentID != null) {
+        root = ApplicationState.actions[root.parentID]
     }
     return root
 }
 
-export function getExecutionSteps(execution: ExecutionGraph | ExecutionNode): (ExecutionGraph | ExecutionNode)[] {
-    if (instanceOfExecutionGraph(execution)) {
+export function getExecutionSteps(
+    execution: ExecutionGraph | ExecutionNode
+): (ExecutionGraph | ExecutionNode)[] {
+    if (instanceOfExecutionGraph(execution) && !isPrimitive(execution)) {
         return execution.vertices
     } else {
         return []
     }
 }
 
-export function getLeafSteps(steps: Action[]): Action[] {
-    const result: Action[] = []
+export function getLeafSteps(steps: ActionState[]): ActionState[] {
+    const result: ActionState[] = []
 
     for (const action of steps) {
-        if (action.steps.length > 0) {
-            result.push(...getLeafSteps(action.steps))
+        if (action.vertices.length > 0) {
+            result.push(
+                ...getLeafSteps(
+                    action.vertices.map((id) => ApplicationState.actions[id])
+                )
+            )
         } else {
             result.push(action)
         }
@@ -146,8 +159,24 @@ export function getLeafSteps(steps: Action[]): Action[] {
     return result
 }
 
+export function getLeafStepsFromIDs(stepIDs: string[]): ActionState[] {
+    const result: ActionState[] = []
+
+    for (const stepID of stepIDs) {
+        const step = ApplicationState.actions[stepID]
+
+        if (step.vertices.length > 0) {
+            result.push(...getLeafStepsFromIDs(step.vertices))
+        } else {
+            result.push(step)
+        }
+    }
+
+    return result
+}
+
 export function getAbstractionPath(
-    parent: ExecutionGraph,
+    parent: ExecutionGraph | ExecutionNode,
     target: ExecutionGraph | ExecutionNode
 ): (ExecutionGraph | ExecutionNode)[] | null {
     if (parent == target) {
@@ -156,7 +185,7 @@ export function getAbstractionPath(
 
     if (instanceOfExecutionGraph(parent)) {
         for (const vertex of parent.vertices) {
-            if (instanceOfExecutionNode(vertex)) continue
+            // if (instanceOfExecutionNode(vertex)) continue
 
             const ret = getAbstractionPath(vertex, target)
 
@@ -172,7 +201,7 @@ export function getAbstractionPath(
 export function queryExecutionGraph(
     animation: ExecutionGraph | ExecutionNode,
     query: (animation: ExecutionGraph | ExecutionNode) => boolean
-): ExecutionGraph | ExecutionNode {
+): ExecutionGraph | ExecutionNode | null {
     if (query(animation)) {
         return animation
     }
@@ -187,4 +216,13 @@ export function queryExecutionGraph(
     }
 
     return null
+}
+
+export function isPrimitive(execution: ExecutionGraph | ExecutionNode) {
+    // if (execution.nodeData.preLabel == 'Name') {
+    //     return true
+    // }
+
+    const primitives = new Set(['Literal', 'Identifier'])
+    return primitives.has(execution.nodeData?.type ?? '')
 }

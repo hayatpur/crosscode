@@ -6,14 +6,14 @@ export class IdentifierRenderer {
     element: HTMLElement
     environmentReference: HTMLElement
 
-    private _tickerId: string
+    private _tickerID: string
     _cachedState: IdentifierState | null = null
 
     constructor() {
         this.element = document.createElement('div')
         this.element.classList.add('identifier')
 
-        this._tickerId = Ticker.instance.registerTick(this.tick.bind(this))
+        this._tickerID = Ticker.instance.registerTick(this.tick.bind(this))
     }
 
     setState(state: IdentifierState) {
@@ -25,7 +25,7 @@ export class IdentifierRenderer {
     tick(dt: number) {}
 
     destroy() {
-        Ticker.instance.removeTickFrom(this._tickerId)
+        Ticker.instance.removeTickFrom(this._tickerID)
         this.element.remove()
     }
 

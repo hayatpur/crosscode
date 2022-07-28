@@ -1,9 +1,20 @@
 import * as ESTree from 'estree'
-import { queryAllExecutionGraph, queryExecutionGraph } from '../execution/execution'
-import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
-import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
-import { Executor } from '../executor/Executor'
-import { DataState, instanceOfObjectData } from '../renderer/View/Environment/data/DataState'
+import {
+    queryAllExecutionGraph,
+    queryExecutionGraph,
+} from '../execution/execution'
+import {
+    ExecutionGraph,
+    instanceOfExecutionGraph,
+} from '../execution/graph/ExecutionGraph'
+import {
+    ExecutionNode,
+    instanceOfExecutionNode,
+} from '../execution/primitive/ExecutionNode'
+import {
+    DataState,
+    instanceOfObjectData,
+} from '../renderer/View/Environment/data/DataState'
 
 export interface Vector {
     x: number
@@ -42,7 +53,10 @@ export function getRelativeLocation(point: Vector, parent: Vector) {
     }
 }
 
-export function getNumericalValueOfStyle(styleValue: string, fallback: number = 0): number {
+export function getNumericalValueOfStyle(
+    styleValue: string,
+    fallback: number = 0
+): number {
     let parsed = parseFloat(styleValue ?? fallback.toString())
 
     if (isNaN(parsed)) {
@@ -91,12 +105,16 @@ export function solveLP(data, mip = true) {
             solver.glp_intopt(lp)
             objective = solver.glp_mip_obj_val(lp)
             for (i = 1; i <= solver.glp_get_num_cols(lp); i++) {
-                result[solver.glp_get_col_name(lp, i)] = solver.glp_mip_col_val(lp, i)
+                result[solver.glp_get_col_name(lp, i)] = solver.glp_mip_col_val(
+                    lp,
+                    i
+                )
             }
         } else {
             objective = solver.glp_get_obj_val(lp)
             for (i = 1; i <= solver.glp_get_num_cols(lp); i++) {
-                result[solver.glp_get_col_name(lp, i)] = solver.glp_get_col_prim(lp, i)
+                result[solver.glp_get_col_name(lp, i)] =
+                    solver.glp_get_col_prim(lp, i)
             }
         }
         lp = null
@@ -244,8 +262,14 @@ export function getDeepestChunks(
     if (parentExecution.vertices.length == 0) {
         return []
     } else if (parentExecution.vertices.length == 1) {
-        const deepestChunks = getDeepestChunks(parentExecution.vertices[0], selection)
-        if (deepestChunks.length == 1 && deepestChunks[0].id == parentExecution.vertices[0].id) {
+        const deepestChunks = getDeepestChunks(
+            parentExecution.vertices[0],
+            selection
+        )
+        if (
+            deepestChunks.length == 1 &&
+            deepestChunks[0].id == parentExecution.vertices[0].id
+        ) {
             return [parentExecution]
         } else {
             return deepestChunks
@@ -274,16 +298,24 @@ export function getDeepestChunks(
     }
 
     // Selection is contained partially in every animation
-    const allArePartiallyContained = childrenContains.every((set) => set.size > 0)
+    const allArePartiallyContained = childrenContains.every(
+        (set) => set.size > 0
+    )
 
     // Each of those partial containments are deepest chunks
     let allAreDeepestChunks = true
     let allDeepestChunks: (ExecutionGraph | ExecutionNode)[] = []
     for (let i = 0; i < childrenContains.length; i++) {
-        const deepestChunks = getDeepestChunks(parentExecution.vertices[i], childrenContains[i])
+        const deepestChunks = getDeepestChunks(
+            parentExecution.vertices[i],
+            childrenContains[i]
+        )
         allDeepestChunks.push(...deepestChunks)
 
-        if (deepestChunks.length != 1 || deepestChunks[0].id != parentExecution.vertices[i].id) {
+        if (
+            deepestChunks.length != 1 ||
+            deepestChunks[0].id != parentExecution.vertices[i].id
+        ) {
             allAreDeepestChunks = false
         }
     }
@@ -325,7 +357,10 @@ export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
 }
 
 export function getClosestMatch(target: ESTree.SourceLocation) {
-    const allNodes = queryAllExecutionGraph(Executor.instance.execution, (node) => true)
+    const allNodes = queryAllExecutionGraph(
+        Executor.instance.execution,
+        (node) => true
+    )
     const allDistances = allNodes.map((node) =>
         tokenDistanceFromTarget(node.nodeData.location, target)
     )
@@ -347,7 +382,9 @@ export function getClosestMatch(target: ESTree.SourceLocation) {
     let toRemove = new Set<string>()
     for (let i = 0; i < minNodes.length; i++) {
         if (minNodes[i].nodeData.type == 'Arguments') {
-            const children = (minNodes[i] as ExecutionGraph).vertices.map((v) => v.id)
+            const children = (minNodes[i] as ExecutionGraph).vertices.map(
+                (v) => v.id
+            )
             for (const other of minNodes) {
                 if (children.includes(other.id)) {
                     toRemove.add(minNodes[i].id)

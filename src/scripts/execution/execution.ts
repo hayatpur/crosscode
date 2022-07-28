@@ -1,6 +1,12 @@
-import { flattenedEnvironmentMemory, getMemoryLocation } from '../environment/environment'
+import {
+    flattenedEnvironmentMemory,
+    getMemoryLocation,
+} from '../environment/environment'
 import { EnvironmentState } from '../environment/EnvironmentState'
-import { DataType, PrimitiveDataState } from '../renderer/View/Environment/data/DataState'
+import {
+    DataType,
+    PrimitiveDataState,
+} from '../renderer/View/Environment/data/DataState'
 import { clone } from '../utilities/objects'
 import {
     DataInfo,
@@ -8,14 +14,21 @@ import {
     GlobalDataInfo,
     instanceOfExecutionGraph,
 } from './graph/ExecutionGraph'
-import { ExecutionNode, instanceOfExecutionNode, NodeData } from './primitive/ExecutionNode'
+import {
+    ExecutionNode,
+    instanceOfExecutionNode,
+    NodeData,
+} from './primitive/ExecutionNode'
 
 export interface VertexOptions {
     nodeData?: NodeData
     shouldDissolve?: boolean
 }
 
-export function applyExecutionNode(execution: ExecutionNode, environment: EnvironmentState) {
+export function applyExecutionNode(
+    execution: ExecutionNode,
+    environment: EnvironmentState
+) {
     execution.precondition = clone(environment)
     execution.apply(execution, environment)
     execution.postcondition = clone(environment)
@@ -159,7 +172,10 @@ export function getEmptyNodeData(pivot: NodeData): NodeData {
     }
 }
 
-export function updateGroupNodeData(graph: ExecutionGraph, options: VertexOptions = {}) {
+export function updateGroupNodeData(
+    graph: ExecutionGraph,
+    options: VertexOptions = {}
+) {
     const { vertices: graphVertices } = graph
 
     if (graphVertices.length === 0) {
@@ -207,7 +223,11 @@ export function updateGroupNodeData(graph: ExecutionGraph, options: VertexOption
  * @param graph - Animation graph to remove from
  * @param i - Vertex to remove at
  */
-export function removeVertexAt(graph: ExecutionGraph, i: number, options: VertexOptions = {}) {
+export function removeVertexAt(
+    graph: ExecutionGraph,
+    i: number,
+    options: VertexOptions = {}
+) {
     const { vertices: graphVertices } = graph
 
     // Remove vertex
@@ -269,9 +289,9 @@ export function animationToString(
         }
     }
 
-    output = `${'\t'.repeat(options.first ? 0 : indent)}[<package> ${animation.nodeData?.type} ${
-        animation.id
-    } |\n${output}`
+    output = `${'\t'.repeat(options.first ? 0 : indent)}[<package> ${
+        animation.nodeData?.type
+    } ${animation.id} |\n${output}`
 
     output += `${'\t'.repeat(indent)}]`
 
@@ -307,11 +327,11 @@ export enum AnimationTraceOperatorType {
 
 export interface AnimationTraceOperator {
     type: AnimationTraceOperatorType
-    executionId: string
+    executionID: string
 }
 
 export interface AugmentedDataInfo extends DataInfo {
-    executionId: string
+    executionID: string
 }
 
 export interface AnimationTraceChain {
@@ -321,7 +341,10 @@ export interface AnimationTraceChain {
 
 export interface GlobalAnimationTraceChain {
     value: GlobalDataInfo
-    children?: [operator: AnimationTraceOperator, child: GlobalAnimationTraceChain][]
+    children?: [
+        operator: AnimationTraceOperator,
+        child: GlobalAnimationTraceChain
+    ][]
 }
 
 export function queryExecutionGraph(
@@ -372,7 +395,10 @@ export function queryExecutionGraphStrict(
         return animation
     }
 
-    if (instanceOfExecutionGraph(animation) && animation.nodeData.type != 'CallExpression') {
+    if (
+        instanceOfExecutionGraph(animation) &&
+        animation.nodeData.type != 'CallExpression'
+    ) {
         for (const vertex of animation.vertices) {
             const ret = queryExecutionGraphStrict(vertex, query)
             if (ret != null) {
@@ -455,8 +481,9 @@ export function getTrace(
             flow.push({
                 value: {
                     id: data.id,
-                    location: getMemoryLocation(environment, data).foundLocation,
-                    executionId: animation.id,
+                    location: getMemoryLocation(environment, data)
+                        .foundLocation,
+                    executionID: animation.id,
                 },
             })
         }
@@ -468,7 +495,7 @@ export function getTrace(
                     value: {
                         id: identifier.name,
                         location: identifier.location,
-                        executionId: animation.id,
+                        executionID: animation.id,
                     },
                 })
             }
@@ -526,8 +553,9 @@ export function getChunkTrace(
             flow.push({
                 value: {
                     id: data.id,
-                    location: getMemoryLocation(environment, data).foundLocation,
-                    executionId: nodes[nodes.length - 1].id,
+                    location: getMemoryLocation(environment, data)
+                        .foundLocation,
+                    executionID: nodes[nodes.length - 1].id,
                 },
             })
         }
@@ -539,7 +567,7 @@ export function getChunkTrace(
                     value: {
                         id: identifier.name,
                         location: identifier.location,
-                        executionId: nodes[nodes.length - 1].id,
+                        executionID: nodes[nodes.length - 1].id,
                     },
                 })
             }
@@ -573,7 +601,9 @@ export function getAllBranches(
                 end = end.children[0][1]
             }
 
-            end.children = [[context.operator, { value: chain.value, children: null }]]
+            end.children = [
+                [context.operator, { value: chain.value, children: null }],
+            ]
 
             return [parent]
         }
@@ -592,23 +622,35 @@ export function getAllBranches(
             end = end.children[0][1]
         }
 
-        end.children = [[context.operator, { value: chain.value, children: null }]]
+        end.children = [
+            [context.operator, { value: chain.value, children: null }],
+        ]
     }
     const branches: AnimationTraceChain[] = []
 
     for (const [operator, child] of chain.children) {
-        branches.push(...getAllBranches(child, { parent: parent, operator: operator }))
+        branches.push(
+            ...getAllBranches(child, { parent: parent, operator: operator })
+        )
     }
 
     return branches
 }
 
-export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationTraceChain[] {
+export function getTracesFromExecutionNode(
+    animation: ExecutionNode
+): AnimationTraceChain[] {
     // Direct movements (to <-- from)
     let traces: AnimationTraceChain[] = []
 
-    const rs = reads(animation).map((r) => ({ ...r, executionId: animation.id }))
-    const ws = writes(animation).map((w) => ({ ...w, executionId: animation.id }))
+    const rs = reads(animation).map((r) => ({
+        ...r,
+        executionID: animation.id,
+    }))
+    const ws = writes(animation).map((w) => ({
+        ...w,
+        executionID: animation.id,
+    }))
 
     switch (animation._name) {
         case 'MoveAndPlaceAnimation':
@@ -621,7 +663,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                         [
                             {
                                 type: AnimationTraceOperatorType.MoveAndPlace,
-                                executionId: animation.id,
+                                executionID: animation.id,
                             },
                             { value: rs[0] },
                         ],
@@ -633,7 +675,10 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                     value: ws[0],
                     children: [
                         [
-                            { type: AnimationTraceOperatorType.Place, executionId: animation.id },
+                            {
+                                type: AnimationTraceOperatorType.Place,
+                                executionID: animation.id,
+                            },
                             { value: rs[0] },
                         ],
                     ],
@@ -647,7 +692,10 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                 value: ws[0],
                 children: [
                     [
-                        { type: AnimationTraceOperatorType.CopyLiteral, executionId: animation.id },
+                        {
+                            type: AnimationTraceOperatorType.CopyLiteral,
+                            executionID: animation.id,
+                        },
                         { value: rs[0] },
                     ],
                 ],
@@ -661,7 +709,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                     [
                         {
                             type: AnimationTraceOperatorType.CreateLiteral,
-                            executionId: animation.id,
+                            executionID: animation.id,
                         },
                         { value: null },
                     ],
@@ -677,7 +725,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                         [
                             {
                                 type: AnimationTraceOperatorType.CreateLiteral,
-                                executionId: animation.id,
+                                executionID: animation.id,
                             },
                             { value: null },
                         ],
@@ -692,7 +740,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                     [
                         {
                             type: AnimationTraceOperatorType.CreateReference,
-                            executionId: animation.id,
+                            executionID: animation.id,
                         },
                         { value: null },
                     ],
@@ -706,7 +754,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                     [
                         {
                             type: AnimationTraceOperatorType.CreateVariable,
-                            executionId: animation.id,
+                            executionID: animation.id,
                         },
                         { value: null },
                     ],
@@ -719,7 +767,10 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                 value: ws[0],
                 children: [
                     [
-                        { type: AnimationTraceOperatorType.CreateArray, executionId: animation.id },
+                        {
+                            type: AnimationTraceOperatorType.CreateArray,
+                            executionID: animation.id,
+                        },
                         { value: null },
                     ],
                 ],
@@ -736,7 +787,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                         [
                             {
                                 type: AnimationTraceOperatorType.CreateLiteral,
-                                executionId: animation.id,
+                                executionID: animation.id,
                             },
                             { value: null },
                         ],
@@ -749,7 +800,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                         [
                             {
                                 type: AnimationTraceOperatorType.CopyLiteral,
-                                executionId: animation.id,
+                                executionID: animation.id,
                             },
                             { value: rs[0] },
                         ],
@@ -764,14 +815,14 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                     [
                         {
                             type: AnimationTraceOperatorType.BinaryOperation,
-                            executionId: animation.id,
+                            executionID: animation.id,
                         },
                         { value: rs[0] },
                     ],
                     [
                         {
                             type: AnimationTraceOperatorType.BinaryOperation,
-                            executionId: animation.id,
+                            executionID: animation.id,
                         },
                         { value: rs[1] },
                     ],
@@ -785,7 +836,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                     [
                         {
                             type: AnimationTraceOperatorType.UpdateOperation,
-                            executionId: animation.id,
+                            executionID: animation.id,
                         },
                         { value: rs[0] },
                     ],
@@ -801,7 +852,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                         [
                             {
                                 type: AnimationTraceOperatorType.MoveAndPlace,
-                                executionId: animation.id,
+                                executionID: animation.id,
                             },
                             { value: rs[i] },
                         ],
@@ -818,7 +869,7 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
                         [
                             {
                                 type: AnimationTraceOperatorType.MoveAndPlace,
-                                executionId: animation.id,
+                                executionID: animation.id,
                             },
                             { value: rs[i] },
                         ],
@@ -833,7 +884,9 @@ export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationT
     return traces
 }
 
-export function getAnimationTraceChainLeaves(chain: AnimationTraceChain): AnimationTraceChain[] {
+export function getAnimationTraceChainLeaves(
+    chain: AnimationTraceChain
+): AnimationTraceChain[] {
     if (chain.children == null) return [chain]
 
     let leaves: AnimationTraceChain[] = []
@@ -847,7 +900,10 @@ export function getAnimationTraceChainLeaves(chain: AnimationTraceChain): Animat
 
 let CHAIN_COUNTER = 0
 
-export function traceChainsToString(chains: AnimationTraceChain[], logUrl: boolean = true) {
+export function traceChainsToString(
+    chains: AnimationTraceChain[],
+    logUrl: boolean = true
+) {
     let output = ''
 
     for (const chain of chains) {
@@ -885,7 +941,8 @@ export function traceChainToString(chain: AnimationTraceChain) {
         const operator = child[0]
         const childChain = child[1]
 
-        const { box: childBox, output: childString } = traceChainToString(childChain)
+        const { box: childBox, output: childString } =
+            traceChainToString(childChain)
 
         rest += `\n${childString}`
         rest += `\n${box}-->${operator.type.toString()}${childBox}`

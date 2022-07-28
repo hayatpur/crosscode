@@ -5,9 +5,6 @@ import { CreateTrailRenderer } from './Renderers/CreateTrailRenderer'
 import { MoveTrailRenderer } from './Renderers/MoveTrailRenderer'
 import { PartialCreateTrailRenderer } from './Renderers/PartialCreateTrailRenderer'
 import { PartialMoveTrailRenderer } from './Renderers/PartialMoveTrailRenderer'
-// import { MoveTrailRenderer } from './Renderers/MoveTrailRenderer'
-// import { PartialCreateTrailRenderer } from './Renderers/PartialCreateTrailRenderer'
-// import { PartialMoveTrailRenderer } from './Renderers/PartialMoveTrailRenderer'
 import { TrailRenderer } from './Renderers/TrailRenderer'
 import { TrailState, TrailType } from './TrailState'
 
@@ -21,9 +18,11 @@ export class Trail {
 
     time: number
 
-    _tickerId: string
-
-    constructor(state: TrailState, execution: ExecutionGraph | ExecutionNode, time: number) {
+    constructor(
+        state: TrailState,
+        execution: ExecutionGraph | ExecutionNode,
+        time: number
+    ) {
         this.state = state
         this.execution = execution
         this.renderer = createTrailRenderer(this)
@@ -38,10 +37,6 @@ export class Trail {
     /* ----------------------- Destroy ---------------------- */
     destroy() {
         this.renderer.destroy()
-        this.renderer = null
-
-        this.execution = null
-        this.state = null
     }
 }
 

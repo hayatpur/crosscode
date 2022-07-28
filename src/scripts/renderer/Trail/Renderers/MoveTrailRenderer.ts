@@ -1,11 +1,14 @@
-import { getMemoryLocation, resolvePath } from '../../../environment/environment'
+import { ApplicationState } from '../../../ApplicationState'
+import {
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
 import {
     AccessorType,
     EnvironmentState,
     instanceOfEnvironment,
     Residual,
 } from '../../../environment/EnvironmentState'
-import { Executor } from '../../../executor/Executor'
 import { getPerfectArrow, reflow } from '../../../utilities/dom'
 import { getNumericalValueOfStyle } from '../../../utilities/math'
 import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
@@ -19,29 +22,45 @@ export class MoveTrailRenderer extends TrailRenderer {
     constructor(trail: Trail) {
         super(trail)
 
-        if (Executor.instance.visualization?.view == null) {
+        if (ApplicationState.visualization?.view == null) {
             throw new Error('View is not initialized')
         }
 
         // Create movement trace
-        this.trace = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        this.trace = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'path'
+        )
         this.trace.classList.add('action-mapping-connection', 'trail-move')
-        Executor.instance.visualization.view.renderer.svg.appendChild(this.trace)
+        ApplicationState.visualization.view.svg.appendChild(this.trace)
     }
 
     /* ---------------------- Animation --------------------- */
     update(amount: number, environment: EnvironmentRenderer) {
         /* ---------------------- Old data ---------------------- */
-        const prev = environment.getResidualOf(this.trail.state.toDataId, this.trail.time)
+        const prev = environment.getResidualOf(
+            this.trail.state.toDataID,
+            this.trail.time
+        )
 
         if (prev != null) {
             updateResidual(amount, prev)
         }
 
         /* ---------------------- New data ---------------------- */
+        if (this.trail.state.fromDataIDs == undefined) {
+            throw new Error('fromDataIDs is undefined.')
+        }
+
         // Update path
-        const start = environment.getResidualOf(this.trail.state.fromDataIds[0], this.trail.time)
-        const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
+        const start = environment.getResidualOf(
+            this.trail.state.fromDataIDs[0],
+            this.trail.time
+        )
+        const end = environment.getResidualOf(
+            this.trail.state.toDataID,
+            this.trail.time + 1
+        )
 
         if (end == null || start == null) {
             this.trace.classList.add('hidden')
@@ -53,8 +72,12 @@ export class MoveTrailRenderer extends TrailRenderer {
         end.element.style.transform = ''
         reflow(end.element)
 
+        if (ApplicationState.visualization?.view == null) {
+            throw new Error('View is not initialized')
+        }
+
         const viewBbox =
-            Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
+            ApplicationState.visualization.view.element.getBoundingClientRect()
         const startBbox = start.element.getBoundingClientRect()
         const endBbox = end.element.getBoundingClientRect()
 
@@ -72,7 +95,13 @@ export class MoveTrailRenderer extends TrailRenderer {
         this.trace.style.strokeDashoffset = `${
             this.trace.getTotalLength() - amount * this.trace.getTotalLength()
         }`
-        let { x, y } = this.trace.getPointAtLength(amount * this.trace.getTotalLength())
+        let { x, y } = this.trace.getPointAtLength(
+            amount * this.trace.getTotalLength()
+        )
+
+        if (environment.element.parentElement?.parentElement == null) {
+            throw new Error('Parent element is null')
+        }
 
         // Update transform
         const environmentBbox =
@@ -84,18 +113,29 @@ export class MoveTrailRenderer extends TrailRenderer {
 
     postUpdate(amount: number, environment: EnvironmentRenderer) {
         if (amount == 1) {
+            if (this.trail.state.fromDataIDs == undefined) {
+                throw new Error('fromDataIDs is undefined.')
+            }
+
             const start = environment.getResidualOf(
-                this.trail.state.fromDataIds[0],
+                this.trail.state.fromDataIDs[0],
                 this.trail.time
             )
-            const end = environment.getResidualOf(this.trail.state.toDataId, this.trail.time + 1)
+            const end = environment.getResidualOf(
+                this.trail.state.toDataID,
+                this.trail.time + 1
+            )
 
             if (end == null || start == null) {
                 return
             }
 
+            if (ApplicationState.visualization?.view == null) {
+                throw new Error('View is not initialized')
+            }
+
             const viewBbox =
-                Executor.instance.visualization.view.renderer.element.getBoundingClientRect()
+                ApplicationState.visualization.view.element.getBoundingClientRect()
             const startBbox = start.element.getBoundingClientRect()
             const endBbox = end.element.getBoundingClientRect()
 
@@ -131,7 +171,7 @@ export class MoveTrailRenderer extends TrailRenderer {
     computeResidual(environment: EnvironmentState): Residual | null {
         const prev = resolvePath(
             environment,
-            [{ type: AccessorType.ID, value: this.trail.state.toDataId }],
+            [{ type: AccessorType.ID, value: this.trail.state.toDataID }],
             null
         )
 
@@ -139,20 +179,25 @@ export class MoveTrailRenderer extends TrailRenderer {
             return null
         }
 
+        const location = getMemoryLocation(environment, prev).foundLocation
+
+        if (location == null) {
+            throw new Error('Location is null')
+        }
+
         return {
             data: prev,
-            location: getMemoryLocation(environment, prev).foundLocation,
+            location: location,
         }
     }
 
     applyTimestamps(environment: EnvironmentState) {
-        environment.timestamps[this.trail.state.toDataId] = this.trail.time
+        environment.timestamps[this.trail.state.toDataID] = this.trail.time
     }
 
     /* ---------------------- Destroy --------------------- */
     destroy() {
         super.destroy()
         this.trace.remove()
-        this.trace = null
     }
 }

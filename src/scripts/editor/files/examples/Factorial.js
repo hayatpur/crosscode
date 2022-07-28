@@ -1,9 +1,10 @@
-function f(x) {
+function factorial(x) {
     if (x == 1) {
         return x
     } else {
-        return x * f(x - 1)
+        return x * factorial(x - 1)
     }
 }
 
-let y = f(5)
+let n = 5
+let y = factorial(n)

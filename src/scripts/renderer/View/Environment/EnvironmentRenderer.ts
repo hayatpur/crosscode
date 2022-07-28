@@ -9,7 +9,12 @@ import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
 import { createElement } from '../../../utilities/dom'
 import { ArrayRenderer } from './data/array/ArrayRenderer'
 import { DataRenderer } from './data/DataRenderer'
-import { DataState, DataType, instanceOfObjectData, instanceOfPrimitiveData } from './data/DataState'
+import {
+    DataState,
+    DataType,
+    instanceOfObjectData,
+    instanceOfPrimitiveData,
+} from './data/DataState'
 import { LiteralRenderer } from './data/literal/LiteralRenderer'
 import { ObjectRenderer } from './data/object/ObjectRenderer'
 import { FunctionRenderer } from './data/reference/FunctionRenderer'
@@ -21,7 +26,9 @@ import { IdentifierRenderer } from './identifier/IdentifierRenderer'
 export class EnvironmentRenderer {
     element: HTMLElement
 
-    dataRenderers: { [id: string]: { data: DataRenderer; column: HTMLElement } } = {}
+    dataRenderers: {
+        [id: string]: { data: DataRenderer; column: HTMLElement }
+    } = {}
     identifierRenderers: { [id: string]: IdentifierRenderer } = {}
     residualRenderers: { [id: string]: DataRenderer }[] = []
 
@@ -72,7 +79,9 @@ export class EnvironmentRenderer {
             )
             .filter((data) => {
                 if (instanceOfPrimitiveData(data)) {
-                    return !(data.value ?? '').toString().includes('[native code]')
+                    return !(data.value ?? '')
+                        .toString()
+                        .includes('[native code]')
                 } else if (data.builtin) {
                     return false
                 } else {
@@ -97,12 +106,18 @@ export class EnvironmentRenderer {
             }
         }
 
-        memory = memory.filter((data) => data.frame >= hardScope || data.frame == 1)
+        memory = memory.filter(
+            (data) => data.frame >= hardScope || data.frame == 1
+        )
 
         // Render references
         let references = Object.values(state.memory)
             .filter((m) => m != null)
-            .filter((data) => instanceOfPrimitiveData(data) && data.type == DataType.Reference)
+            .filter(
+                (data) =>
+                    instanceOfPrimitiveData(data) &&
+                    data.type == DataType.Reference
+            )
 
         if (filter != null) {
             references = references.filter((data) => filter.includes(data.id))
@@ -112,21 +127,32 @@ export class EnvironmentRenderer {
         for (const reference of references) {
             const data = resolvePath(state, reference.value as Accessor[], null)
             if (instanceOfEnvironment(data)) continue
-            if (instanceOfPrimitiveData(data) && data.type == DataType.Function) continue
+            if (instanceOfPrimitiveData(data) && data.type == DataType.Function)
+                continue
 
             let renderer = this.dataRenderers[data.id]
 
             // Create renderer if not there
             if (renderer == null) {
                 renderer = { column: null, data: null }
-                renderer.column = createElement('div', 'environment-column', this.element)
+                renderer.column = createElement(
+                    'div',
+                    'environment-column',
+                    this.element
+                )
 
                 createElement('div', 'identifier-row', renderer.column)
                 createElement('div', 'data-row', renderer.column)
-                createElement('div', 'hole', renderer.column.children[1] as HTMLElement)
+                createElement(
+                    'div',
+                    'hole',
+                    renderer.column.children[1] as HTMLElement
+                )
 
                 renderer.data = createDataRenderer(data)
-                renderer.column.children[1].children[0].append(renderer.data.element)
+                renderer.column.children[1].children[0].append(
+                    renderer.data.element
+                )
 
                 this.dataRenderers[data.id] = renderer
             }
@@ -138,19 +164,30 @@ export class EnvironmentRenderer {
         // Render data
         for (const data of memory) {
             let renderer = this.dataRenderers[data.id]
-            if (instanceOfPrimitiveData(data) && data.type == DataType.Function) continue
+            if (instanceOfPrimitiveData(data) && data.type == DataType.Function)
+                continue
 
             // Create renderer if not there
             if (renderer == null) {
                 renderer = { column: null, data: null }
-                renderer.column = createElement('div', 'environment-column', this.element)
+                renderer.column = createElement(
+                    'div',
+                    'environment-column',
+                    this.element
+                )
 
                 createElement('div', 'identifier-row', renderer.column)
                 createElement('div', 'data-row', renderer.column)
-                createElement('div', 'hole', renderer.column.children[1] as HTMLElement)
+                createElement(
+                    'div',
+                    'hole',
+                    renderer.column.children[1] as HTMLElement
+                )
 
                 renderer.data = createDataRenderer(data)
-                renderer.column.children[1].children[0].append(renderer.data.element)
+                renderer.column.children[1].children[0].append(
+                    renderer.data.element
+                )
 
                 this.dataRenderers[data.id] = renderer
             }
@@ -183,14 +220,20 @@ export class EnvironmentRenderer {
             const scope = state.scope[i]
 
             for (const name of Object.keys(scope.bindings)) {
-                const data = resolvePath(state, scope.bindings[name].location, null)
+                const data = resolvePath(
+                    state,
+                    scope.bindings[name].location,
+                    null
+                )
                 const dataRenderer = this.dataRenderers[data.id]
                 if (dataRenderer == null) continue // Ignore dangling references
 
                 let renderer = this.identifierRenderers[name]
                 if (renderer == null) {
                     renderer = new IdentifierRenderer()
-                    dataRenderer.column.children[0].appendChild(renderer.element)
+                    dataRenderer.column.children[0].appendChild(
+                        renderer.element
+                    )
 
                     this.identifierRenderers[name] = renderer
                 }
@@ -211,14 +254,20 @@ export class EnvironmentRenderer {
             const scope = state.scope[0]
 
             for (const name of Object.keys(scope.bindings)) {
-                const data = resolvePath(state, scope.bindings[name].location, null)
+                const data = resolvePath(
+                    state,
+                    scope.bindings[name].location,
+                    null
+                )
                 const dataRenderer = this.dataRenderers[data.id]
                 if (dataRenderer == null) continue // Ignore dangling references
 
                 let renderer = this.identifierRenderers[name]
                 if (renderer == null) {
                     renderer = new IdentifierRenderer()
-                    dataRenderer.column.children[0].appendChild(renderer.element)
+                    dataRenderer.column.children[0].appendChild(
+                        renderer.element
+                    )
 
                     this.identifierRenderers[name] = renderer
                 }
@@ -231,7 +280,9 @@ export class EnvironmentRenderer {
         }
 
         // Remove hits that aren't used
-        for (const [name, renderer] of Object.entries(this.identifierRenderers)) {
+        for (const [name, renderer] of Object.entries(
+            this.identifierRenderers
+        )) {
             if (!hits.has(name)) {
                 renderer.destroy()
                 renderer.element.remove()
@@ -247,7 +298,9 @@ export class EnvironmentRenderer {
         // Remove data that is no longer in the view
         // TODO: Use hits to do this smartly
         for (let i = 0; i < this.residualRenderers.length; i++) {
-            for (const [id, renderer] of Object.entries(this.residualRenderers[i])) {
+            for (const [id, renderer] of Object.entries(
+                this.residualRenderers[i]
+            )) {
                 renderer.destroy()
                 renderer.element.remove()
                 delete this.residualRenderers[id]
@@ -275,10 +328,12 @@ export class EnvironmentRenderer {
                     continue
                 }
 
-                const locationRenderer = this.getAllChildRenderers()[locationData.id]
+                const locationRenderer =
+                    this.getAllChildRenderers()[locationData.id]
                 const hole = locationRenderer.element.parentElement
 
-                let residualRenderer = this.residualRenderers[time][`${time}-${residual.data.id}`]
+                let residualRenderer =
+                    this.residualRenderers[time][`${time}-${residual.data.id}`]
 
                 // Create renderer if not theres
                 if (residualRenderer == null) {
@@ -286,7 +341,9 @@ export class EnvironmentRenderer {
                     hole.appendChild(residualRenderer.element)
                     residualRenderer.element.classList.add('is-residual')
 
-                    this.residualRenderers[time][`${time}-${residual.data.id}`] = residualRenderer
+                    this.residualRenderers[time][
+                        `${time}-${residual.data.id}`
+                    ] = residualRenderer
                 }
 
                 hits.add(`${time}-${residual.data.id}`)
@@ -295,12 +352,17 @@ export class EnvironmentRenderer {
 
             for (let k = residuals.length - 1; k >= 0; k--) {
                 if (toRemove.has(k)) {
-                    const renderer = this.residualRenderers[time][`${time}-${residuals[k].data.id}`]
+                    const renderer =
+                        this.residualRenderers[time][
+                            `${time}-${residuals[k].data.id}`
+                        ]
 
                     if (renderer != null) {
                         renderer.destroy()
                         renderer.element.remove()
-                        delete this.residualRenderers[time][`${time}-${residuals[k].data.id}`]
+                        delete this.residualRenderers[time][
+                            `${time}-${residuals[k].data.id}`
+                        ]
                     }
 
                     residuals.splice(k, 1)
@@ -309,7 +371,10 @@ export class EnvironmentRenderer {
         }
     }
 
-    getResidualOf(dataId: string, time: number): DataRenderer | IdentifierRenderer {
+    getResidualOf(
+        dataID: string,
+        time: number
+    ): DataRenderer | IdentifierRenderer {
         if (time < 0) {
             return null
         }
@@ -318,7 +383,7 @@ export class EnvironmentRenderer {
         for (let i = time; i < this.residualRenderers.length; i++) {
             const residuals = this.residualRenderers[i]
             for (const [id, renderer] of Object.entries(residuals)) {
-                if (id.split('-')[1] == dataId) {
+                if (id.split('-')[1] == dataID) {
                     return renderer
                 }
             }
@@ -327,10 +392,10 @@ export class EnvironmentRenderer {
         /* ----- Make sure there are no residuals after time ---- */
 
         /* ------------------ Look in data ------------------ */
-        if (this.timestamps[dataId] >= time) {
+        if (this.timestamps[dataID] >= time) {
             return null
         } else {
-            return this.getAllChildRenderers()[dataId]
+            return this.getAllChildRenderers()[dataID]
         }
     }
 
@@ -357,17 +422,21 @@ export class EnvironmentRenderer {
     }
 
     /* ------------------------ Focus ----------------------- */
-    secondaryFocus(dataIds: Set<string>) {
-        for (const [id, renderer] of Object.entries(this.getAllChildRenderers())) {
-            if (dataIds.has(id)) {
+    secondaryFocus(dataIDs: Set<string>) {
+        for (const [id, renderer] of Object.entries(
+            this.getAllChildRenderers()
+        )) {
+            if (dataIDs.has(id)) {
                 renderer.secondaryFocus()
             }
         }
     }
 
-    focus(dataIds: Set<string>) {
-        for (const [id, renderer] of Object.entries(this.getAllChildRenderers())) {
-            if (dataIds.has(id)) {
+    focus(dataIDs: Set<string>) {
+        for (const [id, renderer] of Object.entries(
+            this.getAllChildRenderers()
+        )) {
+            if (dataIDs.has(id)) {
                 renderer.focus()
             }
         }
@@ -436,7 +505,10 @@ export function getRelevantData(state: EnvironmentState) {
                 data.type == DataType.Function
         )
         .filter((data) => {
-            if (instanceOfPrimitiveData(data) && data.type == DataType.Function) {
+            if (
+                instanceOfPrimitiveData(data) &&
+                data.type == DataType.Function
+            ) {
                 return !data.value.toString().includes('[native code]')
             } else if (data.builtin) {
                 return false
@@ -468,7 +540,10 @@ export function getRelevantFlatData(state: EnvironmentState) {
                 data.type == DataType.Function
         )
         .filter((data) => {
-            if (instanceOfPrimitiveData(data) && data.type == DataType.Function) {
+            if (
+                instanceOfPrimitiveData(data) &&
+                data.type == DataType.Function
+            ) {
                 return !data.value.toString().includes('[native code]')
             } else if (data.builtin) {
                 return false

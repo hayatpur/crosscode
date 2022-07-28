@@ -1,4 +1,7 @@
-import { EnvironmentState, Residual } from '../../../environment/EnvironmentState'
+import {
+    EnvironmentState,
+    Residual,
+} from '../../../environment/EnvironmentState'
 import { remap } from '../../../utilities/math'
 import { DataRenderer } from '../../View/Environment/data/DataRenderer'
 import { EnvironmentRenderer } from '../../View/Environment/EnvironmentRenderer'
@@ -35,15 +38,20 @@ export class TrailRenderer {
     }
 
     /* ----------------------- Destroy ---------------------- */
-    destroy() {
-        this.trail = null
-    }
+    destroy() {}
 }
 
-export function updateResidual(amount: number, prev: DataRenderer | IdentifierRenderer) {
+export function updateResidual(
+    amount: number,
+    prev: DataRenderer | IdentifierRenderer
+) {
     const pt = remap(amount, 0, 1, 0, 5)
     let offset = 0
     let hit = false
+
+    if (prev.element.parentElement == null) {
+        throw new Error('Element has no parent')
+    }
 
     for (let i = 0; i < prev.element.parentElement.childElementCount; i++) {
         const child = prev.element.parentElement.children[i]
@@ -57,12 +65,17 @@ export function updateResidual(amount: number, prev: DataRenderer | IdentifierRe
     }
     offset *= 5
 
-    prev.element.style.transform = `translate(${-pt - offset}px, ${pt + offset}px) scale(${1})`
+    prev.element.style.transform = `translate(${-pt - offset}px, ${
+        pt + offset
+    }px) scale(${1})`
 
     if (offset / 5 >= 2) {
         prev.element.style.opacity = `${0}`
     } else if (offset / 5 >= 1) {
-        prev.element.style.opacity = `${Math.max(0, 1 - 0.8 * amount - offset / 20)}`
+        prev.element.style.opacity = `${Math.max(
+            0,
+            1 - 0.8 * amount - offset / 20
+        )}`
     } else {
         prev.element.style.opacity = `${Math.max(0.1, 1 - 0.8 * amount)}`
     }
