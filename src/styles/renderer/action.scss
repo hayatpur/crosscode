@@ -8,11 +8,7 @@
     border-radius: var(--border-radius);
     transition: 0.2s;
     z-index: -1;
-    background: #23242b;
-}
-
-.action.is-showing-steps {
-    background: none;
+    background: var(--color-3);
 }
 
 .action.is-playing:not(.is-showing-steps) {
@@ -23,18 +19,25 @@
     background-color: rgba(255, 255, 255, 0.09);
 }
 
+.action.is-showing-steps {
+    background: none;
+}
+
 /* ----------------------- Mapping ---------------------- */
 .action-mapping {
     display: flex;
     width: fit-content;
     height: -webkit-fill-available;
 
-    border-left: 1px solid #ffffff12;
-    border-right: 1px solid #ffffff17;
-    background: var(--color-2);
+    background: var(--color-0);
     position: relative;
 
     padding: 115px 20px;
+
+    // background-image: radial-gradient(var(--color-2) 1.25px, transparent 1.25px),
+    //     radial-gradient(var(--color-2) 1.25px, transparent 1.25px);
+    // background-size: 35px 35px;
+    // background-position: 0px 0px, 25px 25px;
 }
 
 /* -------------------- Action proxy -------------------- */
@@ -45,20 +48,28 @@
 
     background: var(--color-3);
     border-radius: var(--border-radius);
-    box-shadow: 0px 0px 3px 2px var(--color-2);
+    // box-shadow: 0px 0px 3px 2px var(--color-2);
+    box-shadow: 0px 0px 0px 1px #b5b5b554 inset;
 
     transform: scale(1);
-    transition-property: background, transform;
+    transition-property: background;
     transition-duration: 0.2s;
     cursor: pointer;
 
-    border: 1px solid #ffffff30;
+    // border: 1px solid #ffffff30;
 
     height: fit-content;
     width: fit-content;
 
     min-width: 20px;
     min-height: 20px;
+
+    user-select: none;
+}
+
+.action-proxy:not(.is-showing-steps) {
+    max-width: 200px;
+    max-height: 100px;
 }
 
 .action-proxy:hover {
@@ -68,7 +79,12 @@
 .action-proxy.is-showing-steps {
     background: none;
     border: none;
-    box-shadow: 0px 0px 0px 1px #ffffff12 !important;
+    // box-shadow: 0px 0px 0px 0.5px rgb(255 255 255 / 41%) !important;
+    box-shadow: none !important;
+}
+
+.action-proxy-binary-label {
+    margin: 0px 5px;
 }
 
 /* ----------------- AST Specific Styles ---------------- */
@@ -104,12 +120,25 @@
     }
 }
 
-.action-proxy.type-Program {
-    // min-width: 80px;
-    // min-height: 40px;
-
+.action-proxy.type-Program,
+.action-proxy.type-BlockStatement,
+.action-proxy.type-FunctionCall {
     display: flex;
     flex-direction: column;
+}
+
+.action-proxy.type-Program.is-showing-steps,
+.action-proxy.type-BlockStatement.is-showing-steps,
+.action-proxy.type-FunctionCall.is-showing-steps {
+    padding: 5px;
+
+    > .action-proxy:not(:last-child) {
+        margin-bottom: 5px;
+    }
+
+    > .action-proxy-placeholder:not(:last-child) {
+        margin-bottom: 5px;
+    }
 }
 
 .action-proxy.type-VariableDeclaration {
@@ -123,37 +152,51 @@
     margin: 0px 7px;
 }
 
-.action-proxy.type-Program.is-showing-steps {
-    padding: 10px;
-
-    > .action-proxy:not(:last-child) {
-        margin-bottom: 10px;
-    }
-
-    > .action-proxy-placeholder:not(:last-child) {
-        margin-bottom: 10px;
+.action-proxy.type-ForStatement {
+    > .action-proxy {
+        position: absolute;
     }
 }
 
-.action-proxy._FunctionDeclaration {
-    opacity: 0;
+.action-proxy-code-label {
+    font-family: var(--code-font-family);
+    font-size: 14px;
 }
 
-.action-proxy._ForStatement.Statement.has-steps {
-    padding-top: 13px;
+.action-proxy-for-iteration-top {
+    display: flex;
+}
+
+.action-proxy-for-iteration-top > div:not(:last-child).action-proxy,
+.action-proxy-for-iteration-top
+    > div:not(:last-child).action-proxy-placeholder {
+    margin-right: 7px;
+}
+
+.action-proxy-for-iteration {
+    display: flex;
+    flex-direction: column;
+    margin: 0px 10px;
+}
+
+.action-proxy-for-iteration-bottom {
+    margin-top: 10px;
 }
 
 .action-proxy.type-Literal,
 .action-proxy.type-Identifier {
     font-family: var(--code-font-family);
-    border: 1px solid #ffffff0f !important;
+    // border: 1px solid #ffffff0f !important;
+    border: none !important;
     cursor: default !important;
     justify-content: center;
     align-items: center;
     width: fit-content !important;
-    min-width: 15px;
-    padding: 3px;
+    min-width: 9px;
+    padding: 2px;
     font-size: 14px;
+    background: none !important;
+    box-shadow: none !important;
 }
 
 .type-ArrayExpression > div:not(:last-child).action-proxy,
@@ -172,6 +215,121 @@
 
 .action-proxy.type-MemberExpression > .action-proxy:not(:last-child) {
     margin-right: 8px;
+}
+
+.action-proxy.pre-label-Test._Test_true {
+    background: #293d3b !important;
+    box-shadow: 0px 0px 0px 0.5px #7dfc8ecf, 0px 0px 5px 4px var(--color-2);
+}
+
+.action-proxy.pre-label-Test._Test_false {
+    background: #3d2929 !important;
+    box-shadow: 0px 0px 0px 0.5px #fc7d7dcf, 0px 0px 5px 4px var(--color-2);
+}
+
+.action-proxy.pre-label-Test {
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    border-radius: var(--border-radius);
+    justify-content: center;
+    width: 15px !important;
+    height: 15px !important;
+
+    min-width: 0px;
+    min-height: 0px;
+
+    > ion-icon {
+        font-size: 13px;
+        --ionicon-stroke-width: 79px;
+    }
+}
+
+.action-proxy.pre-label-Test._Test_true > ion-icon.md.hydrated {
+    color: #6ee7b7;
+}
+
+.action-proxy.pre-label-Test._Test_false > ion-icon.md.hydrated {
+    color: #e76e6e;
+}
+
+.action-proxy.type-IfStatement.is-showing-steps {
+    flex-direction: column;
+    padding: 5px;
+}
+
+.action-proxy-if-row {
+    display: flex;
+    align-items: center;
+}
+
+.action-proxy-if-row:not(:last-child) {
+    margin-bottom: 5px;
+}
+
+.action-proxy-if-placeholder {
+    width: 50px;
+    height: 20px;
+    background: var(--color-3);
+    border-radius: var(--border-radius);
+    margin-left: 27px;
+}
+
+.action-proxy-if-label {
+    margin-right: 10px;
+}
+
+.action-proxy.type-BlockStatement.pre-label-Alternate,
+.action-proxy.type-BlockStatement.pre-label-Consequent {
+    margin-left: 27px;
+}
+
+.action-proxy.type-BlockStatement.pre-label-Alternate:not(.is-showing-steps) {
+    max-width: 100px;
+    max-height: 30px;
+}
+
+.action.type-Identifier {
+    background: none;
+}
+
+.action-proxy-placeholder > .action-proxy.type-Arguments {
+    width: 11px !important;
+    height: 11px !important;
+    min-width: 0px !important;
+    min-height: 0px !important;
+    box-shadow: none !important;
+}
+
+.action-proxy.type-CallExpression.is-spatial.is-showing-steps {
+}
+
+.action-proxy.type-FunctionCall.pre-label-Function-Call.is-showing-steps {
+    padding: 0px !important;
+    box-shadow: none !important;
+}
+
+.action-proxy.type-BlockStatement.is-showing-steps {
+    box-shadow: none !important;
+    padding: 0px !important;
+}
+
+.action-proxy-return-label {
+    margin-right: 5px;
+}
+
+.action-proxy.type-ReturnStatement.is-showing-steps {
+    box-shadow: none !important;
+    align-items: center;
+}
+
+.action-proxy.type-BinaryExpression.is-showing-steps {
+    box-shadow: none !important;
+}
+
+.action-proxy.frameless {
+    box-shadow: none !important;
+    padding: 0px !important;
 }
 
 /* --------------------- Out of view -------------------- */
@@ -313,11 +471,16 @@ path.action-mapping-connection.hidden {
 .action-proxy-label {
     white-space: pre;
     position: absolute;
-    right: calc(10px + 100%);
-    opacity: 0.7;
+    opacity: 0;
     pointer-events: none;
-    font-weight: 300;
+    font-weight: 400;
     font-size: 14px;
+    display: none;
+}
+
+.action-proxy.out-of-focus {
+    // filter: brightness(0.5) !important;
+    // transform: scale(0.5) !important;
 }
 
 /* ------------------ Proxy placeholder ----------------- */
@@ -325,12 +488,46 @@ path.action-mapping-connection.hidden {
     background: var(--color-3);
     border-radius: var(--border-radius);
     cursor: initial;
+    width: fit-content !important;
+    min-height: 20px;
 }
 
-.action-proxy.is-spatial.is-showing-steps {
+.action-proxy.is-spatial.is-showing-steps,
+.action-proxy.type-Program {
     padding: 5px;
+    background: var(--color-2);
+
+    > .action-proxy-label {
+        opacity: 1;
+        display: block;
+        top: -25px;
+        left: 0px;
+    }
 }
 
 .action-mapping > .action-proxy {
     margin: 10px;
+}
+
+.action-proxy-ray {
+    fill: #71718ea2;
+    stroke: none;
+}
+
+svg.ray-svg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    overflow: visible;
+    width: fit-content;
+    height: fit-content;
+    pointer-events: none;
+}
+
+.action-mapping-svg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
 }

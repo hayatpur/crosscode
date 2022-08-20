@@ -4,7 +4,6 @@ import { getDarkTheme, getLightTheme } from './EditorThemes'
 
 export class Editor {
     // Singleton
-    static instance: Editor
     parent: HTMLElement
 
     monaco: monaco.editor.IStandaloneCodeEditor
@@ -18,9 +17,6 @@ export class Editor {
     dragSelections: HTMLDivElement[] = []
 
     constructor() {
-        // Singleton
-        Editor.instance = this
-
         monaco.editor.defineTheme(
             'atom',
             getDarkTheme() as monaco.editor.IStandaloneThemeData
@@ -29,8 +25,6 @@ export class Editor {
             'github',
             getLightTheme() as monaco.editor.IStandaloneThemeData
         )
-
-        Editor.instance = this
 
         this.parent = document.getElementById(`editor`) as HTMLElement
 
@@ -174,8 +168,8 @@ export class Editor {
     }
 
     computeBoundingBoxForLoc(location: ESTree.SourceLocation) {
-        const start = Editor.instance.computeBoundingBox(location.start.line)
-        const end = Editor.instance.computeBoundingBox(location.end.line)
+        const start = this.computeBoundingBox(location.start.line)
+        const end = this.computeBoundingBox(location.end.line)
 
         if (start == null || end == null)
             return {
@@ -185,7 +179,7 @@ export class Editor {
                 height: 0,
             }
 
-        const charWidth = Editor.instance.computeCharWidth(location.start.line)
+        const charWidth = this.computeCharWidth(location.start.line)
 
         const min_y = Math.min(start.y, end.y)
         const max_y = Math.max(start.y + start.height, end.y + end.height)
@@ -205,7 +199,7 @@ export class Editor {
             charWidth
 
         for (let line = location.start.line; line < location.end.line; line++) {
-            const lineBbox = Editor.instance.computeBoundingBox(line)
+            const lineBbox = this.computeBoundingBox(line)
             width = Math.max(width, lineBbox.width)
         }
 

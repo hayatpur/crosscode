@@ -1,15 +1,21 @@
 import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
-import { isPrimitive } from '../../../utilities/action'
-import { ActionState, getActionCoordinates } from '../Action'
+import { getExecutionSteps, isPrimitive } from '../../../utilities/action'
+import {
+    ActionState,
+    createActionState,
+    destroyAction,
+    getActionCoordinates,
+    updateAction,
+} from '../Action'
 import { ActionProxyState } from '../Mapping/ActionProxy'
 
 /* ------------------------------------------------------ */
 /*              Abstract representation class             */
 /* ------------------------------------------------------ */
 export class Representation {
-    constructor() {}
+    constructor(action: ActionState) {}
 
     // TODO: If statements inside of for loops are bugged
     updateActionVisual(action: ActionState) {
@@ -46,6 +52,7 @@ export class Representation {
         let height = bbox.height * ApplicationState.proxyHeightMultiplier
         let width = bbox.width * ApplicationState.proxyWidthMultiplier
         width = Math.max(10, width)
+        height = Math.max(10, height)
 
         if (action.isShowingSteps) {
             proxy.element.style.height = `fit-content`
@@ -95,6 +102,8 @@ export class Representation {
             const label = ApplicationState.editor.getValueAt(
                 parent.execution.nodeData.location
             )
+
+            console.log(label, parent.execution.nodeData.location)
 
             if (label == undefined) {
                 throw new Error('Action has no label')
@@ -159,6 +168,60 @@ export class Representation {
 
             return [[bbox.x + 10, bbox.y + bbox.height / 2]]
         }
+    }
+
+    /**
+     * Breaks down the action into sub-steps in-line.
+     * @param action
+     */
+    createSteps(action: ActionState) {
+        if (action.isShowingSteps) {
+            console.warn('Steps already created! Destroying existing.')
+            action.vertices.forEach((id) =>
+                destroyAction(ApplicationState.actions[id])
+            )
+        }
+
+        action.vertices = []
+        action.edges = []
+
+        let steps = getExecutionSteps(action.execution)
+
+        // Create direct descendants
+        for (let i = 0; i < steps.length; i++) {
+            // Create step state
+            const step = createActionState({
+                execution: steps[i],
+                parentID: action.id,
+            })
+            action.vertices.push(step.id)
+            action.edges.push({
+                label: steps[i].nodeData.preLabel ?? 'Unknown',
+            })
+
+            // Add to element
+            action.element.appendChild(step.element)
+        }
+
+        // Update state
+        action.isShowingSteps = true
+        updateAction(action)
+    }
+
+    /**
+     * Remove division of sub-steps, and show the original action.
+     * @param action
+     */
+    destroySteps(action: ActionState) {
+        action.vertices.forEach((id) =>
+            destroyAction(ApplicationState.actions[id])
+        )
+        action.vertices = []
+        action.edges = []
+
+        action.isShowingSteps = false
+
+        updateAction(action)
     }
 
     destroy() {}

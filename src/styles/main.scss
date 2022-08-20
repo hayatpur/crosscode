@@ -50,11 +50,11 @@
     --code-font-size: 18px;
     --code-font-letter-spacing: -0.5;
     --code-font-line-height: 34px;
-    --border-radius: 3px;
+    --border-radius: 6px;
 }
 
 html {
-    background: var(--color-10);
+    background: var(--color-2);
 }
 
 html,
@@ -164,7 +164,23 @@ body {
     position: absolute;
     top: 0px;
     left: 320px;
-    width: 100%;
+    width: fit-content;
     height: 100%;
     display: flex;
+
+    max-width: 700px !important;
+    overflow-x: auto;
+
+    border-left: 1px solid #ffffff12;
+    border-right: 1px solid #ffffff17;
+}
+
+.focus {
+    position: absolute;
+    background: #7dd3fc57;
+    z-index: 100;
+    border-radius: var(--border-radius);
+    mix-blend-mode: soft-light;
+    transition: 0.2s;
+    pointer-events: none;
 }

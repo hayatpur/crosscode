@@ -3,7 +3,10 @@
 import * as ESTree from 'estree'
 import { EnvironmentState } from '../environment/EnvironmentState'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
-import { ExecutionContext, NodeData } from '../execution/primitive/ExecutionNode'
+import {
+    ExecutionContext,
+    NodeData,
+} from '../execution/primitive/ExecutionNode'
 import { ArrayExpression } from './Expressions/Array/ArrayExpression'
 import { AssignmentExpression } from './Expressions/BinaryOperations/AssigmentExpression'
 import { BinaryExpression } from './Expressions/BinaryOperations/BinaryExpression/BinaryExpression'
@@ -31,7 +34,11 @@ import { VariableDeclarator } from './Statements/VariableDeclarator'
 /*     Compiles an execution graph from an ESTree AST.    */
 /* ------------------------------------------------------ */
 export class Compiler {
-    static compile(ast: ESTree.Node, environment: EnvironmentState, context: ExecutionContext): ExecutionGraph {
+    static compile(
+        ast: ESTree.Node,
+        environment: EnvironmentState,
+        context: ExecutionContext
+    ): ExecutionGraph {
         const mapping = {
             VariableDeclarator,
 
@@ -75,19 +82,30 @@ export class Compiler {
 /*                         Helpers                        */
 /* ------------------------------------------------------ */
 
-export function getNodeData(node: ESTree.Node | ESTree.Node[], preLabel?: string): NodeData {
+export function getNodeData(
+    node: ESTree.Node | ESTree.Node[],
+    preLabel?: string
+): NodeData {
     if (Array.isArray(node)) {
         return {
-            location: getUnionOfLocations(node.map((n) => n.loc as ESTree.SourceLocation)),
+            location: getUnionOfLocations(
+                node.map((n) => n.loc as ESTree.SourceLocation)
+            ),
             preLabel: preLabel,
             type: preLabel,
         }
     } else {
-        return { location: node.loc as ESTree.SourceLocation | undefined, type: node.type, preLabel }
+        return {
+            location: node.loc as ESTree.SourceLocation | undefined,
+            type: node.type,
+            preLabel,
+        }
     }
 }
 
-export function getUnionOfLocations(locs: ESTree.SourceLocation[]): ESTree.SourceLocation {
+export function getUnionOfLocations(
+    locs: ESTree.SourceLocation[]
+): ESTree.SourceLocation {
     let start = locs[0].start
     let end = locs[0].end
 

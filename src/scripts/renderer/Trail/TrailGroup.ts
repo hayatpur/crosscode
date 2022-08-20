@@ -96,8 +96,6 @@ export function getTrail(execution: ExecutionGraph) {
     )
     const trails: TrailState[] = []
 
-    console.log(traces)
-
     for (const trace of traces) {
         const endOperations = []
         const endLeaves = []

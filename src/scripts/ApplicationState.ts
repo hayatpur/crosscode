@@ -7,8 +7,8 @@ export class ApplicationState {
     static editor: Editor
 
     // Constants
-    static proxyHeightMultiplier = 0.8
-    static proxyWidthMultiplier = 0.4
+    static proxyHeightMultiplier = 0.4
+    static proxyWidthMultiplier = 0.25
 
     // Collections
     static actions: { [id: string]: ActionState } = {}

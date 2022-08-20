@@ -8,9 +8,15 @@ import {
     instanceOfExecutionNode,
 } from '../execution/primitive/ExecutionNode'
 import { ActionState } from '../renderer/Action/Action'
+import { BinaryStatementRepresentation } from '../renderer/Action/Dynamic/BinaryExpressionRepresentation'
+import { BlockStatementRepresentation } from '../renderer/Action/Dynamic/BlockStatementRepresentation'
+import { CallExpressionRepresentation } from '../renderer/Action/Dynamic/CallExpressionRepresentation'
 import { ForStatementRepresentation } from '../renderer/Action/Dynamic/ForStatementRepresentation'
+import { FunctionCallRepresentation } from '../renderer/Action/Dynamic/FunctionCallRepresentation'
 import { IfStatementRepresentation } from '../renderer/Action/Dynamic/IfStatementRepresentation'
+import { ProgramRepresentation } from '../renderer/Action/Dynamic/ProgramRepresentation'
 import { Representation } from '../renderer/Action/Dynamic/Representation'
+import { ReturnStatementRepresentation } from '../renderer/Action/Dynamic/ReturnStatementRepresentation'
 import { VariableDeclarationRepresentation } from '../renderer/Action/Dynamic/VariableDeclarationRepresentation'
 
 /* ------------------------------------------------------ */
@@ -91,13 +97,19 @@ export function createRepresentation(action: ActionState) {
         IfStatement: IfStatementRepresentation,
         ForStatement: ForStatementRepresentation,
         VariableDeclaration: VariableDeclarationRepresentation,
+        CallExpression: CallExpressionRepresentation,
+        ReturnStatement: ReturnStatementRepresentation,
+        BinaryExpression: BinaryStatementRepresentation,
+        Program: ProgramRepresentation,
+        FunctionCall: FunctionCallRepresentation,
+        BlockStatement: BlockStatementRepresentation,
     }
 
     if (action.execution.nodeData.type in mapping) {
         representation = mapping[action.execution.nodeData.type]
     }
 
-    return new representation()
+    return new representation(action)
 }
 
 export function getAllSteps(action: ActionState): ActionState[] {

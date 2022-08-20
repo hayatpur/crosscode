@@ -1,7 +1,7 @@
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { Keyboard } from '../../../utilities/Keyboard'
-import { createSteps, destroySteps, makeSpatial } from '../Action'
+import { ActionState, makeSpatial } from '../Action'
 
 export interface ActionProxyState {
     // Container of this things indicator and its steps
@@ -41,7 +41,6 @@ export function createActionProxy(
     const element = createElement('div', classes)
     const label = createElement('div', 'action-proxy-label', element)
     label.innerText = `${action.execution.nodeData.type}`
-    label.style.display = 'none'
 
     const base: ActionProxyState = {
         element: element,
@@ -68,16 +67,84 @@ export function setupEventListeners(proxy: ActionProxyState) {
     proxy.element.addEventListener('click', (e) => {
         const action = ApplicationState.actions[proxy.actionID]
 
+        if (
+            action.isSpatial &&
+            !(action.execution.nodeData.type == 'Program') &&
+            action.isShowingSteps
+        ) {
+            e.preventDefault()
+            e.stopPropagation()
+            return
+        }
+
         if (action.isShowingSteps) {
-            destroySteps(action)
+            action.representation.destroySteps(action)
         } else {
-            if (Keyboard.instance.isPressed('Shift')) {
+            if (
+                Keyboard.instance.isPressed('Shift') ||
+                isSpatialByDefault(action)
+            ) {
                 makeSpatial(action)
             }
-            createSteps(action)
+
+            action.representation.createSteps(action)
         }
 
         e.preventDefault()
         e.stopPropagation()
     })
+
+    // Drag
+
+    let _prevMousePosition: { x: number; y: number } = { x: 0, y: 0 }
+
+    proxy.element.addEventListener('mousedown', (e) => {
+        const action = ApplicationState.actions[proxy.actionID]
+        if (
+            action.isSpatial &&
+            !(action.execution.nodeData.type == 'Program')
+        ) {
+            action.isDragging = true
+
+            _prevMousePosition = {
+                x: e.x,
+                y: e.y,
+            }
+        }
+    })
+
+    document.addEventListener('mousemove', (e) => {
+        const action = ApplicationState.actions[proxy.actionID]
+
+        if (!action.isDragging) {
+            return
+        }
+
+        const dx = e.x - _prevMousePosition.x
+        const dy = e.y - _prevMousePosition.y
+
+        action.position.x += dx
+        action.position.y += dy
+
+        action.proxy.element.style.marginLeft = `${action.position.x}px`
+        action.proxy.element.style.marginTop = `${action.position.y}px`
+        // action.proxy.element.style.transform = `translate(${action.position.x}px, ${action.position.y}px)`
+
+        _prevMousePosition = {
+            x: e.x,
+            y: e.y,
+        }
+    })
+
+    document.addEventListener('mouseup', (e) => {
+        const action = ApplicationState.actions[proxy.actionID]
+
+        if (action.isDragging) {
+            action.isDragging = false
+        }
+    })
+}
+
+export function isSpatialByDefault(action: ActionState) {
+    return action.execution.nodeData.type == 'CallExpression'
 }

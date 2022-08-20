@@ -2,8 +2,7 @@ import { ApplicationState } from '../../../ApplicationState'
 import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { getAbstractionPath } from '../../../utilities/action'
-import { createElement } from '../../../utilities/dom'
-import { clone } from '../../../utilities/objects'
+import { createElement, createSVGElement } from '../../../utilities/dom'
 import { ActionProxyState } from './ActionProxy'
 import {
     ControlFlowState,
@@ -29,6 +28,9 @@ export interface ActionMappingState {
     program: ActionProxyState | undefined
 
     time: number
+
+    // SVG Canvas
+    svgElement: SVGElement
 }
 
 /**
@@ -39,8 +41,11 @@ export interface ActionMappingState {
 export function createActionMapping(
     overrides: Partial<ActionMappingState> = {}
 ): ActionMappingState {
+    const element = createElement('div', 'action-mapping')
+    const svgElement = createSVGElement('action-mapping-svg', element)
+
     const base: ActionMappingState = {
-        element: createElement('div', 'action-mapping'),
+        element: element,
         frames: [],
 
         // Break indices (occurs between actions[index] and actions[index + 1])
@@ -55,6 +60,8 @@ export function createActionMapping(
         program: undefined,
 
         time: 0,
+
+        svgElement: svgElement,
     }
 
     return { ...base, ...overrides }
@@ -159,14 +166,11 @@ export function appendProxyToMapping(
         )
 
         if (next === undefined) {
-            console.log('Broke at', clone(prev), ' -> ', executionPath[i].id)
             break
         }
 
         prev = ApplicationState.actions[next]
     }
-
-    console.log(prev)
 
     // Add proxy to vessel, TODO: use path to abstract
     if (proxyAction.isSpatial) {

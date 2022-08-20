@@ -1,6 +1,9 @@
 import * as ESTree from 'estree'
 import { cleanUpRegister } from '../../../../environment/environment'
-import { AccessorType, EnvironmentState } from '../../../../environment/EnvironmentState'
+import {
+    AccessorType,
+    EnvironmentState,
+} from '../../../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../../../execution/execution'
 import { createExecutionGraph } from '../../../../execution/graph/ExecutionGraph'
 import { binaryExpressionEvaluate } from '../../../../execution/primitive/Binary/BinaryExpressionEvaluate'
@@ -33,7 +36,17 @@ export function BinaryExpression(
         ...context,
         outputRegister: leftRegister,
     })
+
     addVertex(graph, left, { nodeData: getNodeData(ast.left, 'Left') })
+
+    // Fix left position
+    // if (left.nodeData.location != null && ast.loc != null) {
+    //     // Put it at the start of the binary expression
+    //     left.nodeData.location.start.column = ast.loc.start.column
+
+    //     // Find how long the left is
+
+    // }
 
     const right = Compiler.compile(ast.right, environment, {
         ...context,
@@ -41,12 +54,22 @@ export function BinaryExpression(
     })
     addVertex(graph, right, { nodeData: getNodeData(ast.right, 'Right') })
 
-    const evaluate = binaryExpressionEvaluate(leftRegister, rightRegister, ast.operator, context.outputRegister)
-    const location = ast.left.loc as ESTree.SourceLocation
-    location.end = (ast.right.loc as ESTree.SourceLocation).start
-    location.start = (ast.left.loc as ESTree.SourceLocation).end
+    const evaluate = binaryExpressionEvaluate(
+        leftRegister,
+        rightRegister,
+        ast.operator,
+        context.outputRegister
+    )
+    const location = clone(ast.left.loc) as ESTree.SourceLocation
+    location.end = (clone(ast.right.loc) as ESTree.SourceLocation).start
+    location.start = (clone(ast.left.loc) as ESTree.SourceLocation).end
+
     addVertex(graph, evaluate, {
-        nodeData: { ...getNodeData(ast, 'Evaluate'), type: 'BinaryExpressionEvaluate', location },
+        nodeData: {
+            ...getNodeData(ast, 'Evaluate'),
+            type: 'BinaryExpressionEvaluate',
+            location,
+        },
     })
     applyExecutionNode(evaluate, environment)
 

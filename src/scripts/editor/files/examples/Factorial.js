@@ -1,10 +1,10 @@
-function factorial(x) {
+function fact(x) {
     if (x == 1) {
         return x
     } else {
-        return x * factorial(x - 1)
+        return x * fact(x - 1)
     }
 }
 
 let n = 5
-let y = factorial(n)
+let y = fact(n)

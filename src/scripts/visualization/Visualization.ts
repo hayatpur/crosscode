@@ -1,6 +1,6 @@
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials'
 import { Pane } from 'tweakpane'
-import { Editor } from '../editor/Editor'
+import { ApplicationState } from '../ApplicationState'
 import { createEnvironment } from '../environment/environment'
 import { EnvironmentState } from '../environment/EnvironmentState'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
@@ -18,6 +18,7 @@ import { createViewState, destroyView, ViewState } from '../renderer/View/View'
 import { Compiler } from '../transpiler/Compiler'
 import { createElement } from '../utilities/dom'
 import { getAST } from '../utilities/executor'
+import { createFocus, FocusState } from './Focus'
 
 /* ------------------------------------------------------ */
 /*             Displays execution information             */
@@ -27,6 +28,8 @@ export interface VisualizationState {
     mapping: ActionMappingState | undefined
     view: ViewState | undefined
     program: ActionState | undefined
+
+    focus: FocusState | undefined
 
     container: HTMLElement
 
@@ -55,6 +58,8 @@ export function createVisualization(
         program: undefined,
 
         container: createVisualContainer(),
+
+        focus: createFocus(),
 
         PARAMS: {
             a: 0.5,
@@ -96,7 +101,7 @@ export function resetVisualization(visualization: VisualizationState) {
  */
 export function createVisualContainer(): HTMLElement {
     const el = createElement('div', 'visualization-container', document.body)
-    const margin = Editor.instance.getMaxWidth() + 70
+    const margin = ApplicationState.editor.getMaxWidth() + 70
 
     el.style.left = `${margin}px`
     return el
@@ -187,7 +192,7 @@ export function tickVisualization(
     visualization: VisualizationState,
     dt: number
 ) {
-    const margin = Editor.instance.getMaxWidth() + 70
+    const margin = ApplicationState.editor.getMaxWidth() + 70
     if (prevMargin != margin) {
         visualization.container.style.left = `${margin}px`
     }
