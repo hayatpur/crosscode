@@ -1,15 +1,25 @@
 import { createPrimitiveData, replaceDataWith } from '../../../environment/data'
 import { resolvePath } from '../../../environment/environment'
-import { Accessor, AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
-import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
+import {
+    Accessor,
+    AccessorType,
+    EnvironmentState,
+} from '../../../environment/EnvironmentState'
+import {
+    DataState,
+    DataType,
+} from '../../../renderer/View/Environment/data/DataState'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface FindVariableAnimation extends ExecutionNode {
+export type FindVariableAnimation = ExecutionNode & {
     identifier: string
     outputRegister: Accessor[]
 }
 
-function apply(animation: FindVariableAnimation, environment: EnvironmentState) {
+function apply(
+    animation: FindVariableAnimation,
+    environment: EnvironmentState
+) {
     const reference = resolvePath(
         environment,
         [{ type: AccessorType.Symbol, value: animation.identifier }],
@@ -27,7 +37,11 @@ function apply(animation: FindVariableAnimation, environment: EnvironmentState) 
 
     replaceDataWith(
         register,
-        createPrimitiveData(DataType.ID, reference.id, `${animation.id}_Floating`)
+        createPrimitiveData(
+            DataType.ID,
+            reference.id,
+            `${animation.id}_Floating`
+        )
     )
 
     computeReadAndWrites(animation)

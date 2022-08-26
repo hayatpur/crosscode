@@ -1,16 +1,27 @@
-import { cloneData, createPrimitiveData, replaceDataWith } from '../../../environment/data'
-import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
+import {
+    cloneData,
+    createPrimitiveData,
+    replaceDataWith,
+} from '../../../environment/data'
+import {
+    addDataAt,
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
     AccessorType,
     EnvironmentState,
 } from '../../../environment/EnvironmentState'
-import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
+import {
+    DataState,
+    DataType,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface CopyDataAnimation extends ExecutionNode {
+export type CopyDataAnimation = ExecutionNode & {
     dataSpecifier: Accessor[]
     outputRegister: Accessor[]
     hardCopy: boolean
@@ -31,7 +42,10 @@ function apply(animation: CopyDataAnimation, environment: EnvironmentState) {
         animation.outputRegister,
         `${animation.id}_Floating`
     ) as DataState
-    replaceDataWith(register, createPrimitiveData(DataType.ID, copy.id, `${animation.id}_Floating`))
+    replaceDataWith(
+        register,
+        createPrimitiveData(DataType.ID, copy.id, `${animation.id}_Floating`)
+    )
 
     if (animation.hardCopy) {
         data.value = undefined
@@ -54,7 +68,11 @@ function apply(animation: CopyDataAnimation, environment: EnvironmentState) {
     }
 }
 
-function computeReadAndWrites(animation: CopyDataAnimation, original: DataInfo, copy: DataInfo) {
+function computeReadAndWrites(
+    animation: CopyDataAnimation,
+    original: DataInfo,
+    copy: DataInfo
+) {
     animation._reads = [original]
     animation._writes = [copy]
 }

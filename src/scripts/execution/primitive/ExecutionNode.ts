@@ -2,13 +2,13 @@ import * as ESTree from 'estree'
 import { Accessor, EnvironmentState } from '../../environment/EnvironmentState'
 import { DataInfo } from '../graph/ExecutionGraph'
 
-export interface NodeData {
+export type NodeData = {
     location?: ESTree.SourceLocation
     type?: string
     preLabel?: string
 }
 
-export interface ChunkNodeData extends NodeData {}
+export type ChunkNodeData = NodeData & {}
 
 export enum ControlOutput {
     None = 'None',
@@ -17,17 +17,17 @@ export enum ControlOutput {
     Return = 'Return',
 }
 
-export interface ControlOutputData {
+export type ControlOutputData = {
     output: ControlOutput
 }
 
-export interface ReturnData {
+export type ReturnData = {
     frame: number
     register: Accessor[]
     environmentID: string
 }
 
-export interface ExecutionContext {
+export type ExecutionContext = {
     locationHint?: Accessor[] // Hint of where to place data (for aesthetic reasons)
     outputRegister?: Accessor[] // Register to place data at
     feed?: boolean // Puts the location of data instead of data itself - used for feeding (assignment / declaration)'
@@ -37,7 +37,7 @@ export interface ExecutionContext {
     returnData?: ReturnData // Register to place the return value at
 }
 
-export interface ExecutionNode {
+export type ExecutionNode = {
     _type: 'ExecutionNode'
     _name: string // Name of the node
 

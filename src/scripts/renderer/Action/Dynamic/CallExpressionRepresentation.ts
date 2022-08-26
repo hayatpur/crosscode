@@ -2,7 +2,6 @@ import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { ActionState } from '../Action'
-import { ActionProxyState } from '../Mapping/ActionProxy'
 import { Representation } from './Representation'
 
 export class CallExpressionRepresentation extends Representation {
@@ -12,55 +11,48 @@ export class CallExpressionRepresentation extends Representation {
     constructor(action: ActionState) {
         super(action)
 
-        this.callExpressionLabelElement = createElement('div', [
-            'action-proxy-code-label',
-        ])
+        this.callExpressionLabelElement = createElement('div', ['action-proxy-code-label'])
 
         if (action.execution.nodeData.location == undefined) {
             throw new Error('Call expression has no nodeData location.')
         }
 
         this.callExpressionLabelElement.innerText =
-            ApplicationState.editor.getValueAt(
-                action.execution.nodeData.location
-            ) ?? 'Unknown'
+            ApplicationState.editor.getValueAt(action.execution.nodeData.location) ?? 'Unknown'
 
-        monaco.editor
-            .colorize(
-                this.callExpressionLabelElement.innerHTML,
-                'javascript',
-                {}
-            )
-            .then((html) => {
-                this.callExpressionLabelElement.innerHTML = html
-            })
+        monaco.editor.colorize(this.callExpressionLabelElement.innerHTML, 'javascript', {}).then((html) => {
+            this.callExpressionLabelElement.innerHTML = html
+        })
     }
 
-    updateProxyVisual(proxy: ActionProxyState) {
-        super.updateProxyVisual(proxy)
+    updateProxyVisual() {
+        super.updateProxyVisual()
 
-        const action = ApplicationState.actions[proxy.actionID]
-        console.log(!action.isShowingSteps, this.hasAppliedProxyVisual)
+        const action = ApplicationState.actions[this.actionId]
+        const proxy = action.proxy
 
         if (!action.isShowingSteps || this.hasAppliedProxyVisual) return
 
-        const [argElement, bodyElement] = Array.from(
-            proxy.element.children
-        ).filter((child) => child.classList.contains('action-proxy'))
+        const [argElement, bodyElement] = Array.from(proxy.element.children).filter(
+            (child) =>
+                child.classList.contains('action-proxy-container') ||
+                child.classList.contains('action-proxy-placeholder')
+        )
+
+        console.log(argElement, bodyElement)
 
         // Remove all action-proxy children
         argElement.remove()
         bodyElement.remove()
 
-        if (!action.isSpatial) {
-            throw new Error(
-                'CallExpressionRepresentation is not implemented for non-spatial actions'
-            )
-        }
+        // if (!action.isSpatial) {
+        //     throw new Error(
+        //         'CallExpressionRepresentation is not implemented for non-spatial actions'
+        //     )
+        // }
 
         // action.placeholder.append(argElement)
-
-        action.placeholder.append(this.callExpressionLabelElement)
+        // action.placeholder.append(this.callExpressionLabelElement)
 
         action.proxy.element.append(bodyElement)
 

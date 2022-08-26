@@ -10,13 +10,13 @@ export enum DataType {
     Function = 'Function',
 }
 
-export interface TransformStyles extends CSS.Properties {
+export type TransformStyles = CSS.Properties & {
     elevation?: number
     xoffset?: number
     yoffset?: number
 }
 
-export interface Transform {
+export type Transform = {
     rendered: {
         x: number
         y: number
@@ -28,11 +28,11 @@ export interface Transform {
     classList: string[]
 }
 
-export interface DataTransform {
+export type DataTransform = {
     classList: string[]
 }
 
-export interface PrimitiveDataState {
+export type PrimitiveDataState = {
     _type: 'PrimitiveDataState'
     type: DataType
 
@@ -46,7 +46,7 @@ export interface PrimitiveDataState {
     builtin?: boolean
 }
 
-export interface ObjectDataState {
+export type ObjectDataState = {
     _type: 'ObjectDataState'
     value: object
 
@@ -63,7 +63,8 @@ export type DataState = PrimitiveDataState | ObjectDataState
 export function instanceOfData(data: any): data is DataState {
     return (
         data != null &&
-        (data['_type'] === 'PrimitiveDataState' || data['_type'] === 'ObjectDataState')
+        (data['_type'] === 'PrimitiveDataState' ||
+            data['_type'] === 'ObjectDataState')
     )
 }
 

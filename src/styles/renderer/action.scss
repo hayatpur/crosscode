@@ -8,11 +8,10 @@
     border-radius: var(--border-radius);
     transition: 0.2s;
     z-index: -1;
-    background: var(--color-3);
-}
 
-.action.is-playing:not(.is-showing-steps) {
-    background: #6f97dc3b;
+    background: var(--color-1);
+    // opacity: 0.7;
+    box-shadow: 0px 0px 0px 0.5px var(--color-4);
 }
 
 .action.is-hovering {
@@ -21,6 +20,7 @@
 
 .action.is-showing-steps {
     background: none;
+    box-shadow: none;
 }
 
 /* ----------------------- Mapping ---------------------- */
@@ -32,12 +32,7 @@
     background: var(--color-0);
     position: relative;
 
-    padding: 115px 20px;
-
-    // background-image: radial-gradient(var(--color-2) 1.25px, transparent 1.25px),
-    //     radial-gradient(var(--color-2) 1.25px, transparent 1.25px);
-    // background-size: 35px 35px;
-    // background-position: 0px 0px, 25px 25px;
+    min-width: 400px;
 }
 
 /* -------------------- Action proxy -------------------- */
@@ -48,7 +43,6 @@
 
     background: var(--color-3);
     border-radius: var(--border-radius);
-    // box-shadow: 0px 0px 3px 2px var(--color-2);
     box-shadow: 0px 0px 0px 1px #b5b5b554 inset;
 
     transform: scale(1);
@@ -62,7 +56,7 @@
     width: fit-content;
 
     min-width: 20px;
-    min-height: 20px;
+    min-height: 15px;
 
     user-select: none;
 }
@@ -73,14 +67,15 @@
 }
 
 .action-proxy:hover {
-    background: #434350;
+    background: var(--s-color-0-2);
 }
 
 .action-proxy.is-showing-steps {
     background: none;
     border: none;
     // box-shadow: 0px 0px 0px 0.5px rgb(255 255 255 / 41%) !important;
-    box-shadow: none !important;
+    // box-shadow: none !important;
+    box-shadow: 0px 0px 0px 0.5px var(--color-4) !important;
 }
 
 .action-proxy-binary-label {
@@ -96,16 +91,6 @@
     align-items: center;
     border-radius: 5px;
     justify-content: center;
-
-    ._Test_true.is-playing {
-        background: #293d3b !important;
-        box-shadow: 0px 0px 0px 0.5px #7dfc8ecf, 0px 0px 5px 4px var(--color-2);
-    }
-
-    ._Test_false.is-playing {
-        background: #3d2929 !important;
-        box-shadow: 0px 0px 0px 0.5px #fc7d7dcf, 0px 0px 5px 4px var(--color-2);
-    }
 
     ._Test_true > ion-icon.md.hydrated {
         font-size: 10px;
@@ -132,7 +117,7 @@
 .action-proxy.type-FunctionCall.is-showing-steps {
     padding: 5px;
 
-    > .action-proxy:not(:last-child) {
+    > .action-proxy-container:not(:last-child) {
         margin-bottom: 5px;
     }
 
@@ -168,19 +153,35 @@
 }
 
 .action-proxy-for-iteration-top > div:not(:last-child).action-proxy,
-.action-proxy-for-iteration-top
-    > div:not(:last-child).action-proxy-placeholder {
+.action-proxy-for-iteration-top > div:not(:last-child).action-proxy-placeholder {
     margin-right: 7px;
 }
 
 .action-proxy-for-iteration {
     display: flex;
     flex-direction: column;
-    margin: 0px 10px;
+    margin-left: 25px;
+    margin-bottom: 10px;
+}
+
+.action-proxy-for-iteration:last-child {
+    margin-bottom: 0px;
 }
 
 .action-proxy-for-iteration-bottom {
-    margin-top: 10px;
+    margin-top: 4px;
+}
+
+.action-proxy-for-label {
+    position: absolute;
+}
+
+.action-proxy-for-iteration-top > div {
+    margin-right: 2px;
+}
+
+.action-proxy-for-iteration-top > div:last-child {
+    margin-right: 0px;
 }
 
 .action-proxy.type-Literal,
@@ -204,6 +205,14 @@
     margin-right: 7px;
 }
 
+.action-proxy.type-ForStatement.is-showing-steps {
+    flex-direction: column;
+    box-shadow: none !important;
+    margin-left: 2px;
+    // max-height: 35px;
+    // overflow-y: scroll;
+}
+
 .action-proxy.pre-label-Name {
     font-family: var(--code-font-family);
     width: fit-content !important;
@@ -218,13 +227,11 @@
 }
 
 .action-proxy.pre-label-Test._Test_true {
-    background: #293d3b !important;
-    box-shadow: 0px 0px 0px 0.5px #7dfc8ecf, 0px 0px 5px 4px var(--color-2);
+    background: var(--s-color-2-1) !important;
 }
 
 .action-proxy.pre-label-Test._Test_false {
-    background: #3d2929 !important;
-    box-shadow: 0px 0px 0px 0.5px #fc7d7dcf, 0px 0px 5px 4px var(--color-2);
+    background: var(--s-color-5-1) !important;
 }
 
 .action-proxy.pre-label-Test {
@@ -240,17 +247,17 @@
     min-height: 0px;
 
     > ion-icon {
-        font-size: 13px;
+        font-size: 10px;
         --ionicon-stroke-width: 79px;
     }
 }
 
 .action-proxy.pre-label-Test._Test_true > ion-icon.md.hydrated {
-    color: #6ee7b7;
+    color: var(--s-color-2-3);
 }
 
 .action-proxy.pre-label-Test._Test_false > ion-icon.md.hydrated {
-    color: #e76e6e;
+    color: var(--s-color-5-3);
 }
 
 .action-proxy.type-IfStatement.is-showing-steps {
@@ -291,6 +298,7 @@
 
 .action.type-Identifier {
     background: none;
+    box-shadow: none;
 }
 
 .action-proxy-placeholder > .action-proxy.type-Arguments {
@@ -298,14 +306,6 @@
     height: 11px !important;
     min-width: 0px !important;
     min-height: 0px !important;
-    box-shadow: none !important;
-}
-
-.action-proxy.type-CallExpression.is-spatial.is-showing-steps {
-}
-
-.action-proxy.type-FunctionCall.pre-label-Function-Call.is-showing-steps {
-    padding: 0px !important;
     box-shadow: none !important;
 }
 
@@ -401,11 +401,6 @@ svg.control-flow-svg.control-flow-svg-overlay {
     margin-left: 44px;
 }
 
-.action-proxy.is-playing {
-    background: #28333f;
-    box-shadow: 0px 0px 0px 0.5px #7dd3fccf, 0px 0px 5px 4px var(--color-2);
-}
-
 /* -------------------- Action cursor ------------------- */
 .action-cursor {
     width: 10px;
@@ -470,12 +465,8 @@ path.action-mapping-connection.hidden {
 
 .action-proxy-label {
     white-space: pre;
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
     font-weight: 400;
     font-size: 14px;
-    display: none;
 }
 
 .action-proxy.out-of-focus {
@@ -489,29 +480,35 @@ path.action-mapping-connection.hidden {
     border-radius: var(--border-radius);
     cursor: initial;
     width: fit-content !important;
-    min-height: 20px;
+    min-height: 15px;
+    height: 15px !important;
+    min-width: 20px;
 }
 
-.action-proxy.is-spatial.is-showing-steps,
-.action-proxy.type-Program {
+.action-proxy-container.is-spatial {
+    position: absolute;
+}
+
+.action-proxy-container.is-spatial > .action-proxy.is-showing-steps {
     padding: 5px;
-    background: var(--color-2);
-
-    > .action-proxy-label {
-        opacity: 1;
-        display: block;
-        top: -25px;
-        left: 0px;
-    }
+    background: var(--color-1);
 }
 
-.action-mapping > .action-proxy {
-    margin: 10px;
+.action-proxy-header {
+    display: none;
+    margin-bottom: 5px;
+}
+
+.action-proxy-container.is-spatial > .action-proxy-header {
+    display: flex;
+    flex-flow: row-reverse;
+    justify-content: flex-end;
 }
 
 .action-proxy-ray {
-    fill: #71718ea2;
+    fill: #dedede;
     stroke: none;
+    opacity: 0.5;
 }
 
 svg.ray-svg {
@@ -522,6 +519,7 @@ svg.ray-svg {
     width: fit-content;
     height: fit-content;
     pointer-events: none;
+    z-index: 1;
 }
 
 .action-mapping-svg {
@@ -530,4 +528,197 @@ svg.ray-svg {
     left: 0px;
     width: 100%;
     height: 100%;
+}
+
+.action-proxy-controls-button {
+    margin: 0px 0px;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition-property: background, transform;
+    transition-duration: 0.2s;
+    transform: scale(0.8);
+    background: var(--color-2);
+    margin-right: 5px;
+}
+
+.action-proxy-controls-button:hover {
+    background: var(--color-4);
+    // transform: scale(1);
+}
+
+.action-proxy-controls {
+    display: flex;
+    font-family: monospace;
+    align-items: center;
+    z-index: 1;
+    // margin-left: auto;
+}
+
+.action-proxy.clipped {
+    overflow: hidden;
+}
+
+/* ---------------------- Minimized --------------------- */
+
+.action-proxy-container.is-minimized {
+    margin-bottom: 0px;
+}
+
+.action-proxy-container.is-minimized {
+    > .action-proxy.type-ExpressionStatement:not(.is-showing-steps),
+    > .action-proxy.type-ForStatement:not(.is-showing-steps),
+    > .action-proxy.type-IfStatement:not(.is-showing-steps) {
+        height: 5px !important;
+        min-height: 0px;
+        box-shadow: none !important;
+        max-width: 30px;
+    }
+
+    .action-proxy.type-VariableDeclaration > .action-proxy-equal-sign {
+        display: none;
+    }
+
+    > .action-proxy {
+        min-height: 0px;
+    }
+
+    > .action-proxy {
+        > .action-proxy-placeholder {
+            height: 5px !important;
+            min-height: 0px !important;
+            box-shadow: none !important;
+        }
+    }
+}
+
+.action-proxy.type-VariableDeclaration > .action-proxy-container.is-minimized {
+    > .action-proxy.type-Identifier {
+        display: none;
+    }
+
+    > .action-proxy.type-Literal {
+        display: none;
+    }
+
+    > .action-proxy {
+        height: 5px !important;
+        min-height: 0px !important;
+        box-shadow: none !important;
+    }
+}
+
+.action-proxy-container.is-spatial.is-minimized {
+    > .action-proxy {
+        background: none !important;
+        box-shadow: none !important;
+        border-left: 1px solid #00000030;
+        border-radius: 0px 10px;
+        margin-left: 6px;
+    }
+}
+
+.action-proxy-container.is-minimized {
+    > .action-proxy.type-IfStatement.is-showing-steps {
+        background: none !important;
+        box-shadow: none !important;
+    }
+}
+
+.action-proxy-container.is-minimized > .type-IfStatement.is-showing-steps {
+    .action-proxy-if-row {
+        margin-bottom: 2px;
+    }
+
+    > * > .action-proxy-code-label {
+        display: none;
+    }
+
+    > * > .action-proxy-if-placeholder {
+        display: none;
+    }
+
+    > :first-child > .action-proxy-code-label {
+        display: none;
+    }
+}
+
+.action-proxy-if-row > .action-proxy-container.is-minimized > .pre-label-Test {
+    height: 5px !important;
+
+    > ion-icon {
+        display: none;
+    }
+}
+
+.action-proxy-container.is-minimized > .action-proxy.type-BlockStatement.pre-label-Alternate,
+.action-proxy.type-BlockStatement.pre-label-Consequent {
+    margin-left: 15px;
+}
+
+.action-proxy-container.is-minimized > .action-proxy.type-ForStatement.is-showing-steps {
+    max-height: none;
+    box-shadow: none !important;
+    border-radius: 0px;
+
+    > .action-proxy-for-label {
+        display: none;
+    }
+
+    .action-proxy-for-iteration {
+        margin-left: 0px !important;
+    }
+}
+
+.action-proxy-for-iteration-top > .action-proxy-container.is-minimized {
+    > .action-proxy.pre-label-Test {
+        height: 5px !important;
+
+        > ion-icon {
+            display: none;
+        }
+    }
+
+    > .action-proxy.pre-label-Initial {
+        height: 5px !important;
+    }
+
+    > .action-proxy.pre-label-Update {
+        height: 5px !important;
+        box-shadow: none !important;
+    }
+}
+
+.action-proxy-for-iteration-bottom > .action-proxy-container.is-minimized > .action-proxy.type-BlockStatement {
+    margin-left: 10px !important;
+}
+
+.action-proxy-for-iteration-bottom
+    > .action-proxy-container.is-minimized
+    > .action-proxy.type-BlockStatement:not(.is-showing-steps) {
+    height: 5px !important;
+    min-height: 0px !important;
+    box-shadow: none !important;
+    max-width: 60px;
+}
+
+.action-proxy-for-start-clone {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.action-proxy-container.is-minimized
+    > .action-proxy.type-ForStatement.is-showing-steps
+    > .action-proxy-for-iteration
+    > .action-proxy-for-iteration-top
+    > .action-proxy-for-start-clone
+    > .action-proxy {
+    height: 5px !important;
+    min-height: 0px !important;
+    box-shadow: none !important;
 }

@@ -20,7 +20,7 @@ import {
     NodeData,
 } from './primitive/ExecutionNode'
 
-export interface VertexOptions {
+export type VertexOptions = {
     nodeData?: NodeData
     shouldDissolve?: boolean
 }
@@ -325,21 +325,21 @@ export enum AnimationTraceOperatorType {
     Unknown = 'Unknown',
 }
 
-export interface AnimationTraceOperator {
+export type AnimationTraceOperator = {
     type: AnimationTraceOperatorType
     executionID: string
 }
 
-export interface AugmentedDataInfo extends DataInfo {
+export type AugmentedDataInfo = DataInfo & {
     executionID: string
 }
 
-export interface AnimationTraceChain {
+export type AnimationTraceChain = {
     value: AugmentedDataInfo
     children?: [operator: AnimationTraceOperator, child: AnimationTraceChain][]
 }
 
-export interface GlobalAnimationTraceChain {
+export type GlobalAnimationTraceChain = {
     value: GlobalDataInfo
     children?: [
         operator: AnimationTraceOperator,

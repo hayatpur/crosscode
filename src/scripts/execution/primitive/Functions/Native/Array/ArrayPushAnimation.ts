@@ -1,20 +1,31 @@
 import { cloneData } from '../../../../../environment/data'
-import { getMemoryLocation, resolvePath } from '../../../../../environment/environment'
-import { Accessor, EnvironmentState } from '../../../../../environment/EnvironmentState'
+import {
+    getMemoryLocation,
+    resolvePath,
+} from '../../../../../environment/environment'
+import {
+    Accessor,
+    EnvironmentState,
+} from '../../../../../environment/EnvironmentState'
 import { DataState } from '../../../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../../../ExecutionNode'
 
-export interface ArrayPushAnimation extends ExecutionNode {
+export type ArrayPushAnimation = ExecutionNode & {
     object: Accessor[]
     args: Accessor[][]
 }
 
 function apply(animation: ArrayPushAnimation, environment: EnvironmentState) {
-    const object = resolvePath(environment, animation.object, `${animation.id}_Data`) as DataState
+    const object = resolvePath(
+        environment,
+        animation.object,
+        `${animation.id}_Data`
+    ) as DataState
 
     const args = animation.args.map(
-        (arg) => resolvePath(environment, arg, `${animation.id}_Data`) as DataState
+        (arg) =>
+            resolvePath(environment, arg, `${animation.id}_Data`) as DataState
     )
 
     const objectValue = object.value as DataState[]
@@ -22,7 +33,11 @@ function apply(animation: ArrayPushAnimation, environment: EnvironmentState) {
     // TODO: Copy data
     let originalLength = objectValue.length
     for (let i = 0; i < args.length; i++) {
-        objectValue[objectValue.length] = cloneData(args[i], false, `${animation.id}_Arg${i}`)
+        objectValue[objectValue.length] = cloneData(
+            args[i],
+            false,
+            `${animation.id}_Arg${i}`
+        )
     }
 
     computeReadAndWrites(
@@ -57,7 +72,10 @@ function computeReadAndWrites(
     animation._writes = [object, ...elements]
 }
 
-export function ArrayPushAnimation(object: Accessor[], args: Accessor[][]): ArrayPushAnimation {
+export function ArrayPushAnimation(
+    object: Accessor[],
+    args: Accessor[][]
+): ArrayPushAnimation {
     return {
         ...createExecutionNode(null),
         _name: 'ArrayPushAnimation',

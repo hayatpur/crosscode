@@ -2,7 +2,6 @@ import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { ActionState } from '../Action'
-import { ActionProxyState } from '../Mapping/ActionProxy'
 import { Representation } from './Representation'
 
 export class IfStatementRepresentation extends Representation {
@@ -12,38 +11,30 @@ export class IfStatementRepresentation extends Representation {
     constructor(action: ActionState) {
         super(action)
 
-        this.ifLabelElement = createElement('div', [
-            'action-proxy-code-label',
-            'action-proxy-if-label',
-        ])
+        this.ifLabelElement = createElement('div', ['action-proxy-code-label', 'action-proxy-if-label'])
         this.ifLabelElement.innerText = 'if'
-        monaco.editor
-            .colorize(this.ifLabelElement.innerHTML, 'javascript', {})
-            .then((html) => {
-                this.ifLabelElement.innerHTML = html
-            })
+        monaco.editor.colorize(this.ifLabelElement.innerHTML, 'javascript', {}).then((html) => {
+            this.ifLabelElement.innerHTML = html
+        })
 
-        this.elseLabelElement = createElement('div', [
-            'action-proxy-code-label',
-            'action-proxy-else-label',
-        ])
+        this.elseLabelElement = createElement('div', ['action-proxy-code-label', 'action-proxy-else-label'])
         this.elseLabelElement.innerText = 'else'
-        monaco.editor
-            .colorize(this.elseLabelElement.innerHTML, 'javascript', {})
-            .then((html) => {
-                this.elseLabelElement.innerHTML = html
-            })
+        monaco.editor.colorize(this.elseLabelElement.innerHTML, 'javascript', {}).then((html) => {
+            this.elseLabelElement.innerHTML = html
+        })
     }
 
-    updateProxyVisual(proxy: ActionProxyState) {
-        super.updateProxyVisual(proxy)
+    updateProxyVisual() {
+        super.updateProxyVisual()
 
-        const action = ApplicationState.actions[proxy.actionID]
+        const action = ApplicationState.actions[this.actionId]
+        const proxy = action.proxy
+
         if (!action.isShowingSteps) return
 
         if (this.ifLabelElement.parentElement == null) {
-            const children = Array.from(proxy.element.children).filter(
-                (child) => child.classList.contains('action-proxy')
+            const children = Array.from(proxy.element.children).filter((child) =>
+                child.classList.contains('action-proxy-container')
             )
 
             // Remove all action-proxy children
@@ -54,9 +45,7 @@ export class IfStatementRepresentation extends Representation {
             // Create four rows
             const rows = []
             for (let i = 0; i < 4; i++) {
-                rows.push(
-                    createElement('div', 'action-proxy-if-row', proxy.element)
-                )
+                rows.push(createElement('div', 'action-proxy-if-row', proxy.element))
             }
 
             // Add the if label
@@ -68,13 +57,10 @@ export class IfStatementRepresentation extends Representation {
             // This if statement was unsuccessful and an else was reached
             if (
                 action.vertices.length == 2 &&
-                ApplicationState.actions[action.vertices[1]].execution.nodeData
-                    .preLabel == 'Alternate'
+                ApplicationState.actions[action.vertices[1]].execution.nodeData.preLabel == 'Alternate'
             ) {
                 // Add the else label
-                rows[1].append(
-                    createElement('div', 'action-proxy-if-placeholder')
-                )
+                rows[1].append(createElement('div', 'action-proxy-if-placeholder'))
 
                 rows[2].append(this.elseLabelElement)
 
@@ -84,8 +70,7 @@ export class IfStatementRepresentation extends Representation {
             // This if statement was successful
             if (
                 action.vertices.length == 2 &&
-                ApplicationState.actions[action.vertices[1]].execution.nodeData
-                    .preLabel == 'Consequent'
+                ApplicationState.actions[action.vertices[1]].execution.nodeData.preLabel == 'Consequent'
             ) {
                 rows[1].append(children[1])
 

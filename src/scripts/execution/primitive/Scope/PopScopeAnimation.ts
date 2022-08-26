@@ -2,7 +2,7 @@ import { popScope } from '../../../environment/environment'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface PopScopeAnimation extends ExecutionNode {}
+export type PopScopeAnimation = ExecutionNode & {}
 
 function apply(animation: PopScopeAnimation, environment: EnvironmentState) {
     popScope(environment)

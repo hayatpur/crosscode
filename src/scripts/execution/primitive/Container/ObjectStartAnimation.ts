@@ -1,15 +1,22 @@
-import { createObjectData, createPrimitiveData, replaceDataWith } from '../../../environment/data'
+import {
+    createObjectData,
+    createPrimitiveData,
+    replaceDataWith,
+} from '../../../environment/data'
 import { addDataAt, resolvePath } from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
     EnvironmentState,
 } from '../../../environment/EnvironmentState'
-import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
+import {
+    DataState,
+    DataType,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface ObjectStartAnimation extends ExecutionNode {
+export type ObjectStartAnimation = ExecutionNode & {
     dataSpecifier: Accessor[]
 }
 
@@ -32,7 +39,11 @@ function apply(animation: ObjectStartAnimation, environment: EnvironmentState) {
     ) as DataState
     replaceDataWith(
         outputRegister,
-        createPrimitiveData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
+        createPrimitiveData(
+            DataType.ID,
+            data.id,
+            `${animation.id}_OutputRegister`
+        )
     )
 }
 
@@ -41,7 +52,9 @@ function computeReadAndWrites(animation: ObjectStartAnimation, data: DataInfo) {
     animation._writes = [data]
 }
 
-export function objectStartAnimation(dataSpecifier: Accessor[]): ObjectStartAnimation {
+export function objectStartAnimation(
+    dataSpecifier: Accessor[]
+): ObjectStartAnimation {
     return {
         ...createExecutionNode(null),
 

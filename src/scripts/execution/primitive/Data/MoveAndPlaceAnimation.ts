@@ -1,12 +1,19 @@
 import { replaceDataWith } from '../../../environment/data'
-import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
+import {
+    getMemoryLocation,
+    removeAt,
+    resolvePath,
+} from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
     EnvironmentState,
     instanceOfEnvironment,
 } from '../../../environment/EnvironmentState'
-import { DataState, instanceOfData } from '../../../renderer/View/Environment/data/DataState'
+import {
+    DataState,
+    instanceOfData,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -14,17 +21,29 @@ import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
  * Move and place animation or just place if the from
  * is not defined.
  */
-export interface MoveAndPlaceAnimation extends Omit<ExecutionNode, 'apply'> {
+export type MoveAndPlaceAnimation = Omit<ExecutionNode, 'apply'> & {
     inputSpecifier: Accessor[]
     outputSpecifier: Accessor[]
 
-    apply: (animation: MoveAndPlaceAnimation, environment: EnvironmentState) => void
+    apply: (
+        animation: MoveAndPlaceAnimation,
+        environment: EnvironmentState
+    ) => void
 }
 
-function apply(animation: MoveAndPlaceAnimation, environment: EnvironmentState) {
-    const from = resolvePath(environment, animation.inputSpecifier, null, null, {
-        noResolvingReference: true,
-    }) as DataState
+function apply(
+    animation: MoveAndPlaceAnimation,
+    environment: EnvironmentState
+) {
+    const from = resolvePath(
+        environment,
+        animation.inputSpecifier,
+        null,
+        null,
+        {
+            noResolvingReference: true,
+        }
+    ) as DataState
 
     const to = resolvePath(
         environment,
@@ -47,7 +66,10 @@ function apply(animation: MoveAndPlaceAnimation, environment: EnvironmentState) 
     }
 
     if (instanceOfData(to)) {
-        removeAt(environment, getMemoryLocation(environment, from).foundLocation)
+        removeAt(
+            environment,
+            getMemoryLocation(environment, from).foundLocation
+        )
         replaceDataWith(to, from, { frame: true, id: true })
     }
 }
@@ -69,9 +91,9 @@ export function moveAndPlaceAnimation(
         ...createExecutionNode(),
         _name: 'MoveAndPlaceAnimation',
 
-        name: `Move data at ${accessorsToString(inputSpecifier)} onto ${accessorsToString(
-            outputSpecifier
-        )}`,
+        name: `Move data at ${accessorsToString(
+            inputSpecifier
+        )} onto ${accessorsToString(outputSpecifier)}`,
 
         // Attributes
         inputSpecifier,

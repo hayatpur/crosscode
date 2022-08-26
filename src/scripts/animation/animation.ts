@@ -5,7 +5,7 @@ export enum AnimationPlayback {
     WithPrevious = 'WithPrevious',
 }
 
-export interface AnimationOptions {
+export type AnimationOptions = {
     playback?: AnimationPlayback
     delay?: number
 
@@ -14,7 +14,7 @@ export interface AnimationOptions {
     speedMultiplier?: number
 }
 
-export interface PlayableAnimation {
+export type PlayableAnimation = {
     // Playback state
     isPlaying: boolean
     hasPlayed: boolean
@@ -26,7 +26,7 @@ export interface PlayableAnimation {
     ease: (t: number) => number
 }
 
-export interface AnimationNode extends PlayableAnimation {
+export type AnimationNode = PlayableAnimation & {
     _type: 'AnimationNode'
 
     name: string // Name of animation
@@ -35,11 +35,15 @@ export interface AnimationNode extends PlayableAnimation {
     baseDuration: number
 
     onBegin: (animation: AnimationNode, view: EnvironmentState) => void
-    onSeek: (animation: AnimationNode, view: EnvironmentState, time: number) => void
+    onSeek: (
+        animation: AnimationNode,
+        view: EnvironmentState,
+        time: number
+    ) => void
     onEnd: (animation: AnimationNode, view: EnvironmentState) => void
 }
 
-export interface AnimationGraph extends PlayableAnimation {
+export type AnimationGraph = PlayableAnimation & {
     // Meta info
     _type: 'AnimationGraph'
     id: string
@@ -50,11 +54,15 @@ export interface AnimationGraph extends PlayableAnimation {
     parallelStarts: number[]
 }
 
-export function instanceOfAnimationNode(animation: any): animation is AnimationNode {
+export function instanceOfAnimationNode(
+    animation: any
+): animation is AnimationNode {
     return animation._type == 'AnimationNode'
 }
 
-export function createAnimationNode(options: AnimationOptions = {}): AnimationNode {
+export function createAnimationNode(
+    options: AnimationOptions = {}
+): AnimationNode {
     if (this.id == undefined) this.id = 0
 
     return {
@@ -70,9 +78,12 @@ export function createAnimationNode(options: AnimationOptions = {}): AnimationNo
 
         ease: (t) => ParametricBlend(t),
 
-        onBegin: () => console.warn('[AnimationNode] Non-implemented on begin callback'),
-        onSeek: () => console.warn('[AnimationNode] Non-implemented on seek callback'),
-        onEnd: () => console.warn('[AnimationNode] Non-implemented on end callback'),
+        onBegin: () =>
+            console.warn('[AnimationNode] Non-implemented on begin callback'),
+        onSeek: () =>
+            console.warn('[AnimationNode] Non-implemented on seek callback'),
+        onEnd: () =>
+            console.warn('[AnimationNode] Non-implemented on end callback'),
     }
 }
 
@@ -122,7 +133,10 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
     // If a parallel animation, return the end point of the longest animation vertex
     if (abstraction.isParallel && abstraction.parallelStarts[0] != undefined) {
         const ends = abstraction.parallelStarts.map(
-            (start, i) => start + duration(abstraction.vertices[i]) + abstraction.vertices[i].delay
+            (start, i) =>
+                start +
+                duration(abstraction.vertices[i]) +
+                abstraction.vertices[i].delay
         )
         return Math.max(...ends)
     }
@@ -142,7 +156,10 @@ export function duration(animation: AnimationGraph | AnimationNode): number {
  * @param animation - Animation to start
  * @param view - View to apply the animation on
  */
-export function begin(animation: AnimationGraph | AnimationNode, environment: EnvironmentState) {
+export function begin(
+    animation: AnimationGraph | AnimationNode,
+    environment: EnvironmentState
+) {
     if (instanceOfAnimationNode(animation)) {
         animation.onBegin(animation, environment)
     }
@@ -154,7 +171,10 @@ export function begin(animation: AnimationGraph | AnimationNode, environment: En
  * @param view - View to apply the animation on
  * @param options - Mostly used for setting flags to bake animation
  */
-export function end(animation: AnimationGraph | AnimationNode, environment: EnvironmentState) {
+export function end(
+    animation: AnimationGraph | AnimationNode,
+    environment: EnvironmentState
+) {
     if (instanceOfAnimationNode(animation)) {
         animation.onEnd(animation, environment)
     } else {
@@ -247,7 +267,11 @@ export function seek(
         }
 
         // Skip over this animation
-        if (time >= start + duration(vertex) && !vertex.isPlaying && !vertex.hasPlayed) {
+        if (
+            time >= start + duration(vertex) &&
+            !vertex.isPlaying &&
+            !vertex.hasPlayed
+        ) {
             begin(vertex, environment)
             vertex.isPlaying = true
             vertex.hasPlayed = false
@@ -283,7 +307,10 @@ export function reset(animation: AnimationGraph | AnimationNode) {
     }
 }
 
-export function apply(animation: AnimationGraph | AnimationNode, environment: EnvironmentState) {
+export function apply(
+    animation: AnimationGraph | AnimationNode,
+    environment: EnvironmentState
+) {
     begin(animation, environment)
     animation.isPlaying = true
 

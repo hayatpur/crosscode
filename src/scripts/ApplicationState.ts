@@ -1,10 +1,15 @@
 import { Editor } from './editor/Editor'
 import { ActionState } from './renderer/Action/Action'
+import { CodeQueryState } from './visualization/query/CodeSelectionQuery'
 import { VisualizationState } from './visualization/Visualization'
 
 export class ApplicationState {
+    // Visualization
     static visualization: VisualizationState
     static editor: Editor
+
+    // Interaction
+    static currentQuery: CodeQueryState
 
     // Constants
     static proxyHeightMultiplier = 0.4

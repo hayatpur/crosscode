@@ -3,7 +3,6 @@ import { ApplicationState } from '../../../ApplicationState'
 import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { createElement } from '../../../utilities/dom'
 import { ActionState } from '../Action'
-import { ActionProxyState } from '../Mapping/ActionProxy'
 import { Representation } from './Representation'
 
 export class BinaryStatementRepresentation extends Representation {
@@ -12,44 +11,37 @@ export class BinaryStatementRepresentation extends Representation {
     constructor(action: ActionState) {
         super(action)
 
-        this.operatorLabelElement = createElement('div', [
-            'action-proxy-code-label',
-            'action-proxy-binary-label',
-        ])
+        this.operatorLabelElement = createElement('div', ['action-proxy-code-label', 'action-proxy-binary-label'])
         const evaluation = (action.execution as ExecutionGraph).vertices[2]
 
         if (evaluation.nodeData.location == null) {
-            throw new Error(
-                'Binary expression evaluation has no associated location.'
-            )
+            throw new Error('Binary expression evaluation has no associated location.')
         }
 
-        const evaluationText = ApplicationState.editor
-            .getValueAt(evaluation.nodeData.location)
-            ?.trim()
+        const evaluationText = ApplicationState.editor.getValueAt(evaluation.nodeData.location)?.trim()
 
         if (evaluationText == null) {
             throw new Error('Binary expression evaluation has no text.')
         }
 
         this.operatorLabelElement.innerText = evaluationText
-        monaco.editor
-            .colorize(this.operatorLabelElement.innerHTML, 'javascript', {})
-            .then((html) => {
-                this.operatorLabelElement.innerHTML = html
-            })
+        monaco.editor.colorize(this.operatorLabelElement.innerHTML, 'javascript', {}).then((html) => {
+            this.operatorLabelElement.innerHTML = html
+        })
     }
 
-    updateProxyVisual(proxy: ActionProxyState) {
-        super.updateProxyVisual(proxy)
+    updateProxyVisual() {
+        super.updateProxyVisual()
 
-        const action = ApplicationState.actions[proxy.actionID]
+        const action = ApplicationState.actions[this.actionId]
+        const proxy = action.proxy
+
         if (!action.isShowingSteps) return
 
         if (this.operatorLabelElement.parentElement == null) {
-            const [leftElement, rightElement, operatorElement] = Array.from(
-                proxy.element.children
-            ).filter((child) => child.classList.contains('action-proxy'))
+            const [leftElement, rightElement, operatorElement] = Array.from(proxy.element.children).filter((child) =>
+                child.classList.contains('action-proxy-container')
+            )
 
             // Remove all action-proxy children
             leftElement.remove()

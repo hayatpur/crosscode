@@ -34,26 +34,27 @@
     display: none;
 }
 
-.execution-decoration {
-    left: 45px !important;
+// .execution-decoration {
+//     left: 45px !important;
 
-    width: 8px !important;
-    height: 8px !important;
+//     width: 8px !important;
+//     height: 8px !important;
 
-    border-radius: 50%;
-    border: 1px solid #bfbebe;
-    background-color: #00000008 !important;
+//     border-radius: 50%;
+//     border: 1px solid #bfbebe;
+//     background-color: #00000008 !important;
 
-    margin-top: 10%;
+//     margin-top: 10%;
 
-    display: none;
-}
+//     display: none;
+// }
 
 .monaco-editor .line-numbers {
-    opacity: 0.7;
+    opacity: 0.4;
     font-size: 12px !important;
     margin-top: 2px !important;
     transition-property: opacity;
+    color: black !important;
 }
 
 .monaco-editor .line-numbers:hover {
@@ -96,12 +97,12 @@
 }
 
 .monaco-editor .cursors-layer .cursor {
-    // background-color: var(--color-6) !important;
-    // transition-property: top, left;
-    // transition: 0.1s;
-    // opacity: 0.5;
-    height: 20px !important;
-    margin-top: 6px !important;
+    background-color: var(--color-6) !important;
+    transition-property: top, left;
+    transition: 0.1s;
+    opacity: 0.8;
+    height: 15px !important;
+    margin-top: 4px !important;
     margin-left: 0px !important;
 }
 
@@ -154,53 +155,52 @@
     opacity: 0;
 }
 
+.cslr {
+    border-radius: 0px !important;
+}
+
+.monaco-editor .mtkz {
+    opacity: 0 !important;
+}
+
 /* -------------------- Syntax colors ------------------- */
 
-.mtk18 {
-    color: var(--color-4) !important;
-    font-weight: bolder;
-}
-
-.mtk7,
-.mtk1 {
-    color: var(--color-5) !important;
-}
-
-.mtkz {
-    color: var(--color-4) !important;
-    opacity: 0.3;
-}
-
+// Generic
 span.mtk1 {
-    color: #ffffff !important;
+    color: black !important;
 }
 
-span.mtk13 {
-    color: #6ee7b7 !important;
-}
-
+// Literals
 span.mtk7 {
-    color: var(--s-color-1) !important;
-}
-
-span.mtk27 {
     color: var(--s-color-0) !important;
 }
 
-span.mtk14 {
-    color: #a1a1aa !important;
+// Keywords
+span.mtk22 {
+    color: var(--s-color-5) !important;
+    font-weight: normal !important;
 }
 
-/*
-.mtk18 {
-    color: #000000 !important;
-    font-weight: bold !important;
-}*/
+// In between keywords
+span.mtk14 {
+    color: #535359 !important;
+}
+
+// Strings
+span.mtk32 {
+    color: var(--s-color-2) !important;
+}
+
+// Comments
+span.mtk8 {
+    color: var(--color-4);
+    font-style: italic;
+}
 
 /* ------------------- Error feedback ------------------- */
 
 #errors {
-    font-family: Fira Mono;
+    font-family: var(--code-font-family);
     border-radius: 10px;
     padding: 10px;
     position: absolute;

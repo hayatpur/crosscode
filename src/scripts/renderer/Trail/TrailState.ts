@@ -13,7 +13,7 @@ export enum TrailType {
     PartialCreate = 'PartialCreate',
 }
 
-export interface TrailState {
+export type TrailState = {
     fromDataIDs?: string[]
     toDataID: string
     type: TrailType

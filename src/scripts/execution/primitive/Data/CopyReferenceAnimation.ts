@@ -1,20 +1,30 @@
 import { createPrimitiveData, replaceDataWith } from '../../../environment/data'
-import { addDataAt, getMemoryLocation, resolvePath } from '../../../environment/environment'
+import {
+    addDataAt,
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
 import {
     Accessor,
     accessorsToString,
     EnvironmentState,
 } from '../../../environment/EnvironmentState'
-import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
+import {
+    DataState,
+    DataType,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface CopyReferenceAnimation extends ExecutionNode {
+export type CopyReferenceAnimation = ExecutionNode & {
     dataSpecifier: Accessor[]
     outputRegister: Accessor[]
 }
 
-function apply(animation: CopyReferenceAnimation, environment: EnvironmentState) {
+function apply(
+    animation: CopyReferenceAnimation,
+    environment: EnvironmentState
+) {
     const data = resolvePath(
         environment,
         animation.dataSpecifier,
@@ -44,7 +54,11 @@ function apply(animation: CopyReferenceAnimation, environment: EnvironmentState)
     ) as DataState
     replaceDataWith(
         register,
-        createPrimitiveData(DataType.ID, reference.id, `${animation.id}_Floating`)
+        createPrimitiveData(
+            DataType.ID,
+            reference.id,
+            `${animation.id}_Floating`
+        )
     )
 }
 
@@ -65,9 +79,9 @@ export function copyReferenceAnimation(
         ...createExecutionNode(null),
         _name: 'CopyReferenceAnimation',
 
-        name: `CopyReference ${accessorsToString(dataSpecifier)} to ${accessorsToString(
-            outputRegister
-        )}`,
+        name: `CopyReference ${accessorsToString(
+            dataSpecifier
+        )} to ${accessorsToString(outputRegister)}`,
 
         // Attributes
         dataSpecifier,

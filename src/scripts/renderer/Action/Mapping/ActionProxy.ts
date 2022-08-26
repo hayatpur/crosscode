@@ -1,10 +1,14 @@
 import { ApplicationState } from '../../../ApplicationState'
+import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
+import { getAccumulatedBoundingBox } from '../../../utilities/action'
 import { createElement } from '../../../utilities/dom'
-import { Keyboard } from '../../../utilities/Keyboard'
-import { ActionState, makeSpatial } from '../Action'
 
-export interface ActionProxyState {
+export type ActionProxyState = {
     // Container of this things indicator and its steps
+    container: HTMLElement
+    header: HTMLElement
+    controls: HTMLElement | null
     element: HTMLElement
 
     // Corresponding action
@@ -14,8 +18,6 @@ export interface ActionProxyState {
     timeOffset: number
 
     isHovering: boolean
-
-    label: HTMLElement
 }
 
 /**
@@ -23,28 +25,38 @@ export interface ActionProxyState {
  * @param overrides
  * @returns
  */
-export function createActionProxy(
-    overrides: Partial<ActionProxyState> = {}
-): ActionProxyState {
+export function createActionProxy(overrides: Partial<ActionProxyState> = {}): ActionProxyState {
     if (overrides.actionID === undefined) {
         throw new Error('ActionProxy requires an action')
     }
 
     const action = ApplicationState.actions[overrides.actionID]
 
-    const classes = [
-        'action-proxy',
-        `type-${action.execution.nodeData.type?.replace(' ', '-')}`,
-        `pre-label-${action.execution.nodeData.preLabel?.replace(' ', '-')}`,
-    ]
+    // Container for the action and its label
+    const container = createElement('div', 'action-proxy-container')
 
-    const element = createElement('div', classes)
-    const label = createElement('div', 'action-proxy-label', element)
+    // Header for the action
+    const header = createElement('div', 'action-proxy-header', container)
+
+    // Label
+    const label = createElement('div', 'action-proxy-label', header)
     label.innerText = `${action.execution.nodeData.type}`
+
+    const element = createElement(
+        'div',
+        [
+            'action-proxy',
+            `type-${action.execution.nodeData.type?.replace(' ', '-')}`,
+            `pre-label-${action.execution.nodeData.preLabel?.replace(' ', '-')}`,
+        ],
+        container
+    )
 
     const base: ActionProxyState = {
         element: element,
-        label: label,
+        header: header,
+        controls: null,
+        container: container,
         actionID: overrides.actionID,
         timeOffset: 0,
         isHovering: false,
@@ -53,98 +65,63 @@ export function createActionProxy(
     // Event listeners
     setupEventListeners(base)
 
-    // Update visual
-    action.representation.updateProxyVisual(base)
-
     return { ...base, ...overrides }
 }
 
 export function destroyActionProxy(proxy: ActionProxyState) {
-    proxy.element.remove()
+    proxy.container.remove()
 }
 
 export function setupEventListeners(proxy: ActionProxyState) {
     proxy.element.addEventListener('click', (e) => {
         const action = ApplicationState.actions[proxy.actionID]
 
-        if (
-            action.isSpatial &&
-            !(action.execution.nodeData.type == 'Program') &&
-            action.isShowingSteps
-        ) {
+        if (action.isSpatial && !(action.execution.nodeData.type == 'Program') && action.isShowingSteps) {
             e.preventDefault()
             e.stopPropagation()
             return
         }
 
         if (action.isShowingSteps) {
-            action.representation.destroySteps(action)
+            action.representation.destroySteps()
         } else {
-            if (
-                Keyboard.instance.isPressed('Shift') ||
-                isSpatialByDefault(action)
-            ) {
-                makeSpatial(action)
-            }
-
-            action.representation.createSteps(action)
+            action.representation.createSteps()
         }
 
         e.preventDefault()
         e.stopPropagation()
     })
-
-    // Drag
-
-    let _prevMousePosition: { x: number; y: number } = { x: 0, y: 0 }
-
-    proxy.element.addEventListener('mousedown', (e) => {
-        const action = ApplicationState.actions[proxy.actionID]
-        if (
-            action.isSpatial &&
-            !(action.execution.nodeData.type == 'Program')
-        ) {
-            action.isDragging = true
-
-            _prevMousePosition = {
-                x: e.x,
-                y: e.y,
-            }
-        }
-    })
-
-    document.addEventListener('mousemove', (e) => {
-        const action = ApplicationState.actions[proxy.actionID]
-
-        if (!action.isDragging) {
-            return
-        }
-
-        const dx = e.x - _prevMousePosition.x
-        const dy = e.y - _prevMousePosition.y
-
-        action.position.x += dx
-        action.position.y += dy
-
-        action.proxy.element.style.marginLeft = `${action.position.x}px`
-        action.proxy.element.style.marginTop = `${action.position.y}px`
-        // action.proxy.element.style.transform = `translate(${action.position.x}px, ${action.position.y}px)`
-
-        _prevMousePosition = {
-            x: e.x,
-            y: e.y,
-        }
-    })
-
-    document.addEventListener('mouseup', (e) => {
-        const action = ApplicationState.actions[proxy.actionID]
-
-        if (action.isDragging) {
-            action.isDragging = false
-        }
-    })
 }
 
-export function isSpatialByDefault(action: ActionState) {
-    return action.execution.nodeData.type == 'CallExpression'
+export function isSpatialByDefault(execution: ExecutionGraph | ExecutionNode) {
+    return execution.nodeData.type == 'FunctionCall' || execution.nodeData.type == 'Program'
+}
+
+export function clipActionProxy(actionID: string) {
+    const action = ApplicationState.actions[actionID]
+
+    if (action.spatialVertices.size > 0) {
+        const bbox = getAccumulatedBoundingBox(
+            [...action.spatialVertices].map((v) => ApplicationState.actions[v].parentID as string)
+        )
+        const actionBbox = action.proxy.element.getBoundingClientRect()
+        let { y, height } = bbox
+
+        y = y - actionBbox.y
+
+        // action.proxy.element.style.margin
+        const firstChild = action.proxy.element.children[0] as HTMLElement
+
+        firstChild.style.marginTop = `${-y}px`
+        action.proxy.element.style.maxHeight = `${height}px`
+
+        action.proxy.element.classList.add('clipped')
+    } else {
+        // Get what things are not going to be clipped by default
+        throw new Error('No implementation for clipping')
+    }
+}
+
+export function unClipActionProxy(actionID: string) {
+    // TODO
 }

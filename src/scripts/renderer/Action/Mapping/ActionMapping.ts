@@ -3,17 +3,14 @@ import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { getAbstractionPath } from '../../../utilities/action'
 import { createElement, createSVGElement } from '../../../utilities/dom'
+import { assert } from '../../../utilities/generic'
 import { ActionProxyState } from './ActionProxy'
-import {
-    ControlFlowState,
-    createControlFlowState,
-    destroyControlFlow,
-} from './ControlFlow'
+import { ControlFlowState, createControlFlowState, destroyControlFlow } from './ControlFlow'
 
 /* ------------------------------------------------------ */
 /*               Stores mapping information               */
 /* ------------------------------------------------------ */
-export interface ActionMappingState {
+export type ActionMappingState = {
     element: HTMLElement
     frames: HTMLElement[]
 
@@ -23,9 +20,6 @@ export interface ActionMappingState {
 
     // Control flow
     controlFlow: ControlFlowState | undefined
-
-    // Program
-    program: ActionProxyState | undefined
 
     time: number
 
@@ -38,9 +32,7 @@ export interface ActionMappingState {
  * @param overrides
  * @returns
  */
-export function createActionMapping(
-    overrides: Partial<ActionMappingState> = {}
-): ActionMappingState {
+export function createActionMapping(overrides: Partial<ActionMappingState> = {}): ActionMappingState {
     const element = createElement('div', 'action-mapping')
     const svgElement = createSVGElement('action-mapping-svg', element)
 
@@ -55,9 +47,6 @@ export function createActionMapping(
         // Control flow
         controlFlow: createControlFlowState(),
         // cursor: createActionMappingCursorState(),
-
-        // Program
-        program: undefined,
 
         time: 0,
 
@@ -80,7 +69,6 @@ export function destroyActionMapping(actionMapping: ActionMappingState) {
     })
 
     actionMapping.controlFlow = undefined
-    actionMapping.program = undefined
     actionMapping.breakElements = []
     actionMapping.breaks = []
     actionMapping.frames = []
@@ -92,10 +80,7 @@ export function destroyActionMapping(actionMapping: ActionMappingState) {
  * @param mapping
  * @param index
  */
-export function getBreakIndexOfFrameIndex(
-    mapping: ActionMappingState,
-    index: number
-): number {
+export function getBreakIndexOfFrameIndex(mapping: ActionMappingState, index: number): number {
     for (let i = 0; i < mapping.breaks.length; i++) {
         if (mapping.breaks[i] >= index) {
             return i
@@ -111,11 +96,7 @@ export function getBreakIndexOfFrameIndex(
 export function addBreakToMapping(mapping: ActionMappingState, index: number) {
     mapping.breaks.push(index)
 
-    const breakEl = createElement(
-        'div',
-        'action-mapping-break',
-        mapping.element.parentElement as HTMLElement
-    )
+    const breakEl = createElement('div', 'action-mapping-break', mapping.element.parentElement as HTMLElement)
     mapping.breakElements.push(breakEl)
 }
 
@@ -124,32 +105,35 @@ export function addBreakToMapping(mapping: ActionMappingState, index: number) {
  * @param proxy Action proxy
  * @param mapping Action mapping
  */
-export function appendProxyToMapping(
-    proxy: ActionProxyState,
-    mapping: ActionMappingState
-) {
-    if (
-        ApplicationState.actions[proxy.actionID].execution.nodeData.type ===
-        'Program'
-    ) {
-        mapping.program = proxy
-        mapping.element.appendChild(proxy.element)
+export function appendProxyToMapping(proxy: ActionProxyState, mapping: ActionMappingState) {
+    if (ApplicationState.actions[proxy.actionID].execution.nodeData.type === 'Program') {
+        mapping.element.appendChild(proxy.container)
         return
     }
 
-    if (mapping.program === undefined) {
+    const programId = ApplicationState.visualization.programId
+    assert(programId != undefined, 'Program ID is undefined')
+
+    const program = ApplicationState.actions[programId]
+
+    if (program === undefined) {
         throw new Error('Program not found!')
     }
 
     // Start at program
-    let start = ApplicationState.actions[mapping.program.actionID]
+    let start = ApplicationState.actions[programId]
     let proxyAction = ApplicationState.actions[proxy.actionID]
 
+    if (proxyAction.isSpatial) {
+        mapping.element.appendChild(proxy.container)
+        return
+    }
+
     // Find path to proxy
-    let executionPath = getAbstractionPath(
-        start.execution as ExecutionGraph,
-        proxyAction.execution
-    ) as (ExecutionGraph | ExecutionNode)[]
+    let executionPath = getAbstractionPath(start.execution as ExecutionGraph, proxyAction.execution) as (
+        | ExecutionGraph
+        | ExecutionNode
+    )[]
 
     if (executionPath == null) {
         throw new Error('Could not find parent for action.')
@@ -160,9 +144,7 @@ export function appendProxyToMapping(
 
     for (let i = 1; i < executionPath.length; i++) {
         let next = Object.values(prev.vertices).find(
-            (id) =>
-                ApplicationState.actions[id].execution.id ===
-                executionPath[i].id
+            (id) => ApplicationState.actions[id].execution.id === executionPath[i].id
         )
 
         if (next === undefined) {
@@ -173,16 +155,5 @@ export function appendProxyToMapping(
     }
 
     // Add proxy to vessel, TODO: use path to abstract
-    if (proxyAction.isSpatial) {
-        mapping.element.appendChild(proxy.element)
-    } else {
-        prev.proxy.element.appendChild(proxy.element)
-    }
-}
-
-export function isHardExecution(execution: ExecutionGraph | ExecutionNode) {
-    return (
-        execution.nodeData.type === 'FunctionCall' ||
-        execution.nodeData.type === 'Program'
-    )
+    prev.proxy.element.appendChild(proxy.container)
 }

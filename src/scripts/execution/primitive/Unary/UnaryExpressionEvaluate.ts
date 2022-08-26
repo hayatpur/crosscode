@@ -6,20 +6,33 @@ import {
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
-import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
+import {
+    Accessor,
+    EnvironmentState,
+} from '../../../environment/EnvironmentState'
+import {
+    DataState,
+    DataType,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface UnaryExpressionEvaluate extends ExecutionNode {
+export type UnaryExpressionEvaluate = ExecutionNode & {
     specifier: Accessor[]
     operator: ESTree.UnaryOperator
     outputRegister: Accessor[]
 }
 
-function apply(animation: UnaryExpressionEvaluate, environment: EnvironmentState) {
+function apply(
+    animation: UnaryExpressionEvaluate,
+    environment: EnvironmentState
+) {
     // Find arg
-    let arg = resolvePath(environment, animation.specifier, `${animation.id}_Left`) as DataState
+    let arg = resolvePath(
+        environment,
+        animation.specifier,
+        `${animation.id}_Left`
+    ) as DataState
 
     // Evaluated
     const evaluated = createPrimitiveData(
@@ -50,10 +63,17 @@ function apply(animation: UnaryExpressionEvaluate, environment: EnvironmentState
         ) as DataState
         replaceDataWith(
             output,
-            createPrimitiveData(DataType.ID, evaluated.id, `${animation.id}_Placed`)
+            createPrimitiveData(
+                DataType.ID,
+                evaluated.id,
+                `${animation.id}_Placed`
+            )
         )
     } else {
-        removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
+        removeAt(
+            environment,
+            getMemoryLocation(environment, evaluated).foundLocation
+        )
     }
 
     removeAt(environment, getMemoryLocation(environment, arg).foundLocation)

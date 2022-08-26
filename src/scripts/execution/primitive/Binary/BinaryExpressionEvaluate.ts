@@ -6,19 +6,28 @@ import {
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
-import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
+import {
+    Accessor,
+    EnvironmentState,
+} from '../../../environment/EnvironmentState'
+import {
+    DataState,
+    DataType,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface BinaryExpressionEvaluate extends ExecutionNode {
+export type BinaryExpressionEvaluate = ExecutionNode & {
     leftSpecifier: Accessor[]
     rightSpecifier: Accessor[]
     operator: ESTree.BinaryOperator
     outputRegister: Accessor[]
 }
 
-function apply(animation: BinaryExpressionEvaluate, environment: EnvironmentState) {
+function apply(
+    animation: BinaryExpressionEvaluate,
+    environment: EnvironmentState
+) {
     // Find left data
     let left = resolvePath(
         environment,
@@ -66,10 +75,17 @@ function apply(animation: BinaryExpressionEvaluate, environment: EnvironmentStat
         ) as DataState
         replaceDataWith(
             output,
-            createPrimitiveData(DataType.ID, evaluated.id, `${animation.id}_Placed`)
+            createPrimitiveData(
+                DataType.ID,
+                evaluated.id,
+                `${animation.id}_Placed`
+            )
         )
     } else {
-        removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
+        removeAt(
+            environment,
+            getMemoryLocation(environment, evaluated).foundLocation
+        )
     }
 
     removeAt(environment, getMemoryLocation(environment, left).foundLocation)
@@ -113,7 +129,11 @@ export function binaryExpressionEvaluate(
     }
 }
 
-function computeBinaryExpression(left: any, right: any, operator: ESTree.BinaryOperator) {
+function computeBinaryExpression(
+    left: any,
+    right: any,
+    operator: ESTree.BinaryOperator
+) {
     switch (operator) {
         case '+':
             return left + right

@@ -1,15 +1,25 @@
-import { getMemoryLocation, resolvePath } from '../../../environment/environment'
-import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
+import {
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
+import {
+    Accessor,
+    EnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { DataState } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface FloatAnimation extends ExecutionNode {
+export type FloatAnimation = ExecutionNode & {
     dataSpecifier: Accessor[]
 }
 
 function apply(animation: FloatAnimation, environment: EnvironmentState) {
-    const data = resolvePath(environment, animation.dataSpecifier, null) as DataState
+    const data = resolvePath(
+        environment,
+        animation.dataSpecifier,
+        null
+    ) as DataState
 
     computeReadAndWrites(animation, {
         location: getMemoryLocation(environment, data).foundLocation,

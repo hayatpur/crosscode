@@ -1,18 +1,31 @@
-import { getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
-import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
+import {
+    getMemoryLocation,
+    removeAt,
+    resolvePath,
+} from '../../../environment/environment'
+import {
+    Accessor,
+    EnvironmentState,
+} from '../../../environment/EnvironmentState'
 import { DataState } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface ConsumeDataAnimation extends ExecutionNode {
+export type ConsumeDataAnimation = ExecutionNode & {
     register: Accessor[]
 }
 
 function apply(animation: ConsumeDataAnimation, environment: EnvironmentState) {
     // Get data
-    const data = resolvePath(environment, animation.register, `${animation.id}_Property`, null, {
-        noResolvingReference: true,
-    }) as DataState
+    const data = resolvePath(
+        environment,
+        animation.register,
+        `${animation.id}_Property`,
+        null,
+        {
+            noResolvingReference: true,
+        }
+    ) as DataState
 
     const dataLocation = getMemoryLocation(environment, data).foundLocation
 
@@ -30,7 +43,9 @@ function computeReadAndWrites(animation: ConsumeDataAnimation, data: DataInfo) {
     animation._writes = [data]
 }
 
-export function consumeDataAnimation(register: Accessor[]): ConsumeDataAnimation {
+export function consumeDataAnimation(
+    register: Accessor[]
+): ConsumeDataAnimation {
     return {
         ...createExecutionNode(null),
         _name: 'ConsumeDataAnimation',

@@ -1,12 +1,6 @@
 import { ApplicationState } from '../ApplicationState'
-import {
-    ExecutionGraph,
-    instanceOfExecutionGraph,
-} from '../execution/graph/ExecutionGraph'
-import {
-    ExecutionNode,
-    instanceOfExecutionNode,
-} from '../execution/primitive/ExecutionNode'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { ActionState } from '../renderer/Action/Action'
 import { BinaryStatementRepresentation } from '../renderer/Action/Dynamic/BinaryExpressionRepresentation'
 import { BlockStatementRepresentation } from '../renderer/Action/Dynamic/BlockStatementRepresentation'
@@ -18,6 +12,7 @@ import { ProgramRepresentation } from '../renderer/Action/Dynamic/ProgramReprese
 import { Representation } from '../renderer/Action/Dynamic/Representation'
 import { ReturnStatementRepresentation } from '../renderer/Action/Dynamic/ReturnStatementRepresentation'
 import { VariableDeclarationRepresentation } from '../renderer/Action/Dynamic/VariableDeclarationRepresentation'
+import { assert } from './generic'
 
 /* ------------------------------------------------------ */
 /*             Helper functions to for actions            */
@@ -51,10 +46,7 @@ export function getLeavesOfAction(parent: ActionState): ActionState[] {
  * @param query
  * @returns action that satisfies the query or null
  */
-export function queryAction(
-    action: ActionState,
-    query: (animation: ActionState) => boolean
-): ActionState | null {
+export function queryAction(action: ActionState, query: (animation: ActionState) => boolean): ActionState | null {
     if (query(action)) {
         return action
     }
@@ -69,10 +61,7 @@ export function queryAction(
     return null
 }
 
-export function queryAllAction(
-    action: ActionState,
-    query: (animation: ActionState) => boolean
-): ActionState[] {
+export function queryAllAction(action: ActionState, query: (animation: ActionState) => boolean): ActionState[] {
     const acc = []
 
     if (query(action)) {
@@ -126,11 +115,7 @@ export function getAllSteps(action: ActionState): ActionState[] {
 }
 
 export function getLabelOfExecution(execution: ExecutionGraph | ExecutionNode) {
-    return (
-        instanceOfExecutionNode(execution)
-            ? execution.name
-            : execution.nodeData.type ?? ''
-    )
+    return (instanceOfExecutionNode(execution) ? execution.name : execution.nodeData.type ?? '')
         .replace(/([A-Z])/g, ' $1')
         .trim()
 }
@@ -143,9 +128,7 @@ export function getActionRootID(action: ActionState) {
     return root
 }
 
-export function getExecutionSteps(
-    execution: ExecutionGraph | ExecutionNode
-): (ExecutionGraph | ExecutionNode)[] {
+export function getExecutionSteps(execution: ExecutionGraph | ExecutionNode): (ExecutionGraph | ExecutionNode)[] {
     if (instanceOfExecutionGraph(execution) && !isPrimitive(execution)) {
         return execution.vertices
     } else {
@@ -158,11 +141,7 @@ export function getLeafSteps(steps: ActionState[]): ActionState[] {
 
     for (const action of steps) {
         if (action.vertices.length > 0) {
-            result.push(
-                ...getLeafSteps(
-                    action.vertices.map((id) => ApplicationState.actions[id])
-                )
-            )
+            result.push(...getLeafSteps(action.vertices.map((id) => ApplicationState.actions[id])))
         } else {
             result.push(action)
         }
@@ -237,4 +216,22 @@ export function isPrimitive(execution: ExecutionGraph | ExecutionNode) {
 
     const primitives = new Set(['Literal', 'Identifier'])
     return primitives.has(execution.nodeData?.type ?? '')
+}
+
+export function getAccumulatedBoundingBox(IDs: string[]) {
+    assert(IDs.length > 0, 'No IDs provided.')
+
+    const bbox = ApplicationState.actions[IDs[0]].proxy.container.getBoundingClientRect()
+
+    for (const id of IDs) {
+        const child = ApplicationState.actions[id]
+        const childBbox = child.proxy.container.getBoundingClientRect()
+
+        bbox.x = Math.min(bbox.x, childBbox.x)
+        bbox.y = Math.min(bbox.y, childBbox.y)
+        bbox.width = Math.max(bbox.width, childBbox.x + childBbox.width - bbox.x)
+        bbox.height = Math.max(bbox.height, childBbox.y + childBbox.height - bbox.y)
+    }
+
+    return bbox
 }

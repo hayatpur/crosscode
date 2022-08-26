@@ -22,39 +22,52 @@
 
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap');
 
 /* ------------------- Color pallette ------------------- */
 
 :root {
     --color-0: #ffffff;
-    --color-1: #ebebeb;
-    --color-2: #d4d4d4;
-    --color-3: #afafaf;
-    --color-4: #474747;
+    --color-1: #fafafa;
+    --color-2: #dfdfdf;
+    --color-3: #d9d9d9;
+    --color-4: #afafaf;
     --color-5: #272727;
     --color-6: #1a1a1a;
 
-    --s-color-0: #7dd3fc;
-    --s-color-1: #e879f9;
-    --s-color-2: #6ee7b7;
+    --s-color-0: #2f6ab3;
+    --s-color-0-1: #c8e8ff;
+    --s-color-0-2: #b2dfff;
+    --s-color-0-3: #0488e5;
+
+    --s-color-1: #af46bf;
+
+    --s-color-2: #1ba44b;
+    --s-color-2-1: #bce7cb;
+    --s-color-2-2: #b2dfff;
+    --s-color-2-3: #226b3b;
+
     --s-color-3: #ffff81;
     --s-color-4: #9981ff;
-    --s-color-5: #f97979;
+
+    --s-color-5: #dc4958;
+    --s-color-5-1: #ebbabf;
+    --s-color-5-3: #944850;
 
     --path-color: #383847;
 }
 
 :root {
-    --code-font-family: 'Fira Code', monospace;
-    --code-font-size: 18px;
+    --code-font-family: 'Ubuntu Mono', monospace;
+    --code-font-size: 16px;
     --code-font-letter-spacing: -0.5;
     --code-font-line-height: 34px;
     --border-radius: 6px;
 }
 
 html {
-    background: var(--color-2);
+    background: var(--color-0);
 }
 
 html,
@@ -132,25 +145,25 @@ body {
 }
 
 /* ---------------------- Selection --------------------- */
-::-moz-selection {
-    /* Code for Firefox */
-    background: #484a5d;
-}
+// ::-moz-selection {
+//     /* Code for Firefox */
+//     background: #484a5d;
+// }
 
-::selection {
-    background: #484a5d;
-}
+// ::selection {
+//     background: #484a5d;
+// }
 
 ::-webkit-scrollbar {
     width: 5px;
 }
 
 ::-webkit-scrollbar-track-piece {
-    background-color: #202028;
+    background-color: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #343440;
+    background-color: #c8c8c8;
     outline: none;
     outline-offset: -2px;
     border: none;
@@ -168,11 +181,8 @@ body {
     height: 100%;
     display: flex;
 
-    max-width: 700px !important;
-    overflow-x: auto;
-
-    border-left: 1px solid #ffffff12;
-    border-right: 1px solid #ffffff17;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .focus {

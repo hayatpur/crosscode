@@ -1,3 +1,8 @@
+/**
+ *
+ * @param {*} array
+ * @returns
+ */
 function qs(array) {
     if (array.length <= 2) {
         return array
@@ -23,5 +28,6 @@ function qs(array) {
     return l.concat(r)
 }
 
+let test = 'Testing...'
 let unsorted = [4, -1, 7, 10, -3, 9, 1, 6, 3]
 let sorted = qs(unsorted)

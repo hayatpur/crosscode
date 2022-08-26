@@ -1,31 +1,19 @@
 import * as ESTree from 'estree'
 import { ApplicationState } from '../../ApplicationState'
-import { EnvironmentState } from '../../environment/EnvironmentState'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import {
-    ExecutionNode,
-    NodeData,
-} from '../../execution/primitive/ExecutionNode'
+import { ExecutionNode, NodeData } from '../../execution/primitive/ExecutionNode'
 import { createRepresentation } from '../../utilities/action'
-import {
-    createElement,
-    createPathElement,
-    createSVGElement,
-} from '../../utilities/dom'
+import { createElement, createPathElement, createSVGElement } from '../../utilities/dom'
+import { assert } from '../../utilities/generic'
 import { Ticker } from '../../utilities/Ticker'
-import { setViewFrames } from '../View/View'
 import { Representation } from './Dynamic/Representation'
 import { appendProxyToMapping } from './Mapping/ActionMapping'
-import {
-    ActionProxyState,
-    createActionProxy,
-    destroyActionProxy,
-} from './Mapping/ActionProxy'
+import { ActionProxyState, createActionProxy, destroyActionProxy, isSpatialByDefault } from './Mapping/ActionProxy'
 
 /* ------------------------------------------------------ */
 /*    An Action visualizes a node in program execution    */
 /* ------------------------------------------------------ */
-export interface ActionState {
+export type ActionState = {
     id: string
 
     // Transform
@@ -33,8 +21,7 @@ export interface ActionState {
         x: number
         y: number
     }
-
-    isDragging: boolean
+    minimized: boolean
 
     isShowingSteps: boolean
     isSpatial: boolean
@@ -49,6 +36,10 @@ export interface ActionState {
     vertices: string[]
     edges: ActionEdge[]
 
+    // Spatial
+    spatialParentID: string | null
+    spatialVertices: Set<string>
+
     // Representation
     representation: Representation
     proxy: ActionProxyState
@@ -62,14 +53,16 @@ export interface ActionState {
 
 /* --------------------- Initializer -------------------- */
 let __ACTION_ID = 0
-export function createActionState(
-    overrides: Partial<ActionState> = {}
-): ActionState {
+export function createActionState(overrides: Partial<ActionState> = {}): ActionState {
     const id = `Action(${++__ACTION_ID})`
 
-    if (overrides.execution === undefined) {
-        throw new Error('Action requires an execution')
+    assert(overrides.execution != undefined, 'Action requires an execution')
+
+    if (isSpatialByDefault(overrides.execution)) {
+        overrides.spatialParentID = id
     }
+
+    assert(overrides.spatialParentID != null, 'Action requires a spatial parent')
 
     // Create dom elements
     const classes = [
@@ -79,7 +72,6 @@ export function createActionState(
     ]
 
     const element = createElement('div', classes)
-
     const parentID = overrides.parentID || null
 
     const base: Partial<ActionState> = {
@@ -95,7 +87,9 @@ export function createActionState(
         element: element,
         vertices: [],
         edges: [],
-        isDragging: false,
+        spatialParentID: overrides.spatialParentID,
+        spatialVertices: new Set(),
+        minimized: false,
     }
 
     ApplicationState.actions[id] = base as ActionState
@@ -103,11 +97,18 @@ export function createActionState(
     base.representation = createRepresentation(ApplicationState.actions[id])
     base.proxy = createActionProxy({ actionID: id })
 
+    // Update visual
+    base.representation.updateProxyVisual()
+
     if (ApplicationState.visualization.mapping == undefined) {
         throw new Error('Mapping not found.')
     }
 
-    base.representation.updateActionVisual(base as ActionState)
+    base.representation.updateActionVisual()
+
+    if (isSpatialByDefault(overrides.execution)) {
+        makeSpatial(id)
+    }
 
     appendProxyToMapping(base.proxy, ApplicationState.visualization.mapping)
 
@@ -117,14 +118,14 @@ export function createActionState(
 /* ------------------------------------------------------ */
 /*        An Action edge stores path to its parent        */
 /* ------------------------------------------------------ */
-export interface ActionEdge {
+export type ActionEdge = {
     label: string
 }
 
 export function updateAction(action: ActionState) {
     const visualization = ApplicationState.visualization
-    action.representation.updateActionVisual(action)
-    action.representation.updateProxyVisual(action.proxy)
+    action.representation.updateActionVisual()
+    action.representation.updateProxyVisual()
     // const mapping = visualization.mapping
 
     // Update mapping, resets time to 0 and then back
@@ -137,20 +138,17 @@ export function updateAction(action: ActionState) {
     //     })
     // }
 
-    if (visualization.program == undefined) {
-        throw new Error('Visualization requires a program')
-    }
+    // assert(visualization.programId != undefined, 'No program found.')
+    // const program = ApplicationState.actions[visualization.programId]
 
     // Update frames of the execution
-    if (visualization.view != null) {
-        setViewFrames(
-            visualization.view,
-            visualization.program.representation.getFrames(
-                visualization.program
-            ),
-            visualization.program.execution.precondition as EnvironmentState
-        )
-    }
+    // if (visualization.view != null) {
+    //     setViewFrames(
+    //         visualization.view,
+    //         program.representation.getFrames(program),
+    //         program.execution.precondition as EnvironmentState
+    //     )
+    // }
 }
 
 export function destroyAction(action: ActionState) {
@@ -159,45 +157,68 @@ export function destroyAction(action: ActionState) {
     action.element.remove()
 }
 
-export function makeSpatial(action: ActionState) {
+export function makeSpatial(actionId: string) {
+    const action = ApplicationState.actions[actionId]
     action.isSpatial = true
 
-    console.log('Making action spatial')
+    const controls = createElement('div', 'action-proxy-controls', action.proxy.header)
 
-    const originalParent = action.proxy.element.parentElement
+    const minimize = createElement('div', 'action-proxy-controls-button', controls)
+    minimize.innerText = '-'
+    minimize.addEventListener('click', () => {
+        if (action.minimized) {
+            action.representation.maximize()
+        } else {
+            action.representation.minimize()
+        }
+    })
 
-    if (originalParent == undefined) {
-        throw new Error('Action has no parent element.')
+    // const clip = createElement('div', 'action-proxy-controls-button', controls)
+    // clip.innerText = '='
+    // clip.addEventListener('click', () => {
+    //     clipActionProxy(actionId)
+    // })
+
+    // const maximize = createElement('div', 'action-proxy-controls-button', controls)
+    // maximize.innerText = '+'
+
+    if (action.execution.nodeData.type == 'Program') {
+        return
     }
 
+    assert(action.parentID != null, 'Action has no parent')
+    const originalParent = ApplicationState.actions[action.parentID].proxy.element
+
+    // Create placeholder
     action.placeholder = createElement('div', 'action-proxy-placeholder')
-    originalParent.insertBefore(action.placeholder, action.proxy.element)
+    originalParent.append(action.placeholder)
 
     const mapping = ApplicationState.visualization.mapping
+    assert(mapping != null, 'Mapping not found.')
 
-    if (mapping == undefined) {
-        throw new Error('Mapping not found.')
-    }
-
-    mapping.element.appendChild(action.proxy.element)
-    action.representation.updateProxyVisual(action.proxy)
+    appendProxyToMapping(action.proxy, mapping)
+    action.representation.updateProxyVisual()
 
     // Create ray
     const svg = createSVGElement('ray-svg')
     action.placeholderRay = createPathElement('action-proxy-ray', svg)
-    originalParent.appendChild(svg)
+    action.proxy.container.insertBefore(svg, action.proxy.container.firstChild)
 
     // Update ray
     Ticker.instance.registerTick(() => {
         updateActionRay(action.id)
     })
 
-    // Update focus
-    if (ApplicationState.visualization.focus == undefined) {
-        throw new Error('Focus not found.')
-    }
+    // Add to spatial parent's vertices
+    const parent = ApplicationState.actions[action.parentID]
+    assert(parent.spatialParentID != null, 'Parent has no spatial parent')
+    const spatialParent = ApplicationState.actions[parent.spatialParentID]
+    spatialParent.spatialVertices.add(action.id)
 
-    ApplicationState.visualization.focus.currentFocus = action.id
+    // Update focus
+    const focus = ApplicationState.visualization.focus
+    assert(focus != null, 'Focus not found.')
+    focus.currentFocus = action.id
 }
 
 export function updateActionRay(actionID: string) {
@@ -208,6 +229,13 @@ export function updateActionRay(actionID: string) {
 
     if (action.placeholderRay.parentElement == null) {
         throw new Error('Ray has no parent element.')
+    }
+
+    if (action.minimized) {
+        endBbox.width = 10
+        endBbox.height = 10
+        endBbox.y -= 19
+        endBbox.x -= 8
     }
 
     const svgBbox = action.placeholderRay.parentElement.getBoundingClientRect()
@@ -240,11 +268,9 @@ export function updateActionRay(actionID: string) {
     let path = `M ${p1[0]} ${p1[1]} C ${p2[0]} ${p2[1]}, ${p3[0]} ${p3[1]}, ${p4[0]} ${p4[1]}`
 
     // Bottom
-    path += `L ${p4[0]} ${p4[1] + endBbox.height} C ${p3[0]} ${
-        p3[1] + endBbox.height
-    }, ${p2[0]} ${p2[1] + startBbox.height}, ${p1[0]} ${
-        p1[1] + startBbox.height
-    }`
+    path += `L ${p4[0]} ${p4[1] + endBbox.height} C ${p3[0]} ${p3[1] + endBbox.height}, ${p2[0]} ${
+        p2[1] + startBbox.height
+    }, ${p1[0]} ${p1[1] + startBbox.height}`
 
     action.placeholderRay.setAttribute('d', path)
 }
@@ -257,9 +283,7 @@ export function getActionCoordinates(
     parentExecution?: ExecutionGraph | ExecutionNode
 ): { x: number; y: number; width: number; height: number } {
     if (execution.nodeData.type == 'BlockStatement') {
-        let parentBbox = parentExecution
-            ? getActionCoordinates(parentExecution)
-            : { x: 0, y: 0, width: 0, height: 0 }
+        let parentBbox = parentExecution ? getActionCoordinates(parentExecution) : { x: 0, y: 0, width: 0, height: 0 }
 
         let bbox: {
             x: number
@@ -312,9 +336,7 @@ export function getActionCoordinates(
         const location = execution.nodeData.location as ESTree.SourceLocation
         let bbox = ApplicationState.editor.computeBoundingBoxForLoc(location)
 
-        let parentBbox = parentExecution
-            ? getActionCoordinates(parentExecution)
-            : { x: 0, y: 0, width: 0, height: 0 }
+        let parentBbox = parentExecution ? getActionCoordinates(parentExecution) : { x: 0, y: 0, width: 0, height: 0 }
 
         if (isChunk(execution.nodeData)) {
             const indentation = location.start.column
@@ -333,11 +355,6 @@ export function getActionCoordinates(
 }
 
 export function isChunk(nodeData: NodeData) {
-    const chunks = new Set([
-        'IfStatement',
-        'WhileStatement',
-        'DoWhileStatement',
-        'ForStatement',
-    ])
+    const chunks = new Set(['IfStatement', 'WhileStatement', 'DoWhileStatement', 'ForStatement'])
     return chunks.has(nodeData.type ?? '')
 }

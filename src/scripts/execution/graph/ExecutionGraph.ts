@@ -2,21 +2,21 @@ import { Accessor, EnvironmentState } from '../../environment/EnvironmentState'
 import { getEmptyNodeData } from '../execution'
 import { ExecutionNode, NodeData } from '../primitive/ExecutionNode'
 
-export interface ExecutionRuntimeOptions {
+export type ExecutionRuntimeOptions = {
     indent?: number
 }
 
-export interface DataInfo {
+export type DataInfo = {
     location: Accessor[]
     id: string
 }
 
-export interface GlobalDataInfo {
+export type GlobalDataInfo = {
     location: { viewID: string; localLocation: Accessor[] }
     id: string
 }
 
-export interface ExecutionGraph {
+export type ExecutionGraph = {
     // Meta info
     _type: 'ExecutionGraph'
     id: string

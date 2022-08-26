@@ -4,16 +4,8 @@ import { ApplicationState } from '../ApplicationState'
 import { createEnvironment } from '../environment/environment'
 import { EnvironmentState } from '../environment/EnvironmentState'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
-import {
-    ActionState,
-    createActionState,
-    destroyAction,
-} from '../renderer/Action/Action'
-import {
-    ActionMappingState,
-    createActionMapping,
-    destroyActionMapping,
-} from '../renderer/Action/Mapping/ActionMapping'
+import { createActionState, destroyAction } from '../renderer/Action/Action'
+import { ActionMappingState, createActionMapping, destroyActionMapping } from '../renderer/Action/Mapping/ActionMapping'
 import { createViewState, destroyView, ViewState } from '../renderer/View/View'
 import { Compiler } from '../transpiler/Compiler'
 import { createElement } from '../utilities/dom'
@@ -23,11 +15,12 @@ import { createFocus, FocusState } from './Focus'
 /* ------------------------------------------------------ */
 /*             Displays execution information             */
 /* ------------------------------------------------------ */
-export interface VisualizationState {
+export type VisualizationState = {
     execution: ExecutionGraph | undefined
     mapping: ActionMappingState | undefined
     view: ViewState | undefined
-    program: ActionState | undefined
+
+    programId: string | undefined
 
     focus: FocusState | undefined
 
@@ -48,14 +41,12 @@ export interface VisualizationState {
  * @param overrides
  * @returns
  */
-export function createVisualization(
-    overrides: Partial<VisualizationState> = {}
-): VisualizationState {
+export function createVisualization(overrides: Partial<VisualizationState> = {}): VisualizationState {
     const base: VisualizationState = {
         execution: undefined,
         mapping: undefined,
         view: undefined,
-        program: undefined,
+        programId: undefined,
 
         container: createVisualContainer(),
 
@@ -86,13 +77,14 @@ export function resetVisualization(visualization: VisualizationState) {
         destroyView(visualization.view as ViewState)
     }
 
-    if (visualization.program != undefined) {
-        destroyAction(visualization.program as ActionState)
+    if (visualization.programId != undefined) {
+        const program = ApplicationState.actions[visualization.programId]
+        destroyAction(program)
     }
 
     visualization.mapping = undefined
     visualization.view = undefined
-    visualization.program = undefined
+    visualization.programId = undefined
     visualization.execution = undefined
 }
 
@@ -112,10 +104,7 @@ export function createVisualContainer(): HTMLElement {
  * @param visualization Visualization state
  * @param code User code
  */
-export function compileVisualization(
-    visualization: VisualizationState,
-    code: string
-) {
+export function compileVisualization(visualization: VisualizationState, code: string) {
     /* ----------------- Reset visualization ---------------- */
     resetVisualization(visualization)
 
@@ -148,11 +137,14 @@ export function compileVisualization(
 
     visualization.view = createViewState()
 
-    visualization.program = createActionState({
+    const program = createActionState({
         execution: visualization.execution,
     })
+    visualization.programId = program.id
 
-    document.body.appendChild(visualization.program.element)
+    program.representation.postCreate()
+
+    document.body.appendChild(program.element)
 
     // TODO: Maintain layout from last time
 }
@@ -188,14 +180,22 @@ export function setupTweakpane(executor: VisualizationState) {
 }
 
 let prevMargin = 0
-export function tickVisualization(
-    visualization: VisualizationState,
-    dt: number
-) {
+export function tickVisualization(visualization: VisualizationState, dt: number) {
+    // Update margin
     const margin = ApplicationState.editor.getMaxWidth() + 70
     if (prevMargin != margin) {
         visualization.container.style.left = `${margin}px`
     }
 
     prevMargin = margin
+
+    // Update positions
+    if (visualization.programId != undefined) {
+        const program = ApplicationState.actions[visualization.programId]
+
+        program.representation.updateSpatialActionProxyPosition({
+            x: 35,
+            y: 115,
+        })
+    }
 }

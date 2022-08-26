@@ -1,14 +1,24 @@
-import { getMemoryLocation, resolvePath } from '../../../environment/environment'
+import {
+    getMemoryLocation,
+    resolvePath,
+} from '../../../environment/environment'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataState } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
-import { createExecutionNode, ExecutionNode, ReturnData } from '../ExecutionNode'
+import {
+    createExecutionNode,
+    ExecutionNode,
+    ReturnData,
+} from '../ExecutionNode'
 
-export interface ReturnStatementAnimation extends ExecutionNode {
+export type ReturnStatementAnimation = ExecutionNode & {
     returnData: ReturnData
 }
 
-function apply(animation: ReturnStatementAnimation, environment: EnvironmentState) {
+function apply(
+    animation: ReturnStatementAnimation,
+    environment: EnvironmentState
+) {
     const data = resolvePath(
         environment,
         animation.returnData.register,
@@ -46,12 +56,17 @@ function apply(animation: ReturnStatementAnimation, environment: EnvironmentStat
     })
 }
 
-function computeReadAndWrites(animation: ReturnStatementAnimation, data: DataInfo) {
+function computeReadAndWrites(
+    animation: ReturnStatementAnimation,
+    data: DataInfo
+) {
     animation._reads = [data]
     animation._writes = []
 }
 
-export function returnStatementAnimation(returnData: ReturnData): ReturnStatementAnimation {
+export function returnStatementAnimation(
+    returnData: ReturnData
+): ReturnStatementAnimation {
     return {
         ...createExecutionNode(null),
         _name: 'ReturnStatementAnimation',

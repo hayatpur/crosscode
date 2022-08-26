@@ -1,11 +1,18 @@
-import { cloneData, createPrimitiveData, replaceDataWith } from '../../../environment/data'
+import {
+    cloneData,
+    createPrimitiveData,
+    replaceDataWith,
+} from '../../../environment/data'
 import {
     addDataAt,
     getMemoryLocation,
     removeAt,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
+import {
+    Accessor,
+    EnvironmentState,
+} from '../../../environment/EnvironmentState'
 import {
     DataState,
     DataType,
@@ -14,7 +21,7 @@ import {
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface GetMember extends ExecutionNode {
+export type GetMember = ExecutionNode & {
     objectRegister: Accessor[]
     propertyRegister?: Accessor[] // Only if computed
     outputRegister: Accessor[]
@@ -34,10 +41,15 @@ function apply(animation: GetMember, environment: EnvironmentState) {
         animation.propertyRegister,
         `${animation.id}_Property`
     ) as DataState
-    const propertyLocation = getMemoryLocation(environment, property).foundLocation
+    const propertyLocation = getMemoryLocation(
+        environment,
+        property
+    ).foundLocation
 
     // Index into it
-    const original = (object.value as DataState[])[property.value as number | string]
+    const original = (object.value as DataState[])[
+        property.value as number | string
+    ]
 
     let copy: DataState
 
@@ -46,13 +58,20 @@ function apply(animation: GetMember, environment: EnvironmentState) {
         copy = cloneData(original, false, `${animation.id}_Copy`)
     } else {
         // Create a new data
-        copy = createPrimitiveData(DataType.Literal, original, `${animation.id}_Copy`)
+        copy = createPrimitiveData(
+            DataType.Literal,
+            original,
+            `${animation.id}_Copy`
+        )
     }
 
     const location = addDataAt(environment, copy, [], null)
 
     // Consume property
-    removeAt(environment, getMemoryLocation(environment, property).foundLocation)
+    removeAt(
+        environment,
+        getMemoryLocation(environment, property).foundLocation
+    )
 
     // Remove object (reference)
     const objectReference = resolvePath(
@@ -64,11 +83,18 @@ function apply(animation: GetMember, environment: EnvironmentState) {
             noResolvingReference: true,
         }
     ) as DataState
-    const objectLocation = getMemoryLocation(environment, objectReference).foundLocation
+    const objectLocation = getMemoryLocation(
+        environment,
+        objectReference
+    ).foundLocation
 
-    removeAt(environment, getMemoryLocation(environment, objectReference).foundLocation, {
-        noResolvingReference: true,
-    })
+    removeAt(
+        environment,
+        getMemoryLocation(environment, objectReference).foundLocation,
+        {
+            noResolvingReference: true,
+        }
+    )
 
     const propertyData = {
         location: propertyLocation,
@@ -99,7 +125,11 @@ function apply(animation: GetMember, environment: EnvironmentState) {
     ) as DataState
     replaceDataWith(
         outputRegister,
-        createPrimitiveData(DataType.ID, copy.id, `${animation.id}_OutputRegister`)
+        createPrimitiveData(
+            DataType.ID,
+            copy.id,
+            `${animation.id}_OutputRegister`
+        )
     )
 }
 
@@ -110,7 +140,8 @@ function computeReadAndWrites(
     copy: DataInfo,
     original: DataInfo = null
 ) {
-    animation._reads = original != null ? [original, obj, property] : [obj, property]
+    animation._reads =
+        original != null ? [original, obj, property] : [obj, property]
     animation._writes = [copy, obj]
 }
 

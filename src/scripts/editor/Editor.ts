@@ -1,6 +1,6 @@
 import * as ESTree from 'estree'
 import * as monaco from 'monaco-editor'
-import { getDarkTheme, getLightTheme } from './EditorThemes'
+import { getDarkTheme, getDawnTheme, getLightTheme } from './EditorThemes'
 
 export class Editor {
     // Singleton
@@ -25,6 +25,10 @@ export class Editor {
             'github',
             getLightTheme() as monaco.editor.IStandaloneThemeData
         )
+        monaco.editor.defineTheme(
+            'dawn',
+            getDawnTheme() as monaco.editor.IStandaloneThemeData
+        )
 
         this.parent = document.getElementById(`editor`) as HTMLElement
 
@@ -40,15 +44,15 @@ export class Editor {
                 vertical: 'hidden',
             },
             overviewRulerBorder: false,
-            fontSize: 18,
+            fontSize: 14,
             contextmenu: false,
             mouseWheelScrollSensitivity: 0,
-            lineHeight: 34,
+            lineHeight: 22,
             selectOnLineNumbers: false,
-            letterSpacing: -0.5,
+            // letterSpacing: -0.5,
             // codeLens: false,
             dragAndDrop: false,
-            theme: 'atom',
+            theme: 'dawn',
             fontFamily: window
                 .getComputedStyle(document.documentElement)
                 .getPropertyValue('--code-font-family'),

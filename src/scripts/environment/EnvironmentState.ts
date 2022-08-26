@@ -1,4 +1,7 @@
-import { DataState, Transform } from '../renderer/View/Environment/data/DataState'
+import {
+    DataState,
+    Transform,
+} from '../renderer/View/Environment/data/DataState'
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { stringHashCode } from '../utilities/string'
 
@@ -9,7 +12,7 @@ export enum AccessorType {
     Register = 'Register',
 }
 
-export interface Accessor {
+export type Accessor = {
     type: AccessorType
     value: string
 }
@@ -27,24 +30,24 @@ export function accessorsToString(accessors: Accessor[]): string {
     return `${accessors.map((acc) => accessorToString(acc)).join(' > ')}`
 }
 
-export interface IdentifierState {
+export type IdentifierState = {
     name: string
     location: Accessor[]
 }
 
-export interface Scope {
+export type Scope = {
     bindings: { [name: string]: IdentifierState }
     type: ScopeType
 }
 
-export interface EnvironmentTransform extends Transform {}
+export type EnvironmentTransform = Transform & {}
 
-export interface Residual {
+export type Residual = {
     data: DataState
     location: Accessor[]
 }
 
-export interface EnvironmentState {
+export type EnvironmentState = {
     _type: 'EnvironmentState'
 
     // Variable name bindings
@@ -65,6 +68,8 @@ export interface EnvironmentState {
     id: string
 }
 
-export function instanceOfEnvironment(environment: any): environment is EnvironmentState {
+export function instanceOfEnvironment(
+    environment: any
+): environment is EnvironmentState {
     return environment['_type'] === 'EnvironmentState'
 }

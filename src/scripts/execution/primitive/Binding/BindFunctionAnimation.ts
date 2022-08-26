@@ -6,19 +6,27 @@ import { DataType } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface BindFunctionAnimation extends ExecutionNode {
+export type BindFunctionAnimation = ExecutionNode & {
     identifier: string
     ast: ESTree.FunctionDeclaration
 }
 
-function apply(animation: BindFunctionAnimation, environment: EnvironmentState) {
+function apply(
+    animation: BindFunctionAnimation,
+    environment: EnvironmentState
+) {
     // Create a reference for variable
     const reference = createPrimitiveData(
         DataType.Reference,
         [],
         `${animation.id}_ReferenceFunction`
     )
-    const referenceLocation = addDataAt(environment, reference, [], `${animation.id}_AddFunction`)
+    const referenceLocation = addDataAt(
+        environment,
+        reference,
+        [],
+        `${animation.id}_AddFunction`
+    )
 
     const data = createPrimitiveData(
         DataType.Function,

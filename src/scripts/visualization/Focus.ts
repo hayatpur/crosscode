@@ -1,7 +1,7 @@
 import { createElement } from '../utilities/dom'
 import { Ticker } from '../utilities/Ticker'
 
-export interface FocusState {
+export type FocusState = {
     currentFocus: string | undefined
     focusElement: HTMLElement
 

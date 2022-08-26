@@ -1,6 +1,7 @@
 import { ApplicationState } from './scripts/ApplicationState'
 import { Editor } from './scripts/editor/Editor'
 import { Ticker } from './scripts/utilities/Ticker'
+import { createCodeQuerySelector } from './scripts/visualization/query/CodeSelectionQuery'
 import {
     compileVisualization,
     createVisualization,
@@ -8,10 +9,10 @@ import {
     tickVisualization,
 } from './scripts/visualization/Visualization'
 import './styles/main.scss'
-import './styles/themes/dark.scss'
 
 function main() {
     ApplicationState.editor = new Editor()
+
     ApplicationState.visualization = createVisualization()
 
     setupTweakpane(ApplicationState.visualization)
@@ -24,14 +25,13 @@ function main() {
 
         const delay = firstCompilation ? 500 : 50 // Stagger on first execution to allow time for monaco to load
         typingTimer = setTimeout(() => {
-            compileVisualization(
-                ApplicationState.visualization,
-                ApplicationState.editor.getValue()
-            )
+            compileVisualization(ApplicationState.visualization, ApplicationState.editor.getValue())
         }, delay)
 
         firstCompilation = false
     })
+
+    createCodeQuerySelector()
 
     /* ------------------------ Ticks ----------------------- */
     Ticker.instance.registerTick(tick)

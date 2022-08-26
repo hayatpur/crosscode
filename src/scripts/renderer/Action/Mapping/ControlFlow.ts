@@ -1,13 +1,13 @@
 import { ApplicationState } from '../../../ApplicationState'
 import { getLeafSteps } from '../../../utilities/action'
 import { createPathElement, createSVGElement } from '../../../utilities/dom'
+import { assert } from '../../../utilities/generic'
 import { bboxContains, catmullRomSolve } from '../../../utilities/math'
-import { ActionState } from '../Action'
 
 /* ------------------------------------------------------ */
 /*                      Control flow                      */
 /* ------------------------------------------------------ */
-export interface ControlFlowState {
+export type ControlFlowState = {
     container: SVGElement | undefined
     overlayContainer: SVGElement | undefined
 
@@ -21,26 +21,15 @@ export interface ControlFlowState {
  * @param overrides
  * @returns
  */
-export function createControlFlowState(
-    overrides: Partial<ControlFlowState> = {}
-): ControlFlowState {
+export function createControlFlowState(overrides: Partial<ControlFlowState> = {}): ControlFlowState {
     // Containers
     const container = createSVGElement('control-flow-svg')
-    const overlayContainer = createSVGElement([
-        'control-flow-svg',
-        'control-flow-svg-overlay',
-    ])
+    const overlayContainer = createSVGElement(['control-flow-svg', 'control-flow-svg-overlay'])
 
     // Paths
     const flowPath = createPathElement('control-flow-path')
-    const flowPathCompleted = createPathElement(
-        'control-flow-path-completed',
-        container
-    )
-    const flowPathOverlay = createPathElement(
-        'control-flow-path-overlay',
-        overlayContainer
-    )
+    const flowPathCompleted = createPathElement('control-flow-path-completed', container)
+    const flowPathOverlay = createPathElement('control-flow-path-overlay', overlayContainer)
 
     const base: ControlFlowState = {
         container: container,
@@ -62,22 +51,20 @@ export function destroyControlFlow(controlFlow: ControlFlowState) {
     controlFlow.overlayContainer = undefined
 }
 
-export function updateControlFlowState(
-    controlFlow: ControlFlowState,
-    program: ActionState
-) {
-    if (
-        controlFlow.container == undefined ||
-        controlFlow.overlayContainer == undefined
-    ) {
+export function updateControlFlowState(controlFlow: ControlFlowState) {
+    if (controlFlow.container == undefined || controlFlow.overlayContainer == undefined) {
         throw new Error('Control flow state is not initialized')
     }
+
+    const programId = ApplicationState.visualization.programId
+    assert(programId != undefined, 'Program is undefined')
+    const program = ApplicationState.actions[programId]
 
     // Get all control flow points
     const controlFlowPoints = []
     const containerBbox = controlFlow.container.getBoundingClientRect()
 
-    const points = program.representation.getControlFlow(program)
+    const points = program.representation.getControlFlow()
 
     if (points == null) {
         return
@@ -111,9 +98,8 @@ export function updateControlFlowState(
     controlFlow.flowPathOverlay.setAttribute('d', d)
 
     // Update timings of step proxies
-    const leafSteps = getLeafSteps(
-        ApplicationState.visualization.program?.vertices ?? []
-    )
+
+    const leafSteps = getLeafSteps(program.vertices.map((v) => ApplicationState.actions[v]))
     const pathBbox = controlFlow.container.getBoundingClientRect()
 
     for (let t = 0; t < controlFlow.flowPath.getTotalLength(); t += 1) {

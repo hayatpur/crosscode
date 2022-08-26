@@ -4,6 +4,7 @@ import { createEnvironment } from '../../environment/environment'
 import { EnvironmentState, Residual } from '../../environment/EnvironmentState'
 import { getLeafStepsFromIDs } from '../../utilities/action'
 import { createElement, createSVGElement } from '../../utilities/dom'
+import { assert } from '../../utilities/generic'
 import { remap } from '../../utilities/math'
 import { getBreakIndexOfFrameIndex } from '../Action/Mapping/ActionMapping'
 import { TrailGroup } from '../Trail/TrailGroup'
@@ -12,7 +13,7 @@ import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
 /* ------------------------------------------------------ */
 /*        View displays a series of program states        */
 /* ------------------------------------------------------ */
-export interface ViewState {
+export type ViewState = {
     id: string
 
     preFrame: EnvironmentState
@@ -42,9 +43,7 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
     const svg = createSVGElement('environment-svg', element)
 
     const sound = new Howl({
-        src: [
-            './src/assets/material_product_sounds/ogg/04 Secondary System Sounds/navigation_transition-left.ogg',
-        ],
+        src: ['./src/assets/material_product_sounds/ogg/04 Secondary System Sounds/navigation_transition-left.ogg'],
     })
 
     const base: ViewState = {
@@ -152,9 +151,11 @@ export function updateView(view: ViewState) {
     let amount = 0
 
     /* --------------- Find the closest frame --------------- */
-    const steps = getLeafStepsFromIDs(
-        ApplicationState.visualization.program?.vertices ?? []
-    )
+    const programId = ApplicationState.visualization.programId
+    assert(programId != undefined, 'Program is undefined')
+    const program = ApplicationState.actions[programId]
+
+    const steps = getLeafStepsFromIDs(program.vertices)
 
     if (steps.length == 0) {
         return
@@ -170,9 +171,7 @@ export function updateView(view: ViewState) {
             amount = Math.min(remap(time, start, end, 0, 1), 1)
             if (time <= end) {
                 if (!proxy.element.classList.contains('is-playing')) {
-                    view.sound.rate(
-                        Math.max(0.5, 3 - Math.abs(start - end) / 20)
-                    )
+                    view.sound.rate(Math.max(0.5, 3 - Math.abs(start - end) / 20))
                     view.sound.play()
                 }
 
@@ -244,9 +243,7 @@ export function updateView(view: ViewState) {
         const trails = view.trails[i]
         const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
 
-        trails.trails.forEach((trail) =>
-            trail.renderer.alwaysUpdate(view.renderers[breakIndex])
-        )
+        trails.trails.forEach((trail) => trail.renderer.alwaysUpdate(view.renderers[breakIndex]))
     }
 
     /* ----------- Update position of containers ------------ */
@@ -258,12 +255,9 @@ export function updateView(view: ViewState) {
         // If candidate is in the same break
         if (candidateBreakIndex == i) {
             const activeAction = steps[0].proxy
-            const activeActionBbox =
-                activeAction.element.getBoundingClientRect()
+            const activeActionBbox = activeAction.element.getBoundingClientRect()
             container.style.top = `${
-                activeActionBbox.top +
-                activeActionBbox.height / 2 -
-                container.getBoundingClientRect().height / 2
+                activeActionBbox.top + activeActionBbox.height / 2 - container.getBoundingClientRect().height / 2
             }px`
 
             container.classList.remove('will-play')
@@ -314,25 +308,22 @@ export function syncViewFrames(view: ViewState) {
     }
 
     /* ----------- Place breaks at right position ----------- */
-    const steps = getLeafStepsFromIDs(
-        ApplicationState.visualization.program?.vertices ?? []
-    )
+    const programId = ApplicationState.visualization.programId
+    assert(programId != undefined, 'Program is undefined')
+    const program = ApplicationState.actions[programId]
+
+    const steps = getLeafStepsFromIDs(program?.vertices ?? [])
     for (let i = 0; i < mapping.breaks.length; i++) {
         const actionToBreakOn = steps[0]
-        const actionToBreakOnBbox =
-            actionToBreakOn.element.getBoundingClientRect()
+        const actionToBreakOnBbox = actionToBreakOn.element.getBoundingClientRect()
 
         const nextAction = steps[mapping.breaks[i] + 1]
         const nextActionBbox = nextAction?.element.getBoundingClientRect()
 
         if (nextActionBbox != null) {
-            mapping.breakElements[i].style.top = `${
-                (actionToBreakOnBbox.bottom + nextActionBbox.top) / 2
-            }px`
+            mapping.breakElements[i].style.top = `${(actionToBreakOnBbox.bottom + nextActionBbox.top) / 2}px`
         } else {
-            mapping.breakElements[i].style.top = `${
-                actionToBreakOnBbox.bottom + 20
-            }px`
+            mapping.breakElements[i].style.top = `${actionToBreakOnBbox.bottom + 20}px`
         }
     }
 }

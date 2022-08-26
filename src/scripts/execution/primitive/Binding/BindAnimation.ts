@@ -5,12 +5,18 @@ import {
     getMemoryLocation,
     resolvePath,
 } from '../../../environment/environment'
-import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
-import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
+import {
+    Accessor,
+    EnvironmentState,
+} from '../../../environment/EnvironmentState'
+import {
+    DataState,
+    DataType,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface BindAnimation extends ExecutionNode {
+export type BindAnimation = ExecutionNode & {
     identifier: string
     existingMemorySpecifier: Accessor[]
 }
@@ -20,7 +26,11 @@ function apply(animation: BindAnimation, environment: EnvironmentState) {
     let location = null
 
     // Create a reference for variable
-    const reference = createPrimitiveData(DataType.Reference, [], `${animation.id}_Reference`)
+    const reference = createPrimitiveData(
+        DataType.Reference,
+        [],
+        `${animation.id}_Reference`
+    )
     const loc = addDataAt(environment, reference, [], `${animation.id}_Add`)
 
     if (animation.existingMemorySpecifier != null) {
@@ -31,7 +41,11 @@ function apply(animation: BindAnimation, environment: EnvironmentState) {
         ) as DataState
         location = getMemoryLocation(environment, data).foundLocation
     } else {
-        data = createPrimitiveData(DataType.Literal, undefined, `${animation.id}_BindNew`)
+        data = createPrimitiveData(
+            DataType.Literal,
+            undefined,
+            `${animation.id}_BindNew`
+        )
         location = addDataAt(environment, data, [], null)
     }
 
@@ -57,7 +71,9 @@ function computeReadAndWrites(
     dataCreated: boolean
 ) {
     animation._reads = [data]
-    animation._writes = dataCreated ? [variable, reference, data] : [variable, reference]
+    animation._writes = dataCreated
+        ? [variable, reference, data]
+        : [variable, reference]
 }
 
 export function bindAnimation(

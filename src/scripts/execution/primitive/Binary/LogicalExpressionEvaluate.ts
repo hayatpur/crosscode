@@ -19,7 +19,7 @@ import {
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface LogicalExpressionEvaluate extends ExecutionNode {
+export type LogicalExpressionEvaluate = ExecutionNode & {
     leftSpecifier: Accessor[]
     rightSpecifier: Accessor[]
     shortCircuit: boolean
@@ -27,7 +27,10 @@ export interface LogicalExpressionEvaluate extends ExecutionNode {
     outputRegister: Accessor[]
 }
 
-function apply(animation: LogicalExpressionEvaluate, environment: EnvironmentState) {
+function apply(
+    animation: LogicalExpressionEvaluate,
+    environment: EnvironmentState
+) {
     // Find left data
     let left = resolvePath(
         environment,
@@ -89,16 +92,26 @@ function apply(animation: LogicalExpressionEvaluate, environment: EnvironmentSta
         ) as DataState
         replaceDataWith(
             output,
-            createPrimitiveData(DataType.ID, evaluated.id, `${animation.id}_Placed`)
+            createPrimitiveData(
+                DataType.ID,
+                evaluated.id,
+                `${animation.id}_Placed`
+            )
         )
     } else {
-        removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
+        removeAt(
+            environment,
+            getMemoryLocation(environment, evaluated).foundLocation
+        )
     }
 
     // Clean up
     removeAt(environment, getMemoryLocation(environment, left).foundLocation)
     if (!animation.shortCircuit) {
-        removeAt(environment, getMemoryLocation(environment, right).foundLocation)
+        removeAt(
+            environment,
+            getMemoryLocation(environment, right).foundLocation
+        )
     }
 }
 
@@ -123,7 +136,9 @@ export function logicalExpressionEvaluate(
         ...createExecutionNode(),
         _name: 'LogicalExpressionEvaluate',
 
-        name: `Logical Evaluate ${accessorsToString(leftSpecifier)} ${operator} ${accessorsToString(
+        name: `Logical Evaluate ${accessorsToString(
+            leftSpecifier
+        )} ${operator} ${accessorsToString(
             rightSpecifier
         )} onto ${accessorsToString(outputRegister)}`,
 

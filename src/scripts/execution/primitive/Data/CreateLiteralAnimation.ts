@@ -5,11 +5,14 @@ import {
     accessorsToString,
     EnvironmentState,
 } from '../../../environment/EnvironmentState'
-import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
+import {
+    DataState,
+    DataType,
+} from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface CreateLiteralAnimation extends ExecutionNode {
+export type CreateLiteralAnimation = ExecutionNode & {
     value: string | number | bigint | boolean | RegExp
     locationHint: Accessor[]
     outputRegister: Accessor[]
@@ -21,7 +24,10 @@ export interface CreateLiteralAnimation extends ExecutionNode {
  * @param view
  * @param options
  */
-function apply(animation: CreateLiteralAnimation, environment: EnvironmentState) {
+function apply(
+    animation: CreateLiteralAnimation,
+    environment: EnvironmentState
+) {
     const data = createPrimitiveData(
         DataType.Literal,
         animation.value as number | string | boolean,
@@ -44,11 +50,18 @@ function apply(animation: CreateLiteralAnimation, environment: EnvironmentState)
     ) as DataState
     replaceDataWith(
         outputRegister,
-        createPrimitiveData(DataType.ID, data.id, `${animation.id}_OutputRegister`)
+        createPrimitiveData(
+            DataType.ID,
+            data.id,
+            `${animation.id}_OutputRegister`
+        )
     )
 }
 
-function computeReadAndWrites(animation: CreateLiteralAnimation, data: DataInfo) {
+function computeReadAndWrites(
+    animation: CreateLiteralAnimation,
+    data: DataInfo
+) {
     animation._reads = []
     animation._writes = [data]
 }

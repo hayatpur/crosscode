@@ -3,7 +3,7 @@ import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
-export interface CreateScopeAnimation extends ExecutionNode {
+export type CreateScopeAnimation = ExecutionNode & {
     type: ScopeType
 }
 
@@ -18,7 +18,9 @@ function computeReadAndWrites(animation: CreateScopeAnimation) {
     animation._writes = []
 }
 
-export function createScopeAnimation(type: ScopeType = ScopeType.Default): CreateScopeAnimation {
+export function createScopeAnimation(
+    type: ScopeType = ScopeType.Default
+): CreateScopeAnimation {
     return {
         ...createExecutionNode(null),
         _name: 'CreateScopeAnimation',
