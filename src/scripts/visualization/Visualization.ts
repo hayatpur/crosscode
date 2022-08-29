@@ -48,9 +48,9 @@ export function createVisualization(overrides: Partial<VisualizationState> = {})
         view: undefined,
         programId: undefined,
 
-        container: createVisualContainer(),
-
         focus: createFocus(),
+
+        container: createVisualContainer(),
 
         PARAMS: {
             a: 0.5,

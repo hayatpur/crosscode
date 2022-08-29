@@ -2,8 +2,12 @@ import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { getExecutionSteps, isPrimitive } from '../../../utilities/action'
+import { reflow } from '../../../utilities/dom'
 import { assert } from '../../../utilities/generic'
+import { Keyboard } from '../../../utilities/Keyboard'
 import { getNumericalValueOfStyle, lerp } from '../../../utilities/math'
+import { clearExistingFocus, isFocused } from '../../../visualization/Focus'
+import { collapseActionIntoAbyss } from '../Abyss'
 import { ActionState, createActionState, destroyAction, getActionCoordinates, updateAction } from '../Action'
 import { isSpatialByDefault } from '../Mapping/ActionProxy'
 
@@ -12,6 +16,8 @@ import { isSpatialByDefault } from '../Mapping/ActionProxy'
 /* ------------------------------------------------------ */
 export class Representation {
     actionId: string
+    shouldHover: boolean = false
+    ignoreStepClicks: boolean = false
 
     /**
      * Only class since typescript doesn't have type classes :(
@@ -77,7 +83,18 @@ export class Representation {
             ? proxy.element.classList.add('is-showing-steps')
             : proxy.element.classList.remove('is-showing-steps')
 
+        action.isShowingSteps
+            ? proxy.container.classList.add('is-showing-steps')
+            : proxy.container.classList.remove('is-showing-steps')
+
         action.isSpatial ? proxy.container.classList.add('is-spatial') : proxy.container.classList.remove('is-spatial')
+
+        // Add line break if necessary
+        if (action.execution.nodeData.hasLineBreak) {
+            proxy.container.classList.add('has-line-break')
+        } else {
+            proxy.container.classList.remove('has-line-break')
+        }
 
         /* ------------- If statement representation ------------ */
         if (action.execution.nodeData.preLabel == 'Test') {
@@ -109,6 +126,10 @@ export class Representation {
             proxy.element.innerHTML = `${label.trim()}`
             monaco.editor.colorize(proxy.element.innerHTML, 'javascript', {}).then((html) => {
                 proxy.element.innerHTML = html
+                proxy.element.classList.add('fit-width')
+                reflow(proxy.element)
+                proxy.element.style.width = `${proxy.element.getBoundingClientRect().width}px`
+                proxy.element.classList.remove('fit-width')
             })
         }
     }
@@ -321,6 +342,18 @@ export class Representation {
 
     unClip() {}
 
+    focus() {
+        const action = ApplicationState.actions[this.actionId]
+        action.proxy.element.classList.add('is-focused')
+
+        const focus = ApplicationState.visualization.focus
+        assert(focus != null, 'Focus is null')
+
+        clearExistingFocus()
+
+        focus.focusedActions.push(action.id)
+    }
+
     /**
      * Remove division of sub-steps, and show the original action.
      */
@@ -334,6 +367,96 @@ export class Representation {
         action.isShowingSteps = false
 
         updateAction(action)
+    }
+
+    toggleSteps() {
+        const action = ApplicationState.actions[this.actionId]
+
+        if (action.isShowingSteps) {
+            this.destroySteps()
+        } else {
+            this.createSteps()
+        }
+    }
+
+    clicked(): boolean {
+        const action = ApplicationState.actions[this.actionId]
+
+        if (Keyboard.instance.isPressed('Alt')) {
+            console.log('Grouping!', action.execution.nodeData.type)
+            // Grouper
+            if (action.proxy.isHovering) {
+                collapseActionIntoAbyss(action.id)
+                return true
+            }
+        } else if (Keyboard.instance.isPressed('Control')) {
+            if (
+                (action.isSpatial && !(action.execution.nodeData.type == 'Program') && action.isShowingSteps) ||
+                this.ignoreStepClicks
+            ) {
+                return false
+            }
+
+            action.representation.toggleSteps()
+            return true
+        } else if (action.proxy.isHovering) {
+            // Pointer
+            if (isFocused(action.id)) {
+                clearExistingFocus()
+            } else {
+                action.representation.focus()
+            }
+            return true
+        }
+
+        return false
+    }
+
+    setupHoverListener() {
+        const action = ApplicationState.actions[this.actionId]
+
+        action.proxy.element.addEventListener('mouseenter', (e) => {
+            const action = ApplicationState.actions[this.actionId]
+
+            if (action.representation.shouldHover) {
+                action.proxy.isHovering = true
+                action.proxy.element.classList.add('is-hovering')
+            }
+
+            e.preventDefault()
+            e.stopPropagation()
+        })
+
+        action.proxy.element.addEventListener('mouseleave', (e) => {
+            const action = ApplicationState.actions[this.actionId]
+
+            if (action.proxy.isHovering) {
+                action.proxy.isHovering = false
+                action.proxy.element.classList.remove('is-hovering')
+            }
+
+            e.preventDefault()
+            e.stopPropagation()
+        })
+    }
+
+    setupClickListener() {
+        const action = ApplicationState.actions[this.actionId]
+
+        action.proxy.element.addEventListener('click', (e) => {
+            console.log('Clicked', action.execution.nodeData.type)
+            let success = this.clicked()
+
+            if (success) {
+                e.preventDefault()
+                e.stopPropagation()
+            }
+        })
+    }
+
+    setupEventListeners() {
+        this.setupClickListener()
+        this.setupHoverListener()
     }
 
     destroy() {}

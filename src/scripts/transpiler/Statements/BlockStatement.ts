@@ -2,11 +2,7 @@ import * as ESTree from 'estree'
 import { EnvironmentState } from '../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
-import {
-    ControlOutput,
-    ControlOutputData,
-    ExecutionContext,
-} from '../../execution/primitive/ExecutionNode'
+import { ControlOutput, ControlOutputData, ExecutionContext } from '../../execution/primitive/ExecutionNode'
 import { createScopeAnimation } from '../../execution/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../execution/primitive/Scope/PopScopeAnimation'
 import { clone } from '../../utilities/objects'
@@ -43,6 +39,8 @@ export function BlockStatement(
         applyExecutionNode(createScope, environment)
     }
 
+    let currLine = -1
+
     // Add statements
     for (const statement of ast.body) {
         const controlOutput: ControlOutputData = { output: ControlOutput.None }
@@ -51,7 +49,16 @@ export function BlockStatement(
             ...context,
             controlOutput,
         })
-        addVertex(graph, animation, { nodeData: getNodeData(statement, 'Statement') })
+
+        let line = animation.nodeData.location?.start.line as number
+        let hasLineBreak = false
+        if (line > currLine + 1 && currLine >= 0) {
+            // Add a line break
+            hasLineBreak = true
+        }
+        currLine = animation.nodeData.location?.end.line as number
+
+        addVertex(graph, animation, { nodeData: getNodeData(statement, 'Statement', hasLineBreak) })
 
         if (controlOutput.output == ControlOutput.Break) {
             // Keep propagating 'break' until reaching a ForStatement or WhileStatement

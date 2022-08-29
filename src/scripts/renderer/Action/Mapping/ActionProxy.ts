@@ -52,6 +52,8 @@ export function createActionProxy(overrides: Partial<ActionProxyState> = {}): Ac
         container
     )
 
+    // autoAnimate(element)
+
     const base: ActionProxyState = {
         element: element,
         header: header,
@@ -62,35 +64,11 @@ export function createActionProxy(overrides: Partial<ActionProxyState> = {}): Ac
         isHovering: false,
     }
 
-    // Event listeners
-    setupEventListeners(base)
-
     return { ...base, ...overrides }
 }
 
 export function destroyActionProxy(proxy: ActionProxyState) {
     proxy.container.remove()
-}
-
-export function setupEventListeners(proxy: ActionProxyState) {
-    proxy.element.addEventListener('click', (e) => {
-        const action = ApplicationState.actions[proxy.actionID]
-
-        if (action.isSpatial && !(action.execution.nodeData.type == 'Program') && action.isShowingSteps) {
-            e.preventDefault()
-            e.stopPropagation()
-            return
-        }
-
-        if (action.isShowingSteps) {
-            action.representation.destroySteps()
-        } else {
-            action.representation.createSteps()
-        }
-
-        e.preventDefault()
-        e.stopPropagation()
-    })
 }
 
 export function isSpatialByDefault(execution: ExecutionGraph | ExecutionNode) {

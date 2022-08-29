@@ -1,4 +1,5 @@
 import { Editor } from './editor/Editor'
+import { AbyssState } from './renderer/Action/Abyss'
 import { ActionState } from './renderer/Action/Action'
 import { CodeQueryState } from './visualization/query/CodeSelectionQuery'
 import { VisualizationState } from './visualization/Visualization'
@@ -17,4 +18,5 @@ export class ApplicationState {
 
     // Collections
     static actions: { [id: string]: ActionState } = {}
+    static abysses: { [id: string]: AbyssState } = {}
 }

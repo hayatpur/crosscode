@@ -49,6 +49,11 @@ export type ActionState = {
     // Used for spatial actions
     placeholder: HTMLElement
     placeholderRay: SVGPathElement
+
+    // Contained abysses
+    abyssesIds: string[]
+
+    isPinned: boolean
 }
 
 /* --------------------- Initializer -------------------- */
@@ -87,15 +92,23 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
         element: element,
         vertices: [],
         edges: [],
+        abyssesIds: [],
         spatialParentID: overrides.spatialParentID,
         spatialVertices: new Set(),
         minimized: false,
+        isPinned: false,
     }
+
+    // Apply overrides
+    Object.assign(base, overrides)
 
     ApplicationState.actions[id] = base as ActionState
 
     base.representation = createRepresentation(ApplicationState.actions[id])
     base.proxy = createActionProxy({ actionID: id })
+
+    // Event listeners
+    base.representation.setupEventListeners()
 
     // Update visual
     base.representation.updateProxyVisual()
@@ -112,7 +125,7 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
 
     appendProxyToMapping(base.proxy, ApplicationState.visualization.mapping)
 
-    return { ...(base as ActionState), ...overrides }
+    return base as ActionState
 }
 
 /* ------------------------------------------------------ */
@@ -214,11 +227,6 @@ export function makeSpatial(actionId: string) {
     assert(parent.spatialParentID != null, 'Parent has no spatial parent')
     const spatialParent = ApplicationState.actions[parent.spatialParentID]
     spatialParent.spatialVertices.add(action.id)
-
-    // Update focus
-    const focus = ApplicationState.visualization.focus
-    assert(focus != null, 'Focus not found.')
-    focus.currentFocus = action.id
 }
 
 export function updateActionRay(actionID: string) {

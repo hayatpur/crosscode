@@ -6,6 +6,7 @@ export type NodeData = {
     location?: ESTree.SourceLocation
     type?: string
     preLabel?: string
+    hasLineBreak?: boolean
 }
 
 export type ChunkNodeData = NodeData & {}
@@ -54,9 +55,7 @@ export type ExecutionNode = {
     apply: (animation: ExecutionNode, environment: EnvironmentState) => void
 }
 
-export function instanceOfExecutionNode(
-    animation: any
-): animation is ExecutionNode {
+export function instanceOfExecutionNode(animation: any): animation is ExecutionNode {
     return animation._type == 'ExecutionNode'
 }
 
@@ -77,7 +76,6 @@ export function createExecutionNode(nodeData: NodeData = {}): ExecutionNode {
 
         nodeData,
 
-        apply: () =>
-            console.warn('[ExecutionNode] Non-implemented apply callback'),
+        apply: () => console.warn('[ExecutionNode] Non-implemented apply callback'),
     }
 }

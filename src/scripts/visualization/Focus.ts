@@ -1,21 +1,21 @@
-import { createElement } from '../utilities/dom'
+import { ApplicationState } from '../ApplicationState'
+import { ForStatementRepresentation } from '../renderer/Action/Dynamic/ForStatementRepresentation'
+import { assert } from '../utilities/generic'
+import { Keyboard } from '../utilities/Keyboard'
 import { Ticker } from '../utilities/Ticker'
 
 export type FocusState = {
-    currentFocus: string | undefined
-    focusElement: HTMLElement
+    focusedActions: (string | string[])[]
 
     // Tick id
     tickID: string
 }
 
 export function createFocus(overrides: Partial<FocusState> = {}): FocusState {
-    const element = createElement('div', 'focus')
-    document.body.appendChild(element)
+    // const element = createElement('div', 'focus', document.body)
 
     const base: FocusState = {
-        currentFocus: undefined,
-        focusElement: element,
+        focusedActions: [],
         tickID: Ticker.instance.registerTick(() => {
             updateFocus()
         }),
@@ -25,32 +25,64 @@ export function createFocus(overrides: Partial<FocusState> = {}): FocusState {
 }
 
 export function destroyFocus(focus: FocusState) {
-    focus.focusElement.remove()
+    // focus.element.remove()
+}
+
+export function clearExistingFocus() {
+    const focus = ApplicationState.visualization.focus
+    assert(focus != undefined, 'Focus is undefined')
+
+    if (Keyboard.instance.isPressed('Shift')) {
+        return
+    }
+
+    for (let i = focus.focusedActions.length - 1; i >= 0; i--) {
+        const otherId = focus.focusedActions[i]
+
+        if (Array.isArray(otherId)) {
+            const forLoopId = ApplicationState.actions[otherId[0]].parentID as string
+            const forLoop = ApplicationState.actions[forLoopId]
+
+            const iterationIndex = Math.floor(Math.max(0, forLoop.vertices.indexOf(otherId[0]) - 1) / 3)
+            const representation = forLoop.representation as ForStatementRepresentation
+
+            if (!representation.pinnedIterations.has(iterationIndex)) {
+                // Remove iteration from focus
+                focus.focusedActions.splice(focus.focusedActions.indexOf(otherId), 1)
+                representation.pinnedIterations.delete(iterationIndex)
+                representation.iterationElements[iterationIndex].classList.remove('is-focused')
+            }
+        } else {
+            const other = ApplicationState.actions[otherId]
+            if (!other.isPinned) {
+                other.proxy.container.classList.remove('is-focused')
+                other.proxy.element.classList.remove('is-focused')
+
+                focus.focusedActions.splice(i, 1)
+            }
+        }
+    }
 }
 
 export function updateFocus() {
     // const focus = ApplicationState.visualization.focus
-    // if (focus == undefined) {
-    //     throw new Error('Focus is undefined.')
-    // }
-    // if (focus.currentFocus === undefined) {
-    //     focus.focusElement.style.display = 'none'
+    // assert(focus != undefined, 'Focus is undefined.')
+    // if (focus.focusedActions.length == 0) {
+    //     focus.element.classList.add('is-hidden')
     // } else {
-    //     focus.focusElement.style.display = 'block'
-    //     // Get element
-    //     const element =
-    //         ApplicationState.actions[focus.currentFocus].proxy.element
+    //     focus.element.classList.remove('is-hidden')
+    //     const element = ApplicationState.actions[focus.focusedActions[0]].proxy.element
     //     if (element == undefined) {
     //         throw new Error('Focus element is undefined.')
     //     }
     //     // Set position
     //     const bbox = element.getBoundingClientRect()
-    //     focus.focusElement.style.left = `${bbox.left}px`
-    //     focus.focusElement.style.top = `${bbox.top}px`
-    //     focus.focusElement.style.width = `${bbox.width}px`
-    //     focus.focusElement.style.height = `${bbox.height}px`
+    //     focus.element.style.left = `${bbox.left}px`
+    //     focus.element.style.top = `${bbox.top}px`
+    //     focus.element.style.width = `${bbox.width}px`
+    //     focus.element.style.height = `${bbox.height}px`
     // }
-    // // Scale down all elements that are not focused
+    // Scale down all elements that are not focused
     // const spatialActionProxies = Object.values(ApplicationState.actions).filter(
     //     (action) =>
     //         action.isSpatial || action.execution.nodeData.type == 'Program'
@@ -69,4 +101,11 @@ export function updateFocus() {
     //         }
     //     }
     // }
+}
+
+export function isFocused(actionId: string) {
+    const focus = ApplicationState.visualization.focus
+    assert(focus != undefined, 'Focus is undefined')
+
+    return focus.focusedActions.includes(actionId)
 }

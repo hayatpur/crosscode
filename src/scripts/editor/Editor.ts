@@ -9,26 +9,15 @@ export class Editor {
     monaco: monaco.editor.IStandaloneCodeEditor
 
     // Callbacks
-    onSelectionUpdate: Set<
-        (e: monaco.editor.ICursorSelectionChangedEvent) => void
-    >
+    onSelectionUpdate: Set<(e: monaco.editor.ICursorSelectionChangedEvent) => void>
     onChangeContent: Set<() => void>
 
     dragSelections: HTMLDivElement[] = []
 
     constructor() {
-        monaco.editor.defineTheme(
-            'atom',
-            getDarkTheme() as monaco.editor.IStandaloneThemeData
-        )
-        monaco.editor.defineTheme(
-            'github',
-            getLightTheme() as monaco.editor.IStandaloneThemeData
-        )
-        monaco.editor.defineTheme(
-            'dawn',
-            getDawnTheme() as monaco.editor.IStandaloneThemeData
-        )
+        monaco.editor.defineTheme('atom', getDarkTheme() as monaco.editor.IStandaloneThemeData)
+        monaco.editor.defineTheme('github', getLightTheme() as monaco.editor.IStandaloneThemeData)
+        monaco.editor.defineTheme('dawn', getDawnTheme() as monaco.editor.IStandaloneThemeData)
 
         this.parent = document.getElementById(`editor`) as HTMLElement
 
@@ -53,9 +42,7 @@ export class Editor {
             // codeLens: false,
             dragAndDrop: false,
             theme: 'dawn',
-            fontFamily: window
-                .getComputedStyle(document.documentElement)
-                .getPropertyValue('--code-font-family'),
+            fontFamily: window.getComputedStyle(document.documentElement).getPropertyValue('--code-font-family'),
             fontLigatures: true,
             // quickSuggestions: false,
             // parameterHints: {
@@ -78,7 +65,7 @@ export class Editor {
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 monaco.editor.remeasureFonts()
-            }, 2000)
+            }, 500)
         })
 
         // Fetch default text
@@ -139,32 +126,22 @@ export class Editor {
 
     getSelectedText() {
         const model = this.monaco.getModel() as monaco.editor.ITextModel
-        return model.getValueInRange(
-            this.monaco.getSelection() as monaco.Selection
-        )
+        return model.getValueInRange(this.monaco.getSelection() as monaco.Selection)
     }
 
     getSelectedTextBoundingBox() {
         const selection = document.getElementsByClassName('cslr selected-text')
-        return selection.length > 0
-            ? selection[0].getBoundingClientRect()
-            : null
+        return selection.length > 0 ? selection[0].getBoundingClientRect() : null
     }
 
     computeBoundingBoxForSection() {
         const selection = document.getElementsByClassName('cslr selected-text')
-        return selection.length > 0
-            ? selection[0].getBoundingClientRect()
-            : null
+        return selection.length > 0 ? selection[0].getBoundingClientRect() : null
     }
 
     computeBoundingBox(ln: number) {
-        const lines = Array.from(
-            document.body.getElementsByClassName('view-lines')[0].children
-        )
-        lines.sort(
-            (a, b) => a.getBoundingClientRect().y - b.getBoundingClientRect().y
-        )
+        const lines = Array.from(document.body.getElementsByClassName('view-lines')[0].children)
+        lines.sort((a, b) => a.getBoundingClientRect().y - b.getBoundingClientRect().y)
 
         const line = lines[ln - 1]
 
@@ -192,9 +169,7 @@ export class Editor {
         const max_x = Math.max(start.x + start.width, end.x + end.width)
 
         let y = min_y
-        let x =
-            min_x +
-            Math.min(location.start.column, location.end.column) * charWidth
+        let x = min_x + Math.min(location.start.column, location.end.column) * charWidth
 
         let height = end.y + end.height - start.y
         let width =
@@ -225,14 +200,9 @@ export class Editor {
         return Array.from(document.querySelectorAll('.view-line > span > span'))
     }
 
-    getContainedTokenElements(
-        bbox: { x: number; y: number; width: number; height: number },
-        tokens?: Element[]
-    ) {
+    getContainedTokenElements(bbox: { x: number; y: number; width: number; height: number }, tokens?: Element[]) {
         if (tokens == undefined) {
-            tokens = Array.from(
-                document.querySelectorAll('.view-line > span > span')
-            )
+            tokens = Array.from(document.querySelectorAll('.view-line > span > span'))
         }
 
         return tokens.filter((token) => {
@@ -246,17 +216,11 @@ export class Editor {
         })
     }
 
-    updateDragSelection(selection: {
-        x: number
-        y: number
-        x2: number
-        y2: number
-    }) {
+    updateDragSelection(selection: { x: number; y: number; x2: number; y2: number }) {
         this.dragSelections.forEach((sel) => sel.remove())
         this.dragSelections = []
 
-        const lines =
-            document.body.getElementsByClassName('view-lines')[0].children
+        const lines = document.body.getElementsByClassName('view-lines')[0].children
 
         const min_y = Math.min(selection.y, selection.y2)
         const max_y = Math.max(selection.y, selection.y2)
@@ -289,9 +253,7 @@ export class Editor {
 
     getMaxWidth() {
         let maxWidth = 0
-        for (const lineEl of Array.from(
-            document.querySelectorAll('.view-line')
-        )) {
+        for (const lineEl of Array.from(document.querySelectorAll('.view-line'))) {
             const tokens = lineEl.children[0].children
             if (tokens.length > 0) {
                 const last = tokens[tokens.length - 1]

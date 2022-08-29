@@ -4,8 +4,9 @@ import { ApplicationState } from '../../ApplicationState'
 import { getDepthOfExecution, queryExecutionGraph } from '../../execution/execution'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { collapseActionIntoAbyss } from '../../renderer/Action/Abyss'
 import { ActionState } from '../../renderer/Action/Action'
-import { getAbstractionPath } from '../../utilities/action'
+import { containsSpatialChild, getAbstractionPath } from '../../utilities/action'
 import { assert } from '../../utilities/generic'
 import { getClosestMatch } from '../../utilities/math'
 
@@ -69,6 +70,8 @@ export function getQuery(selection: ESTree.SourceLocation) {
 
     // executionSelection.reverse()
 
+    let createdActions = []
+
     for (const execution of executionSelection) {
         // Two cases:
         // 1. If the execution is already shown, just highlight it
@@ -83,8 +86,6 @@ export function getQuery(selection: ESTree.SourceLocation) {
             | ExecutionNode
         )[]
 
-        console.log(parent, executionPath)
-
         let currentParent = parent
 
         executionPath.shift() // Remove the current parent
@@ -94,38 +95,32 @@ export function getQuery(selection: ESTree.SourceLocation) {
             const next = executionPath.shift()
             assert(next != null, 'Next is null')
 
-            console.log('Creating steps for ...', currentParent.execution.nodeData)
             if (!currentParent.isShowingSteps) {
                 currentParent.representation.createSteps()
             }
+
             const currentParentId = currentParent.vertices.find(
                 (v) => ApplicationState.actions[v].execution.id == next.id
             ) as string
 
             currentParent = ApplicationState.actions[currentParentId]
-
-            if (ApplicationState.actions[currentParentId].isSpatial) {
-                currentParent.representation.minimize()
-            }
         }
 
-        // const action = new Action(execution, parent, {
-        //     inline: true,
-        //     spacingDelta: 0,
-        // })
+        createdActions.push(currentParent)
+    }
 
-        // parent.steps.push(action)
-        // parent.renderer.render(parent)
+    for (const action of createdActions) {
+        const spatialParent = ApplicationState.actions[action.spatialParentID as string]
 
-        // // const spatialRoot = parent.controller.getSpatialRoot()
-        // // spatialRoot.mapping.updateSteps()
-        // // Update temporal overlaps
-        // parent.controller.updateTemporalOverlaps()
-        // parent.representation.render()
-
-        // this.actions.push(action)
-        // this.parents.push(parent)
-        // break
+        // Add an abyss *before* the execution
+        for (let i = spatialParent.vertices.length - 1; i >= 0; i--) {
+            const vId = spatialParent.vertices[i]
+            const v = ApplicationState.actions[vId]
+            if (vId != action.id && !containsSpatialChild(v)) {
+                console.log(v.execution.nodeData)
+                collapseActionIntoAbyss(vId)
+            }
+        }
     }
 }
 

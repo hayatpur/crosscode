@@ -1,25 +1,28 @@
 import { ApplicationState } from '../../../ApplicationState'
 import { getAccumulatedBoundingBox } from '../../../utilities/action'
+import { AbyssKind } from '../Abyss'
 import { ActionState } from '../Action'
 import { Representation } from './Representation'
 
 export class FunctionCallRepresentation extends Representation {
     constructor(action: ActionState) {
         super(action)
+
+        this.shouldHover = true
     }
 
     postCreate() {
         this.createSteps()
 
-        const action = ApplicationState.actions[this.actionId]
+        // const action = ApplicationState.actions[this.actionId]
 
         // If there is only one step, then expand it
-        if (action.vertices.length == 1) {
-            const step = ApplicationState.actions[action.vertices[0]]
-            step.representation.createSteps()
+        // if (action.vertices.length == 1) {
+        //     const step = ApplicationState.actions[action.vertices[0]]
+        //     step.representation.createSteps()
 
-            step.proxy.element.classList.add('frameless')
-        }
+        //     // step.proxy.element.classList.add('frameless')
+        // }
     }
 
     updateSpatialActionProxyPositionChildren(offset: { x: number; y: number }): string[] {
@@ -31,7 +34,12 @@ export class FunctionCallRepresentation extends Representation {
         action.vertices.forEach((id) => {
             const vertex = ApplicationState.actions[id]
             const childSpatialIDs: string[] = []
-            childSpatialIDs.push(...vertex.representation.updateSpatialActionProxyPosition({ ...rOffset }))
+
+            const copy = { ...rOffset }
+            if (action.abyssesIds.find((id) => ApplicationState.abysses[id].kind == AbyssKind.Spatial)) {
+                copy.x = 0
+            }
+            childSpatialIDs.push(...vertex.representation.updateSpatialActionProxyPosition(copy))
 
             // If hit something
             if (childSpatialIDs.length > 0) {

@@ -31,4 +31,8 @@ export class ProgramRepresentation extends Representation {
 
         return spatialIDs
     }
+
+    clicked() {
+        return false
+    }
 }

@@ -5,12 +5,14 @@ import { ActionState } from '../renderer/Action/Action'
 import { BinaryStatementRepresentation } from '../renderer/Action/Dynamic/BinaryExpressionRepresentation'
 import { BlockStatementRepresentation } from '../renderer/Action/Dynamic/BlockStatementRepresentation'
 import { CallExpressionRepresentation } from '../renderer/Action/Dynamic/CallExpressionRepresentation'
+import { ExpressionStatementRepresentation } from '../renderer/Action/Dynamic/ExpressionStatementRepresentation'
 import { ForStatementRepresentation } from '../renderer/Action/Dynamic/ForStatementRepresentation'
 import { FunctionCallRepresentation } from '../renderer/Action/Dynamic/FunctionCallRepresentation'
 import { IfStatementRepresentation } from '../renderer/Action/Dynamic/IfStatementRepresentation'
 import { ProgramRepresentation } from '../renderer/Action/Dynamic/ProgramRepresentation'
 import { Representation } from '../renderer/Action/Dynamic/Representation'
 import { ReturnStatementRepresentation } from '../renderer/Action/Dynamic/ReturnStatementRepresentation'
+import { UpdateExpressionRepresentation } from '../renderer/Action/Dynamic/UpdateExpressionRepresentation'
 import { VariableDeclarationRepresentation } from '../renderer/Action/Dynamic/VariableDeclarationRepresentation'
 import { assert } from './generic'
 
@@ -92,6 +94,8 @@ export function createRepresentation(action: ActionState) {
         Program: ProgramRepresentation,
         FunctionCall: FunctionCallRepresentation,
         BlockStatement: BlockStatementRepresentation,
+        UpdateExpression: UpdateExpressionRepresentation,
+        ExpressionStatement: ExpressionStatementRepresentation,
     }
 
     if (action.execution.nodeData.type in mapping) {
@@ -234,4 +238,35 @@ export function getAccumulatedBoundingBox(IDs: string[]) {
     }
 
     return bbox
+}
+
+export function isStatement(execution: ExecutionGraph | ExecutionNode) {
+    const statements = new Set([
+        'IfStatement',
+        'ForStatement',
+        'WhileStatement',
+        'VariableDeclaration',
+        'ReturnStatement',
+        'ExpressionStatement',
+    ])
+
+    return statements.has(execution.nodeData?.type ?? '')
+}
+
+export function containsSpatialChild(action: ActionState) {
+    for (const v of action.vertices) {
+        if (ApplicationState.actions[v].execution.nodeData.type == 'CallExpression') {
+            return true
+        }
+    }
+    return false
+
+    // for (const stepID of action.vertices) {
+    //     const step = ApplicationState.actions[stepID]
+    //     if (step.isSpatial || containsSpatialChild(step)) {
+    //         return false
+    //     }
+    // }
+
+    // return false
 }

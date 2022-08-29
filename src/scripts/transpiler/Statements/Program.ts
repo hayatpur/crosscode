@@ -12,6 +12,8 @@ export function Program(ast: ESTree.Program, environment: EnvironmentState, cont
 
     const controlOutput = { output: ControlOutput.None }
 
+    let currLine = -1
+
     // Add blocks
     for (const statement of ast.body) {
         const animation = Compiler.compile(statement, environment, {
@@ -20,7 +22,15 @@ export function Program(ast: ESTree.Program, environment: EnvironmentState, cont
         })
 
         if (animation != null) {
-            addVertex(graph, animation, { nodeData: getNodeData(statement, 'Statement') })
+            let line = animation.nodeData.location?.start.line as number
+            let hasLineBreak = false
+            if (line > currLine + 1 && currLine >= 0) {
+                // Add a line break
+                hasLineBreak = true
+            }
+            currLine = animation.nodeData.location?.end.line as number
+
+            addVertex(graph, animation, { nodeData: getNodeData(statement, 'Statement', hasLineBreak) })
         }
     }
 

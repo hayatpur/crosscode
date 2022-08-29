@@ -6,6 +6,8 @@ import { Representation } from './Representation'
 export class BlockStatementRepresentation extends Representation {
     constructor(action: ActionState) {
         super(action)
+
+        this.shouldHover = true
     }
 
     postCreate(): void {
@@ -14,6 +16,7 @@ export class BlockStatementRepresentation extends Representation {
         // If there is only one step, then expand it
         if (getExecutionSteps(action.execution).length == 1) {
             this.createSteps()
+            action.proxy.container.classList.add('is-singular')
         }
     }
 }

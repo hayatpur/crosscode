@@ -46,9 +46,10 @@
     box-shadow: 0px 0px 0px 1px #b5b5b554 inset;
 
     transform: scale(1);
-    transition-property: background;
-    transition-duration: 0.2s;
-    cursor: pointer;
+    // transition-property: background;
+    // transition-duration: 0.2s;
+    transition: 0.2s;
+    // cursor: pointer;
 
     // border: 1px solid #ffffff30;
 
@@ -61,20 +62,21 @@
     user-select: none;
 }
 
+.action-proxy-container.is-spatial > .action-proxy {
+    border-left: 1px solid #0000;
+}
+
 .action-proxy:not(.is-showing-steps) {
     max-width: 200px;
     max-height: 100px;
 }
 
 .action-proxy:hover {
-    background: var(--s-color-0-2);
+    background: var(--color-4);
 }
 
 .action-proxy.is-showing-steps {
     background: none;
-    border: none;
-    // box-shadow: 0px 0px 0px 0.5px rgb(255 255 255 / 41%) !important;
-    // box-shadow: none !important;
     box-shadow: 0px 0px 0px 0.5px var(--color-4) !important;
 }
 
@@ -135,12 +137,7 @@
     font-family: var(--code-font-family);
     font-size: 14px;
     margin: 0px 7px;
-}
-
-.action-proxy.type-ForStatement {
-    > .action-proxy {
-        position: absolute;
-    }
+    pointer-events: none;
 }
 
 .action-proxy-code-label {
@@ -160,8 +157,50 @@
 .action-proxy-for-iteration {
     display: flex;
     flex-direction: column;
-    margin-left: 25px;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
+    transition: 0.2s;
+    padding: 3px;
+    padding-left: 0px;
+    position: relative;
+    border-radius: var(--border-radius);
+    box-shadow: 0px 0px 0px 1px var(--color-2) !important;
+    padding: 5px;
+    width: fit-content;
+    background: var(--color-1);
+}
+
+.action-proxy-for-iteration.is-focused {
+    padding: 5px;
+}
+
+.action-proxy-for-iteration::after {
+    content: '';
+    width: 33%;
+    border-top: 1px solid var(--color-3);
+    position: absolute;
+    top: -3px;
+    border: none !important;
+}
+
+.action-proxy-for-iteration.consumed + .action-proxy-for-iteration::after {
+    border: none !important;
+}
+
+.action-proxy-for-iteration:first-child::after {
+    border: none !important;
+}
+
+.action-proxy-abyss + .action-proxy-for-iteration::after {
+    border: none !important;
+}
+
+.action-proxy-for-iteration:not(.is-focused):first-child {
+    // padding-top: 0px;
+}
+
+.action-proxy-container.is-minimized > .action-proxy.type-ForStatement > .action-proxy-for-iteration {
+    box-shadow: none;
+    border-radius: 0px;
 }
 
 .action-proxy-for-iteration:last-child {
@@ -173,7 +212,9 @@
 }
 
 .action-proxy-for-label {
-    position: absolute;
+    width: 25px;
+    transition: 0.2s;
+    height: 14px;
 }
 
 .action-proxy-for-iteration-top > div {
@@ -192,12 +233,12 @@
     cursor: default !important;
     justify-content: center;
     align-items: center;
-    width: fit-content !important;
     min-width: 9px;
     padding: 2px;
     font-size: 14px;
     background: none !important;
     box-shadow: none !important;
+    pointer-events: none !important;
 }
 
 .type-ArrayExpression > div:not(:last-child).action-proxy,
@@ -207,15 +248,15 @@
 
 .action-proxy.type-ForStatement.is-showing-steps {
     flex-direction: column;
-    box-shadow: none !important;
     margin-left: 2px;
-    // max-height: 35px;
-    // overflow-y: scroll;
+}
+
+.action-proxy.type-ForStatement.is-showing-steps:not(.is-hovering):not(.is-focused) {
+    box-shadow: none !important;
 }
 
 .action-proxy.pre-label-Name {
     font-family: var(--code-font-family);
-    width: fit-content !important;
     background: none !important;
     box-shadow: none !important;
     border: none !important;
@@ -230,8 +271,16 @@
     background: var(--s-color-2-1) !important;
 }
 
+.action-proxy.pre-label-Test._Test_true:hover {
+    background: var(--s-color-2-2) !important;
+}
+
 .action-proxy.pre-label-Test._Test_false {
     background: var(--s-color-5-1) !important;
+}
+
+.action-proxy.pre-label-Test._Test_false:hover {
+    background: var(--s-color-5-2) !important;
 }
 
 .action-proxy.pre-label-Test {
@@ -262,7 +311,7 @@
 
 .action-proxy.type-IfStatement.is-showing-steps {
     flex-direction: column;
-    padding: 5px;
+    box-shadow: none !important;
 }
 
 .action-proxy-if-row {
@@ -271,24 +320,19 @@
 }
 
 .action-proxy-if-row:not(:last-child) {
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .action-proxy-if-placeholder {
-    width: 50px;
-    height: 20px;
+    width: 33px;
+    height: 15px;
     background: var(--color-3);
     border-radius: var(--border-radius);
-    margin-left: 27px;
+    opacity: 0.5;
 }
 
 .action-proxy-if-label {
     margin-right: 10px;
-}
-
-.action-proxy.type-BlockStatement.pre-label-Alternate,
-.action-proxy.type-BlockStatement.pre-label-Consequent {
-    margin-left: 27px;
 }
 
 .action-proxy.type-BlockStatement.pre-label-Alternate:not(.is-showing-steps) {
@@ -309,18 +353,16 @@
     box-shadow: none !important;
 }
 
-.action-proxy.type-BlockStatement.is-showing-steps {
-    box-shadow: none !important;
-    padding: 0px !important;
-}
-
 .action-proxy-return-label {
     margin-right: 5px;
 }
 
 .action-proxy.type-ReturnStatement.is-showing-steps {
-    box-shadow: none !important;
     align-items: center;
+}
+
+.action-proxy.type-ReturnStatement.is-showing-steps:not(.is-hovering) {
+    box-shadow: none !important;
 }
 
 .action-proxy.type-BinaryExpression.is-showing-steps {
@@ -458,11 +500,6 @@ path.action-mapping-connection.hidden {
     z-index: 1;
 }
 
-.action-proxy.is-hovering {
-    transform: scaleX(1.05) scaleY(1.1);
-    filter: brightness(1.2);
-}
-
 .action-proxy-label {
     white-space: pre;
     font-weight: 400;
@@ -483,6 +520,11 @@ path.action-mapping-connection.hidden {
     min-height: 15px;
     height: 15px !important;
     min-width: 20px;
+}
+
+.action-proxy-container {
+    transition-property: margin-bottom;
+    transition-duration: 0.2s;
 }
 
 .action-proxy-container.is-spatial {
@@ -566,22 +608,55 @@ svg.ray-svg {
 
 /* ---------------------- Minimized --------------------- */
 
+@mixin action-minimized-mixin() {
+    min-width: 0px !important;
+    width: 0px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    margin: 0px !important;
+    padding: 0px !important;
+    height: 0px !important;
+    min-height: 0px !important;
+    border: none !important;
+}
+
+.fit-width {
+    width: fit-content !important;
+}
+
 .action-proxy-container.is-minimized {
     margin-bottom: 0px;
 }
 
 .action-proxy-container.is-minimized {
-    > .action-proxy.type-ExpressionStatement:not(.is-showing-steps),
-    > .action-proxy.type-ForStatement:not(.is-showing-steps),
-    > .action-proxy.type-IfStatement:not(.is-showing-steps) {
+    > .action-proxy.type-ExpressionStatement:not(.is-showing-steps) {
         height: 5px !important;
         min-height: 0px;
-        box-shadow: none !important;
         max-width: 30px;
     }
 
+    > .action-proxy.type-ForStatement:not(.is-showing-steps) {
+        height: 10px !important;
+        min-height: 0px;
+        max-width: 30px;
+        margin-top: 1px;
+    }
+
+    > .action-proxy.type-IfStatement:not(.is-showing-steps) {
+        height: 10px !important;
+        min-height: 0px;
+        max-width: 30px;
+        margin-top: 1px;
+    }
+
+    > .action-proxy.type-ExpressionStatement:not(.is-showing-steps):not(.is-hovering),
+    > .action-proxy.type-ForStatement:not(.is-showing-steps):not(.is-hovering),
+    > .action-proxy.type-IfStatement:not(.is-showing-steps):not(.is-hovering) {
+        box-shadow: none !important;
+    }
+
     .action-proxy.type-VariableDeclaration > .action-proxy-equal-sign {
-        display: none;
+        @include action-minimized-mixin();
     }
 
     > .action-proxy {
@@ -598,12 +673,9 @@ svg.ray-svg {
 }
 
 .action-proxy.type-VariableDeclaration > .action-proxy-container.is-minimized {
-    > .action-proxy.type-Identifier {
-        display: none;
-    }
-
+    > .action-proxy.type-Identifier,
     > .action-proxy.type-Literal {
-        display: none;
+        @include action-minimized-mixin();
     }
 
     > .action-proxy {
@@ -632,19 +704,13 @@ svg.ray-svg {
 
 .action-proxy-container.is-minimized > .type-IfStatement.is-showing-steps {
     .action-proxy-if-row {
-        margin-bottom: 2px;
+        margin-bottom: 3px;
     }
 
-    > * > .action-proxy-code-label {
-        display: none;
-    }
-
-    > * > .action-proxy-if-placeholder {
-        display: none;
-    }
-
+    > * > .action-proxy-code-label,
+    > * > .action-proxy-if-placeholder,
     > :first-child > .action-proxy-code-label {
-        display: none;
+        @include action-minimized-mixin();
     }
 }
 
@@ -652,13 +718,41 @@ svg.ray-svg {
     height: 5px !important;
 
     > ion-icon {
-        display: none;
+        @include action-minimized-mixin();
     }
 }
 
-.action-proxy-container.is-minimized > .action-proxy.type-BlockStatement.pre-label-Alternate,
-.action-proxy.type-BlockStatement.pre-label-Consequent {
-    margin-left: 15px;
+.action-proxy-container.is-minimized > .action-proxy-for-label {
+    transform: scale(0.8);
+    width: 15px;
+    padding-left: 0px !important;
+    transform-origin: left top;
+}
+
+.action-proxy-container.is-minimized > .action-proxy.type-ReturnStatement {
+    > .action-proxy-return-label {
+        transform: scale(0.8);
+        width: 33px;
+        padding-left: 0px !important;
+        transform-origin: left top;
+    }
+
+    height: 5px !important;
+}
+
+.action-proxy-container.is-minimized > .action-proxy-if-label {
+    transform: scale(0.8);
+    width: 10px;
+    padding-left: 0px !important;
+    transform-origin: left top;
+}
+
+.action-proxy-container.is-minimized > .action-proxy.type-BinaryExpression {
+    height: 5px !important;
+}
+
+.action-proxy-if-row:first-child {
+    margin-top: 3px;
 }
 
 .action-proxy-container.is-minimized > .action-proxy.type-ForStatement.is-showing-steps {
@@ -667,7 +761,7 @@ svg.ray-svg {
     border-radius: 0px;
 
     > .action-proxy-for-label {
-        display: none;
+        @include action-minimized-mixin();
     }
 
     .action-proxy-for-iteration {
@@ -680,7 +774,7 @@ svg.ray-svg {
         height: 5px !important;
 
         > ion-icon {
-            display: none;
+            @include action-minimized-mixin();
         }
     }
 
@@ -720,5 +814,236 @@ svg.ray-svg {
     > .action-proxy {
     height: 5px !important;
     min-height: 0px !important;
+    box-shadow: none !important;
+    transform: scaleX(0);
+}
+
+.action-proxy-container.is-minimized
+    > .action-proxy.type-ForStatement.is-showing-steps
+    > .action-proxy-for-iteration::after {
+    width: 110%;
+}
+
+.action-proxy-abyss {
+    display: flex;
+    width: fit-content;
+    margin-bottom: 4px;
+    transition: 0.2s;
+}
+
+.action-proxy-abyss-dots-container {
+    border-radius: var(--border-radius);
+    background: var(--s-color-0-1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: fit-content;
+    padding: 5px 3px;
+    filter: hue-rotate(45deg);
+    transition: 0.2s;
+}
+
+.action-proxy-abyss-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--s-color-0);
+    border-radius: var(--border-radius);
+    margin: 0px 2px;
+    opacity: 0.5;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.action-proxy-abyss.action-proxy-abyss-overflow
+    > .action-proxy-abyss-dots-container
+    > .action-proxy-abyss-dot:nth-child(2) {
+    width: 12px;
+}
+
+.action-proxy-abyss-dot:hover {
+    opacity: 1;
+    width: 12px;
+}
+
+.action-proxy.is-hovering {
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-1) !important;
+}
+
+.action-proxy-abyss-empty {
+    display: none;
+}
+
+.action-proxy-container.has-line-break {
+    margin-top: 8px;
+}
+
+.action-proxy-container.is-minimized {
+    > .action-proxy.type-Program.is-showing-steps,
+    > .action-proxy.type-BlockStatement.is-showing-steps,
+    > .action-proxy.type-FunctionCall.is-showing-steps {
+        > .action-proxy-container:not(:last-child) {
+            margin-bottom: 3px !important;
+        }
+
+        > .action-proxy-placeholder:not(:last-child) {
+            margin-bottom: 3px !important;
+        }
+    }
+}
+
+// .action-proxy.has-line-break::after {
+//     content: '';
+//     width: 10px;
+//     height: 5px;
+//     border-radius: var(--border-radius);
+//     background: var(--color-2);
+//     position: absolute;
+//     top: -8px;
+//     left: 2px;
+// }
+.action-proxy.type-ForStatement > .action-proxy-abyss {
+}
+
+.action-proxy-container.is-minimized.has-line-break {
+    margin-top: 4px;
+}
+
+.action-proxy-container.is-minimized > .action-proxy > .action-proxy-abyss {
+    transform: scale(0.7);
+    transform-origin: left;
+}
+
+.action-proxy-container.is-minimized > .action-proxy > .action-proxy-abyss > .action-proxy-abyss-dots-container {
+    background: none;
+    padding: 0px;
+}
+
+.action-proxy-container.is-minimized > .action-proxy.type-ForStatement > .action-proxy-abyss {
+    margin-left: 0px;
+}
+
+.action-proxy-container > .action-proxy {
+    transform-origin: left;
+}
+
+.action-proxy-container.consumed:not(.is-spatial) {
+    @include action-minimized-mixin();
+    margin-bottom: 0px !important;
+}
+
+.action-proxy-container.consumed.is-spatial > .action-proxy {
+    @include action-minimized-mixin();
+}
+
+.action-proxy-container.consumed.is-spatial > .action-proxy-header {
+    @include action-minimized-mixin();
+}
+
+.action-proxy-for-iteration.consumed {
+    @include action-minimized-mixin();
+    margin-bottom: 0px !important;
+}
+
+.action-proxy.type-Program {
+    cursor: auto !important;
+}
+
+.action-proxy.type-FunctionCall {
+    cursor: auto !important;
+}
+
+.action-proxy.type-VariableDeclaration {
+    cursor: auto !important;
+}
+
+.action-proxy-abyss-label {
+    font-size: 12px;
+    font-family: Source Sans Pro;
+    white-space: pre;
+    color: #919191;
+    margin: 0px 3px;
+}
+
+.action-proxy-abyss-label.is-hidden {
+    @include action-minimized-mixin();
+}
+
+.action-proxy.is-focused {
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-2) !important;
+    background: #f1fbff !important;
+}
+
+.action-proxy-for-iteration.is-focused {
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-2) !important;
+    background: #f1fbff !important;
+}
+
+.action-proxy-container.is-for-loop {
+    display: flex;
+    width: fit-content;
+    border-radius: var(--border-radius);
+}
+
+.action-proxy-container.is-if-statement {
+    display: flex;
+    width: fit-content;
+    border-radius: var(--border-radius);
+}
+
+.action-proxy-container.is-for-loop.is-hovering {
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-1) !important;
+}
+
+.action-proxy-container.is-if-statement.is-hovering {
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-1) !important;
+}
+
+.action-proxy-for-iteration.is-hovering {
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-1) !important;
+}
+
+.action-proxy-container.is-for-loop.is-focused {
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-2) !important;
+    background: #f1fbff !important;
+}
+
+.action-proxy-container.is-if-statement.is-focused {
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-2) !important;
+    background: #f1fbff !important;
+}
+
+.action-proxy-container.is-for-loop > .action-proxy-for-label {
+    margin-right: 5px;
+    padding-left: 3px;
+}
+
+.action-proxy-container.is-if-statement > .action-proxy-if-label {
+    margin-right: 6px;
+    padding-left: 3px;
+}
+
+.action-proxy-for-start-clone {
+    background-color: var(--color-3);
+    border-radius: var(--border-radius);
+}
+
+.action-proxy-container.is-for-loop.is-showing-steps {
+    padding: 4px 0px;
+}
+
+.action-proxy-container.is-for-loop.is-showing-steps.is-focused {
+    background-color: none;
+}
+
+.action-proxy-container.is-minimized > .action-proxy.type-BlockStatement {
+    box-shadow: none !important;
+}
+
+.action-proxy-else-label {
+    margin-left: -18px;
+}
+
+.action-proxy-container.is-singular > .action-proxy.type-BlockStatement {
+    padding: 0px !important;
     box-shadow: none !important;
 }

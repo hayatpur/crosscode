@@ -11,6 +11,9 @@ export class VariableDeclarationRepresentation extends Representation {
 
         this.equalSignElement = createElement('div', 'action-proxy-equal-sign')
         this.equalSignElement.innerText = '='
+
+        this.shouldHover = true
+        this.ignoreStepClicks = true
     }
 
     postCreate() {
@@ -21,15 +24,18 @@ export class VariableDeclarationRepresentation extends Representation {
         }
     }
 
-    updateProxyVisual() {
-        super.updateProxyVisual()
+    createSteps(): void {
+        super.createSteps()
 
         // Add an '=' in between the two children if not already there
         const action = ApplicationState.actions[this.actionId]
         const proxy = action.proxy
 
-        if (action.isShowingSteps && this.equalSignElement.parentElement !== proxy.element) {
-            proxy.element.insertBefore(this.equalSignElement, proxy.element.children[1])
-        }
+        proxy.element.insertBefore(this.equalSignElement, proxy.element.children[1])
+    }
+
+    destroySteps(): void {
+        super.destroySteps()
+        this.equalSignElement.remove()
     }
 }

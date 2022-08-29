@@ -28,34 +28,40 @@ export class BinaryStatementRepresentation extends Representation {
         monaco.editor.colorize(this.operatorLabelElement.innerHTML, 'javascript', {}).then((html) => {
             this.operatorLabelElement.innerHTML = html
         })
+
+        this.shouldHover = true
     }
 
-    updateProxyVisual() {
-        super.updateProxyVisual()
+    createSteps(): void {
+        super.createSteps()
 
         const action = ApplicationState.actions[this.actionId]
         const proxy = action.proxy
 
         if (!action.isShowingSteps) return
 
-        if (this.operatorLabelElement.parentElement == null) {
-            const [leftElement, rightElement, operatorElement] = Array.from(proxy.element.children).filter((child) =>
-                child.classList.contains('action-proxy-container')
-            )
+        const [leftElement, rightElement, operatorElement] = Array.from(proxy.element.children).filter((child) =>
+            child.classList.contains('action-proxy-container')
+        )
 
-            // Remove all action-proxy children
-            leftElement.remove()
-            rightElement.remove()
-            operatorElement.remove()
+        // Remove all action-proxy children
+        leftElement.remove()
+        rightElement.remove()
+        operatorElement.remove()
 
-            // Add left element
-            proxy.element.appendChild(leftElement)
+        // Add left element
+        proxy.element.appendChild(leftElement)
 
-            // Add operator label
-            proxy.element.appendChild(this.operatorLabelElement)
+        // Add operator label
+        proxy.element.appendChild(this.operatorLabelElement)
 
-            // Add right element
-            proxy.element.appendChild(rightElement)
-        }
+        // Add right element
+        proxy.element.appendChild(rightElement)
+    }
+
+    destroySteps(): void {
+        super.destroySteps()
+
+        this.operatorLabelElement.remove()
     }
 }

@@ -106,8 +106,11 @@ export function addBreakToMapping(mapping: ActionMappingState, index: number) {
  * @param mapping Action mapping
  */
 export function appendProxyToMapping(proxy: ActionProxyState, mapping: ActionMappingState) {
-    if (ApplicationState.actions[proxy.actionID].execution.nodeData.type === 'Program') {
+    const proxyAction = ApplicationState.actions[proxy.actionID]
+
+    if (proxyAction.execution.nodeData.type === 'Program') {
         mapping.element.appendChild(proxy.container)
+        // proxyAction.representation.focus()
         return
     }
 
@@ -122,7 +125,6 @@ export function appendProxyToMapping(proxy: ActionProxyState, mapping: ActionMap
 
     // Start at program
     let start = ApplicationState.actions[programId]
-    let proxyAction = ApplicationState.actions[proxy.actionID]
 
     if (proxyAction.isSpatial) {
         mapping.element.appendChild(proxy.container)
