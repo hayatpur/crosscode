@@ -4,8 +4,8 @@ import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { getAbstractionPath } from '../../../utilities/action'
 import { createElement, createSVGElement } from '../../../utilities/dom'
 import { assert } from '../../../utilities/generic'
+import { Keyboard } from '../../../utilities/Keyboard'
 import { ActionProxyState } from './ActionProxy'
-import { ControlFlowState, createControlFlowState, destroyControlFlow } from './ControlFlow'
 
 /* ------------------------------------------------------ */
 /*               Stores mapping information               */
@@ -18,13 +18,12 @@ export type ActionMappingState = {
     breaks: number[]
     breakElements: HTMLElement[]
 
-    // Control flow
-    controlFlow: ControlFlowState | undefined
-
     time: number
 
     // SVG Canvas
     svgElement: SVGElement
+
+    indicationElement: HTMLElement
 }
 
 /**
@@ -45,10 +44,9 @@ export function createActionMapping(overrides: Partial<ActionMappingState> = {})
         breakElements: [],
 
         // Control flow
-        controlFlow: createControlFlowState(),
-        // cursor: createActionMappingCursorState(),
-
         time: 0,
+
+        indicationElement: createIndicationElement(element),
 
         svgElement: svgElement,
     }
@@ -56,19 +54,53 @@ export function createActionMapping(overrides: Partial<ActionMappingState> = {})
     return { ...base, ...overrides }
 }
 
-export function destroyActionMapping(actionMapping: ActionMappingState) {
-    if (actionMapping.controlFlow !== undefined) {
-        destroyControlFlow(actionMapping.controlFlow)
-    }
-    // destroyActionMappingCursor(actionMapping.cursor)
+export function createIndicationElement(parent: HTMLElement) {
+    const container = createElement('div', ['mode-indicator-container'])
 
+    const selector = createElement('div', ['mode-indicator', 'pointer'], container)
+    selector.innerText = 'Select (Shift)'
+
+    const destructor = createElement('div', ['mode-indicator', 'destructor'], container)
+    destructor.innerText = 'Destruct (Control)'
+
+    const abyss = createElement('div', ['mode-indicator', 'abyss'], container)
+    abyss.innerText = 'Abyss (Alt)'
+
+    setInterval(() => {
+        if (Keyboard.instance.isPressed('Control')) {
+            destructor.classList.add('active')
+
+            abyss.classList.remove('active')
+            selector.classList.remove('active')
+        } else if (Keyboard.instance.isPressed('Shift')) {
+            selector.classList.add('active')
+
+            destructor.classList.remove('active')
+            abyss.classList.remove('active')
+        } else if (Keyboard.instance.isPressed('Alt')) {
+            abyss.classList.add('active')
+
+            destructor.classList.remove('active')
+            selector.classList.remove('active')
+        } else {
+            selector.classList.remove('active')
+            destructor.classList.remove('active')
+            abyss.classList.remove('active')
+        }
+    }, 100)
+
+    parent.appendChild(container)
+
+    return container
+}
+
+export function destroyActionMapping(actionMapping: ActionMappingState) {
     actionMapping.element.remove()
 
     actionMapping.breakElements.forEach((breakEl) => {
         breakEl.remove()
     })
 
-    actionMapping.controlFlow = undefined
     actionMapping.breakElements = []
     actionMapping.breaks = []
     actionMapping.frames = []
@@ -86,6 +118,7 @@ export function getBreakIndexOfFrameIndex(mapping: ActionMappingState, index: nu
             return i
         }
     }
+
     return mapping.breaks.length
 }
 

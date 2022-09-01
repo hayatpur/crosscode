@@ -6,11 +6,13 @@ import { EnvironmentState } from '../environment/EnvironmentState'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { createActionState, destroyAction } from '../renderer/Action/Action'
 import { ActionMappingState, createActionMapping, destroyActionMapping } from '../renderer/Action/Mapping/ActionMapping'
+import { ControlFlowState, updateControlFlowState } from '../renderer/Action/Mapping/ControlFlowState'
 import { createViewState, destroyView, ViewState } from '../renderer/View/View'
 import { Compiler } from '../transpiler/Compiler'
 import { createElement } from '../utilities/dom'
 import { getAST } from '../utilities/executor'
 import { createFocus, FocusState } from './Focus'
+import { createSelection, SelectionState, updateSelectionTime } from './Selection'
 
 /* ------------------------------------------------------ */
 /*             Displays execution information             */
@@ -23,6 +25,7 @@ export type VisualizationState = {
     programId: string | undefined
 
     focus: FocusState | undefined
+    selections: SelectionState[]
 
     container: HTMLElement
 
@@ -49,6 +52,7 @@ export function createVisualization(overrides: Partial<VisualizationState> = {})
         programId: undefined,
 
         focus: createFocus(),
+        selections: [createSelection()],
 
         container: createVisualContainer(),
 
@@ -198,4 +202,25 @@ export function tickVisualization(visualization: VisualizationState, dt: number)
             y: 115,
         })
     }
+
+    // Update selections
+    for (const selection of visualization.selections) {
+        updateSelectionTime(selection)
+    }
+
+    // Update spatial control flow
+    for (const actionId of Object.keys(ApplicationState.actions)) {
+        const action = ApplicationState.actions[actionId]
+        if (action.isSpatial) {
+            updateControlFlowState(action.controlFlow as ControlFlowState)
+        }
+    }
+
+    // Sync all cursors
+    // for (const actionId of Object.keys(ApplicationState.actions)) {
+    //     const action = ApplicationState.actions[actionId]
+    //     if (action.isSpatial) {
+    //         syncCursor(action)
+    //     }
+    // }
 }

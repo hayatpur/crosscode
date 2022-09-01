@@ -14,9 +14,13 @@ export class BlockStatementRepresentation extends Representation {
         const action = ApplicationState.actions[this.actionId]
 
         // If there is only one step, then expand it
-        if (getExecutionSteps(action.execution).length == 1) {
+        const executionSteps = getExecutionSteps(action.execution)
+        if (executionSteps.length == 1 && action.execution.nodeData.preLabel != 'Body') {
             this.createSteps()
-            action.proxy.container.classList.add('is-singular')
+
+            if (executionSteps[0].nodeData.preLabel != 'IfStatement') {
+                action.proxy.container.classList.add('is-singular')
+            }
         }
     }
 }

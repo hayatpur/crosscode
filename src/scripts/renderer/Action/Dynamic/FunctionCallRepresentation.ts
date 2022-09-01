@@ -9,6 +9,7 @@ export class FunctionCallRepresentation extends Representation {
         super(action)
 
         this.shouldHover = true
+        this.isSelectableGroup = true
     }
 
     postCreate() {

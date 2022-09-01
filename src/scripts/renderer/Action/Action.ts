@@ -9,6 +9,7 @@ import { Ticker } from '../../utilities/Ticker'
 import { Representation } from './Dynamic/Representation'
 import { appendProxyToMapping } from './Mapping/ActionMapping'
 import { ActionProxyState, createActionProxy, destroyActionProxy, isSpatialByDefault } from './Mapping/ActionProxy'
+import { ControlFlowState, createControlFlowState } from './Mapping/ControlFlowState'
 
 /* ------------------------------------------------------ */
 /*    An Action visualizes a node in program execution    */
@@ -44,6 +45,9 @@ export type ActionState = {
     representation: Representation
     proxy: ActionProxyState
 
+    // Control flow
+    controlFlow: ControlFlowState | null
+
     element: HTMLElement
 
     // Used for spatial actions
@@ -54,6 +58,12 @@ export type ActionState = {
     abyssesIds: string[]
 
     isPinned: boolean
+
+    // Start and end time relative to the spatial parent
+    startTime: number
+    endTime: number
+
+    globalTimeOffset: number
 }
 
 /* --------------------- Initializer -------------------- */
@@ -97,6 +107,8 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
         spatialVertices: new Set(),
         minimized: false,
         isPinned: false,
+        controlFlow: null,
+        globalTimeOffset: 0,
     }
 
     // Apply overrides
@@ -124,6 +136,12 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
     }
 
     appendProxyToMapping(base.proxy, ApplicationState.visualization.mapping)
+
+    if (base.isSpatial) {
+        base.controlFlow = createControlFlowState({
+            actionId: id,
+        })
+    }
 
     return base as ActionState
 }
@@ -255,7 +273,7 @@ export function updateActionRay(actionID: string) {
     endBbox.y -= svgBbox.y
 
     // Add paddings for rounded borders
-    startBbox.x -= 4
+    startBbox.x += 2
     endBbox.x += 4
 
     // const path = `M ${startBbox.x + 0.9 * startBbox.width} ${startBbox.y}

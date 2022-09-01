@@ -24,6 +24,39 @@ export class VariableDeclarationRepresentation extends Representation {
         }
     }
 
+    // getStartAndEndTime() {
+    //     const action = ApplicationState.actions[this.actionId]
+
+    //     if (action.isShowingSteps) {
+    //         return ApplicationState.actions[action.vertices[0]].representation.getStartAndEndTime()
+    //     } else {
+    //         return super.getStartAndEndTime()
+    //     }
+    // }
+
+    // getControlFlow(): number[][] {
+    //     const action = ApplicationState.actions[this.actionId]
+
+    //     if (action.isShowingSteps) {
+    //         return ApplicationState.actions[action.vertices[0]].representation.getControlFlow()
+    //     } else {
+    //         return super.getControlFlow()
+    //     }
+
+    //     // const bbox = action.proxy.element.getBoundingClientRect()
+
+    //     // if (action.vertices.length > 0) {
+    //     //     const controlFlowPoints = []
+    //     //     for (const stepID of action.vertices) {
+    //     //         const step = ApplicationState.actions[stepID]
+    //     //         controlFlowPoints.push(...step.representation.getControlFlow())
+    //     //     }
+    //     //     return controlFlowPoints
+    //     // } else {
+    //     //     return this.getControlFlowPoints()
+    //     // }
+    // }
+
     createSteps(): void {
         super.createSteps()
 

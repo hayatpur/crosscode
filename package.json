@@ -18,6 +18,7 @@
         "curved-arrows": "^0.1.0",
         "eaz": "^1.0.2",
         "howler": "^2.2.3",
+        "kld-intersections": "^0.7.0",
         "monaco-editor": "^0.33.0",
         "patch-package": "^6.4.7",
         "perfect-arrows": "^0.3.7",
@@ -28,6 +29,7 @@
     "devDependencies": {
         "@tweakpane/core": "^1.1.0",
         "@types/howler": "^2.2.7",
+        "@types/svg-intersections": "^0.4.1",
         "@typescript-eslint/eslint-plugin": "^5.29.0",
         "@typescript-eslint/parser": "^5.29.0",
         "css-loader": "^6.7.1",

@@ -1,8 +1,6 @@
 import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
-import { assert } from '../../../utilities/generic'
-import { clearExistingFocus } from '../../../visualization/Focus'
 import { ActionState } from '../Action'
 import { Representation } from './Representation'
 
@@ -37,7 +35,16 @@ export class IfStatementRepresentation extends Representation {
     postCreate() {
         const action = ApplicationState.actions[this.actionId]
 
-        this.createSteps()
+        const parent = ApplicationState.actions[action.parentID as string]
+        // console.log(
+        //     parent.execution.nodeData.type,
+        //     parent.execution.nodeData.preLabel,
+        //     parent.execution.nodeData.type == 'BlockStatement' && parent.execution.nodeData.preLabel == 'Body'
+        // )
+        // if (parent.execution.nodeData.type == 'BlockStatement' && parent.execution.nodeData.preLabel == 'Body') {
+        // } else {
+        // this.createSteps()
+        // }
     }
 
     updateProxyVisual() {
@@ -138,17 +145,27 @@ export class IfStatementRepresentation extends Representation {
         })
     }
 
-    focus() {
+    select() {
         const action = ApplicationState.actions[this.actionId]
         action.proxy.container.classList.add('is-focused')
-
-        const focus = ApplicationState.visualization.focus
-        assert(focus != null, 'Focus is null')
-
-        clearExistingFocus()
-
-        focus.focusedActions.push(action.id)
     }
+
+    deselect() {
+        const action = ApplicationState.actions[this.actionId]
+        action.proxy.container.classList.remove('is-focused')
+    }
+
+    // focus() {
+    //     const action = ApplicationState.actions[this.actionId]
+    //     action.proxy.container.classList.add('is-focused')
+
+    //     const focus = ApplicationState.visualization.focus
+    //     assert(focus != null, 'Focus is null')
+
+    //     clearExistingFocus()
+
+    //     focus.focusedActions.push(action.id)
+    // }
 
     destroySteps(): void {
         super.destroySteps()

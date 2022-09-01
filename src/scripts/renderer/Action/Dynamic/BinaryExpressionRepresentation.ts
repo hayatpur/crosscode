@@ -12,6 +12,7 @@ export class BinaryStatementRepresentation extends Representation {
         super(action)
 
         this.operatorLabelElement = createElement('div', ['action-proxy-code-label', 'action-proxy-binary-label'])
+        console.log(action.execution)
         const evaluation = (action.execution as ExecutionGraph).vertices[2]
 
         if (evaluation.nodeData.location == null) {

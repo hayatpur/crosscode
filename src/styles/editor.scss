@@ -34,20 +34,20 @@
     display: none;
 }
 
-// .execution-decoration {
-//     left: 45px !important;
+// // .execution-decoration {
+// //     left: 45px !important;
 
-//     width: 8px !important;
-//     height: 8px !important;
+// //     width: 8px !important;
+// //     height: 8px !important;
 
-//     border-radius: 50%;
-//     border: 1px solid #bfbebe;
-//     background-color: #00000008 !important;
+// //     border-radius: 50%;
+// //     border: 1px solid #bfbebe;
+// //     background-color: #00000008 !important;
 
-//     margin-top: 10%;
+// //     margin-top: 10%;
 
-//     display: none;
-// }
+// //     display: none;
+// // }
 
 .monaco-editor .line-numbers {
     opacity: 0.4;
@@ -98,8 +98,8 @@
 
 .monaco-editor .cursors-layer .cursor {
     background-color: var(--color-6) !important;
-    transition-property: top, left;
-    transition: 0.1s;
+    // transition-property: top, left;
+    // transition: 0.1s;
     opacity: 0.8;
     height: 15px !important;
     margin-top: 4px !important;
@@ -119,13 +119,6 @@
     overflow: visible !important;
 }
 
-.editor-selection {
-    position: absolute;
-    background: #e9e9e9a4;
-    border-radius: var(--border-radius);
-    mix-blend-mode: multiply;
-}
-
 .monaco-editor .codelens-decoration {
     color: #999999;
     margin-left: -10px;
@@ -143,24 +136,8 @@
     visibility: hidden !important;
 }
 
-.view-line > span > span {
-    display: inline-block;
-}
-
-.view-line > span > span.highlighted {
-    transform: translate(3px, -3px);
-}
-
 .cdr.folded-background {
     opacity: 0;
-}
-
-.cslr {
-    border-radius: 0px !important;
-}
-
-.monaco-editor .mtkz {
-    opacity: 0 !important;
 }
 
 /* -------------------- Syntax colors ------------------- */

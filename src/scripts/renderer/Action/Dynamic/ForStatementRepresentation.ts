@@ -1,7 +1,6 @@
 import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
-import { assert } from '../../../utilities/generic'
 import { Keyboard } from '../../../utilities/Keyboard'
 import { clearExistingFocus } from '../../../visualization/Focus'
 import { AbyssKind, collapseForIterationIntoAbyss, createAbyss, focusIteration } from '../Abyss'
@@ -102,17 +101,35 @@ export class ForStatementRepresentation extends Representation {
         this.setupClickListenerForIterations()
     }
 
-    focus() {
+    select() {
         const action = ApplicationState.actions[this.actionId]
         action.proxy.container.classList.add('is-focused')
-
-        const focus = ApplicationState.visualization.focus
-        assert(focus != null, 'Focus is null')
-
-        clearExistingFocus()
-
-        focus.focusedActions.push(action.id)
     }
+
+    deselect() {
+        const action = ApplicationState.actions[this.actionId]
+        action.proxy.container.classList.remove('is-focused')
+    }
+
+    // focus() {
+    //     const action = ApplicationState.actions[this.actionId]
+    //     action.proxy.container.classList.add('is-focused')
+
+    //     const focus = ApplicationState.visualization.focus
+    //     assert(focus != null, 'Focus is null')
+
+    //     clearExistingFocus()
+
+    //     focus.focusedActions.push(action.id)
+
+    //     // Update time
+    //     const spatialId = action.spatialParentID
+    //     assert(spatialId != null, 'Spatial parent ID is null')
+
+    //     const spatial = ApplicationState.actions[spatialId]
+    //     const [startTime, endTime] = this.getStartAndEndTime()
+    //     spatial.representation.seekTime(endTime)
+    // }
 
     setupHoverEventsForIterations() {
         for (const element of this.iterationElements) {

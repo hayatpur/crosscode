@@ -133,19 +133,46 @@ export function getActionRootID(action: ActionState) {
 }
 
 export function getExecutionSteps(execution: ExecutionGraph | ExecutionNode): (ExecutionGraph | ExecutionNode)[] {
-    if (instanceOfExecutionGraph(execution) && !isPrimitive(execution)) {
+    if (instanceOfExecutionGraph(execution) && !isTrimmedByDefault(execution)) {
         return execution.vertices
     } else {
         return []
     }
 }
 
-export function getLeafSteps(steps: ActionState[]): ActionState[] {
+export function isPrimitiveByDefault(execution: ExecutionGraph | ExecutionNode): boolean {
+    if (execution.nodeData.type == 'Identifier' || execution.nodeData.type == 'Literal') {
+        return true
+    }
+
+    return false
+}
+
+export function isTrimmedByDefault(execution: ExecutionGraph | ExecutionNode): boolean {
+    if (execution.nodeData.type == 'Identifier' && execution.nodeData.preLabel == 'Name') {
+        return true
+    }
+
+    if (execution.nodeData.type == 'BinaryExpressionEvaluate') {
+        return true
+    }
+
+    return false
+}
+
+export function getLeafSteps(steps: ActionState[], filterOutTrimmed: boolean = true): ActionState[] {
     const result: ActionState[] = []
 
     for (const action of steps) {
+        if (filterOutTrimmed && action.representation.isTrimmed) continue
+
         if (action.vertices.length > 0) {
-            result.push(...getLeafSteps(action.vertices.map((id) => ApplicationState.actions[id])))
+            result.push(
+                ...getLeafSteps(
+                    action.vertices.map((id) => ApplicationState.actions[id]),
+                    filterOutTrimmed
+                )
+            )
         } else {
             result.push(action)
         }
@@ -211,15 +238,6 @@ export function queryExecutionGraph(
     }
 
     return null
-}
-
-export function isPrimitive(execution: ExecutionGraph | ExecutionNode) {
-    // if (execution.nodeData.preLabel == 'Name') {
-    //     return true
-    // }
-
-    const primitives = new Set(['Literal', 'Identifier'])
-    return primitives.has(execution.nodeData?.type ?? '')
 }
 
 export function getAccumulatedBoundingBox(IDs: string[]) {

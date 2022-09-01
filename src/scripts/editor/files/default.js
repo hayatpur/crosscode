@@ -1,10 +1,28 @@
-function fact(x) {
-    if (x == 1) {
-        return x
-    } else {
-        return x * fact(x - 1)
+function qs(array) {
+    if (array.length <= 2) {
+        return array
     }
+
+    let pivot = array[0]
+
+    let left = []
+    let right = []
+
+    for (let i = 1; i < array.length - 1; i = i + 1) {
+        if (array[i] < pivot) {
+            left.push(array[i])
+        } else {
+            right.push(array[i])
+        }
+    }
+
+    let l = qs(left)
+
+    let r = qs(right)
+    l.push(pivot)
+
+    return l.concat(r)
 }
 
-let n = 5
-let y = fact(n)
+let unsorted = [4, -1, 7, 10, -3, 9, 1, 6, 3]
+let sorted = qs(unsorted)
