@@ -18,8 +18,6 @@ export type ActionMappingState = {
     breaks: number[]
     breakElements: HTMLElement[]
 
-    time: number
-
     // SVG Canvas
     svgElement: SVGElement
 
@@ -42,9 +40,6 @@ export function createActionMapping(overrides: Partial<ActionMappingState> = {})
         // Break indices (occurs between actions[index] and actions[index + 1])
         breaks: [],
         breakElements: [],
-
-        // Control flow
-        time: 0,
 
         indicationElement: createIndicationElement(element),
 
@@ -104,7 +99,6 @@ export function destroyActionMapping(actionMapping: ActionMappingState) {
     actionMapping.breakElements = []
     actionMapping.breaks = []
     actionMapping.frames = []
-    actionMapping.time = 0
 }
 
 /**

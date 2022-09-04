@@ -32,25 +32,7 @@ export function updateSelectionTime(selection: SelectionState) {
 }
 
 export function updateSelectionActions(selection: SelectionState) {
-    const newSelections: Set<string> = new Set()
-    for (const [id, action] of Object.entries(ApplicationState.actions)) {
-        if (
-            action.representation.shouldHover &&
-            action.globalTimeOffset <= selection.targetGlobalTime &&
-            selection.targetGlobalTime <= action.globalTimeOffset + getTotalDuration(action.id)
-        ) {
-            newSelections.add(id)
-        }
-    }
-
-    // Filter out parents of selected actions
-    for (const id of newSelections) {
-        const action = ApplicationState.actions[id]
-        const hasChildSelected = queryAction(action, (child) => child.id != id && newSelections.has(child.id)) != null
-        if (hasChildSelected) {
-            newSelections.delete(id)
-        }
-    }
+    const newSelections = getSelections(selection.targetGlobalTime)[0]
 
     // Add new
     for (const id of newSelections) {
@@ -67,4 +49,35 @@ export function updateSelectionActions(selection: SelectionState) {
             ApplicationState.actions[id].representation.deselect()
         }
     }
+}
+
+/**
+ * @param time global time
+ * @returns
+ */
+export function getSelections(time: number, shouldHover: boolean = true): [Set<string>, { [key: string]: number }] {
+    const newSelections: Set<string> = new Set()
+    const amounts: { [key: string]: number } = {}
+
+    for (const [id, action] of Object.entries(ApplicationState.actions)) {
+        if (
+            (!shouldHover || action.representation.shouldHover) &&
+            action.globalTimeOffset <= time &&
+            time <= action.globalTimeOffset + getTotalDuration(action.id)
+        ) {
+            newSelections.add(id)
+            amounts[id] = (time - action.globalTimeOffset) / getTotalDuration(action.id)
+        }
+    }
+
+    // Filter out parents of selected actions
+    for (const id of newSelections) {
+        const action = ApplicationState.actions[id]
+        const hasChildSelected = queryAction(action, (child) => child.id != id && newSelections.has(child.id)) != null
+        if (hasChildSelected) {
+            newSelections.delete(id)
+        }
+    }
+
+    return [newSelections, amounts]
 }

@@ -32,7 +32,9 @@
     background: var(--color-0);
     position: relative;
 
-    min-width: 400px;
+    min-width: 200px;
+    border-left: 1px solid #0000001a;
+    border-right: 1px solid #0000001a;
 }
 
 /* -------------------- Action proxy -------------------- */
@@ -166,7 +168,6 @@
     box-shadow: 0px 0px 0px 1px var(--color-2) !important;
     padding: 5px;
     width: fit-content;
-    background: var(--color-1);
 }
 
 .action-proxy-for-iteration.is-focused {
@@ -196,11 +197,6 @@
 
 .action-proxy-for-iteration:not(.is-focused):first-child {
     // padding-top: 0px;
-}
-
-.action-proxy-container.is-minimized > .action-proxy.type-ForStatement > .action-proxy-for-iteration {
-    box-shadow: none;
-    border-radius: 0px;
 }
 
 .action-proxy-for-iteration:last-child {
@@ -405,9 +401,10 @@ svg.control-flow-svg.control-flow-svg-overlay {
 
 .control-flow-path {
     fill: none;
-    stroke: #636363;
-    stroke-width: 4px;
-    opacity: 0;
+    stroke: var(--color-4);
+    stroke-width: 2px;
+    opacity: 0.4;
+    stroke-linejoin: round;
 }
 
 .control-flow-path-overlay {
@@ -562,6 +559,10 @@ path.action-mapping-connection.hidden {
     opacity: 0.5;
 }
 
+.action-proxy-ray.is-overlapping {
+    opacity: 0 !important;
+}
+
 svg.ray-svg {
     position: absolute;
     top: 0px;
@@ -571,6 +572,7 @@ svg.ray-svg {
     height: fit-content;
     pointer-events: none;
     z-index: 1;
+    mix-blend-mode: darken;
 }
 
 .action-mapping-svg {
@@ -658,9 +660,9 @@ svg.ray-svg {
         margin-top: 4px;
     }
 
-    > .action-proxy.type-ExpressionStatement:not(.is-showing-steps):not(.is-hovering),
-    > .action-proxy.type-ForStatement:not(.is-showing-steps):not(.is-hovering),
-    > .action-proxy.type-IfStatement:not(.is-showing-steps):not(.is-hovering) {
+    > .action-proxy.type-ExpressionStatement:not(.is-showing-steps):not(.is-hovering):not(.is-focused),
+    > .action-proxy.type-ForStatement:not(.is-showing-steps):not(.is-hovering):not(.is-focused),
+    > .action-proxy.type-IfStatement:not(.is-showing-steps):not(.is-hovering):not(.is-focused) {
         box-shadow: none !important;
     }
 
@@ -686,12 +688,16 @@ svg.ray-svg {
     > .action-proxy.type-Literal {
         @include action-minimized-mixin();
     }
+}
 
-    > .action-proxy {
-        height: 5px !important;
-        min-height: 0px !important;
-        box-shadow: none !important;
-    }
+.action-proxy.type-VariableDeclaration > .action-proxy-container.is-minimized > .action-proxy {
+    height: 5px !important;
+    min-height: 0px !important;
+    box-shadow: none !important;
+}
+
+.action-proxy.type-VariableDeclaration.is-focused > .action-proxy-container.is-minimized > .action-proxy {
+    background: none !important;
 }
 
 .action-proxy-container.is-spatial.is-minimized {
@@ -776,6 +782,7 @@ svg.ray-svg {
 
     .action-proxy-for-iteration {
         margin-left: 0px !important;
+        padding: 2px;
     }
 }
 
@@ -794,6 +801,9 @@ svg.ray-svg {
 
     > .action-proxy.pre-label-Update {
         height: 5px !important;
+    }
+
+    > .action-proxy.pre-label-Update:not(.is-focused) {
         box-shadow: none !important;
     }
 }
@@ -807,7 +817,6 @@ svg.ray-svg {
     > .action-proxy.type-BlockStatement:not(.is-showing-steps) {
     height: 5px !important;
     min-height: 0px !important;
-    box-shadow: none !important;
     max-width: 60px;
 }
 
@@ -924,8 +933,8 @@ svg.ray-svg {
 }
 
 .action-proxy-container.is-minimized > .action-proxy > .action-proxy-abyss > .action-proxy-abyss-dots-container {
-    background: none;
-    padding: 0px;
+    // background: none;
+    // padding: 0px;
 }
 
 .action-proxy-container.is-minimized > .action-proxy.type-ForStatement > .action-proxy-abyss {
@@ -980,12 +989,13 @@ svg.ray-svg {
 
 .action-proxy.is-focused {
     box-shadow: 0px 0px 0px 1px var(--s-color-0-2) !important;
-    background: #f1fbff !important;
+    // background: #f1fbff !important;
+    background: var(--focused-background) !important;
 }
 
 .action-proxy-for-iteration.is-focused {
     box-shadow: 0px 0px 0px 1px var(--s-color-0-2) !important;
-    background: #f1fbff !important;
+    background: none !important;
 }
 
 .action-proxy-container.is-for-loop {
@@ -1039,15 +1049,16 @@ svg.ray-svg {
 
 .action-proxy-container.is-for-loop.is-showing-steps {
     padding: 4px 0px;
+    padding-right: 8px;
 }
 
 .action-proxy-container.is-for-loop.is-showing-steps.is-focused {
-    background-color: none;
+    background: none !important;
 }
 
-.action-proxy-container.is-minimized > .action-proxy.type-BlockStatement {
-    box-shadow: none !important;
-}
+// .action-proxy-container.is-minimized > .action-proxy.type-BlockStatement {
+//     box-shadow: none !important;
+// }
 
 .action-proxy-else-label {
     margin-left: -18px;
@@ -1104,6 +1115,22 @@ svg.ray-svg {
     opacity: 0;
 }
 
-.action-proxy.type-FunctionCall.is-showing-steps.is-focused {
+.action-proxy.is-focused.is-showing-steps.type-FunctionCall {
     background: var(--color-1) !important;
+}
+
+.action-proxy-for-iteration:last-child > .action-proxy-for-iteration-bottom {
+    margin: 0px !important;
+}
+
+.action-proxy-container.is-minimized > .action-proxy.is-focused.is-showing-steps.type-FunctionCall {
+    background: none !important;
+}
+
+.action-proxy-abyss-dot-spatial {
+    position: absolute;
+}
+
+.action-proxy-abyss.is-spatial > .action-proxy-abyss-dots-container {
+    background: none !important;
 }

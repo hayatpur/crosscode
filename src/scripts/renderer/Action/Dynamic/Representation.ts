@@ -1,17 +1,24 @@
 import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
-import { EnvironmentState } from '../../../environment/EnvironmentState'
+import { EnvironmentState, FrameInfo } from '../../../environment/EnvironmentState'
 import { getExecutionSteps, isPrimitiveByDefault, isTrimmedByDefault } from '../../../utilities/action'
 import { reflow } from '../../../utilities/dom'
 import { assert } from '../../../utilities/generic'
 import { Keyboard } from '../../../utilities/Keyboard'
-import { getNumericalValueOfStyle, lerp } from '../../../utilities/math'
+import { getLastPointInPath, getNumericalValueOfStyle, overLerp } from '../../../utilities/math'
 import { clearExistingFocus, isFocused } from '../../../visualization/Focus'
-import { collapseActionIntoAbyss } from '../Abyss'
+import {
+    collapseActionIntoAbyss,
+    destroyAbyss,
+    getAbyssControlFlowPoints,
+    getConsumedAbyss,
+    getSpatialAbyssControlFlowPoints,
+} from '../Abyss'
 import { ActionState, createActionState, destroyAction, getActionCoordinates, updateAction } from '../Action'
 import { isSpatialByDefault } from '../Mapping/ActionProxy'
 import { getTotalDuration } from '../Mapping/ControlFlowCursor'
 import { ControlFlowState } from '../Mapping/ControlFlowState'
+import { FunctionCallRepresentation } from './FunctionCallRepresentation'
 
 /* ------------------------------------------------------ */
 /*              Abstract representation class             */
@@ -165,11 +172,17 @@ export class Representation {
 
                 assert(parent.spatialParentID != null, 'Non-program action has no spatial parent.')
                 const spatialParent = ApplicationState.actions[parent.spatialParentID]
-                const spatialParentBbox = spatialParent.proxy.container.getBoundingClientRect()
+                let spatialParentBbox = spatialParent.proxy.container.getBoundingClientRect()
+
+                const spatialParentAbyssInfo = getConsumedAbyss(spatialParent.id)
+                // if (spatialParentAbyssInfo != null) {
+                //     const abyss = ApplicationState.abysses[spatialParentAbyssInfo.id]
+                //     spatialParentBbox = abyss.dotsContainer.getBoundingClientRect()
+                // }
 
                 const vizBbox = (action.proxy.container.parentElement as HTMLElement).getBoundingClientRect()
 
-                const bbox = getPrincipleBbox(action)
+                // const bbox = getPrincipleBbox(action)
 
                 const x = spatialParentBbox.x + spatialParentBbox.width + offset.x - vizBbox.x
                 const y = spatialParentBbox.y + offset.y
@@ -177,8 +190,8 @@ export class Representation {
                 const px = getNumericalValueOfStyle(action.proxy.container.style.left, x)
                 const py = getNumericalValueOfStyle(action.proxy.container.style.top, y)
 
-                action.proxy.container.style.left = `${lerp(px, x, 0.2)}px`
-                action.proxy.container.style.top = `${lerp(py, y, 0.2)}px`
+                action.proxy.container.style.left = `${overLerp(px, x, 0.2, 0.5)}px`
+                action.proxy.container.style.top = `${overLerp(py, y, 0.2, 0.5)}px`
             }
 
             spatialIDs.push(action.id)
@@ -209,40 +222,82 @@ export class Representation {
     }
 
     // Get frames should call get frames of each step.
-    getFrames(): [env: EnvironmentState, actionID: string][] {
+    getFrames(originId: string): FrameInfo[] {
         const action = ApplicationState.actions[this.actionId]
 
-        if (action.vertices.length == 0) {
-            return [[action.execution.postcondition as EnvironmentState, action.id]]
-        } else {
-            const frames = []
+        if (action.vertices.length > 0 && (!action.isSpatial || action.id == originId)) {
+            const frames: FrameInfo[] = []
+
+            if (this.isSelectableGroup) {
+                const frame = {
+                    environment: action.execution.precondition as EnvironmentState,
+                    actionId: action.id,
+                }
+                frames.push(frame)
+            }
+
             for (const stepID of action.vertices) {
                 const step = ApplicationState.actions[stepID]
-                frames.push(...step.representation.getFrames())
+                frames.push(...step.representation.getFrames(originId))
             }
+
+            if (this.isSelectableGroup) {
+                const frame = {
+                    environment: action.execution.postcondition as EnvironmentState,
+                    actionId: action.id,
+                }
+                frames.push(frame)
+            }
+
             return frames
+        } else {
+            if (this.isTrimmed) {
+                return []
+            }
+
+            if (action.execution.nodeData.preLabel == 'Value') {
+                const parent = ApplicationState.actions[action.parentID!]
+                if (parent.execution.nodeData.type == 'VariableDeclaration') {
+                    return [{ environment: parent.execution.postcondition as EnvironmentState, actionId: action.id }]
+                }
+            }
+
+            return [{ environment: action.execution.postcondition as EnvironmentState, actionId: action.id }]
         }
     }
 
-    getControlFlowPoints(usePlaceholder: boolean = true): [number[], number[]] | null {
+    getControlFlowPoints(usePlaceholder: boolean = true): [[number, number], [number, number]] | null {
         if (this.isTrimmed) {
             return null
         }
 
         const action = ApplicationState.actions[this.actionId]
         let bbox = action.proxy.element.getBoundingClientRect()
+        const abyssInfo = getConsumedAbyss(action.id)
 
-        if (bbox.height == 0 || bbox.width == 0) {
-            return null
+        if (abyssInfo != null && !action.isSpatial) {
+            // Find the abyss that it's in
+            const abyss = ApplicationState.abysses[abyssInfo.id]
+            return getAbyssControlFlowPoints(abyss, abyssInfo.index!)
         }
 
         if (action.isSpatial && action.placeholder != null && usePlaceholder) {
             bbox = action.placeholder.getBoundingClientRect()
+        } else if (action.isSpatial && abyssInfo != null) {
+            const abyss = ApplicationState.abysses[abyssInfo.id]
+            return getSpatialAbyssControlFlowPoints(abyss, action.id)
         }
 
+        if (bbox.height == 0 || bbox.width == 0) {
+            console.warn('Action has no size', action.execution.nodeData.type)
+            return null
+        }
+
+        const offset = Math.min(2, bbox.height * 0.1)
+
         return [
-            [bbox.x + bbox.width / 2, bbox.y],
-            [bbox.x + bbox.width / 2, bbox.y + bbox.height],
+            [bbox.x + bbox.width / 2, bbox.y + offset],
+            [bbox.x + bbox.width / 2, bbox.y + bbox.height - offset],
         ]
     }
 
@@ -271,8 +326,61 @@ export class Representation {
         return cache
     }
 
-    updateControlFlow(controlFlow: ControlFlowState, originId: string) {
+    updateControlFlow(controlFlow: ControlFlowState, originId: string, isSpatiallyConsumed: boolean = false) {
         const action = ApplicationState.actions[this.actionId]
+
+        if (action.vertices.length > 0 && !action.isSpatial && isSpatiallyConsumed) {
+            // Start
+            let d = controlFlow.flowPath.getAttribute('d') as string
+            let [x, y] = getLastPointInPath(d)
+            x += ApplicationState.Epsilon
+            d += ` L ${x} ${y}`
+            controlFlow.flowPath.setAttribute('d', d)
+            action.startTime = controlFlow.flowPath.getTotalLength()
+
+            // Steps
+            for (let s = 0; s < action.vertices.length; s++) {
+                const stepID = action.vertices[s]
+                const step = ApplicationState.actions[stepID]
+
+                // Add start point to path
+                step.representation.updateControlFlow(controlFlow, originId, true)
+            }
+
+            // End
+            d = controlFlow.flowPath.getAttribute('d') as string
+            let [x2, y2] = getLastPointInPath(d)
+            x2 += ApplicationState.Epsilon
+            d += ` L ${x2} ${y2}`
+            controlFlow.flowPath.setAttribute('d', d)
+            action.endTime = controlFlow.flowPath.getTotalLength()
+
+            return
+        } else if (isSpatiallyConsumed) {
+            let d = controlFlow.flowPath.getAttribute('d') as string
+            let [x, y] = getLastPointInPath(d)
+
+            // Start
+            x += ApplicationState.Epsilon
+            d += ` L ${x} ${y}`
+            controlFlow.flowPath.setAttribute('d', d)
+            action.startTime = controlFlow.flowPath.getTotalLength()
+
+            let delta = ApplicationState.Epsilon
+
+            if (action.isSpatial) {
+                const origin = ApplicationState.actions[originId]
+                const representation = origin.representation as FunctionCallRepresentation
+                delta = representation.sizePerSpatialStep
+            }
+
+            // End
+            x += delta
+            d += ` L ${x} ${y}`
+            controlFlow.flowPath.setAttribute('d', d)
+            action.endTime = controlFlow.flowPath.getTotalLength()
+            return
+        }
 
         if (action.vertices.length > 0 && (!action.isSpatial || action.id == originId)) {
             let starts: number[] = []
@@ -490,11 +598,6 @@ export class Representation {
 
     unClip() {}
 
-    getStartAndEndTime() {
-        const action = ApplicationState.actions[this.actionId]
-        return [action.startTime, action.endTime]
-    }
-
     select() {
         const action = ApplicationState.actions[this.actionId]
         action.proxy.element.classList.add('is-focused')
@@ -503,6 +606,20 @@ export class Representation {
     deselect() {
         const action = ApplicationState.actions[this.actionId]
         action.proxy.element.classList.remove('is-focused')
+    }
+
+    consume() {
+        const action = ApplicationState.actions[this.actionId]
+        action.proxy.container.classList.add('consumed')
+
+        if (action.isShowingSteps) {
+            this.destroySteps()
+        }
+    }
+
+    unConsume() {
+        const action = ApplicationState.actions[this.actionId]
+        action.proxy.container.classList.remove('consumed')
     }
 
     focus() {
@@ -533,6 +650,11 @@ export class Representation {
      */
     destroySteps() {
         const action = ApplicationState.actions[this.actionId]
+
+        // Destroy abyss
+        for (const abyss of action.abyssesIds) {
+            destroyAbyss(ApplicationState.abysses[abyss].id)
+        }
 
         action.vertices.forEach((id) => destroyAction(ApplicationState.actions[id]))
         action.vertices = []

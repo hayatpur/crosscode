@@ -1,14 +1,20 @@
 import { ApplicationState } from '../../ApplicationState'
-import { queryAllAction } from '../../utilities/action'
+import { getAccumulatedBoundingBoxForElements } from '../../utilities/action'
 import { createElement } from '../../utilities/dom'
 import { assert } from '../../utilities/generic'
 import { clearExistingFocus } from '../../visualization/Focus'
 import { ForStatementRepresentation } from './Dynamic/ForStatementRepresentation'
 
 export enum AbyssKind {
-    Normal,
-    ForLoop,
-    Spatial,
+    Normal = 'Normal',
+    ForLoop = 'ForLoop',
+    Spatial = 'Spatial',
+}
+
+export type AbyssSpatialChild = {
+    value: string
+    children: AbyssSpatialChild[]
+    element: HTMLElement | null
 }
 
 export type AbyssState = {
@@ -18,12 +24,10 @@ export type AbyssState = {
     // For abysses that are over breadth
     containerActionId: string | null
     startIndex: number
-
-    // For abysses that are over depth
-    referenceActionId: string | null
-
-    // State
     numItems: number
+
+    // For abysses that are over depth & breadth
+    referenceActionId: AbyssSpatialChild | null
 
     // HTML
     element: HTMLElement
@@ -74,20 +78,25 @@ export function createAbyss(overrides: Partial<AbyssState>): AbyssState {
             const vertex = ApplicationState.actions[vertexId]
 
             if (abyss.kind == AbyssKind.ForLoop) {
-                vertex.proxy.container.parentElement?.parentElement?.classList.add('consumed')
+                const iteration = Math.floor(Math.max(0, (i - 1) / 3))
+                const representation = container.representation as ForStatementRepresentation
+                representation.consumeIteration(iteration)
             } else {
-                vertex.proxy.container.classList.add('consumed')
+                vertex.representation.consume()
             }
         }
     } else {
         assert(abyss.referenceActionId != null, 'Reference action ID must be specified')
 
-        let stack: string[] = [abyss.referenceActionId]
-        for (let i = 0; i < abyss.numItems; i++) {
-            for (const itemId of stack) {
-                const item = ApplicationState.actions[itemId]
-                item.proxy.container.classList.add('consumed')
-            }
+        let stack: AbyssSpatialChild[] = [abyss.referenceActionId]
+
+        while (stack.length > 0) {
+            const current = stack.pop()!
+
+            const vertex = ApplicationState.actions[current.value]
+            vertex.representation.consume()
+
+            stack.push(...current.children)
         }
     }
 
@@ -97,22 +106,96 @@ export function createAbyss(overrides: Partial<AbyssState>): AbyssState {
     return base
 }
 
+export function getAbyssControlFlowPoints(abyss: AbyssState, index: number): [[number, number], [number, number]] {
+    const bbox = abyss.dotsContainer.getBoundingClientRect()
+    const segmentSize = bbox.width / abyss.numItems
+
+    return [
+        [bbox.x + segmentSize * (index - abyss.startIndex), bbox.y + bbox.height / 2],
+        [bbox.x + segmentSize * (index - abyss.startIndex + 1), bbox.y + bbox.height / 2],
+    ]
+}
+
+export function getSpatialAbyssControlFlowPoints(abyss: AbyssState, id: string): [[number, number], [number, number]] {
+    const bbox = abyss.dotsContainer.getBoundingClientRect()
+    const segmentSize = bbox.width / abyss.numItems
+
+    return [
+        [bbox.x, bbox.y + bbox.height / 2],
+        [bbox.x + bbox.width, bbox.y + bbox.height / 2],
+    ]
+}
+
+export type AbyssInfo = {
+    id: string
+    index: number | null
+}
+
+export function getConsumedAbyss(actionId: string): AbyssInfo | null {
+    const action = ApplicationState.actions[actionId]
+    const spatialParent = ApplicationState.actions[action.spatialParentID!]
+
+    let isSpatiallyConsumed =
+        (action.isSpatial && action.proxy.container.classList.contains('consumed')) ||
+        spatialParent.proxy.container.classList.contains('consumed')
+
+    let isNormalConsumed =
+        !isSpatiallyConsumed &&
+        (action.proxy.container.classList.contains('consumed') ||
+            (action.proxy.container.parentElement?.parentElement?.classList.contains('consumed') &&
+                action.proxy.container.parentElement?.parentElement?.classList.contains('action-proxy-for-iteration')))
+
+    if (!isSpatiallyConsumed && !isNormalConsumed) {
+        return null
+    }
+
+    if (isSpatiallyConsumed) {
+        for (const [id, abyss] of Object.entries(ApplicationState.abysses)) {
+            if (abyss.kind != AbyssKind.Spatial) {
+                continue
+            }
+
+            const search = [abyss.referenceActionId]
+            while (search.length > 0) {
+                const current = search.pop()!
+                if (current.value == spatialParent.id) {
+                    return { id, index: null }
+                }
+
+                search.push(...current.children)
+            }
+        }
+
+        console.log("Couldn't find spatial abyss for consumed action", actionId)
+    }
+
+    if (isNormalConsumed) {
+        // Find the abyss that it's in
+        const container = ApplicationState.actions[action.parentID as string]
+        const selfIndex = container.vertices.indexOf(action.id)
+        for (const abyssId of container.abyssesIds) {
+            const abyss = ApplicationState.abysses[abyssId]
+            if (abyss.startIndex <= selfIndex && abyss.startIndex + abyss.numItems >= selfIndex) {
+                return { id: abyss.id, index: selfIndex }
+            }
+        }
+
+        console.log("Couldn't find abyss for consumed action", actionId)
+    }
+
+    return null
+}
+
 export function updateAbyssVisual(abyssId: string) {
     const abyss = ApplicationState.abysses[abyssId]
 
     // Destroy it if it has 0 items
-    if (abyss.numItems == 0) {
-        abyss.element.remove()
-
-        for (const action of Object.values(ApplicationState.actions)) {
-            if (action.abyssesIds.includes(abyssId)) {
-                action.abyssesIds.splice(action.abyssesIds.indexOf(abyssId), 1)
-            }
-        }
-
-        delete ApplicationState.abysses[abyssId]
+    if (abyss.numItems == 0 && abyss.kind != AbyssKind.Spatial) {
+        destroyAbyss(abyssId)
         return
     }
+
+    // TODO: Check for destroying spatial
 
     // Remove existing dots
     abyss.dots.forEach((dot) => dot.remove())
@@ -120,39 +203,56 @@ export function updateAbyssVisual(abyssId: string) {
     // Update number of dots
     const dots: HTMLElement[] = []
 
-    const totalItems = abyss.kind == AbyssKind.ForLoop ? Math.floor(Math.max(0, abyss.numItems / 3)) : abyss.numItems
+    let totalItems = abyss.numItems
 
-    for (let i = 0; i < Math.min(3, totalItems); i++) {
-        dots.push(createElement('div', 'action-proxy-abyss-dot', abyss.dotsContainer))
+    if (abyss.kind == AbyssKind.ForLoop) {
+        totalItems = Math.floor(Math.max(0, abyss.numItems / 3))
     }
 
-    // Event listeners
-    dots[0].onclick = (e) => {
-        popAbyssFromStart(abyssId)
-        e.preventDefault()
-        e.stopPropagation()
+    if (abyss.kind == AbyssKind.Spatial) {
+        let count = 0
+        let stack: AbyssSpatialChild[] = [abyss.referenceActionId!]
+
+        while (stack.length > 0) {
+            const current = stack.pop()!
+            count++
+            stack.push(...current.children)
+        }
+
+        totalItems = count
     }
 
-    if (dots.length > 1) {
-        const last = dots[dots.length - 1]
-        last.onclick = (e) => {
-            popAbyssFromEnd(abyssId)
+    if (abyss.kind != AbyssKind.Spatial) {
+        for (let i = 0; i < Math.min(3, totalItems); i++) {
+            dots.push(createElement('div', 'action-proxy-abyss-dot', abyss.dotsContainer))
+        }
+
+        // Event listeners
+        dots[0].onclick = (e) => {
+            popAbyssFromStart(abyssId)
             e.preventDefault()
             e.stopPropagation()
         }
-    }
 
-    // Width and label
-    if (totalItems > 3) {
-        dots[1].style.width = `${Math.min(totalItems * 2, 10)}px`
-    } else {
-        abyss.element.style.width = 'inherit'
-    }
+        if (dots.length > 1) {
+            const last = dots[dots.length - 1]
+            last.onclick = (e) => {
+                popAbyssFromEnd(abyssId)
+                e.preventDefault()
+                e.stopPropagation()
+            }
+        }
 
-    abyss.label.innerText = `${totalItems} more`
+        // Width and label
+        if (totalItems > 3) {
+            dots[1].style.width = `${Math.min(totalItems * 2, 10)}px`
+        } else {
+            abyss.element.style.width = 'inherit'
+        }
 
-    // Put it in the right spot
-    if (abyss.containerActionId != null) {
+        abyss.label.innerText = `${totalItems} more`
+
+        assert(abyss.containerActionId != null, 'Container action ID must be specified')
         const container = ApplicationState.actions[abyss.containerActionId]
         const startAction = ApplicationState.actions[container.vertices[abyss.startIndex]]
 
@@ -161,14 +261,151 @@ export function updateAbyssVisual(abyssId: string) {
         } else {
             startAction.proxy.container.parentElement?.parentElement?.after(abyss.element)
         }
-    } else if (abyss.referenceActionId != null) {
-        const reference = ApplicationState.actions[abyss.referenceActionId]
+    } else {
+        assert(abyss.referenceActionId != null, 'Reference action ID must be specified')
+        const elements = updateSpatialDotsPosition(abyss.referenceActionId, { x: 5, y: 5 }, abyss.dotsContainer, null)
+
+        // Update width
+        const accBbox = getAccumulatedBoundingBoxForElements(elements)
+        abyss.dotsContainer.style.width = `${accBbox.width + 12}px`
+        abyss.dotsContainer.style.height = `${accBbox.height + 11}px`
+
         abyss.element.classList.add('is-spatial')
+
+        const reference = ApplicationState.actions[abyss.referenceActionId.value]
         reference.proxy.container.append(abyss.element)
     }
 
     // Update dots
     abyss.dots = dots
+}
+
+export function getActionLocationInAbyss(abyssId: string, actionId: string) {
+    const abyss = ApplicationState.abysses[abyssId]
+    const action = ApplicationState.actions[actionId]
+
+    console.log(abyss, action)
+
+    if (abyss.kind == AbyssKind.Spatial) {
+        let stack: AbyssSpatialChild[] = [abyss.referenceActionId!]
+
+        while (stack.length > 0) {
+            const current = stack.pop()!
+            if (current.value == actionId) {
+                return current.element
+            }
+
+            stack.push(...current.children)
+        }
+    } else {
+        const container = ApplicationState.actions[action.parentID as string]
+        const selfIndex = container.vertices.indexOf(action.id)
+
+        if (selfIndex == abyss.startIndex) {
+            return abyss.dots[0]
+        } else if (selfIndex == abyss.startIndex + abyss.numItems - 1) {
+            return abyss.dots[abyss.dots.length - 1]
+        } else {
+            return abyss.dots[1]
+        }
+    }
+
+    return null
+}
+
+export function updateSpatialDotsPosition(
+    node: AbyssSpatialChild,
+    offset: { x: number; y: number },
+    container: HTMLElement,
+    relativeTo: HTMLElement | null
+): HTMLElement[] {
+    const childrenElements: HTMLElement[] = []
+
+    // Create dot
+    if (node.element == null) {
+        node.element = createElement('div', ['action-proxy-abyss-dot', 'action-proxy-abyss-dot-spatial'], container)
+    }
+
+    // Update self
+    let x = 0
+    let y = 0
+
+    if (relativeTo != null) {
+        const parentBbox = relativeTo.getBoundingClientRect()
+        const containerBbox = container.getBoundingClientRect()
+
+        x = parentBbox.x + parentBbox.width + offset.x - containerBbox.x
+        y = parentBbox.y + offset.y - containerBbox.y
+    } else {
+        x = offset.x
+        y = offset.y
+    }
+
+    node.element.style.left = `${x}px`
+    node.element.style.top = `${y}px`
+
+    childrenElements.push(node.element)
+
+    // Update children
+    const rOffset = { x: 2, y: 0 }
+
+    node.children.forEach((child) => {
+        const childElements: HTMLElement[] = []
+        childElements.push(...updateSpatialDotsPosition(child, { ...rOffset }, container, node.element!))
+
+        // If hit something
+        if (childElements.length > 0) {
+            const bbox = getAccumulatedBoundingBoxForElements(childElements)
+            rOffset.y += bbox.height + 2
+        }
+
+        childrenElements.push(...childElements)
+    })
+
+    return childrenElements
+}
+
+export function destroyAbyss(abyssId: string) {
+    const abyss = ApplicationState.abysses[abyssId]
+    abyss.element.remove()
+
+    // Free the consumed items
+    if (abyss.kind != AbyssKind.Spatial) {
+        const container = ApplicationState.actions[abyss.containerActionId as string]
+        for (let i = abyss.startIndex; i < abyss.startIndex + abyss.numItems; i++) {
+            const vertexId = container.vertices[i]
+            const vertex = ApplicationState.actions[vertexId]
+
+            if (abyss.kind == AbyssKind.ForLoop) {
+                const iteration = Math.floor(Math.max(0, (i - 1) / 3))
+                const representation = container.representation as ForStatementRepresentation
+                representation.unConsumeIteration(iteration)
+            } else {
+                vertex.representation.unConsume()
+            }
+        }
+    } else {
+        assert(abyss.referenceActionId != null, 'Reference action ID must be specified')
+
+        let stack: AbyssSpatialChild[] = [abyss.referenceActionId]
+
+        while (stack.length > 0) {
+            const current = stack.pop()!
+
+            const vertex = ApplicationState.actions[current.value]
+            vertex.representation.unConsume()
+
+            stack.push(...current.children)
+        }
+    }
+
+    for (const action of Object.values(ApplicationState.actions)) {
+        if (action.abyssesIds.includes(abyssId)) {
+            action.abyssesIds.splice(action.abyssesIds.indexOf(abyssId), 1)
+        }
+    }
+
+    delete ApplicationState.abysses[abyssId]
 }
 
 export function popAbyssFromStart(abyssId: string) {
@@ -180,20 +417,21 @@ export function popAbyssFromStart(abyssId: string) {
         const action = ApplicationState.actions[actionId]
 
         if (abyss.kind == AbyssKind.Normal) {
-            action.proxy.container.classList.remove('consumed')
+            action.representation.unConsume()
 
             abyss.startIndex += 1
             abyss.numItems -= 1
 
             action.representation.focus()
         } else if (abyss.kind == AbyssKind.ForLoop) {
-            action.proxy.container.parentElement?.parentElement?.classList.remove('consumed')
-
             const focus = ApplicationState.visualization.focus
             assert(focus != null, 'Focus must be set.')
 
             let numItems = abyss.startIndex == 0 ? 4 : 3
             let iterationIndex = Math.floor(Math.max(0, (abyss.startIndex - 1) / 3))
+
+            const representation = container.representation as ForStatementRepresentation
+            representation.unConsumeIteration(iterationIndex)
 
             clearExistingFocus()
             focusIteration(container.id, iterationIndex)
@@ -220,15 +458,13 @@ export function popAbyssFromEnd(abyssId: string) {
 
         if (abyss.kind == AbyssKind.Normal) {
             // Remove consumed
-            action.proxy.container.classList.remove('consumed')
+            action.representation.unConsume()
 
             // TODO: Set focus
 
             // Update abyss
             abyss.numItems -= 1
         } else if (abyss.kind == AbyssKind.ForLoop) {
-            action.proxy.container.parentElement?.parentElement?.classList.remove('consumed')
-
             // Set focus
             const focus = ApplicationState.visualization.focus
             assert(focus != null, 'Focus must be set.')
@@ -236,6 +472,9 @@ export function popAbyssFromEnd(abyssId: string) {
             // Update abyss
             let numItems = abyss.startIndex + abyss.numItems - 1 == 0 ? 4 : 3
             let iterationIndex = Math.floor(Math.max(0, (abyss.startIndex + abyss.numItems - 2) / 3))
+
+            const representation = container.representation as ForStatementRepresentation
+            representation.unConsumeIteration(iterationIndex)
 
             clearExistingFocus()
             focusIteration(container.id, iterationIndex)
@@ -262,7 +501,7 @@ export function expandAbyssForward(abyssId: string, length: number = 1) {
         for (let i = abyss.startIndex + abyss.numItems; i < abyss.startIndex + abyss.numItems + length; i++) {
             const vertexId = container.vertices[i]
             const vertex = ApplicationState.actions[vertexId]
-            vertex.proxy.container.classList.add('consumed')
+            vertex.representation.consume()
         }
 
         abyss.numItems += length
@@ -272,7 +511,7 @@ export function expandAbyssForward(abyssId: string, length: number = 1) {
         // Consume elements
         for (let iter = iterationIndex; iter < iterationIndex + length; iter++) {
             const representation = container.representation as ForStatementRepresentation
-            representation.iterationElements[iter].classList.add('consumed')
+            representation.consumeIteration(iter)
         }
 
         // Update indices
@@ -293,7 +532,7 @@ export function expandAbyssBackward(abyssId: string, length: number = 1) {
         for (let i = abyss.startIndex - length; i < abyss.startIndex; i++) {
             const vertexId = container.vertices[i]
             const vertex = ApplicationState.actions[vertexId]
-            vertex.proxy.container.classList.add('consumed')
+            vertex.representation.consume()
         }
 
         abyss.startIndex -= length
@@ -304,7 +543,7 @@ export function expandAbyssBackward(abyssId: string, length: number = 1) {
         // Consume elements
         for (let iter = iterationIndex - length; iter < iterationIndex; iter++) {
             const representation = container.representation as ForStatementRepresentation
-            representation.iterationElements[iter].classList.add('consumed')
+            representation.consumeIteration(iter)
         }
 
         let numItems = iterationIndex - length == 0 ? 4 : 3
@@ -317,22 +556,45 @@ export function expandAbyssBackward(abyssId: string, length: number = 1) {
     updateAbyssVisual(abyssId)
 }
 
-export function expandSpatialAbyssForward(abyssId: string) {
+export function expandSpatialAbyssForward(abyssId: string, newActionId: string) {
+    const newAction = ApplicationState.actions[newActionId]
+    assert(newAction.isSpatial, 'New action must be spatial.')
+
+    // Expand abyss to include this this action
     const abyss = ApplicationState.abysses[abyssId]
-    assert(abyss.referenceActionId != null, 'Reference action id must not be null')
 
-    const reference = ApplicationState.actions[abyss.referenceActionId]
+    // Find index of parent abyss
+    let search = [abyss.referenceActionId]
+    let found: AbyssSpatialChild | null = null
+    while (search.length > 0) {
+        const current = search.pop()!
+        const currentAction = ApplicationState.actions[current.value]
 
-    // Get spatial children of reference
-    const spatialChildren = queryAllAction(reference, (a) => a.isSpatial).slice(abyss.numItems)
+        if (currentAction.spatialVertices != null && currentAction.spatialVertices.has(newActionId)) {
+            found = current
 
-    if (spatialChildren.length > 0) {
-        const spatialChild = spatialChildren[0]
-        spatialChild.proxy.container.classList.add('consumed')
-        spatialChild.abyssesIds.push(abyssId)
+            break
+        }
 
-        abyss.numItems += 1
+        if (current.children != null) {
+            search = search.concat(current.children)
+        }
     }
+
+    assert(found != null, 'Action must be a child of the parent abyss.')
+
+    // Expand abyss
+    if (found.children == null) {
+        found.children = []
+    }
+
+    found.children.push({
+        value: newActionId,
+        children: [],
+        element: null,
+    })
+
+    newAction.representation.consume()
 
     updateAbyssVisual(abyssId)
 }
@@ -343,20 +605,17 @@ export function collapseActionIntoAbyss(actionId: string) {
     if (action.isSpatial) {
         // Check parent for having a spatial abyss
         const parent = ApplicationState.actions[action.parentID as string]
-        const spatialParent = ApplicationState.actions[parent.spatialParentID as string]
-        const spatialAbyssId = spatialParent.abyssesIds.find(
-            (id) => ApplicationState.abysses[id].kind == AbyssKind.Spatial
-        )
+        const parentAbyssInfo = getConsumedAbyss(parent.id)
 
-        if (spatialAbyssId == null) {
+        if (parentAbyssInfo == null) {
             const newAbyss = createAbyss({
-                referenceActionId: action.id,
+                referenceActionId: { value: action.id, children: [], element: null },
                 numItems: 1,
                 kind: AbyssKind.Spatial,
             })
             action.abyssesIds.push(newAbyss.id)
         } else {
-            expandSpatialAbyssForward(spatialAbyssId)
+            expandSpatialAbyssForward(parentAbyssInfo.id, action.id)
         }
     } else {
         const parent = ApplicationState.actions[action.parentID as string]

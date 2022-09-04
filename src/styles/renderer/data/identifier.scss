@@ -2,10 +2,9 @@
     font-size: 12px;
     border-radius: var(--border-radius);
     font-family: var(--code-font-family);
-    font-weight: 300;
-    color: #fff;
-    background: #ffffff0f;
+    color: black;
     padding: 1px 4px 2px 4px;
+    background: var(--color-2);
 }
 
 .identifier.selected {

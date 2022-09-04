@@ -371,3 +371,8 @@ export function tokenDistanceFromTarget(node: ESTree.SourceLocation, target: EST
         Math.abs(node.end.column - target.end.column + 1)
     )
 }
+
+export function getLastPointInPath(d: string) {
+    let [xStr, yStr] = d.split(' ').slice(-2)
+    return [parseFloat(xStr), parseFloat(yStr)]
+}

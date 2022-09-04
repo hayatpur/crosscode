@@ -40,7 +40,7 @@ export function createControlFlowState(overrides: Partial<ControlFlowState> = {}
     const overlayContainer = createSVGElement(['control-flow-svg', 'control-flow-svg-overlay'], action.proxy.element)
 
     // Paths
-    const flowPath = createPathElement('control-flow-path-overlay', overlayContainer)
+    const flowPath = createPathElement('control-flow-path', container)
     // const flowPathOverlay = createPathElement('control-flow-path-overlay', overlayContainer)
     // const flowPathCompleted = createPathElement('control-flow-path-completed')
 

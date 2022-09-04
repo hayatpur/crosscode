@@ -1,7 +1,4 @@
-import {
-    DataState,
-    Transform,
-} from '../renderer/View/Environment/data/DataState'
+import { DataState, Transform } from '../renderer/View/Environment/data/DataState'
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { stringHashCode } from '../utilities/string'
 
@@ -68,8 +65,11 @@ export type EnvironmentState = {
     id: string
 }
 
-export function instanceOfEnvironment(
-    environment: any
-): environment is EnvironmentState {
+export type FrameInfo = {
+    environment: EnvironmentState
+    actionId: string
+}
+
+export function instanceOfEnvironment(environment: any): environment is EnvironmentState {
     return environment['_type'] === 'EnvironmentState'
 }

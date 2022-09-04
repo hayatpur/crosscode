@@ -58,7 +58,9 @@
     --s-color-5-2: #db959c;
     --s-color-5-3: #944850;
 
-    --path-color: #383847;
+    --focused-background: #b3dbff45;
+
+    --path-color: #66b8ff21;
 }
 
 :root {
@@ -182,10 +184,7 @@ body {
     position: absolute;
     top: 0px;
     left: 320px;
-    width: fit-content;
+    width: -webkit-fill-available;
     height: 100%;
     display: flex;
-
-    border-left: 1px solid rgba(0, 0, 0, 0.1);
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
 }

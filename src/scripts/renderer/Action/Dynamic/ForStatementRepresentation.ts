@@ -3,13 +3,23 @@ import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { Keyboard } from '../../../utilities/Keyboard'
 import { clearExistingFocus } from '../../../visualization/Focus'
-import { AbyssKind, collapseForIterationIntoAbyss, createAbyss, focusIteration } from '../Abyss'
+import {
+    AbyssKind,
+    collapseForIterationIntoAbyss,
+    createAbyss,
+    focusIteration,
+    getAbyssControlFlowPoints,
+} from '../Abyss'
 import { ActionState } from '../Action'
 import { Representation } from './Representation'
 
 export class ForStatementRepresentation extends Representation {
     forLabelElement: HTMLElement
+
     iterationElements: HTMLElement[] = []
+
+    // iterationStartTimes: number[] = []
+    // iterationEndTimes: number[] = []
 
     pinnedIterations: Set<number> = new Set()
 
@@ -25,7 +35,114 @@ export class ForStatementRepresentation extends Representation {
         })
 
         this.shouldHover = true
+        this.isSelectableGroup = true
     }
+
+    getControlFlowPointsForIteration(iteration: number, i: number): [number[], number[]] {
+        const iterationElement = this.iterationElements[iteration]
+        let bbox = iterationElement.getBoundingClientRect()
+
+        if (iterationElement.classList.contains('consumed')) {
+            // Find the abyss that it's in
+            const container = ApplicationState.actions[this.actionId]
+
+            for (const abyssId of container.abyssesIds) {
+                const abyss = ApplicationState.abysses[abyssId]
+                if (abyss.startIndex <= i && abyss.startIndex + abyss.numItems >= i) {
+                    return getAbyssControlFlowPoints(abyss, i)
+                }
+            }
+
+            console.log("Couldn't find abyss for iteration", iteration)
+        }
+
+        return [
+            [bbox.x + bbox.width / 2, bbox.y],
+            [bbox.x + bbox.width / 2, bbox.y + bbox.height],
+        ]
+    }
+
+    // updateControlFlow(controlFlow: ControlFlowState, originId: string) {
+    //     const action = ApplicationState.actions[this.actionId]
+
+    //     if (action.vertices.length > 0 && (!action.isSpatial || action.id == originId)) {
+    //         let starts: number[] = []
+    //         let ends: number[] = []
+
+    //         for (let s = 0; s < action.vertices.length; s++) {
+    //             const stepID = action.vertices[s]
+    //             const step = ApplicationState.actions[stepID]
+
+    //             if (s == 0 || (s > 1 && step.execution.nodeData.preLabel == 'Test')) {
+    //                 const iteration = Math.floor(Math.max(0, (s - 1) / 3))
+
+    //                 let [start, _] = this.getControlFlowPointsForIteration(iteration, s) as [number[], number[]]
+    //                 const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
+
+    //                 start[0] -= containerBbox.x
+    //                 start[1] -= containerBbox.y
+
+    //                 let d = controlFlow.flowPath.getAttribute('d') as string
+
+    //                 if (controlFlow.flowPath.getAttribute('d') == '') {
+    //                     d += `M ${start[0]} ${start[1]}`
+    //                 } else {
+    //                     d += ` L ${start[0]} ${start[1]}`
+    //                 }
+
+    //                 controlFlow.flowPath.setAttribute('d', d)
+    //                 this.iterationStartTimes[iteration] = controlFlow.flowPath.getTotalLength()
+    //                 starts.push(this.iterationStartTimes[iteration])
+    //             }
+
+    //             // Add start point to path
+    //             step.representation.updateControlFlow(controlFlow, originId)
+
+    //             if (step.execution.nodeData.preLabel == 'Update') {
+    //                 const iteration = Math.floor(Math.max(0, (s - 1) / 3))
+
+    //                 let [_, end] = this.getControlFlowPointsForIteration(iteration, s) as [number[], number[]]
+    //                 const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
+
+    //                 end[0] -= containerBbox.x
+    //                 end[1] -= containerBbox.y
+
+    //                 let d = controlFlow.flowPath.getAttribute('d') as string
+    //                 d += ` L ${end[0]} ${end[1]}`
+
+    //                 controlFlow.flowPath.setAttribute('d', d)
+    //                 this.iterationEndTimes[iteration] = controlFlow.flowPath.getTotalLength()
+    //                 ends.push(this.iterationEndTimes[iteration])
+    //             }
+
+    //             starts.push(step.startTime)
+    //             ends.push(step.endTime)
+    //         }
+
+    //         // End for selectable groups
+    //         if (action.representation.isSelectableGroup) {
+    //             let [_, end] = this.getControlFlowPoints(false) as [number[], number[]]
+    //             const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
+    //             end[0] -= containerBbox.x
+    //             end[1] -= containerBbox.y
+
+    //             let d = controlFlow.flowPath.getAttribute('d') as string
+    //             d += ` L ${end[0]} ${end[1]}`
+
+    //             controlFlow.flowPath.setAttribute('d', d)
+    //             action.endTime = controlFlow.flowPath.getTotalLength()
+    //             ends.push(action.endTime)
+    //         }
+
+    //         starts = starts.filter((s) => s != null)
+    //         ends = ends.filter((s) => s != null)
+
+    //         if (starts.length > 0 && ends.length > 0) {
+    //             action.startTime = starts[0]
+    //             action.endTime = ends[ends.length - 1]
+    //         }
+    //     }
+    // }
 
     createSteps() {
         super.createSteps()
@@ -94,8 +211,8 @@ export class ForStatementRepresentation extends Representation {
         const focus = ApplicationState.visualization.focus
         clearExistingFocus()
 
-        focus?.focusedActions.push([action.vertices[0], action.vertices[1], action.vertices[2], action.vertices[3]])
-        iterationElements[0].classList.add('is-focused')
+        // focus?.focusedActions.push([action.vertices[0], action.vertices[1], action.vertices[2], action.vertices[3]])
+        // iterationElements[0].classList.add('is-focused')
 
         this.setupHoverEventsForIterations()
         this.setupClickListenerForIterations()
@@ -111,25 +228,13 @@ export class ForStatementRepresentation extends Representation {
         action.proxy.container.classList.remove('is-focused')
     }
 
-    // focus() {
-    //     const action = ApplicationState.actions[this.actionId]
-    //     action.proxy.container.classList.add('is-focused')
+    consumeIteration(iteration: number) {
+        this.iterationElements[iteration].classList.add('consumed')
+    }
 
-    //     const focus = ApplicationState.visualization.focus
-    //     assert(focus != null, 'Focus is null')
-
-    //     clearExistingFocus()
-
-    //     focus.focusedActions.push(action.id)
-
-    //     // Update time
-    //     const spatialId = action.spatialParentID
-    //     assert(spatialId != null, 'Spatial parent ID is null')
-
-    //     const spatial = ApplicationState.actions[spatialId]
-    //     const [startTime, endTime] = this.getStartAndEndTime()
-    //     spatial.representation.seekTime(endTime)
-    // }
+    unConsumeIteration(iteration: number) {
+        this.iterationElements[iteration].classList.remove('consumed')
+    }
 
     setupHoverEventsForIterations() {
         for (const element of this.iterationElements) {

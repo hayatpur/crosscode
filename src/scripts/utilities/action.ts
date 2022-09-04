@@ -2,6 +2,7 @@ import { ApplicationState } from '../ApplicationState'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
 import { ActionState } from '../renderer/Action/Action'
+import { AssignmentExpressionRepresentation } from '../renderer/Action/Dynamic/AssignmentExpressionRepresentation'
 import { BinaryStatementRepresentation } from '../renderer/Action/Dynamic/BinaryExpressionRepresentation'
 import { BlockStatementRepresentation } from '../renderer/Action/Dynamic/BlockStatementRepresentation'
 import { CallExpressionRepresentation } from '../renderer/Action/Dynamic/CallExpressionRepresentation'
@@ -96,6 +97,7 @@ export function createRepresentation(action: ActionState) {
         BlockStatement: BlockStatementRepresentation,
         UpdateExpression: UpdateExpressionRepresentation,
         ExpressionStatement: ExpressionStatementRepresentation,
+        AssignmentExpression: AssignmentExpressionRepresentation,
     }
 
     if (action.execution.nodeData.type in mapping) {
@@ -248,6 +250,23 @@ export function getAccumulatedBoundingBox(IDs: string[]) {
     for (const id of IDs) {
         const child = ApplicationState.actions[id]
         const childBbox = child.proxy.container.getBoundingClientRect()
+
+        bbox.x = Math.min(bbox.x, childBbox.x)
+        bbox.y = Math.min(bbox.y, childBbox.y)
+        bbox.width = Math.max(bbox.width, childBbox.x + childBbox.width - bbox.x)
+        bbox.height = Math.max(bbox.height, childBbox.y + childBbox.height - bbox.y)
+    }
+
+    return bbox
+}
+
+export function getAccumulatedBoundingBoxForElements(elements: HTMLElement[]) {
+    assert(elements.length > 0, 'No elements provided.')
+
+    const bbox = elements[0].getBoundingClientRect()
+
+    for (const element of elements) {
+        const childBbox = element.getBoundingClientRect()
 
         bbox.x = Math.min(bbox.x, childBbox.x)
         bbox.y = Math.min(bbox.y, childBbox.y)

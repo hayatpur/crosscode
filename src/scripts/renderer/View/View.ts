@@ -1,11 +1,11 @@
 import { Howl } from 'howler'
 import { ApplicationState } from '../../ApplicationState'
 import { createEnvironment } from '../../environment/environment'
-import { EnvironmentState, Residual } from '../../environment/EnvironmentState'
+import { EnvironmentState, FrameInfo, Residual } from '../../environment/EnvironmentState'
 import { getLeafStepsFromIDs } from '../../utilities/action'
 import { createElement, createSVGElement } from '../../utilities/dom'
 import { assert } from '../../utilities/generic'
-import { remap } from '../../utilities/math'
+import { getSelections } from '../../visualization/Selection'
 import { getBreakIndexOfFrameIndex } from '../Action/Mapping/ActionMapping'
 import { TrailGroup } from '../Trail/TrailGroup'
 import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
@@ -16,8 +16,10 @@ import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
 export type ViewState = {
     id: string
 
+    actionId: string
+
     preFrame: EnvironmentState
-    frames: EnvironmentState[]
+    frames: FrameInfo[]
 
     // Container
     element: HTMLElement
@@ -39,12 +41,13 @@ export type ViewState = {
 let __VIEW_ID = 0
 export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
     const element = createElement('div', 'view')
-
     const svg = createSVGElement('environment-svg', element)
 
     const sound = new Howl({
         src: ['./src/assets/material_product_sounds/ogg/04 Secondary System Sounds/navigation_transition-left.ogg'],
     })
+
+    assert(overrides.actionId != null, 'Action id must be provided')
 
     const base: ViewState = {
         id: `View(${++__VIEW_ID})`,
@@ -60,33 +63,34 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
         renderers: [],
         containers: [],
 
+        actionId: overrides.actionId,
+
         sound: sound,
     }
 
-    return { ...base, ...overrides }
+    Object.assign(base, overrides)
+
+    return base
 }
 
 /* -------------------- Modify State -------------------- */
-export function setViewFrames(
-    view: ViewState,
-    frames: [env: EnvironmentState, actionID: string][],
-    preFrame: EnvironmentState
-) {
+export function setViewFrames(view: ViewState, frames: FrameInfo[], preFrame: EnvironmentState) {
     /* -------------------- Update frames ------------------- */
-    view.frames = frames.map(([env, actionID]) => env)
+    view.frames = [...frames]
     syncViewFrames(view)
 
     view.preFrame = preFrame
 
     /* -------------------- Update trails ------------------- */
 
-    // Clean up existing ones
+    // Clean up existing trails
     Object.values(view.trails).forEach((trail) => trail.destroy())
     view.trails = []
 
+    // Create new trails
     for (let i = 0; i < frames.length; i++) {
-        const [env, actionID] = frames[i]
-        const action = ApplicationState.actions[actionID]
+        const { actionId } = frames[i]
+        const action = ApplicationState.actions[actionId]
 
         const trailGroup = new TrailGroup(action.execution, i)
         view.trails.push(trailGroup)
@@ -98,27 +102,27 @@ export function setViewFrames(
 
     // Clean up existing residuals
     for (const frame of view.frames) {
-        frame.residuals = []
+        frame.environment.residuals = []
     }
 
     // Clean up existing timestamps
     for (const frame of view.frames) {
-        frame.timestamps = {}
+        frame.environment.timestamps = {}
     }
 
     // Create new residuals
     // TODO: can make it linear time by maintaining residuals
     for (let i = 0; i < frames.length; i++) {
         // For each frame
-        const [frameEnvironment, frameAction] = frames[i]
+        const { environment: frameEnvironment } = frames[i]
         const residuals: Residual[][] = []
 
         for (let j = 0; j <= i; j++) {
             // For each previous frame
-            const [previousFrameEnvironment, previousFrameAction] = frames[j]
+            // const [previousFrameEnvironment, previousFrameAction] = frames[j]
             const trail = view.trails[j]
 
-            const ppFrame = j == 0 ? view.preFrame : frames[j - 1][0]
+            const ppFrame = j == 0 ? view.preFrame : frames[j - 1].environment
 
             residuals.push(trail.computeResidual(ppFrame))
             trail.applyTimestamps(frameEnvironment)
@@ -145,97 +149,122 @@ export function updateView(view: ViewState) {
         throw new Error('No mapping defined.')
     }
 
-    const time = mapping.time
-
-    let candidate = 0
-    let amount = 0
-
     /* --------------- Find the closest frame --------------- */
     const programId = ApplicationState.visualization.programId
-    assert(programId != undefined, 'Program is undefined')
-    const program = ApplicationState.actions[programId]
+    assert(programId != undefined, 'Program is undefined.')
 
-    const steps = getLeafStepsFromIDs(program.vertices)
+    const globalTime = ApplicationState.visualization.selections[0]._globalTime
 
-    if (steps.length == 0) {
+    // Get selected action(s) in the current spatial thing
+    let [allSelectedSet, amounts] = getSelections(globalTime, false)
+    const allSelected = [...allSelectedSet]
+        .filter((selection) => ApplicationState.actions[selection].spatialParentID == programId)
+        .filter((selection) => view.frames.some((frame) => frame.actionId == selection))
+
+    if (allSelected.length == 0) {
+        // No action selected
+        console.warn('No action selected')
         return
+    } else if (allSelected.length > 1) {
+        // Multiple actions selected
+        console.warn('Multiple actions selected')
     }
 
-    for (let i = steps.length - 1; i >= 0; i--) {
-        const proxy = steps[i].proxy
-        const start = proxy.timeOffset
-        const end = start + proxy.element.getBoundingClientRect().height // TODO: Fix end point calculation
-        candidate = i
+    const selected = allSelected[0]
 
-        if (time >= start) {
-            amount = Math.min(remap(time, start, end, 0, 1), 1)
-            if (time <= end) {
-                if (!proxy.element.classList.contains('is-playing')) {
-                    view.sound.rate(Math.max(0.5, 3 - Math.abs(start - end) / 20))
-                    view.sound.play()
-                }
+    // Find the selected frame
+    const selectedFrameIndex = view.frames.findIndex((frame) => frame.actionId == selected)
+    const selectedFrameAmount = amounts[selected]
+    // const steps = getLeafStepsFromIDs(program.vertices)
 
-                const action = ApplicationState.actions[proxy.actionID]
-                action.element.classList.add('is-playing')
-                proxy.element.classList.add('is-playing')
-            }
-            break
-        }
-    }
+    // if (steps.length == 0) {
+    //     return
+    // }
+
+    // for (let i = steps.length - 1; i >= 0; i--) {
+    //     // const controlf = steps[i].proxy
+    //     const start = steps[i].globalTimeOffset
+    //     const end = steps[i].globalTimeOffset + getTotalDuration(steps[i].id)
+    //     candidate = i
+
+    //     if (time >= start) {
+    //         amount = Math.min(remap(time, start, end, 0, 1), 1)
+    //         if (time <= end) {
+    //             if (!proxy.element.classList.contains('is-playing')) {
+    //                 view.sound.rate(Math.max(0.5, 3 - Math.abs(start - end) / 20))
+    //                 view.sound.play()
+    //             }
+
+    //             const action = ApplicationState.actions[proxy.actionID]
+    //             action.element.classList.add('is-playing')
+    //             proxy.element.classList.add('is-playing')
+    //         }
+    //         break
+    //     }
+    // }
 
     /* ------------------- Assign classes ------------------- */
-    for (let i = 0; i < steps.length; i++) {
-        const proxy = steps[i].proxy
-        const action = ApplicationState.actions[proxy.actionID]
+    // for (let i = 0; i < steps.length; i++) {
+    //     const proxy = steps[i].proxy
+    //     const action = ApplicationState.actions[proxy.actionID]
 
-        if (i != candidate) {
-            action.element.classList.remove('is-playing')
-            proxy.element.classList.remove('is-playing')
-        }
-        if (i < candidate) {
-            action.element.classList.add('has-played')
-            proxy.element.classList.add('has-played')
-        } else {
-            action.element.classList.remove('has-played')
-            proxy.element.classList.remove('has-played')
-        }
-    }
+    //     if (i != candidate) {
+    //         action.element.classList.remove('is-playing')
+    //         proxy.element.classList.remove('is-playing')
+    //     }
+    //     if (i < candidate) {
+    //         action.element.classList.add('has-played')
+    //         proxy.element.classList.add('has-played')
+    //     } else {
+    //         action.element.classList.remove('has-played')
+    //         proxy.element.classList.remove('has-played')
+    //     }
+    // }
 
-    if (candidate == -1) {
-        console.warn('No candidate frame found.')
-        return
-    }
+    // if (candidate == -1) {
+    //     console.warn('No candidate frame found.')
+    //     return
+    // }
 
     /* --------------- Show the current frame --------------- */
 
     /* -------------------- Apply breaks -------------------- */
 
     /* -------------------- Apply trails -------------------- */
-    const candidateBreakIndex = getBreakIndexOfFrameIndex(mapping, candidate)
+    const candidateBreakIndex = getBreakIndexOfFrameIndex(mapping, selectedFrameIndex)
+    view.renderers[candidateBreakIndex].render(view.frames[selectedFrameIndex].environment)
 
-    view.renderers[candidateBreakIndex].render(view.frames[candidate])
-
+    // Update
     for (let i = 0; i < view.trails.length; i++) {
         const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
         const trails = view.trails[i]
-        if (i < candidate) {
+
+        if (i < selectedFrameIndex) {
             trails.updateTime(1, view.renderers[breakIndex])
-        } else if (i > candidate) {
+        } else if (i > selectedFrameIndex) {
+            // TODO: Why?
             // trails.updateTime(0, this.renderer)
         } else {
-            trails.updateTime(amount, view.renderers[breakIndex])
+            trails.updateTime(selectedFrameAmount, view.renderers[breakIndex])
         }
     }
 
+    // Post update
     for (let i = 0; i < view.trails.length; i++) {
         const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
-        const trails = view.trails[i]
-        if (i < candidate) {
-            trails.postUpdate(1, view.renderers[breakIndex])
-        } else if (i > candidate) {
-            trails.postUpdate(0, view.renderers[breakIndex])
-        } else {
-            trails.postUpdate(amount, view.renderers[breakIndex])
+        const trailGroup = view.trails[i]
+
+        // Occurred before the current frame
+        if (i < selectedFrameIndex) {
+            trailGroup.postUpdate(1, view.renderers[breakIndex])
+        }
+        // Occurred after the current frame
+        else if (i > selectedFrameIndex) {
+            trailGroup.postUpdate(0, view.renderers[breakIndex])
+        }
+        // Occurred at the current frame
+        else {
+            trailGroup.postUpdate(selectedFrameAmount, view.renderers[breakIndex])
         }
     }
 
@@ -246,30 +275,30 @@ export function updateView(view: ViewState) {
         trails.trails.forEach((trail) => trail.renderer.alwaysUpdate(view.renderers[breakIndex]))
     }
 
-    /* ----------- Update position of containers ------------ */
-    for (let i = 0; i < view.containers.length; i++) {
-        const container = view.containers[i]
-        // const breakIndex = mapping.breaks[i] ?? steps.length - 1
-        // const prevBreakIndex = mapping.breaks[i - 1] ?? 0
+    // /* ----------- Update position of containers ------------ */
+    // for (let i = 0; i < view.containers.length; i++) {
+    //     const container = view.containers[i]
+    //     // const breakIndex = mapping.breaks[i] ?? steps.length - 1
+    //     // const prevBreakIndex = mapping.breaks[i - 1] ?? 0
 
-        // If candidate is in the same break
-        if (candidateBreakIndex == i) {
-            const activeAction = steps[0].proxy
-            const activeActionBbox = activeAction.element.getBoundingClientRect()
-            container.style.top = `${
-                activeActionBbox.top + activeActionBbox.height / 2 - container.getBoundingClientRect().height / 2
-            }px`
+    //     // If candidate is in the same break
+    //     if (candidateBreakIndex == i) {
+    //         const activeAction = steps[0].proxy
+    //         const activeActionBbox = activeAction.element.getBoundingClientRect()
+    //         container.style.top = `${
+    //             activeActionBbox.top + activeActionBbox.height / 2 - container.getBoundingClientRect().height / 2
+    //         }px`
 
-            container.classList.remove('will-play')
-            container.classList.remove('has-played')
-        } else if (candidateBreakIndex < i) {
-            container.classList.add('will-play')
-            container.classList.remove('has-played')
-        } else {
-            container.classList.add('has-played')
-            container.classList.remove('will-play')
-        }
-    }
+    //         container.classList.remove('will-play')
+    //         container.classList.remove('has-played')
+    //     } else if (candidateBreakIndex < i) {
+    //         container.classList.add('will-play')
+    //         container.classList.remove('has-played')
+    //     } else {
+    //         container.classList.add('has-played')
+    //         container.classList.remove('will-play')
+    //     }
+    // }
 }
 
 /**

@@ -24,6 +24,16 @@ export class VariableDeclarationRepresentation extends Representation {
         }
     }
 
+    unConsume() {
+        const action = ApplicationState.actions[this.actionId]
+
+        super.unConsume()
+
+        if (action.execution.nodeData.preLabel == 'Statement') {
+            this.createSteps()
+        }
+    }
+
     // getStartAndEndTime() {
     //     const action = ApplicationState.actions[this.actionId]
 

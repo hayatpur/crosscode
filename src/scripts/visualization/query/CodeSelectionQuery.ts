@@ -4,9 +4,9 @@ import { ApplicationState } from '../../ApplicationState'
 import { getDepthOfExecution, queryExecutionGraph } from '../../execution/execution'
 import { ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../../execution/primitive/ExecutionNode'
-import { collapseActionIntoAbyss } from '../../renderer/Action/Abyss'
+import { collapseActionIntoAbyss, getConsumedAbyss } from '../../renderer/Action/Abyss'
 import { ActionState } from '../../renderer/Action/Action'
-import { containsSpatialChild, getAbstractionPath } from '../../utilities/action'
+import { getAbstractionPath } from '../../utilities/action'
 import { assert } from '../../utilities/generic'
 import { getClosestMatch } from '../../utilities/math'
 
@@ -66,11 +66,8 @@ export function getQuery(selection: ESTree.SourceLocation) {
         return aDepth - bDepth
     })
 
-    console.log('Selection', executionSelection)
-
-    // executionSelection.reverse()
-
-    let createdActions = []
+    let createdActionsIds: string[] = []
+    let createdSpatialActionsIds: string[] = []
 
     for (const execution of executionSelection) {
         // Two cases:
@@ -104,22 +101,38 @@ export function getQuery(selection: ESTree.SourceLocation) {
             ) as string
 
             currentParent = ApplicationState.actions[currentParentId]
+
+            if (currentParent.isSpatial) {
+                createdSpatialActionsIds.push(currentParent.id!)
+            }
         }
 
-        createdActions.push(currentParent)
+        // Leaves / end points!
+        createdActionsIds.push(currentParent.id)
+
+        // Filter out this spatial parent
+        createdSpatialActionsIds = createdSpatialActionsIds.filter((a) => a != currentParent.spatialParentID)
     }
 
-    for (const action of createdActions) {
-        const spatialParent = ApplicationState.actions[action.spatialParentID as string]
+    // for (const action of createdActions) {
+    //     const spatialParent = ApplicationState.actions[action.spatialParentID as string]
 
-        // Add an abyss *before* the execution
-        for (let i = spatialParent.vertices.length - 1; i >= 0; i--) {
-            const vId = spatialParent.vertices[i]
-            const v = ApplicationState.actions[vId]
-            if (vId != action.id && !containsSpatialChild(v)) {
-                console.log(v.execution.nodeData)
-                collapseActionIntoAbyss(vId)
-            }
+    //     // Add an abyss *before* the execution
+    //     for (let i = spatialParent.vertices.length - 1; i >= 0; i--) {
+    //         const vId = spatialParent.vertices[i]
+    //         const v = ApplicationState.actions[vId]
+    //         if (vId != action.id && !containsSpatialChild(v)) {
+    //             console.log(v.execution.nodeData)
+    //             collapseActionIntoAbyss(vId)
+    //         }
+    //     }
+    // }
+
+    console.log(createdSpatialActionsIds)
+    for (const actionId of createdSpatialActionsIds) {
+        const abyssInfo = getConsumedAbyss(actionId)
+        if (abyssInfo == null) {
+            collapseActionIntoAbyss(actionId)
         }
     }
 }

@@ -8,6 +8,7 @@ export class BlockStatementRepresentation extends Representation {
         super(action)
 
         this.shouldHover = true
+        this.isSelectableGroup = true
     }
 
     postCreate(): void {

@@ -7,7 +7,7 @@ import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { createActionState, destroyAction } from '../renderer/Action/Action'
 import { ActionMappingState, createActionMapping, destroyActionMapping } from '../renderer/Action/Mapping/ActionMapping'
 import { ControlFlowState, updateControlFlowState } from '../renderer/Action/Mapping/ControlFlowState'
-import { createViewState, destroyView, ViewState } from '../renderer/View/View'
+import { setViewFrames, updateView } from '../renderer/View/View'
 import { Compiler } from '../transpiler/Compiler'
 import { createElement } from '../utilities/dom'
 import { getAST } from '../utilities/executor'
@@ -20,7 +20,6 @@ import { createSelection, SelectionState, updateSelectionTime } from './Selectio
 export type VisualizationState = {
     execution: ExecutionGraph | undefined
     mapping: ActionMappingState | undefined
-    view: ViewState | undefined
 
     programId: string | undefined
 
@@ -48,7 +47,6 @@ export function createVisualization(overrides: Partial<VisualizationState> = {})
     const base: VisualizationState = {
         execution: undefined,
         mapping: undefined,
-        view: undefined,
         programId: undefined,
 
         focus: createFocus(),
@@ -77,17 +75,12 @@ export function resetVisualization(visualization: VisualizationState) {
         destroyActionMapping(visualization.mapping)
     }
 
-    if (visualization.view != undefined) {
-        destroyView(visualization.view as ViewState)
-    }
-
     if (visualization.programId != undefined) {
         const program = ApplicationState.actions[visualization.programId]
         destroyAction(program)
     }
 
     visualization.mapping = undefined
-    visualization.view = undefined
     visualization.programId = undefined
     visualization.execution = undefined
 }
@@ -139,14 +132,24 @@ export function compileVisualization(visualization: VisualizationState, code: st
     visualization.mapping = createActionMapping()
     visualization.container.appendChild(visualization.mapping.element)
 
-    visualization.view = createViewState()
-
     const program = createActionState({
         execution: visualization.execution,
     })
     visualization.programId = program.id
 
     program.representation.postCreate()
+
+    setTimeout(() => {
+        setViewFrames(
+            program.view!,
+            program.representation.getFrames(program.id),
+            program.execution.precondition as EnvironmentState
+        )
+
+        setInterval(() => {
+            updateView(program.view!)
+        }, 200)
+    }, 500)
 
     document.body.appendChild(program.element)
 
@@ -215,6 +218,8 @@ export function tickVisualization(visualization: VisualizationState, dt: number)
             updateControlFlowState(action.controlFlow as ControlFlowState)
         }
     }
+
+    // Update view
 
     // Sync all cursors
     // for (const actionId of Object.keys(ApplicationState.actions)) {

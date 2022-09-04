@@ -6,6 +6,8 @@ import { createRepresentation } from '../../utilities/action'
 import { createElement, createPathElement, createSVGElement } from '../../utilities/dom'
 import { assert } from '../../utilities/generic'
 import { Ticker } from '../../utilities/Ticker'
+import { createViewState, ViewState } from '../View/View'
+import { getActionLocationInAbyss, getConsumedAbyss } from './Abyss'
 import { Representation } from './Dynamic/Representation'
 import { appendProxyToMapping } from './Mapping/ActionMapping'
 import { ActionProxyState, createActionProxy, destroyActionProxy, isSpatialByDefault } from './Mapping/ActionProxy'
@@ -62,6 +64,9 @@ export type ActionState = {
     // Start and end time relative to the spatial parent
     startTime: number
     endTime: number
+
+    // Only for spatial actions
+    view: ViewState
 
     globalTimeOffset: number
 }
@@ -141,6 +146,9 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
         base.controlFlow = createControlFlowState({
             actionId: id,
         })
+
+        base.view = createViewState({ actionId: id })
+        ApplicationState.visualization.container.appendChild(base.view.element)
     }
 
     return base as ActionState
@@ -250,8 +258,29 @@ export function makeSpatial(actionId: string) {
 export function updateActionRay(actionID: string) {
     const action = ApplicationState.actions[actionID]
 
-    const startBbox = action.placeholder.getBoundingClientRect()
-    const endBbox = action.proxy.element.getBoundingClientRect()
+    let startBbox = action.placeholder.getBoundingClientRect()
+    let endBbox = action.proxy.element.getBoundingClientRect()
+
+    // If end is consumed
+    const abyssInfo = getConsumedAbyss(actionID)
+    if (abyssInfo != null) {
+        const location = getActionLocationInAbyss(abyssInfo.id, actionID)
+        endBbox = location!.getBoundingClientRect()
+    }
+
+    // If start is consumed
+    const parentAbyssInfo = getConsumedAbyss(action.parentID!)
+    if (parentAbyssInfo != null) {
+        const parent = ApplicationState.actions[action.parentID!]
+        const location = getActionLocationInAbyss(parentAbyssInfo.id, parent.spatialParentID!)
+        startBbox = location!.getBoundingClientRect()
+    }
+
+    if (abyssInfo != null && parentAbyssInfo != null && abyssInfo.id == parentAbyssInfo?.id) {
+        action.placeholderRay.classList.add('is-overlapping')
+    } else {
+        action.placeholderRay.classList.remove('is-overlapping')
+    }
 
     if (action.placeholderRay.parentElement == null) {
         throw new Error('Ray has no parent element.')

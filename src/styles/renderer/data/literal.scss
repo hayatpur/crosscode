@@ -4,13 +4,14 @@
 .data-function {
     font-size: var(--code-font-size);
     font-family: var(--code-font-family);
-    color: var(--s-color-1);
+    color: var(--s-color-0);
     padding: 0px 4px;
     min-height: 30px;
     font-weight: 400;
     position: relative;
     z-index: 10;
     width: fit-content;
+    font-size: 14px;
 }
 
 .data-array > .hole > .data-literal {

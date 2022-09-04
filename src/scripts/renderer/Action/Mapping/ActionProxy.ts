@@ -14,9 +14,6 @@ export type ActionProxyState = {
     // Corresponding action
     actionID: string
 
-    // Time in control flow
-    timeOffset: number
-
     isHovering: boolean
 }
 

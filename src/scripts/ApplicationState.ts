@@ -19,4 +19,6 @@ export class ApplicationState {
     // Collections
     static actions: { [id: string]: ActionState } = {}
     static abysses: { [id: string]: AbyssState } = {}
+
+    static Epsilon = 0.001
 }
