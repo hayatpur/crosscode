@@ -5,6 +5,7 @@ import { EnvironmentState, FrameInfo, Residual } from '../../environment/Environ
 import { getLeafStepsFromIDs } from '../../utilities/action'
 import { createElement, createSVGElement } from '../../utilities/dom'
 import { assert } from '../../utilities/generic'
+import { getNumericalValueOfStyle } from '../../utilities/math'
 import { getSelections } from '../../visualization/Selection'
 import { getBreakIndexOfFrameIndex } from '../Action/Mapping/ActionMapping'
 import { TrailGroup } from '../Trail/TrailGroup'
@@ -22,6 +23,7 @@ export type ViewState = {
     frames: FrameInfo[]
 
     // Container
+    container: HTMLElement
     element: HTMLElement
 
     // SVG overlay
@@ -35,12 +37,19 @@ export type ViewState = {
 
     // Like animation paths (that are acting on a given animation)
     trails: TrailGroup[]
+
+    // Cache
+    prevTime: number
 }
 
 /* --------------------- Initializer -------------------- */
 let __VIEW_ID = 0
 export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
-    const element = createElement('div', 'view')
+    const container = createElement('div', 'view-container')
+
+    const label = createElement('div', 'view-label', container)
+
+    const element = createElement('div', 'view', container)
     const svg = createSVGElement('environment-svg', element)
 
     const sound = new Howl({
@@ -48,6 +57,9 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
     })
 
     assert(overrides.actionId != null, 'Action id must be provided')
+
+    const action = ApplicationState.actions[overrides.actionId]
+    label.innerText = action.execution.nodeData.type!
 
     const base: ViewState = {
         id: `View(${++__VIEW_ID})`,
@@ -57,6 +69,7 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
 
         trails: [],
 
+        container,
         element: element,
         svg: svg,
 
@@ -66,6 +79,7 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
         actionId: overrides.actionId,
 
         sound: sound,
+        prevTime: -1,
     }
 
     Object.assign(base, overrides)
@@ -92,10 +106,11 @@ export function setViewFrames(view: ViewState, frames: FrameInfo[], preFrame: En
         const { actionId } = frames[i]
         const action = ApplicationState.actions[actionId]
 
-        const trailGroup = new TrailGroup(action.execution, i)
+        const trailGroup = new TrailGroup(action.execution, view.actionId, i)
         view.trails.push(trailGroup)
     }
 
+    view.prevTime = -1
     updateView(view)
 
     /* ------------------ Update residuals ------------------ */
@@ -135,7 +150,7 @@ export function setViewFrames(view: ViewState, frames: FrameInfo[], preFrame: En
 /* ----------------------- Destroy ---------------------- */
 export function destroyView(view: ViewState) {
     view.renderers.forEach((renderer) => renderer.destroy())
-    view.element.remove()
+    view.container.remove()
 
     view.trails.forEach((trail) => trail.destroy())
     view.trails = []
@@ -143,25 +158,29 @@ export function destroyView(view: ViewState) {
 
 /* --------------------- Update time -------------------- */
 export function updateView(view: ViewState) {
-    const mapping = ApplicationState.visualization.mapping
+    const mapping = ApplicationState.visualization.mapping!
+    const globalTime = ApplicationState.visualization.selections['main']._globalTime
 
-    if (mapping == undefined) {
-        throw new Error('No mapping defined.')
-    }
+    const action = ApplicationState.actions[view.actionId]
+
+    // Update position
+    const targetLeft = getNumericalValueOfStyle(action.proxy.container.style.left)
+    const targetTop = getNumericalValueOfStyle(action.proxy.container.style.top)
+
+    view.container.style.left = `${targetLeft}px`
+    view.container.style.top = `${targetTop}px`
+
+    if (view.prevTime == globalTime) return
 
     /* --------------- Find the closest frame --------------- */
-    const programId = ApplicationState.visualization.programId
-    assert(programId != undefined, 'Program is undefined.')
-
-    const globalTime = ApplicationState.visualization.selections[0]._globalTime
 
     // Get selected action(s) in the current spatial thing
-    let [allSelectedSet, amounts] = getSelections(globalTime, false)
+    let { selectedIds: allSelectedSet, amounts, closestId } = getSelections(globalTime)
     const allSelected = [...allSelectedSet]
-        .filter((selection) => ApplicationState.actions[selection].spatialParentID == programId)
+        .filter((selection) => ApplicationState.actions[selection].spatialParentID == action.id)
         .filter((selection) => view.frames.some((frame) => frame.actionId == selection))
 
-    if (allSelected.length == 0) {
+    if (allSelected.length == 0 && closestId == null) {
         // No action selected
         console.warn('No action selected')
         return
@@ -170,7 +189,7 @@ export function updateView(view: ViewState) {
         console.warn('Multiple actions selected')
     }
 
-    const selected = allSelected[0]
+    const selected = allSelected.length > 0 ? allSelected[0] : closestId!
 
     // Find the selected frame
     const selectedFrameIndex = view.frames.findIndex((frame) => frame.actionId == selected)
@@ -272,7 +291,7 @@ export function updateView(view: ViewState) {
         const trails = view.trails[i]
         const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
 
-        trails.trails.forEach((trail) => trail.renderer.alwaysUpdate(view.renderers[breakIndex]))
+        trails.trails!.forEach((trail) => trail.renderer.alwaysUpdate(view.renderers[breakIndex]))
     }
 
     // /* ----------- Update position of containers ------------ */
@@ -299,6 +318,8 @@ export function updateView(view: ViewState) {
     //         container.classList.remove('will-play')
     //     }
     // }
+
+    view.prevTime = globalTime
 }
 
 /**

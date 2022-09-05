@@ -53,10 +53,7 @@ export function createEnvironment(): EnvironmentState {
     }
 }
 
-export function createIdentifier(
-    name: string,
-    location: Accessor[]
-): IdentifierState {
+export function createIdentifier(name: string, location: Accessor[]): IdentifierState {
     return { name, location }
 }
 
@@ -64,10 +61,7 @@ export function createIdentifier(
  * Push an empty scope into the environment.
  * @param environment
  */
-export function createScope(
-    environment: EnvironmentState,
-    scopeType: ScopeType = ScopeType.Default
-) {
+export function createScope(environment: EnvironmentState, scopeType: ScopeType = ScopeType.Default) {
     environment.scope.push({ bindings: {}, type: scopeType })
 }
 
@@ -100,13 +94,8 @@ export function popScope(environment: EnvironmentState): Scope {
  * @param location location of where its stored
  * @param shouldBeGlobal whether it should be declared in the global scope (TODO)
  */
-export function declareVariable(
-    environment: EnvironmentState,
-    name: string,
-    location: Accessor[]
-) {
-    environment.scope[environment.scope.length - 1].bindings[name] =
-        createIdentifier(name, location)
+export function declareVariable(environment: EnvironmentState, name: string, location: Accessor[]) {
+    environment.scope[environment.scope.length - 1].bindings[name] = createIdentifier(name, location)
 }
 
 /**
@@ -115,10 +104,7 @@ export function declareVariable(
  * @param name name of variable
  * @returns location of stored in the variable
  */
-export function lookupVariable(
-    environment: EnvironmentState,
-    name: string
-): Accessor[] | null {
+export function lookupVariable(environment: EnvironmentState, name: string): Accessor[] | null {
     for (let i = environment.scope.length - 1; i >= 0; i--) {
         const scope = environment.scope[i]
 
@@ -139,10 +125,7 @@ export function lookupVariable(
  * @param environment
  * @returns Returns a deep clone of the environment
  */
-export function cloneEnvironment(
-    environment: EnvironmentState,
-    assignNewId = false
-): EnvironmentState {
+export function cloneEnvironment(environment: EnvironmentState, assignNewId = false): EnvironmentState {
     return {
         _type: 'EnvironmentState',
         scope: clone(environment.scope),
@@ -159,10 +142,7 @@ export function cloneEnvironment(
  * @param current
  * @param newEnv
  */
-export function replaceEnvironmentWith(
-    current: EnvironmentState,
-    newEnv: EnvironmentState
-) {
+export function replaceEnvironmentWith(current: EnvironmentState, newEnv: EnvironmentState) {
     const clone = cloneEnvironment(newEnv)
     current.scope = clone.scope
     current.memory = clone.memory
@@ -185,9 +165,7 @@ export function removeAt(
     const index = location[location.length - 1]
 
     if (instanceOfData(parent) && instanceOfObjectData(parent)) {
-        delete (parent.value as { [id: string | number]: DataState })[
-            index.value
-        ]
+        delete (parent.value as { [id: string | number]: DataState })[index.value]
     } else if (instanceOfEnvironment(parent)) {
         delete parent.memory[index.value]
     } else {
@@ -209,9 +187,7 @@ export function logEnvironment(environment: EnvironmentState) {
  * @param environment
  * @returns
  */
-export function flattenedEnvironmentMemory(
-    environment: EnvironmentState
-): DataState[] {
+export function flattenedEnvironmentMemory(environment: EnvironmentState): DataState[] {
     const search = [...Object.values(environment.memory)]
     const flattened: DataState[] = []
 
@@ -248,16 +224,10 @@ export function resolve(
     if (accessor.type == AccessorType.Register) {
         // Registers are always located in the root
         if (root.registers[accessor.value] == null) {
-            root.registers[accessor.value] = createPrimitiveData(
-                DataType.Register,
-                null,
-                srcID
-            )
+            root.registers[accessor.value] = createPrimitiveData(DataType.Register, null, srcID)
         }
 
-        const registerData = root.registers[
-            accessor.value
-        ] as PrimitiveDataState
+        const registerData = root.registers[accessor.value] as PrimitiveDataState
 
         if (registerData.type == DataType.ID) {
             return resolvePath(
@@ -275,17 +245,10 @@ export function resolve(
         } else if (registerData.type == DataType.Register) {
             return registerData
         } else {
-            console.error(
-                'Invalid register type, has to be either ID or Register',
-                registerData.type
-            )
+            console.error('Invalid register type, has to be either ID or Register', registerData.type)
         }
     } else if (accessor.type == AccessorType.ID) {
-        const search = [
-            ...(instanceOfData(parent)
-                ? (parent.value as DataState[])
-                : Object.values(parent.memory)),
-        ]
+        const search = [...(instanceOfData(parent) ? (parent.value as DataState[]) : Object.values(parent.memory))]
 
         while (search.length > 0) {
             const data = search.shift()
@@ -318,21 +281,13 @@ export function resolve(
             if (Array.isArray(parent.value)) {
                 const value = parent.value as DataState[]
                 if (parseInt(accessor.value) >= value.length) {
-                    value[parseInt(accessor.value)] = createPrimitiveData(
-                        DataType.Literal,
-                        null,
-                        srcID
-                    )
+                    value[parseInt(accessor.value)] = createPrimitiveData(DataType.Literal, null, srcID)
                     value[parseInt(accessor.value)].frame = parent.frame
                 }
             } else if (parent.constructor == Object) {
                 const value = parent.value as { [key: string]: DataState }
                 if (value[accessor.value] == null) {
-                    value[accessor.value] = createPrimitiveData(
-                        DataType.Literal,
-                        null,
-                        srcID
-                    )
+                    value[accessor.value] = createPrimitiveData(DataType.Literal, null, srcID)
                     value[accessor.value].frame = parent.frame
                 }
             }
@@ -341,9 +296,7 @@ export function resolve(
         let data = null
 
         if (instanceOfData(parent) && instanceOfObjectData(parent)) {
-            data = (parent.value as { [key: string | number]: DataState })[
-                accessor.value
-            ]
+            data = (parent.value as { [key: string | number]: DataState })[accessor.value]
         } else if (instanceOfEnvironment(parent)) {
             data = parent.memory[accessor.value]
         }
@@ -367,20 +320,11 @@ export function resolve(
                     options
                 )
             }
-        } else if (
-            instanceOfPrimitiveData(data) &&
-            data.type == DataType.Reference
-        ) {
+        } else if (instanceOfPrimitiveData(data) && data.type == DataType.Reference) {
             if (options.noResolvingReference) {
                 return data
             } else {
-                return resolvePath(
-                    root,
-                    data.value as Accessor[],
-                    srcID,
-                    null,
-                    options
-                )
+                return resolvePath(root, data.value as Accessor[], srcID, null, options)
             }
         }
 
@@ -437,10 +381,7 @@ export function addDataAt(
     }
 
     if (instanceOfData(origin)) {
-        if (!instanceOfObjectData(origin))
-            throw new Error(
-                '[Data] Invalid addAt, trying to add to a non-addable type'
-            )
+        if (!instanceOfObjectData(origin)) throw new Error('[Data] Invalid addAt, trying to add to a non-addable type')
 
         // No path specified, push it into memory
         if (path.length == 0) {
@@ -457,9 +398,7 @@ export function addDataAt(
 
         if (parent == origin) {
             const index = path[path.length - 1]
-            ;(parent.value as { [key: string | number]: DataState })[
-                index.value
-            ] = data
+            ;(parent.value as { [key: string | number]: DataState })[index.value] = data
             data.frame = origin.frame
         } else {
             addDataAt(root, data, path.slice(-2, -1), srcID, parent)
@@ -497,13 +436,8 @@ export function getMemoryLocation(
 ): { found: boolean; foundLocation: Accessor[] | null } {
     let search: { [id: string]: DataState } | { [id: number]: DataState } = {}
 
-    const isArray =
-        parent != null &&
-        instanceOfObjectData(parent) &&
-        Array.isArray(parent.value) &&
-        parent.frame >= 0
-    const isObject =
-        parent != null && instanceOfObjectData(parent) && parent.frame >= 0
+    const isArray = parent != null && instanceOfObjectData(parent) && Array.isArray(parent.value) && parent.frame >= 0
+    const isObject = parent != null && instanceOfObjectData(parent) && parent.frame >= 0
 
     if (isArray) {
         // Array
@@ -550,10 +484,7 @@ export function getMemoryLocation(
 }
 
 // Converts register IDs to memory counter-parts
-export function getTrueID(
-    environment: EnvironmentState,
-    id: string
-): string | null {
+export function getTrueID(environment: EnvironmentState, id: string): string | null {
     const register = environment.registers[id]
     if (register == null || instanceOfObjectData(register)) return id
 
@@ -564,9 +495,6 @@ export function getTrueID(
     return null
 }
 
-export function cleanUpRegister(
-    environment: EnvironmentState,
-    registerName: string
-) {
+export function cleanUpRegister(environment: EnvironmentState, registerName: string) {
     delete environment.registers[registerName]
 }

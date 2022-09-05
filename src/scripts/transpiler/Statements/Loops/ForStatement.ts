@@ -4,22 +4,14 @@ import { AccessorType, EnvironmentState } from '../../../environment/Environment
 import { addVertex, applyExecutionNode } from '../../../execution/execution'
 import { createExecutionGraph, ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { consumeDataAnimation } from '../../../execution/primitive/Data/ConsumeDataAnimation'
-import {
-    ControlOutput,
-    ControlOutputData,
-    ExecutionContext,
-} from '../../../execution/primitive/ExecutionNode'
+import { ControlOutput, ControlOutputData, ExecutionContext } from '../../../execution/primitive/ExecutionNode'
 import { createScopeAnimation } from '../../../execution/primitive/Scope/CreateScopeAnimation'
 import { popScopeAnimation } from '../../../execution/primitive/Scope/PopScopeAnimation'
 import { DataState } from '../../../renderer/View/Environment/data/DataState'
 import { clone } from '../../../utilities/objects'
 import { Compiler, getNodeData } from '../../Compiler'
 
-export function ForStatement(
-    ast: ESTree.ForStatement,
-    environment: EnvironmentState,
-    context: ExecutionContext
-) {
+export function ForStatement(ast: ESTree.ForStatement, environment: EnvironmentState, context: ExecutionContext) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
     graph.precondition = clone(environment)
 

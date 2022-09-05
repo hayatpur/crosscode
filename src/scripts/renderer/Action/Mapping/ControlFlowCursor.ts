@@ -6,7 +6,7 @@ import { ControlFlowState } from './ControlFlowState'
 export type ControlFlowCursor = {
     actionId: string
     element: HTMLElement
-    selectionIndex: number
+    selectionId: string
     isDragging: boolean
 }
 
@@ -17,16 +17,18 @@ export type ControlFlowCursor = {
  */
 export function createControlFlowCursorState(overrides: Partial<ControlFlowCursor> = {}): ControlFlowCursor {
     assert(overrides.actionId !== undefined, 'Action ID must be defined for control flow state.')
+    // assert(overrides.selectionId !== undefined, 'Selection ID must be defined for control flow state.')
 
     const action = ApplicationState.actions[overrides.actionId]
 
     // Element
     const element = createElement('div', 'control-flow-cursor', action.proxy.element)
 
+    // TODO
     const base: ControlFlowCursor = {
         actionId: overrides.actionId,
         element,
-        selectionIndex: 0,
+        selectionId: 'main',
         isDragging: false,
     }
 
@@ -37,7 +39,7 @@ export function updateControlFlowCursor(controlFlowCursor: ControlFlowCursor) {
     const action = ApplicationState.actions[controlFlowCursor.actionId]
     const controlFlow = action.controlFlow as ControlFlowState
 
-    const targetTime = ApplicationState.visualization.selections[controlFlowCursor.selectionIndex]._globalTime
+    const targetTime = ApplicationState.visualization.selections[controlFlowCursor.selectionId]._globalTime
     const localTime = convertGlobalTimeToLocalTime(targetTime, action.id)
 
     // TODO Cache

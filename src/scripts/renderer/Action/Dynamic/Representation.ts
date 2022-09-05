@@ -36,6 +36,8 @@ export class Representation {
 
     isSelectableGroup = false
 
+    dirtyFrames = false
+
     /**
      * Only class since typescript doesn't have type classes :(
      * @param action
@@ -45,6 +47,18 @@ export class Representation {
 
         this.isTrimmed = isTrimmedByDefault(action.execution)
         this.isPrimitive = isPrimitiveByDefault(action.execution)
+
+        if (action.isSpatial) {
+            this.dirtyFrames = true
+        }
+    }
+
+    getPreDuration() {
+        return 0
+    }
+
+    getPostDuration() {
+        return 0
     }
 
     // TODO: If statements inside of for loops are bugged
@@ -221,6 +235,15 @@ export class Representation {
         return spatialIDs
     }
 
+    isFrame() {
+        if (this.isTrimmed) {
+            return false
+        }
+
+        const action = ApplicationState.actions[this.actionId]
+        return action.vertices.length == 0 && !action.isSpatial
+    }
+
     // Get frames should call get frames of each step.
     getFrames(originId: string): FrameInfo[] {
         const action = ApplicationState.actions[this.actionId]
@@ -228,26 +251,26 @@ export class Representation {
         if (action.vertices.length > 0 && (!action.isSpatial || action.id == originId)) {
             const frames: FrameInfo[] = []
 
-            if (this.isSelectableGroup) {
-                const frame = {
-                    environment: action.execution.precondition as EnvironmentState,
-                    actionId: action.id,
-                }
-                frames.push(frame)
-            }
+            // if (this.isSelectableGroup) {
+            //     const frame = {
+            //         environment: action.execution.precondition as EnvironmentState,
+            //         actionId: action.id,
+            //     }
+            //     frames.push(frame)
+            // }
 
             for (const stepID of action.vertices) {
                 const step = ApplicationState.actions[stepID]
                 frames.push(...step.representation.getFrames(originId))
             }
 
-            if (this.isSelectableGroup) {
-                const frame = {
-                    environment: action.execution.postcondition as EnvironmentState,
-                    actionId: action.id,
-                }
-                frames.push(frame)
-            }
+            // if (this.isSelectableGroup) {
+            //     const frame = {
+            //         environment: action.execution.postcondition as EnvironmentState,
+            //         actionId: action.id,
+            //     }
+            //     frames.push(frame)
+            // }
 
             return frames
         } else {
@@ -266,7 +289,7 @@ export class Representation {
         }
     }
 
-    getControlFlowPoints(usePlaceholder: boolean = true): [[number, number], [number, number]] | null {
+    getControlFlowPoints(usePlaceholder: boolean = true): [number, number][] | null {
         if (this.isTrimmed) {
             return null
         }
@@ -307,7 +330,7 @@ export class Representation {
 
         if (action.vertices.length > 0 && (!action.isSpatial || action.id == originId)) {
             if (action.representation.isSelectableGroup) {
-                let points = this.getControlFlowPoints(false) as [number[], number[]]
+                let points = this.getControlFlowPoints(false)
                 cache += JSON.stringify(points)
             }
 
@@ -388,7 +411,7 @@ export class Representation {
 
             // Start for selectable groups
             if (action.representation.isSelectableGroup) {
-                let [start, _] = this.getControlFlowPoints(false) as [number[], number[]]
+                let start = this.getControlFlowPoints(false)![0]
                 const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
 
                 start[0] -= containerBbox.x
@@ -414,13 +437,34 @@ export class Representation {
                 // Add start point to path
                 step.representation.updateControlFlow(controlFlow, originId)
 
+                if (action.execution.nodeData.type == 'ForStatement') {
+                    if (step.execution.nodeData.preLabel == 'Body') {
+                        let d = controlFlow.flowPath.getAttribute('d') as string
+                        const [x, y] = getLastPointInPath(d)
+
+                        const bbox = action.proxy.element.getBoundingClientRect()
+                        const container = controlFlow.flowPath.parentElement as HTMLElement
+                        const containerBbox = container.getBoundingClientRect()
+
+                        d += ` L ${bbox.x + bbox.width - containerBbox.x} ${y}`
+                        controlFlow.flowPath.setAttribute('d', d)
+
+                        const nextStep = ApplicationState.actions[action.vertices[s + 1]]
+                        const nextStepBbox = nextStep.proxy.element.getBoundingClientRect()
+                        d += ` L ${bbox.x + bbox.width - containerBbox.x} ${
+                            nextStepBbox.y + nextStepBbox.height / 2 - containerBbox.y
+                        }`
+                        controlFlow.flowPath.setAttribute('d', d)
+                    }
+                }
+
                 starts.push(step.startTime)
                 ends.push(step.endTime)
             }
 
             // End for selectable groups
             if (action.representation.isSelectableGroup) {
-                let [_, end] = this.getControlFlowPoints(false) as [number[], number[]]
+                let end = this.getControlFlowPoints(false)!.at(-1)!
                 const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
                 end[0] -= containerBbox.x
                 end[1] -= containerBbox.y
@@ -444,7 +488,8 @@ export class Representation {
             const points = this.getControlFlowPoints()
 
             if (points != null) {
-                const [start, end] = points
+                const start = points[0]
+                const end = points.at(-1)!
 
                 const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
 
@@ -463,6 +508,15 @@ export class Representation {
 
                 controlFlow.flowPath.setAttribute('d', d)
                 action.startTime = controlFlow.flowPath.getTotalLength()
+
+                // Add points in middle
+                for (let i = 1; i < points.length - 1; i++) {
+                    const point = points[i]
+                    point[0] -= containerBbox.x
+                    point[1] -= containerBbox.y
+
+                    d += ` L ${point[0]} ${point[1]}`
+                }
 
                 // if (action.isSpatial && action.id != originId) {
                 //     action.globalTimeOffset = action.startTime
@@ -641,7 +695,7 @@ export class Representation {
         const controlFlow = spatial.controlFlow
         assert(controlFlow != null, 'Control flow is null')
 
-        const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionIndex]
+        const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionId]
         selection.targetGlobalTime = action.globalTimeOffset + getTotalDuration(action.id)
     }
 

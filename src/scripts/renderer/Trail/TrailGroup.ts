@@ -6,16 +6,10 @@ import {
     getAllBranches,
     getTrace,
 } from '../../execution/execution'
-import {
-    ExecutionGraph,
-    instanceOfExecutionGraph,
-} from '../../execution/graph/ExecutionGraph'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
 import { instanceOfData } from '../View/Environment/data/DataState'
-import {
-    EnvironmentRenderer,
-    getRelevantFlatData,
-} from '../View/Environment/EnvironmentRenderer'
+import { EnvironmentRenderer, getRelevantFlatData } from '../View/Environment/EnvironmentRenderer'
 import { Trail } from './Trail'
 import { TrailState, TrailType } from './TrailState'
 
@@ -23,17 +17,19 @@ import { TrailState, TrailType } from './TrailState'
 /*           A collection of parallel trails              */
 /* ------------------------------------------------------ */
 export class TrailGroup {
-    trails: Trail[] = []
-    execution: ExecutionGraph | ExecutionNode
+    trails: Trail[] | null = []
+    execution: ExecutionGraph | ExecutionNode | null
+    originId: string
 
-    constructor(execution: ExecutionGraph | ExecutionNode, time: number) {
+    constructor(execution: ExecutionGraph | ExecutionNode, originId: string, time: number) {
         this.execution = execution
+        this.originId = originId
 
         if (instanceOfExecutionGraph(execution)) {
             const trailStates = getTrail(execution)
             for (const trailState of trailStates) {
-                const trail = new Trail(trailState, execution, time)
-                this.trails.push(trail)
+                const trail = new Trail(trailState, execution, originId, time)
+                this.trails!.push(trail)
             }
         } else {
             this.trails = []
@@ -41,20 +37,20 @@ export class TrailGroup {
     }
 
     updateTime(amount: number, environment: EnvironmentRenderer) {
-        this.trails.forEach((trail) => {
+        this.trails!.forEach((trail) => {
             trail.update(amount, environment)
         })
     }
 
     postUpdate(amount: number, environment: EnvironmentRenderer) {
-        this.trails.forEach((trail) => {
+        this.trails!.forEach((trail) => {
             trail.renderer.postUpdate(amount, environment)
         })
     }
 
     computeResidual(environment: EnvironmentState): Residual[] {
         const residual: Residual[] = []
-        this.trails.forEach((trail) => {
+        this.trails!.forEach((trail) => {
             const trailResidual = trail.renderer.computeResidual(environment)
             if (trailResidual != null) {
                 residual.push(trailResidual)
@@ -65,15 +61,18 @@ export class TrailGroup {
     }
 
     applyTimestamps(environment: EnvironmentState) {
-        this.trails.forEach((trail) => {
+        this.trails!.forEach((trail) => {
             trail.renderer.applyTimestamps(environment)
         })
     }
 
     destroy() {
-        this.trails.forEach((trail) => {
+        this.trails!.forEach((trail) => {
             trail.destroy()
         })
+
+        this.trails = null
+        this.execution = null
     }
 }
 
@@ -88,11 +87,11 @@ export function getTrail(execution: ExecutionGraph) {
         throw new Error('Precondition or postcondition is null.')
     }
 
-    const preDataKeys = getRelevantFlatData(execution.precondition).map(
-        (data) => (instanceOfData(data) ? data.id : data.name)
+    const preDataKeys = getRelevantFlatData(execution.precondition).map((data) =>
+        instanceOfData(data) ? data.id : data.name
     )
-    const postDataKeys = getRelevantFlatData(execution.postcondition).map(
-        (data) => (instanceOfData(data) ? data.id : data.name)
+    const postDataKeys = getRelevantFlatData(execution.postcondition).map((data) =>
+        instanceOfData(data) ? data.id : data.name
     )
     const trails: TrailState[] = []
 
@@ -114,10 +113,7 @@ export function getTrail(execution: ExecutionGraph) {
             }
 
             const endLeaf = leaves[leaves.length - 1]
-            if (
-                endLeaf?.value?.id != null &&
-                !preDataKeys.includes(endLeaf.value.id)
-            ) {
+            if (endLeaf?.value?.id != null && !preDataKeys.includes(endLeaf.value.id)) {
                 continue
             }
 
@@ -126,11 +122,7 @@ export function getTrail(execution: ExecutionGraph) {
         }
 
         // Convert end operation and leaves to a trail
-        const trailGroup: TrailState[] = convertEndOperationsAndLeavesToTrails(
-            trace.value.id,
-            endOperations,
-            endLeaves
-        )
+        const trailGroup: TrailState[] = convertEndOperationsAndLeavesToTrails(trace.value.id, endOperations, endLeaves)
         trails.push(...trailGroup)
     }
 

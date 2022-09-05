@@ -61,22 +61,14 @@ export function setSVGPath(
         c2[1] -= (p2[1] - p1[1]) / 2
     }
 
-    connection.path.setAttribute(
-        'd',
-        `M ${p1[0]} ${p1[1]} C ${c1[0]} ${c1[1]} ${c2[0]} ${c2[1]}  ${p2[0]} ${p2[1]}`
-    )
+    connection.path.setAttribute('d', `M ${p1[0]} ${p1[1]} C ${c1[0]} ${c1[1]} ${c2[0]} ${c2[1]}  ${p2[0]} ${p2[1]}`)
 
     const pathBbox = connection.path.getBoundingClientRect()
     connection.svg.style.width = `${pathBbox.width + 5}px`
     connection.svg.style.height = `${pathBbox.height + 5}px`
 }
 
-export function flipAnimate(
-    element: HTMLElement,
-    first: DOMRect,
-    last: DOMRect,
-    duration: number = 300
-) {
+export function flipAnimate(element: HTMLElement, first: DOMRect, last: DOMRect, duration: number = 300) {
     // Invert: determine the delta between the
     // first and last bounds to invert the element
     const deltaX = first.left - last.left
@@ -108,23 +100,11 @@ export function flipAnimate(
     )
 }
 
-export function getCurvedArrow(
-    x0: number,
-    y0: number,
-    x1: number,
-    y1: number,
-    reflect = false
-) {
-    let [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = CurvedArrows.getArrow(
-        x0,
-        y0,
-        x1,
-        y1,
-        {
-            padEnd: 10,
-            padStart: 10,
-        }
-    )
+export function getCurvedArrow(x0: number, y0: number, x1: number, y1: number, reflect = false) {
+    let [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = CurvedArrows.getArrow(x0, y0, x1, y1, {
+        padEnd: 0,
+        padStart: 0,
+    })
     if (reflect) {
         sy = sy + 2 * (y0 - sy)
         c1y = c1y + 2 * (y0 - c1y)
@@ -134,34 +114,21 @@ export function getCurvedArrow(
     return `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
 }
 
-export function getPerfectArrow(
-    x0: number,
-    y0: number,
-    x1: number,
-    y1: number
-) {
-    const [sx, sy, cx, cy, ex, ey, ae, as, sc] = PerfectArrows.getArrow(
-        x0,
-        y0,
-        x1,
-        y1,
-        {
-            padEnd: 0,
-            padStart: 0,
-            flip: x0 > x1,
-            bow: 0.1,
-            stretch: 0.1,
-            straights: false,
-        }
-    )
+export function getPerfectArrow(x0: number, y0: number, x1: number, y1: number) {
+    // return getCurvedArrow(x0, y0, x1, y1)
+    // console.log(x0, y0, )
+    const [sx, sy, cx, cy, ex, ey, ae, as, sc] = PerfectArrows.getArrow(x0, y0, x1, y1, {
+        padEnd: 0,
+        padStart: 0,
+        flip: x0 > x1,
+        // bow: 0.1,
+        // stretch: 0.1,
+        straights: false,
+    })
     return `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`
 }
 
-export function createElement(
-    tag: string,
-    classes: string[] | string = [],
-    parent?: Element
-) {
+export function createElement(tag: string, classes: string[] | string = [], parent?: Element) {
     const el = document.createElement(tag)
 
     if (Array.isArray(classes)) {
@@ -177,10 +144,7 @@ export function createElement(
     return el
 }
 
-export function createSVGElement(
-    classes: string[] | string = [],
-    parent?: Element
-) {
+export function createSVGElement(classes: string[] | string = [], parent?: Element) {
     const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
     if (Array.isArray(classes)) {
@@ -196,14 +160,8 @@ export function createSVGElement(
     return svgEl
 }
 
-export function createPathElement(
-    classes: string[] | string = [],
-    parent?: Element
-): SVGPathElement {
-    const pathEl = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'path'
-    )
+export function createPathElement(classes: string[] | string = [], parent?: Element): SVGPathElement {
+    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path')
 
     if (Array.isArray(classes)) {
         pathEl.classList.add(...classes)

@@ -3,13 +3,7 @@ import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { Keyboard } from '../../../utilities/Keyboard'
 import { clearExistingFocus } from '../../../visualization/Focus'
-import {
-    AbyssKind,
-    collapseForIterationIntoAbyss,
-    createAbyss,
-    focusIteration,
-    getAbyssControlFlowPoints,
-} from '../Abyss'
+import { AbyssKind, collapseForIterationIntoAbyss, createAbyss, focusIteration } from '../Abyss'
 import { ActionState } from '../Action'
 import { Representation } from './Representation'
 
@@ -38,29 +32,29 @@ export class ForStatementRepresentation extends Representation {
         this.isSelectableGroup = true
     }
 
-    getControlFlowPointsForIteration(iteration: number, i: number): [number[], number[]] {
-        const iterationElement = this.iterationElements[iteration]
-        let bbox = iterationElement.getBoundingClientRect()
+    // getControlFlowPointsForIteration(iteration: number, i: number): [number[], number[]] {
+    //     const iterationElement = this.iterationElements[iteration]
+    //     let bbox = iterationElement.getBoundingClientRect()
 
-        if (iterationElement.classList.contains('consumed')) {
-            // Find the abyss that it's in
-            const container = ApplicationState.actions[this.actionId]
+    //     if (iterationElement.classList.contains('consumed')) {
+    //         // Find the abyss that it's in
+    //         const container = ApplicationState.actions[this.actionId]
 
-            for (const abyssId of container.abyssesIds) {
-                const abyss = ApplicationState.abysses[abyssId]
-                if (abyss.startIndex <= i && abyss.startIndex + abyss.numItems >= i) {
-                    return getAbyssControlFlowPoints(abyss, i)
-                }
-            }
+    //         for (const abyssId of container.abyssesIds) {
+    //             const abyss = ApplicationState.abysses[abyssId]
+    //             if (abyss.startIndex <= i && abyss.startIndex + abyss.numItems >= i) {
+    //                 return getAbyssControlFlowPoints(abyss, i)
+    //             }
+    //         }
 
-            console.log("Couldn't find abyss for iteration", iteration)
-        }
+    //         console.log("Couldn't find abyss for iteration", iteration)
+    //     }
 
-        return [
-            [bbox.x + bbox.width / 2, bbox.y],
-            [bbox.x + bbox.width / 2, bbox.y + bbox.height],
-        ]
-    }
+    //     return [
+    //         [bbox.x + bbox.width / 2, bbox.y],
+    //         [bbox.x + bbox.width / 2, bbox.y + bbox.height],
+    //     ]
+    // }
 
     // updateControlFlow(controlFlow: ControlFlowState, originId: string) {
     //     const action = ApplicationState.actions[this.actionId]

@@ -1,7 +1,7 @@
 /** Array style used for computing layout **/
 .data-array {
     display: flex;
-    min-height: 30px;
+    min-height: 20px;
 }
 
 // .data.data-literal.array-item:not(.last-array-item):after {
@@ -10,10 +10,10 @@
 // }
 
 .data-array-brace {
-    color: var(--color-4);
+    color: var(--color-5);
     font-weight: 400;
     font-family: var(--code-font-family);
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .data-array-opening-brace {
@@ -50,8 +50,8 @@
 }
 
 .data-array-comma {
-    color: var(--color-4);
+    color: #535359;
     font-weight: 400;
     font-family: var(--code-font-family);
-    font-size: 14px;
+    font-size: 12px;
 }

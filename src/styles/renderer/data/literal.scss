@@ -6,7 +6,7 @@
     font-family: var(--code-font-family);
     color: var(--s-color-0);
     padding: 0px 4px;
-    min-height: 30px;
+    min-height: 20px;
     font-weight: 400;
     position: relative;
     z-index: 10;
@@ -15,11 +15,11 @@
 }
 
 .data-array > .hole > .data-literal {
-    padding: 0px 0px 0px 6px;
+    // padding: 0px 0px 0px 6px;
 }
 
 .data-array > .hole:nth-child(2) > .data-literal {
-    padding: 0px 0px 0px 0px;
+    // padding: 0px 0px 0px 0px;
 }
 
 .data-function {

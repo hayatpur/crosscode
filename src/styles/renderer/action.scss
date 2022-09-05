@@ -69,8 +69,8 @@
 }
 
 .action-proxy:not(.is-showing-steps) {
-    max-width: 200px;
-    max-height: 100px;
+    max-width: 100px;
+    max-height: 60px;
 }
 
 .action-proxy:hover {
@@ -488,8 +488,9 @@ svg.control-flow-svg.control-flow-svg-overlay {
 /* ----------------------- Trails ----------------------- */
 .action-mapping-connection {
     fill: #0000;
-    stroke: var(--path-color);
+    stroke: #00000024;
     stroke-width: 1px;
+    stroke-linecap: round;
 }
 
 path.action-mapping-connection.hidden {
@@ -1133,4 +1134,23 @@ svg.ray-svg {
 
 .action-proxy-abyss.is-spatial > .action-proxy-abyss-dots-container {
     background: none !important;
+}
+
+.action-proxy-for-iteration-bottom2 {
+    display: flex;
+}
+
+.action-proxy-for-mid-clone {
+    background: var(--color-3);
+    opacity: 0.5;
+    border-radius: var(--border-radius);
+}
+
+.action-proxy-for-mid-clone > div {
+    opacity: 0;
+}
+
+.action-proxy-for-iteration-bottom2 > div {
+    margin-top: 4px;
+    margin-right: 2px;
 }

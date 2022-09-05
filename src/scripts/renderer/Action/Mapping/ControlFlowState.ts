@@ -73,7 +73,7 @@ export function setupEventListeners(controlFlow: ControlFlowState) {
         controlFlow.cursor.isDragging = true
         controlFlow.cursor.element.classList.add('is-dragging')
 
-        const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionIndex]
+        const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionId]
         const action = ApplicationState.actions[controlFlow.actionId]
 
         // selection.globalTime = Math.max(
@@ -90,7 +90,7 @@ export function setupEventListeners(controlFlow: ControlFlowState) {
     document.body.addEventListener('mousemove', (e) => {
         if (controlFlow.cursor.isDragging) {
             const dy = e.clientY - mousePosition.y
-            const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionIndex]
+            const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionId]
 
             selection.targetGlobalTime += dy
             selection.targetGlobalTime = Math.max(

@@ -148,7 +148,7 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
         })
 
         base.view = createViewState({ actionId: id })
-        ApplicationState.visualization.container.appendChild(base.view.element)
+        ApplicationState.visualization.allViewsContainer.appendChild(base.view.container)
     }
 
     return base as ActionState
@@ -165,6 +165,10 @@ export function updateAction(action: ActionState) {
     const visualization = ApplicationState.visualization
     action.representation.updateActionVisual()
     action.representation.updateProxyVisual()
+
+    const spatialParent = ApplicationState.actions[action.spatialParentID!]
+    spatialParent.representation.dirtyFrames = true
+
     // const mapping = visualization.mapping
 
     // Update mapping, resets time to 0 and then back

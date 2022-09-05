@@ -1,30 +1,20 @@
 import * as ESTree from 'estree'
 import { cleanUpRegister } from '../../../environment/environment'
-import {
-    AccessorType,
-    EnvironmentState,
-} from '../../../environment/EnvironmentState'
+import { AccessorType, EnvironmentState } from '../../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../../execution/execution'
-import {
-    createExecutionGraph,
-    ExecutionGraph,
-} from '../../../execution/graph/ExecutionGraph'
+import { createExecutionGraph, ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { arrayStartAnimation } from '../../../execution/primitive/Container/ArrayStartAnimation'
 import { moveAndPlaceAnimation } from '../../../execution/primitive/Data/MoveAndPlaceAnimation'
 import { ExecutionContext } from '../../../execution/primitive/ExecutionNode'
 import { clone } from '../../../utilities/objects'
 import { Compiler, getNodeData } from '../../Compiler'
 
-export function ArrayExpression(
-    ast: ESTree.ArrayExpression,
-    environment: EnvironmentState,
-    context: ExecutionContext
-) {
+export function ArrayExpression(ast: ESTree.ArrayExpression, environment: EnvironmentState, context: ExecutionContext) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
     graph.precondition = clone(environment)
 
     const start = arrayStartAnimation(context.outputRegister)
-    // addVertex(graph, start, { nodeData: getNodeData(ast, 'start') })
+    addVertex(graph, start, { nodeData: getNodeData(ast, 'start') })
     applyExecutionNode(start, environment)
 
     for (let i = 0; i < ast.elements.length; i++) {
@@ -49,7 +39,7 @@ export function ArrayExpression(
             ...context.outputRegister,
             { type: AccessorType.Index, value: i.toString() },
         ])
-        // addVertex(graph, place, { nodeData: getNodeData(ast.elements[i]) })
+        addVertex(graph, place, { nodeData: getNodeData(ast.elements[i]) })
         applyExecutionNode(place, environment)
 
         cleanUpRegister(environment, register[0].value)

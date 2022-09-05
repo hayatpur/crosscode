@@ -24,9 +24,10 @@ export type VisualizationState = {
     programId: string | undefined
 
     focus: FocusState | undefined
-    selections: SelectionState[]
+    selections: { [key: string]: SelectionState }
 
     container: HTMLElement
+    allViewsContainer: HTMLElement
 
     // Tweakpane
     PARAMS: {
@@ -44,15 +45,22 @@ export type VisualizationState = {
  * @returns
  */
 export function createVisualization(overrides: Partial<VisualizationState> = {}): VisualizationState {
+    const container = createVisualContainer()
+    const allViewsContainer = createElement('div', 'all-views-container', container)
+
+    const mainSelection = createSelection({}, true)
+    const selections = { [mainSelection.id]: mainSelection }
+
     const base: VisualizationState = {
         execution: undefined,
         mapping: undefined,
         programId: undefined,
 
         focus: createFocus(),
-        selections: [createSelection()],
+        selections: selections,
 
-        container: createVisualContainer(),
+        container,
+        allViewsContainer,
 
         PARAMS: {
             a: 0.5,
@@ -132,24 +140,14 @@ export function compileVisualization(visualization: VisualizationState, code: st
     visualization.mapping = createActionMapping()
     visualization.container.appendChild(visualization.mapping.element)
 
+    visualization.container.appendChild(visualization.allViewsContainer)
+
     const program = createActionState({
         execution: visualization.execution,
     })
     visualization.programId = program.id
 
     program.representation.postCreate()
-
-    setTimeout(() => {
-        setViewFrames(
-            program.view!,
-            program.representation.getFrames(program.id),
-            program.execution.precondition as EnvironmentState
-        )
-
-        setInterval(() => {
-            updateView(program.view!)
-        }, 200)
-    }, 500)
 
     document.body.appendChild(program.element)
 
@@ -207,8 +205,8 @@ export function tickVisualization(visualization: VisualizationState, dt: number)
     }
 
     // Update selections
-    for (const selection of visualization.selections) {
-        updateSelectionTime(selection)
+    for (const selectionId of Object.keys(visualization.selections)) {
+        updateSelectionTime(selectionId)
     }
 
     // Update spatial control flow
@@ -216,6 +214,27 @@ export function tickVisualization(visualization: VisualizationState, dt: number)
         const action = ApplicationState.actions[actionId]
         if (action.isSpatial) {
             updateControlFlowState(action.controlFlow as ControlFlowState)
+        }
+    }
+
+    // Update dirty frames
+    for (const [id, action] of Object.entries(ApplicationState.actions)) {
+        if (action.isSpatial && action.representation.dirtyFrames) {
+            setViewFrames(
+                action.view!,
+                action.representation.getFrames(action.id),
+                action.execution.precondition as EnvironmentState
+            )
+            updateView(action.view!)
+
+            action.representation.dirtyFrames = false
+        }
+    }
+
+    // Update views
+    for (const [id, action] of Object.entries(ApplicationState.actions)) {
+        if (action.isSpatial) {
+            updateView(action.view!)
         }
     }
 

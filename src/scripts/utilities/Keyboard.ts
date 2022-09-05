@@ -5,6 +5,8 @@ export class Keyboard {
     // List of tick callbacks
     private pressed: { [key: string]: boolean } = {}
 
+    // List of tick callbacks
+
     static _initialize() {
         if (Keyboard.instance) return
         Keyboard.instance = new Keyboard()

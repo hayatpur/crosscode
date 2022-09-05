@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { createElement } from '../../../utilities/dom'
+import { getConsumedAbyss } from '../Abyss'
 import { ActionState } from '../Action'
 import { Representation } from './Representation'
 
@@ -64,5 +65,39 @@ export class BinaryStatementRepresentation extends Representation {
         super.destroySteps()
 
         this.operatorLabelElement.remove()
+    }
+
+    getControlFlowPoints(usePlaceholder: boolean = true): [number, number][] | null {
+        if (this.isTrimmed) {
+            return null
+        }
+
+        const action = ApplicationState.actions[this.actionId]
+        const abyssInfo = getConsumedAbyss(action.id)
+
+        if (abyssInfo != null && !action.isSpatial) {
+            // Find the abyss that it's in
+            return super.getControlFlowPoints(usePlaceholder)
+        }
+
+        const parent = ApplicationState.actions[action.parentID!]
+
+        if (
+            action.execution.nodeData.preLabel == 'Test' &&
+            parent.execution.nodeData.type == 'ForStatement' &&
+            !action.isShowingSteps
+        ) {
+            let bbox = action.proxy.element.getBoundingClientRect()
+
+            const offset = Math.min(2, bbox.height * 0.1)
+
+            return [
+                [bbox.x, bbox.y + bbox.height / 2],
+                [bbox.x + bbox.width / 2, bbox.y + bbox.height / 2],
+                [bbox.x + bbox.width / 2, bbox.y + bbox.height],
+            ]
+        } else {
+            return super.getControlFlowPoints(usePlaceholder)
+        }
     }
 }

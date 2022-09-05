@@ -1,34 +1,16 @@
-import {
-    flattenedEnvironmentMemory,
-    getMemoryLocation,
-} from '../environment/environment'
+import { flattenedEnvironmentMemory, getMemoryLocation } from '../environment/environment'
 import { EnvironmentState } from '../environment/EnvironmentState'
-import {
-    DataType,
-    PrimitiveDataState,
-} from '../renderer/View/Environment/data/DataState'
+import { DataType, PrimitiveDataState } from '../renderer/View/Environment/data/DataState'
 import { clone } from '../utilities/objects'
-import {
-    DataInfo,
-    ExecutionGraph,
-    GlobalDataInfo,
-    instanceOfExecutionGraph,
-} from './graph/ExecutionGraph'
-import {
-    ExecutionNode,
-    instanceOfExecutionNode,
-    NodeData,
-} from './primitive/ExecutionNode'
+import { DataInfo, ExecutionGraph, GlobalDataInfo, instanceOfExecutionGraph } from './graph/ExecutionGraph'
+import { ExecutionNode, instanceOfExecutionNode, NodeData } from './primitive/ExecutionNode'
 
 export type VertexOptions = {
     nodeData?: NodeData
     shouldDissolve?: boolean
 }
 
-export function applyExecutionNode(
-    execution: ExecutionNode,
-    environment: EnvironmentState
-) {
+export function applyExecutionNode(execution: ExecutionNode, environment: EnvironmentState) {
     execution.precondition = clone(environment)
     execution.apply(execution, environment)
     execution.postcondition = clone(environment)
@@ -67,9 +49,7 @@ export function writes(animation: ExecutionGraph | ExecutionNode): DataInfo[] {
     return result
 }
 
-export function getExecutionChildren(
-    execution: ExecutionGraph | ExecutionNode
-): (ExecutionGraph | ExecutionNode)[] {
+export function getExecutionChildren(execution: ExecutionGraph | ExecutionNode): (ExecutionGraph | ExecutionNode)[] {
     if (instanceOfExecutionNode(execution)) {
         return []
     }
@@ -103,20 +83,13 @@ export function getExecutionChildren(
  * @param nodeData - Data of AST node for vertex
  * @param shouldDissolve - If vertex should dissolve or not
  */
-export function addVertex(
-    graph: ExecutionGraph,
-    vertex: ExecutionGraph | ExecutionNode,
-    options: VertexOptions = {}
-) {
+export function addVertex(graph: ExecutionGraph, vertex: ExecutionGraph | ExecutionNode, options: VertexOptions = {}) {
     // Defaults
     options.shouldDissolve = options.shouldDissolve ?? false
 
     const { vertices: graphVertices } = graph
 
-    if (
-        instanceOfExecutionNode(vertex) ||
-        (instanceOfExecutionGraph(vertex) && !options.shouldDissolve)
-    ) {
+    if (instanceOfExecutionNode(vertex) || (instanceOfExecutionGraph(vertex) && !options.shouldDissolve)) {
         if (instanceOfExecutionGraph(vertex) && vertex.isGroup) {
             updateGroupNodeData(vertex)
             graphVertices.push(vertex)
@@ -172,10 +145,7 @@ export function getEmptyNodeData(pivot: NodeData): NodeData {
     }
 }
 
-export function updateGroupNodeData(
-    graph: ExecutionGraph,
-    options: VertexOptions = {}
-) {
+export function updateGroupNodeData(graph: ExecutionGraph, options: VertexOptions = {}) {
     const { vertices: graphVertices } = graph
 
     if (graphVertices.length === 0) {
@@ -223,11 +193,7 @@ export function updateGroupNodeData(
  * @param graph - Animation graph to remove from
  * @param i - Vertex to remove at
  */
-export function removeVertexAt(
-    graph: ExecutionGraph,
-    i: number,
-    options: VertexOptions = {}
-) {
+export function removeVertexAt(graph: ExecutionGraph, i: number, options: VertexOptions = {}) {
     const { vertices: graphVertices } = graph
 
     // Remove vertex
@@ -289,9 +255,9 @@ export function animationToString(
         }
     }
 
-    output = `${'\t'.repeat(options.first ? 0 : indent)}[<package> ${
-        animation.nodeData?.type
-    } ${animation.id} |\n${output}`
+    output = `${'\t'.repeat(options.first ? 0 : indent)}[<package> ${animation.nodeData?.type} ${
+        animation.id
+    } |\n${output}`
 
     output += `${'\t'.repeat(indent)}]`
 
@@ -303,9 +269,7 @@ export function animationToString(
 #ranker: longest-path
 #lineWidth: 1`
 
-        const url = `https://nomnoml.com/image.svg?source=${encodeURIComponent(
-            `${config}\n${output}`
-        )}`
+        const url = `https://nomnoml.com/image.svg?source=${encodeURIComponent(`${config}\n${output}`)}`
         return [output, url]
     }
 
@@ -341,10 +305,7 @@ export type AnimationTraceChain = {
 
 export type GlobalAnimationTraceChain = {
     value: GlobalDataInfo
-    children?: [
-        operator: AnimationTraceOperator,
-        child: GlobalAnimationTraceChain
-    ][]
+    children?: [operator: AnimationTraceOperator, child: GlobalAnimationTraceChain][]
 }
 
 export function queryExecutionGraph(
@@ -395,10 +356,7 @@ export function queryExecutionGraphStrict(
         return animation
     }
 
-    if (
-        instanceOfExecutionGraph(animation) &&
-        animation.nodeData.type != 'CallExpression'
-    ) {
+    if (instanceOfExecutionGraph(animation) && animation.nodeData.type != 'CallExpression') {
         for (const vertex of animation.vertices) {
             const ret = queryExecutionGraphStrict(vertex, query)
             if (ret != null) {
@@ -429,10 +387,7 @@ export function queryAllExecutionGraph(
     return acc
 }
 
-export function getDepthOfExecution(
-    target: ExecutionGraph | ExecutionNode,
-    root: ExecutionGraph
-): number {
+export function getDepthOfExecution(target: ExecutionGraph | ExecutionNode, root: ExecutionGraph): number {
     let depth = 0
     let parent = root
 
@@ -444,10 +399,7 @@ export function getDepthOfExecution(
                 return depth
             }
 
-            if (
-                instanceOfExecutionGraph(vertex) &&
-                queryExecutionGraph(vertex, (a) => a.id == target.id)
-            ) {
+            if (instanceOfExecutionGraph(vertex) && queryExecutionGraph(vertex, (a) => a.id == target.id)) {
                 next = vertex
                 break
             }
@@ -463,11 +415,11 @@ export function getDepthOfExecution(
 
 export function getTrace(
     animation: ExecutionGraph | ExecutionNode,
-    flow: AnimationTraceChain[] = null
+    flow: AnimationTraceChain[] | null = null
 ): AnimationTraceChain[] {
     // Set default flow to ids of literals and arrays in environment
     if (flow == null) {
-        const environment = clone(animation.postcondition)
+        const environment = clone(animation.postcondition!)
 
         flow = []
 
@@ -481,8 +433,7 @@ export function getTrace(
             flow.push({
                 value: {
                     id: data.id,
-                    location: getMemoryLocation(environment, data)
-                        .foundLocation,
+                    location: getMemoryLocation(environment, data).foundLocation!,
                     executionID: animation.id,
                 },
             })
@@ -532,14 +483,14 @@ export function getTrace(
 
 export function getChunkTrace(
     nodes: (ExecutionGraph | ExecutionNode)[],
-    flow: AnimationTraceChain[] = null
+    flow: AnimationTraceChain[] | null = null
 ): AnimationTraceChain[] {
     // Chunk
     const postcondition = nodes[nodes.length - 1].postcondition
 
     // Set default flow to ids of literals and arrays in environment
     if (flow == null) {
-        const environment = clone(postcondition)
+        const environment = clone(postcondition!)
 
         flow = []
 
@@ -553,8 +504,7 @@ export function getChunkTrace(
             flow.push({
                 value: {
                     id: data.id,
-                    location: getMemoryLocation(environment, data)
-                        .foundLocation,
+                    location: getMemoryLocation(environment, data).foundLocation!,
                     executionID: nodes[nodes.length - 1].id,
                 },
             })
@@ -601,9 +551,7 @@ export function getAllBranches(
                 end = end.children[0][1]
             }
 
-            end.children = [
-                [context.operator, { value: chain.value, children: null }],
-            ]
+            end.children = [[context.operator, { value: chain.value, children: null }]]
 
             return [parent]
         }
@@ -622,35 +570,23 @@ export function getAllBranches(
             end = end.children[0][1]
         }
 
-        end.children = [
-            [context.operator, { value: chain.value, children: null }],
-        ]
+        end.children = [[context.operator, { value: chain.value, children: null }]]
     }
     const branches: AnimationTraceChain[] = []
 
     for (const [operator, child] of chain.children) {
-        branches.push(
-            ...getAllBranches(child, { parent: parent, operator: operator })
-        )
+        branches.push(...getAllBranches(child, { parent: parent, operator: operator }))
     }
 
     return branches
 }
 
-export function getTracesFromExecutionNode(
-    animation: ExecutionNode
-): AnimationTraceChain[] {
+export function getTracesFromExecutionNode(animation: ExecutionNode): AnimationTraceChain[] {
     // Direct movements (to <-- from)
     let traces: AnimationTraceChain[] = []
 
-    const rs = reads(animation).map((r) => ({
-        ...r,
-        executionID: animation.id,
-    }))
-    const ws = writes(animation).map((w) => ({
-        ...w,
-        executionID: animation.id,
-    }))
+    const rs = reads(animation).map((r) => ({ ...r, executionID: animation.id }))
+    const ws = writes(animation).map((w) => ({ ...w, executionID: animation.id }))
 
     switch (animation._name) {
         case 'MoveAndPlaceAnimation':
@@ -884,9 +820,7 @@ export function getTracesFromExecutionNode(
     return traces
 }
 
-export function getAnimationTraceChainLeaves(
-    chain: AnimationTraceChain
-): AnimationTraceChain[] {
+export function getAnimationTraceChainLeaves(chain: AnimationTraceChain): AnimationTraceChain[] {
     if (chain.children == null) return [chain]
 
     let leaves: AnimationTraceChain[] = []
@@ -900,10 +834,7 @@ export function getAnimationTraceChainLeaves(
 
 let CHAIN_COUNTER = 0
 
-export function traceChainsToString(
-    chains: AnimationTraceChain[],
-    logUrl: boolean = true
-) {
+export function traceChainsToString(chains: AnimationTraceChain[], logUrl: boolean = true) {
     let output = ''
 
     for (const chain of chains) {
@@ -919,9 +850,7 @@ export function traceChainsToString(
 #lineWidth: 1
 #ranker: tight-tree`
 
-        const url = `https://nomnoml.com/image.svg?source=${encodeURIComponent(
-            `${config}\n${output}`
-        )}`
+        const url = `https://nomnoml.com/image.svg?source=${encodeURIComponent(`${config}\n${output}`)}`
         console.log(url)
         console.log(chains)
     }
@@ -931,18 +860,14 @@ export function traceChainsToString(
 export function traceChainToString(chain: AnimationTraceChain) {
     if (chain == null) return
 
-    let box =
-        chain.value == null
-            ? `[NULL \\[${++CHAIN_COUNTER}\\]]`
-            : `[${chain.value.id} \\[${++CHAIN_COUNTER}\\]]`
+    let box = chain.value == null ? `[NULL \\[${++CHAIN_COUNTER}\\]]` : `[${chain.value.id} \\[${++CHAIN_COUNTER}\\]]`
     let rest = ''
 
     for (const child of chain.children ?? []) {
         const operator = child[0]
         const childChain = child[1]
 
-        const { box: childBox, output: childString } =
-            traceChainToString(childChain)
+        const { box: childBox, output: childString } = traceChainToString(childChain)
 
         rest += `\n${childString}`
         rest += `\n${box}-->${operator.type.toString()}${childBox}`
