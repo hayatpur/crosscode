@@ -2,7 +2,6 @@ import { ApplicationState } from '../ApplicationState'
 import { getTotalDuration } from '../renderer/Action/Mapping/ControlFlowCursor'
 import { queryAction } from '../utilities/action'
 import { overLerp } from '../utilities/math'
-import { clone } from '../utilities/objects'
 
 export type SelectionState = {
     id: string
@@ -41,9 +40,9 @@ export function createSelection(overrides: Partial<SelectionState> = {}, isMain:
 export function updateSelectionTime(selectionId: string) {
     const selection = ApplicationState.visualization.selections[selectionId]
 
-    let newTime = overLerp(selection._globalTime, selection.targetGlobalTime, 0.1, 1)
+    let newTime = overLerp(selection._globalTime, selection.targetGlobalTime, 0.05, 1)
     let different = Math.abs(newTime - selection._globalTime) > 0.0001
-    selection._globalTime = overLerp(selection._globalTime, selection.targetGlobalTime, 0.1, 1)
+    selection._globalTime = newTime
 
     if (different) {
         updateSelectionActions(selection)
@@ -139,6 +138,16 @@ export function getSelections(time: number): SelectionInfo {
         }
     }
 
+    // Add spatial parents
+    for (const id of newSelections) {
+        const action = ApplicationState.actions[id]
+        const spatialParent = ApplicationState.actions[action.spatialParentID!]
+        if (spatialParent.execution.nodeData.type != 'Program') {
+            const spatialParentParent = ApplicationState.actions[spatialParent.parentID!]
+            newSelections.add(spatialParentParent.id)
+        }
+    }
+
     return { selectedIds: newSelections, closestId: closestAction, amounts }
 }
 
@@ -220,7 +229,6 @@ export function goToNextStepSelection(selectionId: string) {
 export function goToPrevStepSelection(selectionId: string) {
     const selection = ApplicationState.visualization.selections[selectionId]
     const currentSelections = [...selection.selectedActionIds]
-    console.log('Current selections', clone(currentSelections))
 
     if (currentSelections.length == 0) {
         console.warn('No selection.')
@@ -233,7 +241,6 @@ export function goToPrevStepSelection(selectionId: string) {
     for (const id of currentSelections) {
         const action = ApplicationState.actions[id]
         const endTime = action.globalTimeOffset + getTotalDuration(id)
-        console.log(id, action.globalTimeOffset, endTime)
 
         if (endTime > furthestTime) {
             furthestTime = endTime
@@ -260,7 +267,8 @@ export function goToPrevStepSelection(selectionId: string) {
         }
     }
 
-    const nextAction = ApplicationState.actions[nextActionId!]
-    console.log(nextAction.globalTimeOffset + getTotalDuration(nextActionId!), nextAction.id)
-    selection.targetGlobalTime = nextAction.globalTimeOffset + getTotalDuration(nextActionId!)
+    if (nextActionId != null) {
+        const nextAction = ApplicationState.actions[nextActionId]
+        selection.targetGlobalTime = nextAction.globalTimeOffset + getTotalDuration(nextActionId)
+    }
 }

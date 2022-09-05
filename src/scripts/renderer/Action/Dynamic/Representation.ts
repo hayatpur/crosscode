@@ -5,7 +5,14 @@ import { getExecutionSteps, isPrimitiveByDefault, isTrimmedByDefault } from '../
 import { reflow } from '../../../utilities/dom'
 import { assert } from '../../../utilities/generic'
 import { Keyboard } from '../../../utilities/Keyboard'
-import { getLastPointInPath, getNumericalValueOfStyle, overLerp } from '../../../utilities/math'
+import {
+    addPointToPathChunks,
+    createNewPathChunk,
+    getLastPointInPathChunks,
+    getNumericalValueOfStyle,
+    getTotalLengthOfPathChunks,
+    overLerp,
+} from '../../../utilities/math'
 import { clearExistingFocus, isFocused } from '../../../visualization/Focus'
 import {
     collapseActionIntoAbyss,
@@ -241,6 +248,11 @@ export class Representation {
         }
 
         const action = ApplicationState.actions[this.actionId]
+
+        if (action.execution.nodeData.type == 'Arguments') {
+            return false
+        }
+
         return action.vertices.length == 0 && !action.isSpatial
     }
 
@@ -289,7 +301,10 @@ export class Representation {
         }
     }
 
-    getControlFlowPoints(usePlaceholder: boolean = true): [number, number][] | null {
+    getControlFlowPoints(
+        usePlaceholder: boolean = true,
+        referencePoint: { x: number; y: number } = { x: 0, y: 0 }
+    ): [number, number][] | null {
         if (this.isTrimmed) {
             return null
         }
@@ -312,7 +327,6 @@ export class Representation {
         }
 
         if (bbox.height == 0 || bbox.width == 0) {
-            console.warn('Action has no size', action.execution.nodeData.type)
             return null
         }
 
@@ -354,12 +368,10 @@ export class Representation {
 
         if (action.vertices.length > 0 && !action.isSpatial && isSpatiallyConsumed) {
             // Start
-            let d = controlFlow.flowPath.getAttribute('d') as string
-            let [x, y] = getLastPointInPath(d)
+            let [x, y] = getLastPointInPathChunks(controlFlow.flowPathChunks)!
             x += ApplicationState.Epsilon
-            d += ` L ${x} ${y}`
-            controlFlow.flowPath.setAttribute('d', d)
-            action.startTime = controlFlow.flowPath.getTotalLength()
+            addPointToPathChunks(controlFlow.flowPathChunks, x, y)
+            action.startTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
 
             // Steps
             for (let s = 0; s < action.vertices.length; s++) {
@@ -371,26 +383,21 @@ export class Representation {
             }
 
             // End
-            d = controlFlow.flowPath.getAttribute('d') as string
-            let [x2, y2] = getLastPointInPath(d)
+            let [x2, y2] = getLastPointInPathChunks(controlFlow.flowPathChunks)!
             x2 += ApplicationState.Epsilon
-            d += ` L ${x2} ${y2}`
-            controlFlow.flowPath.setAttribute('d', d)
-            action.endTime = controlFlow.flowPath.getTotalLength()
+            addPointToPathChunks(controlFlow.flowPathChunks, x2, y2)
+            action.endTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
 
             return
         } else if (isSpatiallyConsumed) {
-            let d = controlFlow.flowPath.getAttribute('d') as string
-            let [x, y] = getLastPointInPath(d)
-
             // Start
+            let [x, y] = getLastPointInPathChunks(controlFlow.flowPathChunks)!
             x += ApplicationState.Epsilon
-            d += ` L ${x} ${y}`
-            controlFlow.flowPath.setAttribute('d', d)
-            action.startTime = controlFlow.flowPath.getTotalLength()
+            addPointToPathChunks(controlFlow.flowPathChunks, x, y)
+            action.startTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
 
+            // Delta
             let delta = ApplicationState.Epsilon
-
             if (action.isSpatial) {
                 const origin = ApplicationState.actions[originId]
                 const representation = origin.representation as FunctionCallRepresentation
@@ -399,9 +406,8 @@ export class Representation {
 
             // End
             x += delta
-            d += ` L ${x} ${y}`
-            controlFlow.flowPath.setAttribute('d', d)
-            action.endTime = controlFlow.flowPath.getTotalLength()
+            addPointToPathChunks(controlFlow.flowPathChunks, x, y)
+            action.endTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
             return
         }
 
@@ -409,24 +415,32 @@ export class Representation {
             let starts: number[] = []
             let ends: number[] = []
 
+            const consumed = getConsumedAbyss(action.id)
+
             // Start for selectable groups
-            if (action.representation.isSelectableGroup) {
+            // Create discontinuous path
+            if (
+                (consumed == null && action.execution.nodeData.type == 'ForStatement') ||
+                action.execution.nodeData.type == 'BlockStatement'
+            ) {
+                const containerBbox = controlFlow.container!.getBoundingClientRect()
+                const bbox = action.proxy.element.getBoundingClientRect()
+
+                if (getLastPointInPathChunks(controlFlow.flowPathChunks) != null) {
+                    const [x, y] = getLastPointInPathChunks(controlFlow.flowPathChunks)!
+                    addPointToPathChunks(controlFlow.flowPathChunks, x, bbox.y - containerBbox.y)
+                }
+
+                createNewPathChunk(controlFlow)
+            } else if (action.representation.isSelectableGroup) {
                 let start = this.getControlFlowPoints(false)![0]
-                const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
+                const containerBbox = controlFlow.container!.getBoundingClientRect()
 
                 start[0] -= containerBbox.x
                 start[1] -= containerBbox.y
 
-                let d = controlFlow.flowPath.getAttribute('d') as string
-
-                if (controlFlow.flowPath.getAttribute('d') == '') {
-                    d += `M ${start[0]} ${start[1]}`
-                } else {
-                    d += ` L ${start[0]} ${start[1]}`
-                }
-
-                controlFlow.flowPath.setAttribute('d', d)
-                action.startTime = controlFlow.flowPath.getTotalLength()
+                addPointToPathChunks(controlFlow.flowPathChunks, start[0], start[1])
+                action.startTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
                 starts.push(action.startTime)
             }
 
@@ -434,27 +448,47 @@ export class Representation {
                 const stepID = action.vertices[s]
                 const step = ApplicationState.actions[stepID]
 
+                if (consumed == null && action.execution.nodeData.type == 'ForStatement' && s == 0) {
+                    const containerBbox = controlFlow.container!.getBoundingClientRect()
+                    const bbox = action.proxy.element.getBoundingClientRect()
+                    const stepBbox = step.proxy.element.getBoundingClientRect()
+                    addPointToPathChunks(
+                        controlFlow.flowPathChunks,
+                        stepBbox.x + stepBbox.width / 2 - containerBbox.x,
+                        bbox.y - containerBbox.y
+                    )
+                } else if (
+                    consumed == null &&
+                    action.execution.nodeData.type == 'ForStatement' &&
+                    s > 2 &&
+                    step.execution.nodeData.type == 'Update'
+                ) {
+                }
+
                 // Add start point to path
                 step.representation.updateControlFlow(controlFlow, originId)
 
-                if (action.execution.nodeData.type == 'ForStatement') {
+                const stepConsumed = getConsumedAbyss(step.id)
+
+                if (stepConsumed == null && action.execution.nodeData.type == 'ForStatement') {
                     if (step.execution.nodeData.preLabel == 'Body') {
-                        let d = controlFlow.flowPath.getAttribute('d') as string
-                        const [x, y] = getLastPointInPath(d)
+                        const [x, y] = getLastPointInPathChunks(controlFlow.flowPathChunks)!
 
                         const bbox = action.proxy.element.getBoundingClientRect()
-                        const container = controlFlow.flowPath.parentElement as HTMLElement
-                        const containerBbox = container.getBoundingClientRect()
+                        const containerBbox = controlFlow.container!.getBoundingClientRect()
 
-                        d += ` L ${bbox.x + bbox.width - containerBbox.x} ${y}`
-                        controlFlow.flowPath.setAttribute('d', d)
+                        addPointToPathChunks(controlFlow.flowPathChunks, bbox.x + bbox.width - containerBbox.x, y)
 
                         const nextStep = ApplicationState.actions[action.vertices[s + 1]]
                         const nextStepBbox = nextStep.proxy.element.getBoundingClientRect()
-                        d += ` L ${bbox.x + bbox.width - containerBbox.x} ${
+
+                        addPointToPathChunks(
+                            controlFlow.flowPathChunks,
+                            bbox.x + bbox.width - containerBbox.x,
                             nextStepBbox.y + nextStepBbox.height / 2 - containerBbox.y
-                        }`
-                        controlFlow.flowPath.setAttribute('d', d)
+                        )
+                    } else if (step.execution.nodeData.preLabel == 'Update') {
+                        createNewPathChunk(controlFlow)
                     }
                 }
 
@@ -465,15 +499,12 @@ export class Representation {
             // End for selectable groups
             if (action.representation.isSelectableGroup) {
                 let end = this.getControlFlowPoints(false)!.at(-1)!
-                const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
+                const containerBbox = controlFlow.container!.getBoundingClientRect()
                 end[0] -= containerBbox.x
                 end[1] -= containerBbox.y
 
-                let d = controlFlow.flowPath.getAttribute('d') as string
-                d += ` L ${end[0]} ${end[1]}`
-
-                controlFlow.flowPath.setAttribute('d', d)
-                action.endTime = controlFlow.flowPath.getTotalLength()
+                addPointToPathChunks(controlFlow.flowPathChunks, end[0], end[1])
+                action.endTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
                 ends.push(action.endTime)
             }
 
@@ -485,29 +516,27 @@ export class Representation {
                 action.endTime = ends[ends.length - 1]
             }
         } else {
-            const points = this.getControlFlowPoints()
+            let points = null
+            const last = getLastPointInPathChunks(controlFlow.flowPathChunks)
+            const containerBbox = controlFlow.container!.getBoundingClientRect()
+            points = this.getControlFlowPoints(
+                true,
+                last != null ? { x: last[0] + containerBbox.x, y: last[1] + containerBbox.y } : { x: 0, y: 0 }
+            )
 
             if (points != null) {
                 const start = points[0]
                 const end = points.at(-1)!
 
-                const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
+                const containerBbox = controlFlow.container!.getBoundingClientRect()
 
                 start[0] -= containerBbox.x
                 start[1] -= containerBbox.y
                 end[0] -= containerBbox.x
                 end[1] -= containerBbox.y
 
-                let d = controlFlow.flowPath.getAttribute('d') as string
-
-                if (controlFlow.flowPath.getAttribute('d') == '') {
-                    d += `M ${start[0]} ${start[1]}`
-                } else {
-                    d += ` L ${start[0]} ${start[1]}`
-                }
-
-                controlFlow.flowPath.setAttribute('d', d)
-                action.startTime = controlFlow.flowPath.getTotalLength()
+                addPointToPathChunks(controlFlow.flowPathChunks, start[0], start[1])
+                action.startTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
 
                 // Add points in middle
                 for (let i = 1; i < points.length - 1; i++) {
@@ -515,16 +544,15 @@ export class Representation {
                     point[0] -= containerBbox.x
                     point[1] -= containerBbox.y
 
-                    d += ` L ${point[0]} ${point[1]}`
+                    addPointToPathChunks(controlFlow.flowPathChunks, point[0], point[1])
                 }
 
                 // if (action.isSpatial && action.id != originId) {
                 //     action.globalTimeOffset = action.startTime
                 // }
 
-                d += ` L ${end[0]} ${end[1]}`
-                controlFlow.flowPath.setAttribute('d', d)
-                action.endTime = controlFlow.flowPath.getTotalLength()
+                addPointToPathChunks(controlFlow.flowPathChunks, end[0], end[1])
+                action.endTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
             }
         }
     }

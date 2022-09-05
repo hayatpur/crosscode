@@ -1,6 +1,7 @@
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { assert } from '../../../utilities/generic'
+import { remap } from '../../../utilities/math'
 import { ControlFlowState } from './ControlFlowState'
 
 export type ControlFlowCursor = {
@@ -50,21 +51,64 @@ export function updateControlFlowCursor(controlFlowCursor: ControlFlowCursor) {
         controlFlowCursor.element.classList.remove('out-of-range')
     }
 
-    let { x, y } = getPositionAtControlFlow(controlFlow, localTime[0])
+    let { x, y, distanceToEnd, distanceToStart } = getPositionAtControlFlow(controlFlow, localTime[0])!
     x -= 3.5
     y -= 3.5
 
     controlFlowCursor.element.style.left = `${x}px`
     controlFlowCursor.element.style.top = `${y}px`
 
+    let scaleEnd = 1
+    let opacityEnd = 1
+    if (distanceToEnd < 10) {
+        scaleEnd = remap(distanceToEnd, 0, 10, 0.8, 1)
+        opacityEnd = remap(distanceToEnd, 0, 10, 0.2, 1)
+    }
+
+    let scaleStart = 1
+    let opacityStart = 1
+    if (distanceToStart < 10) {
+        scaleStart = remap(distanceToStart, 0, 10, 0.8, 1)
+        opacityStart = remap(distanceToStart, 0, 10, 0.2, 1)
+    }
+
+    controlFlowCursor.element.style.transform = `scale(${Math.min(scaleEnd, scaleStart)})`
+    controlFlowCursor.element.style.opacity = `${Math.min(opacityEnd, opacityStart)}`
+
     // console.log(
     //     convertGlobalTimeToLocalTime(controlFlowCursor.time, ApplicationState.visualization.programId as string)
     // )
 }
 
-export function getPositionAtControlFlow(controlFlow: ControlFlowState, time: number) {
-    const path = controlFlow.flowPath
-    return path.getPointAtLength(time)
+export type CursorPositionInfo = {
+    x: number
+    y: number
+    distanceToEnd: number
+    distanceToStart: number
+}
+
+export function getPositionAtControlFlow(controlFlow: ControlFlowState, time: number): CursorPositionInfo | null {
+    const paths = controlFlow.flowPathChunks
+    let offset = 0
+
+    for (let i = 0; i < paths.length; i++) {
+        const path = paths[i]
+        const length = path.getTotalLength()
+
+        if (offset + length >= time) {
+            const pt = path.getPointAtLength(time - offset)
+            return {
+                x: pt.x,
+                y: pt.y,
+                distanceToEnd: length - (time - offset),
+                distanceToStart: time - offset,
+            }
+        }
+
+        offset += length
+    }
+
+    return null
 }
 
 export function convertGlobalTimeToLocalTime(globalTime: number, actionId: string): [number, boolean] {

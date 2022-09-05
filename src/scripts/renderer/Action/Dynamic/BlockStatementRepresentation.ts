@@ -26,7 +26,10 @@ export class BlockStatementRepresentation extends Representation {
         }
     }
 
-    getControlFlowPoints(usePlaceholder: boolean = true): [number, number][] | null {
+    getControlFlowPoints(
+        usePlaceholder: boolean = true,
+        referencePoint: { x: number; y: number } = { x: 0, y: 0 }
+    ): [number, number][] | null {
         if (this.isTrimmed) {
             return null
         }
@@ -50,9 +53,11 @@ export class BlockStatementRepresentation extends Representation {
 
             const offset = Math.min(2, bbox.height * 0.1)
 
+            let mid = referencePoint!.x
+
             return [
-                [bbox.x + bbox.width / 2, bbox.y],
-                [bbox.x + bbox.width / 2, bbox.y + bbox.height / 2],
+                [mid, bbox.y],
+                [mid, bbox.y + bbox.height / 2],
                 [bbox.x + bbox.width, bbox.y + bbox.height / 2],
             ]
         } else {

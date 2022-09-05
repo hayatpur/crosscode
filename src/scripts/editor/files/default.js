@@ -1,14 +1,10 @@
-let array = [5, 2, 7, 1, 6]
-let n = array.length
-
-// Sort
-for (let i = 0; i < n; i++) {
-    let key = array[i]
-
-    let j = 0
-    for (j = i - 1; j >= 0 && array[j] > key; j--) {
-        array[j + 1] = array[j]
+function fact(x) {
+    if (x == 1) {
+        return x
+    } else {
+        return x * fact(x - 1)
     }
-
-    array[j + 1] = key
 }
+
+let n = 5
+let y = fact(n)

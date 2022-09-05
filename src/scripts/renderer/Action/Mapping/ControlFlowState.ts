@@ -1,6 +1,7 @@
 import { ApplicationState } from '../../../ApplicationState'
 import { createPathElement, createSVGElement } from '../../../utilities/dom'
 import { assert } from '../../../utilities/generic'
+import { resetPathChunks } from '../../../utilities/math'
 import { ActionState } from '../Action'
 import {
     ControlFlowCursor,
@@ -18,7 +19,7 @@ export type ControlFlowState = {
     container: SVGElement | undefined
     overlayContainer: SVGElement | undefined
 
-    flowPath: SVGPathElement
+    flowPathChunks: SVGPathElement[]
     actionRadii: SVGCircleElement[]
     pathCache: string
 
@@ -51,7 +52,7 @@ export function createControlFlowState(overrides: Partial<ControlFlowState> = {}
         container: container,
         overlayContainer: overlayContainer,
         actionRadii: [],
-        flowPath: flowPath,
+        flowPathChunks: [flowPath],
         cursor: createControlFlowCursorState({ actionId: overrides.actionId }),
         pathCache: '',
     }
@@ -131,8 +132,10 @@ export function updateControlFlowState(controlFlow: ControlFlowState) {
     // Exit early if no change
     const cached = action.representation.getControlFlowCache(action.id)
     if (cached != controlFlow.pathCache) {
+        // Reset control flow
+        resetPathChunks(controlFlow.flowPathChunks)
+
         // Update control flow
-        controlFlow.flowPath.setAttribute('d', '')
         action.representation.updateControlFlow(controlFlow, action.id)
 
         // Update spatial offsets

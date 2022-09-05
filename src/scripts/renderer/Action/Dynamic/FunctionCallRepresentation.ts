@@ -1,5 +1,6 @@
 import { ApplicationState } from '../../../ApplicationState'
 import { getAccumulatedBoundingBox } from '../../../utilities/action'
+import { addPointToPathChunks, getTotalLengthOfPathChunks } from '../../../utilities/math'
 import { getConsumedAbyss, getSpatialAbyssControlFlowPoints } from '../Abyss'
 import { ActionState } from '../Action'
 import { ControlFlowState } from '../Mapping/ControlFlowState'
@@ -70,8 +71,6 @@ export class FunctionCallRepresentation extends Representation {
     updateControlFlow(controlFlow: ControlFlowState, originId: string, isSpatiallyConsumed: boolean = false) {
         const action = ApplicationState.actions[this.actionId]
 
-        // console.log(action.id, isSpatiallyConsumed)
-
         const abyssInfo = getConsumedAbyss(action.id)
         if (!action.isShowingSteps || abyssInfo == null || originId != action.id) {
             super.updateControlFlow(controlFlow, originId, isSpatiallyConsumed)
@@ -79,7 +78,7 @@ export class FunctionCallRepresentation extends Representation {
         }
 
         const abyss = ApplicationState.abysses[abyssInfo.id]
-        const containerBbox = (controlFlow.flowPath.parentElement as HTMLElement).getBoundingClientRect()
+        const containerBbox = controlFlow.container!.getBoundingClientRect()
         const [abyssStart, abyssEnd] = getSpatialAbyssControlFlowPoints(abyss, action.id)
 
         abyssStart[0] -= containerBbox.x
@@ -90,14 +89,8 @@ export class FunctionCallRepresentation extends Representation {
         this.sizePerSpatialStep = (abyssEnd[0] - abyssStart[0]) / action.spatialVertices.size
 
         // Add start
-        let d = controlFlow.flowPath.getAttribute('d') as string
-        d +=
-            controlFlow.flowPath.getAttribute('d') == ''
-                ? `M ${abyssStart[0]} ${abyssStart[1]}`
-                : ` L ${abyssStart[0]} ${abyssStart[1]}`
-
-        controlFlow.flowPath.setAttribute('d', d)
-        action.startTime = controlFlow.flowPath.getTotalLength()
+        addPointToPathChunks(controlFlow.flowPathChunks, abyssStart[0], abyssStart[1])
+        action.startTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
 
         // Add steps
         for (let s = 0; s < action.vertices.length; s++) {
@@ -109,9 +102,7 @@ export class FunctionCallRepresentation extends Representation {
         }
 
         // Add end
-        d = controlFlow.flowPath.getAttribute('d') as string
-        d += ` L ${abyssEnd[0]} ${abyssEnd[1]}`
-        controlFlow.flowPath.setAttribute('d', d)
-        action.endTime = controlFlow.flowPath.getTotalLength()
+        addPointToPathChunks(controlFlow.flowPathChunks, abyssEnd[0], abyssEnd[1])
+        action.endTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
     }
 }

@@ -194,6 +194,19 @@ export function tickVisualization(visualization: VisualizationState, dt: number)
 
     prevMargin = margin
 
+    // Update action mapping width
+    if (visualization.mapping != null) {
+        const childrenRight = Array.from(visualization.mapping.element.childNodes)
+            .filter((el) => (el as HTMLElement).classList.contains('action-proxy-container'))
+            .map((el) => (el as HTMLElement).getBoundingClientRect().right)
+        const maxRight = Math.max(...childrenRight) + 50
+        const minWidth = maxRight - visualization.mapping.element.getBoundingClientRect().left
+
+        if (visualization.mapping.element.style.minWidth != `${minWidth}px`) {
+            visualization.mapping.element.style.minWidth = `${minWidth}px`
+        }
+    }
+
     // Update positions
     if (visualization.programId != undefined) {
         const program = ApplicationState.actions[visualization.programId]

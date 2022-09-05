@@ -4,7 +4,9 @@ import { ApplicationState } from '../ApplicationState'
 import { queryAllExecutionGraph, queryExecutionGraph } from '../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
 import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
+import { ControlFlowState } from '../renderer/Action/Mapping/ControlFlowState'
 import { DataState, instanceOfObjectData } from '../renderer/View/Environment/data/DataState'
+import { createPathElement } from './dom'
 
 export type Vector = {
     x: number
@@ -372,7 +374,55 @@ export function tokenDistanceFromTarget(node: ESTree.SourceLocation, target: EST
     )
 }
 
-export function getLastPointInPath(d: string) {
+export function getLastPointInPath(d: string): [number, number] | null {
+    if (d == '') {
+        return null
+    }
+
     let [xStr, yStr] = d.split(' ').slice(-2)
     return [parseFloat(xStr), parseFloat(yStr)]
+}
+
+export function getLastPointInPathChunks(pathChunks: SVGPathElement[]) {
+    const last = pathChunks[pathChunks.length - 1]
+    return getLastPointInPath(last.getAttribute('d') as string)
+}
+
+export function addPointToPathChunks(pathChunks: SVGPathElement[], x: number, y: number) {
+    const last = pathChunks[pathChunks.length - 1]
+    let d = last.getAttribute('d') as string
+
+    if (d == '') {
+        d = `M ${x} ${y}`
+    } else {
+        d += ` L ${x} ${y}`
+    }
+
+    last.setAttribute('d', d)
+}
+
+export function getTotalLengthOfPathChunks(pathChunks: SVGPathElement[]) {
+    let sum = 0
+    for (const chunk of pathChunks) {
+        sum += chunk.getTotalLength()
+    }
+
+    return sum
+}
+
+export function resetPathChunks(pathChunks: SVGPathElement[]) {
+    // Remove all but the first path
+    for (let i = pathChunks.length - 1; i > 0; i--) {
+        pathChunks[i].remove()
+        pathChunks.pop()
+    }
+
+    // Reset the first path
+    pathChunks[0].setAttribute('d', '')
+}
+
+export function createNewPathChunk(controlFlow: ControlFlowState) {
+    const newPath = createPathElement('control-flow-path', controlFlow.container)
+    newPath.setAttribute('d', '')
+    controlFlow.flowPathChunks.push(newPath)
 }

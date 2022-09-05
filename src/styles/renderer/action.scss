@@ -449,10 +449,6 @@ svg.control-flow-svg.control-flow-svg-overlay {
     cursor: pointer;
     opacity: 0.7;
 
-    transition-property: box-shadow, transform, opacity;
-    transition-duration: 0.2s;
-    transition-timing-function: ease-in;
-
     transform: scale(1.2);
     z-index: 100;
 }
@@ -694,6 +690,9 @@ svg.ray-svg {
 .action-proxy.type-VariableDeclaration > .action-proxy-container.is-minimized > .action-proxy {
     height: 5px !important;
     min-height: 0px !important;
+}
+
+.action-proxy.type-VariableDeclaration > .action-proxy-container.is-minimized > .action-proxy:not(.is-focused) {
     box-shadow: none !important;
 }
 
@@ -1012,7 +1011,7 @@ svg.ray-svg {
 }
 
 .action-proxy-container.is-for-loop.is-hovering {
-    box-shadow: 0px 0px 0px 1px var(--s-color-0-1) !important;
+    box-shadow: 0px 0px 0px 1px var(--color-2) !important;
 }
 
 .action-proxy-container.is-if-statement.is-hovering {
@@ -1153,4 +1152,8 @@ svg.ray-svg {
 .action-proxy-for-iteration-bottom2 > div {
     margin-top: 4px;
     margin-right: 2px;
+}
+
+.action-proxy.is-focused.pre-label-Test._Test_true {
+    background: #00ff5947 !important;
 }

@@ -83,7 +83,10 @@ export class VariableDeclarationRepresentation extends Representation {
         this.equalSignElement.remove()
     }
 
-    getControlFlowPoints(usePlaceholder: boolean = true): [number, number][] | null {
+    getControlFlowPoints(
+        usePlaceholder: boolean = true,
+        referencePoint: { x: number; y: number } = { x: 0, y: 0 }
+    ): [number, number][] | null {
         if (this.isTrimmed) {
             return null
         }

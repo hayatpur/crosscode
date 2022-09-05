@@ -183,6 +183,7 @@ export function updateView(view: ViewState) {
     if (allSelected.length == 0 && closestId == null) {
         // No action selected
         console.warn('No action selected')
+        view.prevTime == globalTime
         return
     } else if (allSelected.length > 1) {
         // Multiple actions selected
@@ -193,6 +194,19 @@ export function updateView(view: ViewState) {
 
     // Find the selected frame
     const selectedFrameIndex = view.frames.findIndex((frame) => frame.actionId == selected)
+
+    if (selectedFrameIndex == -1) {
+        const selectedAction = ApplicationState.actions[selected]
+        console.warn(
+            'Selected frame not found',
+            selectedAction.execution.nodeData.type,
+            selectedAction.id,
+            view.actionId
+        )
+        view.prevTime = globalTime
+        return
+    }
+
     const selectedFrameAmount = amounts[selected]
     // const steps = getLeafStepsFromIDs(program.vertices)
 
