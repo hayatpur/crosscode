@@ -44,14 +44,13 @@ export class ForStatementRepresentation extends Representation {
     }
 
     showAll() {
-        console.log('Show all iterations')
-
         const action = ApplicationState.actions[this.actionId]
 
         if (this.showingAll) {
-            updateForLoopAbyss(this.actionId, 0)
-            this.showingAll = false
+            updateForLoopAbyss(this.actionId, 0, true)
             this.showAllButton.innerText = '+'
+
+            this.showingAll = false
         } else {
             for (const abyssId of action.abyssesIds) {
                 const abyss = ApplicationState.abysses[abyssId]

@@ -2,7 +2,6 @@ import { ApplicationState } from '../../ApplicationState'
 import { getAccumulatedBoundingBoxForElements } from '../../utilities/action'
 import { createElement } from '../../utilities/dom'
 import { assert } from '../../utilities/generic'
-import { clone } from '../../utilities/objects'
 import { ForStatementRepresentation } from './Dynamic/ForStatementRepresentation'
 import { getTotalDuration } from './Mapping/ControlFlowCursor'
 
@@ -431,7 +430,7 @@ export function navigateToSpatialAbyss(abyssId: string, target: string) {}
 
 export function popLeafFromSpatialAbyss(abyssId: string, target: string) {
     const abyss = ApplicationState.abysses[abyssId]
-    console.log(clone(abyss.referenceActionId))
+    // console.log(clone(abyss.referenceActionId))
 
     // Find target
     const stack: [AbyssSpatialChild, AbyssSpatialChild | null][] = [[abyss.referenceActionId!, null]]
@@ -466,7 +465,7 @@ export function popLeafFromSpatialAbyss(abyssId: string, target: string) {
     // Update visual
     updateAbyssVisual(abyssId)
 
-    console.log(clone(abyss.referenceActionId))
+    // console.log(clone(abyss.referenceActionId))
 
     const program = ApplicationState.actions[ApplicationState.visualization.programId!]
     program.representation.dirtyFrames = true
@@ -678,6 +677,8 @@ export function destroyAbyss(abyssId: string) {
             action.abyssesIds.splice(action.abyssesIds.indexOf(abyssId), 1)
         }
     }
+
+    ApplicationState.actions[ApplicationState.visualization.programId!].representation.dirtyFrames = true
 
     delete ApplicationState.abysses[abyssId]
 }
@@ -975,15 +976,17 @@ export function collapseForIterationIntoAbyss(forActionId: string, iterationInde
             expandAbyssBackward(adjacentAbyss.id)
         }
     }
+
+    ApplicationState.actions[forAction.spatialParentID!].representation.dirtyFrames = true
 }
 
-export function updateForLoopAbyss(forActionId: string, focusIteration: number) {
+export function updateForLoopAbyss(forActionId: string, focusIteration: number, forced: boolean = false) {
     const forAction = ApplicationState.actions[forActionId]
 
     // Collapse any iterations that are not selected
     const totalVertices = (forAction.vertices.length - 2) / 3
 
-    if (!ApplicationState.visualization.PARAMS.Closure) {
+    if (!ApplicationState.visualization.PARAMS.Closure && !forced) {
         return
     }
 

@@ -73,8 +73,6 @@ export class EnvironmentRenderer {
 
         this.timestamps = frame.environment.timestamps
 
-        console.log(frame)
-
         this.renderMemory(frame)
         this.renderIdentifiers(frame)
         this.renderResiduals(frame)

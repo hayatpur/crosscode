@@ -1,32 +1,12 @@
-// Tutorial D
-//
-// Controls:
-//    - Progressive closure button
-//    - Progressive disclosure button
-// Concepts
-//    - Aggregation over depth
+function fibonacci(N) {
+    let memo = [0, 1]
 
-function fact(x) {
-    if (x > 1) {
-        return x * fact(x - 1)
+    for (let i = 2; i < N; i = i + 1) {
+        memo[i] = memo[i] + memo[i - 1]
     }
 
-    return 1
+    return memo[N]
 }
 
-function fact2(x) {
-    let r = 5
-    let z = r + 1
-    let y = z - r
-    y = y - r
-    r = y * y
-
-    if (x > 1) {
-        return x * fact(x - 1)
-    }
-
-    return 1
-}
-
-let n = 5
-let y = fact(n)
+let n = 7
+let y = fibonacci(n)
