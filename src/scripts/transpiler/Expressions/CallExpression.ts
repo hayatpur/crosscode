@@ -1,16 +1,8 @@
 import * as ESTree from 'estree'
 import { cleanUpRegister, resolvePath } from '../../environment/environment'
-import {
-    Accessor,
-    AccessorType,
-    EnvironmentState,
-} from '../../environment/EnvironmentState'
+import { Accessor, AccessorType, EnvironmentState } from '../../environment/EnvironmentState'
 import { addVertex, applyExecutionNode } from '../../execution/execution'
-import {
-    createExecutionGraph,
-    ExecutionGraph,
-    instanceOfExecutionGraph,
-} from '../../execution/graph/ExecutionGraph'
+import { createExecutionGraph, ExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { consumeDataAnimation } from '../../execution/primitive/Data/ConsumeDataAnimation'
 import {
     ControlOutput,
@@ -27,11 +19,7 @@ import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 import { FunctionCall } from '../Functions/FunctionCall'
 
-export function CallExpression(
-    ast: ESTree.CallExpression,
-    environment: EnvironmentState,
-    context: ExecutionContext
-) {
+export function CallExpression(ast: ESTree.CallExpression, environment: EnvironmentState, context: ExecutionContext) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
     graph.precondition = clone(environment)
 
@@ -91,11 +79,7 @@ export function CallExpression(
             feed: true,
             outputRegister: lookupRegister,
         })
-        const lookupData = resolvePath(
-            environment,
-            lookupRegister,
-            null
-        ) as DataState
+        const lookupData = resolvePath(environment, lookupRegister, null) as DataState
         lookupDataValue = lookupData.value as Function
     }
 
@@ -108,15 +92,11 @@ export function CallExpression(
                     value: `${graph.id}_ObjectRegister`,
                 },
             ]
-            const objectLookup = Compiler.compile(
-                ast.callee.object,
-                environment,
-                {
-                    ...context,
-                    feed: false,
-                    outputRegister: objectRegister,
-                }
-            )
+            const objectLookup = Compiler.compile(ast.callee.object, environment, {
+                ...context,
+                feed: false,
+                outputRegister: objectRegister,
+            })
             // console.log(resolvePath(environment, objectRegister, null))
             // addVertex(graph, objectLookup, {
             //     nodeData: getNodeData(ast.callee.object),
@@ -125,9 +105,11 @@ export function CallExpression(
             objectRegister = null
         }
 
-        const nativeFunction = lookupNativeFunctionAnimation(
-            lookupDataValue.name
-        )(objectRegister, registers, context.outputRegister)
+        const nativeFunction = lookupNativeFunctionAnimation(lookupDataValue.name)(
+            objectRegister,
+            registers,
+            context.outputRegister
+        )
 
         bodyGraph = nativeFunction
         addVertex(graph, nativeFunction, { nodeData: getNodeData(ast) })
@@ -136,19 +118,14 @@ export function CallExpression(
             cleanUpRegister(environment, objectRegister[0].value)
         }
     } else {
-        const funcAST: ESTree.FunctionDeclaration = JSON.parse(
-            lookupDataValue.toString()
-        )
+        const funcAST: ESTree.FunctionDeclaration = JSON.parse(lookupDataValue.toString())
 
         const body = FunctionCall(funcAST, environment, {
             ...context,
             args: registers,
             outputRegister: [],
             returnData: {
-                register:
-                    context.outputRegister.length > 0
-                        ? context.outputRegister
-                        : null,
+                register: context.outputRegister.length > 0 ? context.outputRegister : null,
                 frame: environment.scope.length,
                 environmentID: environment.id,
             },
@@ -163,24 +140,18 @@ export function CallExpression(
         })
     }
 
+    argGraph.postcondition = clone(bodyGraph.precondition)
+
     // Cleanup
     if (lookupRegister != null) {
         cleanUpRegister(environment, lookupRegister[0].value)
     }
 
-    const ret = resolvePath(
-        environment,
-        context.outputRegister,
-        null
-    ) as DataState
+    const ret = resolvePath(environment, context.outputRegister, null) as DataState
 
     for (let i = 0; i < ast.arguments.length; i++) {
         // Make sure that the things being cleaned up is not a return value
-        const resolve = resolvePath(
-            environment,
-            registers[i],
-            null
-        ) as DataState
+        const resolve = resolvePath(environment, registers[i], null) as DataState
 
         if (ret.id == resolve.id) {
             continue
@@ -191,15 +162,20 @@ export function CallExpression(
         cleanUpRegister(environment, registers[i][0].value)
     }
 
-    if (instanceOfExecutionGraph(bodyGraph) && bodyGraph.vertices.length > 1) {
-        graph.vertices[0].postcondition = clone(
-            bodyGraph.vertices[0].postcondition
-        )
-    }
+    // const retAnimation = createExecutionNode({
+    //     ...getNodeData(ast.callee, 'ReturnAnimationSpecial'),
+    //     preLabel: `ReturnAnimationSpecial_${ret.id}`,
+    // })
+    // retAnimation.postcondition = clone(environment)
+
+    // TODO ... why is this here?
+    // if (instanceOfExecutionGraph(bodyGraph) && bodyGraph.vertices.length > 1) {
+    //     graph.vertices[0].postcondition = clone(bodyGraph.vertices[0].postcondition)
+    // }
 
     graph.postcondition = clone(environment)
-
     graph.nodeData.type = 'CallExpression'
+
     return graph
 }
 

@@ -3,6 +3,7 @@ import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
 import { getAccumulatedBoundingBox } from '../../../utilities/action'
 import { createElement } from '../../../utilities/dom'
+import { getTitleFromExecution } from '../Dynamic/Representation'
 
 export type ActionProxyState = {
     // Container of this things indicator and its steps
@@ -37,7 +38,7 @@ export function createActionProxy(overrides: Partial<ActionProxyState> = {}): Ac
 
     // Label
     const label = createElement('div', 'action-proxy-label', header)
-    label.innerText = `${action.execution.nodeData.type}`
+    label.innerText = `${getTitleFromExecution(action.execution)}`
 
     const element = createElement(
         'div',

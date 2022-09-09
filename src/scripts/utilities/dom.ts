@@ -114,7 +114,7 @@ export function getCurvedArrow(x0: number, y0: number, x1: number, y1: number, r
     return `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
 }
 
-export function getPerfectArrow(x0: number, y0: number, x1: number, y1: number) {
+export function getPerfectArrow(x0: number, y0: number, x1: number, y1: number): [string, number, number, number] {
     // return getCurvedArrow(x0, y0, x1, y1)
     // console.log(x0, y0, )
     const [sx, sy, cx, cy, ex, ey, ae, as, sc] = PerfectArrows.getArrow(x0, y0, x1, y1, {
@@ -125,7 +125,8 @@ export function getPerfectArrow(x0: number, y0: number, x1: number, y1: number) 
         // stretch: 0.1,
         straights: false,
     })
-    return `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`
+
+    return [`M${sx},${sy} Q${cx},${cy} ${ex},${ey}`, ex, ey, ae * (180 / Math.PI)]
 }
 
 export function createElement(tag: string, classes: string[] | string = [], parent?: Element) {

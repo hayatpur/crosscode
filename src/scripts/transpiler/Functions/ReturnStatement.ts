@@ -9,11 +9,7 @@ import { returnStatementAnimation } from '../../execution/primitive/Functions/Re
 import { clone } from '../../utilities/objects'
 import { Compiler, getNodeData } from '../Compiler'
 
-export function ReturnStatement(
-    ast: ESTree.ReturnStatement,
-    environment: EnvironmentState,
-    context: ExecutionContext
-) {
+export function ReturnStatement(ast: ESTree.ReturnStatement, environment: EnvironmentState, context: ExecutionContext) {
     const graph: ExecutionGraph = createExecutionGraph(getNodeData(ast))
     graph.precondition = clone(environment)
 
@@ -46,7 +42,7 @@ export function ReturnStatement(
         context.returnData.register = returnRegister
     }
     const ret = returnStatementAnimation(context.returnData)
-    // addVertex(graph, ret, { nodeData: getNodeData(ast) })
+    addVertex(graph, ret, { nodeData: { ...getNodeData(ast), type: 'ReturnStatementAnimation' } })
     applyExecutionNode(ret, environment)
 
     // Cleanup temp return
@@ -58,6 +54,23 @@ export function ReturnStatement(
 
         context.returnData.register = null
     }
+
+    // const special = createExecutionNode({
+    //     ...getNodeData(ast),
+    //     type: 'ReturnSpecial',
+    //     preLabel: 'ReturnSpecial',
+    // })
+    // special._reads = [
+    //     {
+    //         location: context.returnData.register,
+    //         value: 'return',
+    //     },
+    // ]
+    // special._writes = []
+    // special.precondition = clone(environment)
+    // special.postcondition = clone(environment)
+
+    // addVertex(graph, special, { nodeData: getNodeData(ast) })
 
     // TODO: Does this need a move and place?
     // const place = moveAndPlaceAnimation(register, context.returnData.register);

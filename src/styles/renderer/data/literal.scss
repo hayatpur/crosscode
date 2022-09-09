@@ -4,7 +4,7 @@
 .data-function {
     font-size: var(--code-font-size);
     font-family: var(--code-font-family);
-    color: var(--s-color-0);
+    color: var(--color-4-1);
     padding: 0px 4px;
     min-height: 20px;
     font-weight: 400;
@@ -12,10 +12,20 @@
     z-index: 10;
     width: fit-content;
     font-size: 14px;
+    transition-property: color;
+    transition-duration: 0.2s;
 }
 
 .data-array > .hole > .data-literal {
     // padding: 0px 0px 0px 6px;
+}
+
+.data-literal.environment-write {
+    color: var(--s-color-0-3);
+}
+
+.data-literal.environment-read {
+    color: #ff9431;
 }
 
 .data-array > .hole:nth-child(2) > .data-literal {
@@ -27,7 +37,7 @@
 }
 
 .data-literal-string {
-    color: #6ee7b7 !important;
+    color: var(--s-color-2) !important;
 }
 
 .data-literal.trail-create {

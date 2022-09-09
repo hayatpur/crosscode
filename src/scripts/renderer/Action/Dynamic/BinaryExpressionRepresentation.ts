@@ -1,35 +1,31 @@
-import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
-import { ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
-import { createElement } from '../../../utilities/dom'
 import { getConsumedAbyss } from '../Abyss'
 import { ActionState } from '../Action'
 import { Representation } from './Representation'
 
 export class BinaryStatementRepresentation extends Representation {
-    operatorLabelElement: HTMLElement
+    // operatorLabelElement: HTMLElement
 
     constructor(action: ActionState) {
         super(action)
 
-        this.operatorLabelElement = createElement('div', ['action-proxy-code-label', 'action-proxy-binary-label'])
-        console.log(action.execution)
-        const evaluation = (action.execution as ExecutionGraph).vertices[2]
+        // this.operatorLabelElement = createElement('div', ['action-proxy-code-label', 'action-proxy-binary-label'])
+        // const evaluation = (action.execution as ExecutionGraph).vertices[2]
 
-        if (evaluation.nodeData.location == null) {
-            throw new Error('Binary expression evaluation has no associated location.')
-        }
+        // if (evaluation.nodeData.location == null) {
+        //     throw new Error('Binary expression evaluation has no associated location.')
+        // }
 
-        const evaluationText = ApplicationState.editor.getValueAt(evaluation.nodeData.location)?.trim()
+        // const evaluationText = ApplicationState.editor.getValueAt(evaluation.nodeData.location)?.trim()
 
-        if (evaluationText == null) {
-            throw new Error('Binary expression evaluation has no text.')
-        }
+        // if (evaluationText == null) {
+        //     throw new Error('Binary expression evaluation has no text.')
+        // }
 
-        this.operatorLabelElement.innerText = evaluationText
-        monaco.editor.colorize(this.operatorLabelElement.innerHTML, 'javascript', {}).then((html) => {
-            this.operatorLabelElement.innerHTML = html
-        })
+        // this.operatorLabelElement.innerText = evaluationText
+        // monaco.editor.colorize(this.operatorLabelElement.innerHTML, 'javascript', {}).then((html) => {
+        //     this.operatorLabelElement.innerHTML = html
+        // })
 
         this.shouldHover = true
     }
@@ -55,7 +51,11 @@ export class BinaryStatementRepresentation extends Representation {
         proxy.element.appendChild(leftElement)
 
         // Add operator label
-        proxy.element.appendChild(this.operatorLabelElement)
+        // proxy.element.appendChild(this.operatorLabelElement)
+
+        // Add operator element
+        // operatorElement.classList.add('skip-')
+        proxy.element.appendChild(operatorElement)
 
         // Add right element
         proxy.element.appendChild(rightElement)
@@ -63,18 +63,13 @@ export class BinaryStatementRepresentation extends Representation {
 
     destroySteps(): void {
         super.destroySteps()
-
-        this.operatorLabelElement.remove()
+        // this.operatorLabelElement.remove()
     }
 
     getControlFlowPoints(
         usePlaceholder: boolean = true,
         referencePoint: { x: number; y: number } = { x: 0, y: 0 }
     ): [number, number][] | null {
-        if (this.isTrimmed) {
-            return null
-        }
-
         const action = ApplicationState.actions[this.actionId]
         const abyssInfo = getConsumedAbyss(action.id)
 

@@ -37,7 +37,7 @@ export function FunctionCall(
     }
     args.postcondition = clone(environment)
 
-    addVertex(graph, args, { nodeData: getNodeData(ast.params, 'Arguments') })
+    // addVertex(graph, args, { nodeData: getNodeData(ast.params, 'Arguments') })
 
     // Call function
     const body = BlockStatement(ast.body, environment, { ...context, args: null }, ScopeType.None)

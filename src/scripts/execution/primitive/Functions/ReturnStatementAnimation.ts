@@ -1,38 +1,20 @@
-import {
-    getMemoryLocation,
-    resolvePath,
-} from '../../../environment/environment'
+import { getMemoryLocation, resolvePath } from '../../../environment/environment'
 import { EnvironmentState } from '../../../environment/EnvironmentState'
 import { DataState } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
-import {
-    createExecutionNode,
-    ExecutionNode,
-    ReturnData,
-} from '../ExecutionNode'
+import { createExecutionNode, ExecutionNode, ReturnData } from '../ExecutionNode'
 
 export type ReturnStatementAnimation = ExecutionNode & {
     returnData: ReturnData
 }
 
-function apply(
-    animation: ReturnStatementAnimation,
-    environment: EnvironmentState
-) {
-    const data = resolvePath(
-        environment,
-        animation.returnData.register,
-        `${animation.id}_Data`
-    ) as DataState
+function apply(animation: ReturnStatementAnimation, environment: EnvironmentState) {
+    const data = resolvePath(environment, animation.returnData.register, `${animation.id}_Data`) as DataState
     data.frame = animation.returnData.frame
 
-    const ref = resolvePath(
-        environment,
-        animation.returnData.register,
-        `${animation.id}_Data`,
-        null,
-        { noResolvingReference: true }
-    ) as DataState
+    const ref = resolvePath(environment, animation.returnData.register, `${animation.id}_Data`, null, {
+        noResolvingReference: true,
+    }) as DataState
     ref.frame = animation.returnData.frame
 
     // Any reference that points to data should also be uplifted
@@ -56,17 +38,12 @@ function apply(
     })
 }
 
-function computeReadAndWrites(
-    animation: ReturnStatementAnimation,
-    data: DataInfo
-) {
+function computeReadAndWrites(animation: ReturnStatementAnimation, data: DataInfo) {
     animation._reads = [data]
     animation._writes = []
 }
 
-export function returnStatementAnimation(
-    returnData: ReturnData
-): ReturnStatementAnimation {
+export function returnStatementAnimation(returnData: ReturnData): ReturnStatementAnimation {
     return {
         ...createExecutionNode(null),
         _name: 'ReturnStatementAnimation',

@@ -1,10 +1,13 @@
-function fact(x) {
-    if (x == 1) {
-        return x
-    } else {
-        return x * fact(x - 1)
+function avg(list) {
+    let sum = 0
+    let n = list.length
+
+    for (let i = 0; i < n; i = i + 1) {
+        sum = sum + list[i]
     }
+
+    return sum / n
 }
 
-let n = 5
-let y = fact(n)
+let lst = [1, 5, 6, 10]
+let k = avg(lst)

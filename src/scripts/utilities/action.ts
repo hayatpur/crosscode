@@ -147,17 +147,45 @@ export function isPrimitiveByDefault(execution: ExecutionGraph | ExecutionNode):
         return true
     }
 
+    if (execution.nodeData.type == 'BinaryExpressionEvaluate') {
+        return true
+    }
+
     return false
 }
 
-export function isTrimmedByDefault(execution: ExecutionGraph | ExecutionNode): boolean {
+export function isSkippedByDefault(execution: ExecutionGraph | ExecutionNode): boolean {
+    if (execution.nodeData.type == 'Arguments') {
+        return true
+    }
+
     if (execution.nodeData.type == 'Identifier' && execution.nodeData.preLabel == 'Name') {
         return true
     }
 
-    if (execution.nodeData.type == 'BinaryExpressionEvaluate') {
+    if (execution.nodeData.type == 'ReturnStatementAnimation') {
         return true
     }
+
+    return false
+}
+
+export function isBreakableByDefault(execution: ExecutionGraph | ExecutionNode): boolean {
+    return false
+}
+
+export function isTrimmedByDefault(execution: ExecutionGraph | ExecutionNode): boolean {
+    // if (execution.nodeData.type == 'Identifier' && execution.nodeData.preLabel == 'Name') {
+    //     return true
+    // }
+
+    // if (execution.nodeData.type == 'Identifier' && execution.nodeData.preLabel == 'Left') {
+    //     return true
+    // }
+
+    // if (execution.nodeData.type == 'BinaryExpressionEvaluate') {
+    //     return true
+    // }
 
     return false
 }
@@ -288,22 +316,4 @@ export function isStatement(execution: ExecutionGraph | ExecutionNode) {
     ])
 
     return statements.has(execution.nodeData?.type ?? '')
-}
-
-export function containsSpatialChild(action: ActionState) {
-    for (const v of action.vertices) {
-        if (ApplicationState.actions[v].execution.nodeData.type == 'CallExpression') {
-            return true
-        }
-    }
-    return false
-
-    // for (const stepID of action.vertices) {
-    //     const step = ApplicationState.actions[stepID]
-    //     if (step.isSpatial || containsSpatialChild(step)) {
-    //         return false
-    //     }
-    // }
-
-    // return false
 }

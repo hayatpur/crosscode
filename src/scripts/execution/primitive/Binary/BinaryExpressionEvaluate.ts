@@ -1,19 +1,8 @@
 import * as ESTree from 'estree'
 import { createPrimitiveData, replaceDataWith } from '../../../environment/data'
-import {
-    addDataAt,
-    getMemoryLocation,
-    removeAt,
-    resolvePath,
-} from '../../../environment/environment'
-import {
-    Accessor,
-    EnvironmentState,
-} from '../../../environment/EnvironmentState'
-import {
-    DataState,
-    DataType,
-} from '../../../renderer/View/Environment/data/DataState'
+import { addDataAt, getMemoryLocation, removeAt, resolvePath } from '../../../environment/environment'
+import { Accessor, EnvironmentState } from '../../../environment/EnvironmentState'
+import { DataState, DataType } from '../../../renderer/View/Environment/data/DataState'
 import { DataInfo } from '../../graph/ExecutionGraph'
 import { createExecutionNode, ExecutionNode } from '../ExecutionNode'
 
@@ -24,23 +13,12 @@ export type BinaryExpressionEvaluate = ExecutionNode & {
     outputRegister: Accessor[]
 }
 
-function apply(
-    animation: BinaryExpressionEvaluate,
-    environment: EnvironmentState
-) {
+function apply(animation: BinaryExpressionEvaluate, environment: EnvironmentState) {
     // Find left data
-    let left = resolvePath(
-        environment,
-        animation.leftSpecifier,
-        `${animation.id}_Left`
-    ) as DataState
+    let left = resolvePath(environment, animation.leftSpecifier, `${animation.id}_Left`) as DataState
 
     // Find right data
-    let right = resolvePath(
-        environment,
-        animation.rightSpecifier,
-        `${animation.id}_Right`
-    ) as DataState
+    let right = resolvePath(environment, animation.rightSpecifier, `${animation.id}_Right`) as DataState
 
     // Evaluated
     const evaluated = createPrimitiveData(
@@ -68,24 +46,10 @@ function apply(
 
     // Point output to evaluated
     if (animation.outputRegister.length > 0) {
-        const output = resolvePath(
-            environment,
-            animation.outputRegister,
-            `${animation.id}_Floating`
-        ) as DataState
-        replaceDataWith(
-            output,
-            createPrimitiveData(
-                DataType.ID,
-                evaluated.id,
-                `${animation.id}_Placed`
-            )
-        )
+        const output = resolvePath(environment, animation.outputRegister, `${animation.id}_Floating`) as DataState
+        replaceDataWith(output, createPrimitiveData(DataType.ID, evaluated.id, `${animation.id}_Placed`))
     } else {
-        removeAt(
-            environment,
-            getMemoryLocation(environment, evaluated).foundLocation
-        )
+        removeAt(environment, getMemoryLocation(environment, evaluated).foundLocation)
     }
 
     removeAt(environment, getMemoryLocation(environment, left).foundLocation)
@@ -129,11 +93,7 @@ export function binaryExpressionEvaluate(
     }
 }
 
-function computeBinaryExpression(
-    left: any,
-    right: any,
-    operator: ESTree.BinaryOperator
-) {
+function computeBinaryExpression(left: any, right: any, operator: ESTree.BinaryOperator) {
     switch (operator) {
         case '+':
             return left + right

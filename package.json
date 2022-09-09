@@ -2,7 +2,7 @@
     "name": "cross-code",
     "scripts": {
         "dev": "vite",
-        "build": "tsc && vite build",
+        "build": "vite build",
         "preview": "vite preview",
         "postinstall": "patch-package"
     },

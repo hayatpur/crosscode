@@ -22,10 +22,13 @@
 }
 
 .trail-move {
-    stroke: var(--color-3);
+    stroke: url(#grad3) !important;
     stroke-dasharray: 6 2;
     stroke-dashoffset: 0;
-    // animation: showStroke 10s;
+}
+
+.trail-move.is-expired {
+    filter: saturate(0);
 }
 
 .trail-create {
@@ -34,6 +37,7 @@
 }
 
 .trail-path.hidden {
+    display: none;
     opacity: 0;
 }
 

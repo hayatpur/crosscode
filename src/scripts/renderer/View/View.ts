@@ -2,12 +2,13 @@ import { Howl } from 'howler'
 import { ApplicationState } from '../../ApplicationState'
 import { createEnvironment } from '../../environment/environment'
 import { EnvironmentState, FrameInfo, Residual } from '../../environment/EnvironmentState'
-import { getLeafStepsFromIDs } from '../../utilities/action'
+import { getAccumulatedBoundingBoxForElements, getLeafStepsFromIDs } from '../../utilities/action'
 import { createElement, createSVGElement } from '../../utilities/dom'
 import { assert } from '../../utilities/generic'
-import { getNumericalValueOfStyle } from '../../utilities/math'
 import { getSelections } from '../../visualization/Selection'
+import { getConsumedAbyss } from '../Action/Abyss'
 import { getBreakIndexOfFrameIndex } from '../Action/Mapping/ActionMapping'
+import { ReturnAnimation } from '../Trail/ReturnAnimation'
 import { TrailGroup } from '../Trail/TrailGroup'
 import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
 
@@ -15,10 +16,6 @@ import { EnvironmentRenderer } from './Environment/EnvironmentRenderer'
 /*        View displays a series of program states        */
 /* ------------------------------------------------------ */
 export type ViewState = {
-    id: string
-
-    actionId: string
-
     preFrame: EnvironmentState
     frames: FrameInfo[]
 
@@ -36,14 +33,15 @@ export type ViewState = {
     sound: Howl
 
     // Like animation paths (that are acting on a given animation)
-    trails: TrailGroup[]
+    trails: (TrailGroup | ReturnAnimation)[]
+
+    scopeContainers: { [key: string]: HTMLElement }
 
     // Cache
     prevTime: number
 }
 
 /* --------------------- Initializer -------------------- */
-let __VIEW_ID = 0
 export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
     const container = createElement('div', 'view-container')
 
@@ -51,19 +49,15 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
 
     const element = createElement('div', 'view', container)
     const svg = createSVGElement('environment-svg', element)
+    const programId = ApplicationState.visualization.programId!
+    const scopeContainers: { [key: string]: HTMLElement } = {}
+    scopeContainers[programId] = createElement('div', 'scope-container', container)
 
     const sound = new Howl({
         src: ['./src/assets/material_product_sounds/ogg/04 Secondary System Sounds/navigation_transition-left.ogg'],
     })
 
-    assert(overrides.actionId != null, 'Action id must be provided')
-
-    const action = ApplicationState.actions[overrides.actionId]
-    label.innerText = action.execution.nodeData.type!
-
     const base: ViewState = {
-        id: `View(${++__VIEW_ID})`,
-
         preFrame: createEnvironment(),
         frames: [],
 
@@ -76,10 +70,9 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
         renderers: [],
         containers: [],
 
-        actionId: overrides.actionId,
-
         sound: sound,
         prevTime: -1,
+        scopeContainers,
     }
 
     Object.assign(base, overrides)
@@ -106,8 +99,15 @@ export function setViewFrames(view: ViewState, frames: FrameInfo[], preFrame: En
         const { actionId } = frames[i]
         const action = ApplicationState.actions[actionId]
 
-        const trailGroup = new TrailGroup(action.execution, view.actionId, i)
-        view.trails.push(trailGroup)
+        if (action.execution.nodeData.type == 'ReturnStatementAnimation') {
+            const returnAnimation = new ReturnAnimation(action.execution, i)
+            view.trails.push(returnAnimation)
+
+            returnAnimation.setReturnDetails(frames[i - 1].environment, action.id, action.spatialParentID!)
+        } else {
+            const trailGroup = new TrailGroup(frames[i].overrideExecution ?? action.execution, i)
+            view.trails.push(trailGroup)
+        }
     }
 
     view.prevTime = -1
@@ -136,7 +136,6 @@ export function setViewFrames(view: ViewState, frames: FrameInfo[], preFrame: En
             // For each previous frame
             // const [previousFrameEnvironment, previousFrameAction] = frames[j]
             const trail = view.trails[j]
-
             const ppFrame = j == 0 ? view.preFrame : frames[j - 1].environment
 
             residuals.push(trail.computeResidual(ppFrame))
@@ -161,24 +160,49 @@ export function updateView(view: ViewState) {
     const mapping = ApplicationState.visualization.mapping!
     const globalTime = ApplicationState.visualization.selections['main']._globalTime
 
-    const action = ApplicationState.actions[view.actionId]
+    const program = ApplicationState.actions[ApplicationState.visualization.programId!]
+
+    // Update scope containers
+    const scopeHits: Set<string> = new Set()
+    for (const [actionId, action] of Object.entries(ApplicationState.actions)) {
+        if (!action.isSpatial) continue
+
+        let scope = view.scopeContainers[actionId]
+        if (scope == null) {
+            scope = createElement('div', 'scope-container', view.container)
+            view.scopeContainers[actionId] = scope
+        }
+
+        scopeHits.add(actionId)
+    }
+
+    // Remove unused scope containers
+    for (const [actionId, scope] of Object.entries(view.scopeContainers)) {
+        if (!scopeHits.has(actionId)) {
+            scope.remove()
+            delete view.scopeContainers[actionId]
+        }
+    }
+
+    // Update scope container positions
+    updateScopeContainerPositions(program.id, { x: 35, y: 115 }, null)
 
     // Update position
-    const targetLeft = getNumericalValueOfStyle(action.proxy.container.style.left)
-    const targetTop = getNumericalValueOfStyle(action.proxy.container.style.top)
+    // const targetLeft = getNumericalValueOfStyle(program.proxy.container.style.left)
+    // const targetTop = getNumericalValueOfStyle(program.proxy.container.style.top)
 
-    view.container.style.left = `${targetLeft}px`
-    view.container.style.top = `${targetTop}px`
+    // view.container.style.left = `${targetLeft}px`
+    // view.container.style.top = `${targetTop}px`
 
     if (view.prevTime == globalTime) return
 
     /* --------------- Find the closest frame --------------- */
 
-    // Get selected action(s) in the current spatial thing
+    // Get selected action(s)
     let { selectedIds: allSelectedSet, amounts, closestId } = getSelections(globalTime)
-    const allSelected = [...allSelectedSet]
-        .filter((selection) => ApplicationState.actions[selection].spatialParentID == action.id)
-        .filter((selection) => view.frames.some((frame) => frame.actionId == selection))
+    const allSelected = [...allSelectedSet].filter((selection) =>
+        view.frames.some((frame) => frame.actionId == selection)
+    )
 
     if (allSelected.length == 0 && closestId == null) {
         // No action selected
@@ -197,12 +221,7 @@ export function updateView(view: ViewState) {
 
     if (selectedFrameIndex == -1) {
         const selectedAction = ApplicationState.actions[selected]
-        console.warn(
-            'Selected frame not found',
-            selectedAction.execution.nodeData.type,
-            selectedAction.id,
-            view.actionId
-        )
+        console.warn('Selected frame not found', selectedAction.execution.nodeData.type, selectedAction.id)
         view.prevTime = globalTime
         return
     }
@@ -265,47 +284,69 @@ export function updateView(view: ViewState) {
 
     /* -------------------- Apply trails -------------------- */
     const candidateBreakIndex = getBreakIndexOfFrameIndex(mapping, selectedFrameIndex)
-    view.renderers[candidateBreakIndex].render(view.frames[selectedFrameIndex].environment)
+    view.renderers[candidateBreakIndex].render(view.frames[selectedFrameIndex])
 
-    // Update
-    for (let i = 0; i < view.trails.length; i++) {
-        const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
-        const trails = view.trails[i]
+    const totalTime = selectedFrameIndex + selectedFrameAmount
 
-        if (i < selectedFrameIndex) {
-            trails.updateTime(1, view.renderers[breakIndex])
-        } else if (i > selectedFrameIndex) {
-            // TODO: Why?
-            // trails.updateTime(0, this.renderer)
-        } else {
-            trails.updateTime(selectedFrameAmount, view.renderers[breakIndex])
+    for (let k = 0; k < 2; k++) {
+        // Post-update pass for each trail group
+        for (let i = 0; i < view.trails.length; i++) {
+            if (k == 0 && view.trails[i] instanceof ReturnAnimation) continue
+            if (k == 1 && !(view.trails[i] instanceof ReturnAnimation)) continue
+
+            const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
+            const trails = view.trails[i]
+
+            // Has already occurred
+            if (i < selectedFrameIndex) {
+                trails.updateTime(1, view.renderers[breakIndex], totalTime)
+            }
         }
-    }
 
-    // Post update
-    for (let i = 0; i < view.trails.length; i++) {
-        const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
-        const trailGroup = view.trails[i]
+        // Update pass for each trail group
+        for (let i = 0; i < view.trails.length; i++) {
+            if (k == 0 && view.trails[i] instanceof ReturnAnimation) continue
+            if (k == 1 && !(view.trails[i] instanceof ReturnAnimation)) continue
 
-        // Occurred before the current frame
-        if (i < selectedFrameIndex) {
-            trailGroup.postUpdate(1, view.renderers[breakIndex])
+            const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
+            const trails = view.trails[i]
+
+            if (i == selectedFrameIndex) {
+                trails.updateTime(selectedFrameAmount, view.renderers[breakIndex], totalTime)
+            }
         }
-        // Occurred after the current frame
-        else if (i > selectedFrameIndex) {
-            trailGroup.postUpdate(0, view.renderers[breakIndex])
-        }
-        // Occurred at the current frame
-        else {
-            trailGroup.postUpdate(selectedFrameAmount, view.renderers[breakIndex])
-        }
-    }
 
-    for (let i = 0; i < view.trails.length; i++) {
-        const trails = view.trails[i]
-        const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
+        // Post update
+        for (let i = 0; i < view.trails.length; i++) {
+            if (k == 0 && view.trails[i] instanceof ReturnAnimation) continue
+            if (k == 1 && !(view.trails[i] instanceof ReturnAnimation)) continue
 
-        trails.trails!.forEach((trail) => trail.renderer.alwaysUpdate(view.renderers[breakIndex]))
+            const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
+            const trailGroup = view.trails[i]
+
+            // Occurred before the current frame
+            if (i < selectedFrameIndex) {
+                trailGroup.postUpdate(1, view.renderers[breakIndex], totalTime)
+            }
+            // Occurred after the current frame
+            else if (i > selectedFrameIndex) {
+                trailGroup.postUpdate(0, view.renderers[breakIndex], totalTime)
+            }
+            // Occurred at the current frame
+            else {
+                trailGroup.postUpdate(selectedFrameAmount, view.renderers[breakIndex], totalTime)
+            }
+        }
+
+        for (let i = 0; i < view.trails.length; i++) {
+            if (k == 0 && view.trails[i] instanceof ReturnAnimation) continue
+            if (k == 1 && !(view.trails[i] instanceof ReturnAnimation)) continue
+
+            const trails = view.trails[i]
+            const breakIndex = getBreakIndexOfFrameIndex(mapping, i)
+
+            trails.trails!.forEach((trail) => trail.renderer.alwaysUpdate(view.renderers[breakIndex]))
+        }
     }
 
     // /* ----------- Update position of containers ------------ */
@@ -390,4 +431,66 @@ export function syncViewFrames(view: ViewState) {
             mapping.breakElements[i].style.top = `${actionToBreakOnBbox.bottom + 20}px`
         }
     }
+}
+
+export function updateScopeContainerPositions(
+    id: string,
+    offset: { x: number; y: number },
+    relativeTo: HTMLElement | null
+): HTMLElement[] {
+    const childrenElements: HTMLElement[] = []
+
+    // Update self
+    let x = 0
+    let y = 0
+
+    const action = ApplicationState.actions[id]
+    const scopeContainer = ApplicationState.visualization.view!.scopeContainers[id]
+    const containerBbox = ApplicationState.visualization.view!.container.getBoundingClientRect()
+    const abyss = getConsumedAbyss(id)
+    if (abyss != null) {
+        scopeContainer.classList.add('consumed')
+    } else {
+        scopeContainer.classList.remove('consumed')
+    }
+
+    if (relativeTo != null) {
+        const parentBbox = relativeTo.getBoundingClientRect()
+        x = parentBbox.x + parentBbox.width + offset.x - containerBbox.x
+        y = parentBbox.y + offset.y - containerBbox.y
+
+        if (relativeTo.classList.contains('consumed') && abyss == null) {
+            x += 50
+        }
+    } else {
+        x = offset.x
+        y = offset.y
+    }
+
+    scopeContainer.style.left = `${x}px`
+    scopeContainer.style.top = `${y}px`
+
+    childrenElements.push(scopeContainer)
+
+    // Update children
+    const rOffset = { x: 50, y: 0 }
+
+    for (const vertexId of action.spatialVertices) {
+        const childElements: HTMLElement[] = []
+        if (abyss != null) {
+            rOffset.x = 0
+        }
+
+        childElements.push(...updateScopeContainerPositions(vertexId, { ...rOffset }, scopeContainer))
+
+        // If hit something
+        if (childElements.length > 0) {
+            const bbox = getAccumulatedBoundingBoxForElements(childElements)
+            rOffset.y += bbox.height + 20
+        }
+
+        childrenElements.push(...childElements)
+    }
+
+    return childrenElements
 }

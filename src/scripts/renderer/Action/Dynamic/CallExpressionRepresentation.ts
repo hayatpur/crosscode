@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { ActionState } from '../Action'
+import { getTotalDuration } from '../Mapping/ControlFlowCursor'
 import { Representation } from './Representation'
 
 export class CallExpressionRepresentation extends Representation {
@@ -24,29 +25,52 @@ export class CallExpressionRepresentation extends Representation {
         })
     }
 
-    updateProxyVisual() {
-        super.updateProxyVisual()
-    }
-
     createSteps(): void {
+        const action = ApplicationState.actions[this.actionId]
+
+        const selection = ApplicationState.visualization.selections['main']
+        const globalTime = selection.targetGlobalTime
+        const timeDelta = {
+            start: globalTime - action.globalTimeOffset,
+            end: globalTime - action.globalTimeOffset - getTotalDuration(action.id),
+        }
+
         super.createSteps()
 
-        const action = ApplicationState.actions[this.actionId]
+        // If was before the global time, then seek to the start of the function call
+        if (timeDelta.start < 0) {
+            setTimeout(() => {
+                const child = ApplicationState.actions[action.vertices[1]]
+                const childVertex = ApplicationState.actions[child.vertices[0]]
+                selection.targetGlobalTime = childVertex.globalTimeOffset + getTotalDuration(childVertex.id)
+            }, 0)
+        } else if (timeDelta.end >= 0) {
+            setTimeout(() => {
+                // const child = ApplicationState.actions[action.vertices[1]]
+                const parent = ApplicationState.actions[action.parentID!]
+                selection.targetGlobalTime = parent.globalTimeOffset + getTotalDuration(parent.id)
+                selection._globalTime = parent.globalTimeOffset + getTotalDuration(parent.id)
+            }, 100)
+        }
+
         const proxy = action.proxy
 
-        const [argElement, bodyElement] = Array.from(proxy.element.children).filter(
-            (child) =>
-                child.classList.contains('action-proxy-container') ||
-                child.classList.contains('action-proxy-placeholder')
-        )
+        // const [argElement, bodyElement] = Array.from(proxy.element.children).filter(
+        //     (child) =>
+        //         child.classList.contains('action-proxy-container') ||
+        //         child.classList.contains('action-proxy-placeholder')
+        // )
+
+        // const spatialParent = ApplicationState.actions[action.spatialParentID!]
+        // spatialParent.representation.minimize()
 
         // Remove all action-proxy children
-        argElement.remove()
-        bodyElement.remove()
+        // argElement.remove()
+        // bodyElement.remove()
 
         // Add call expression label to placeholder
         // TODO
 
-        action.proxy.element.append(bodyElement)
+        // action.proxy.element.append(bodyElement)
     }
 }

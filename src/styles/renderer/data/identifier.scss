@@ -30,3 +30,11 @@
     color: var(--s-color-3);
     opacity: 0.7;
 }
+
+.identifier.identifier-write {
+    color: var(--s-color-0-3);
+}
+
+.identifier.identifier-read {
+    color: #ff9431;
+}

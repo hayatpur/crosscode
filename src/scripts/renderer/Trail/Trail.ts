@@ -15,21 +15,19 @@ export class Trail {
     state: TrailState
     renderer: TrailRenderer
     execution: ExecutionGraph | ExecutionNode
-    originId: string
 
     time: number
 
-    constructor(state: TrailState, execution: ExecutionGraph | ExecutionNode, originId: string, time: number) {
+    constructor(state: TrailState, execution: ExecutionGraph | ExecutionNode, time: number) {
         this.state = state
         this.execution = execution
-        this.originId = originId
         this.renderer = createTrailRenderer(this)
         this.time = time
     }
 
     /* ----------------------- Update ----------------------- */
-    update(amount: number, environment: EnvironmentRenderer) {
-        this.renderer.update(amount, environment)
+    update(amount: number, environment: EnvironmentRenderer, totalTime: number) {
+        this.renderer.update(amount, environment, totalTime)
     }
 
     /* ----------------------- Destroy ---------------------- */

@@ -100,6 +100,8 @@ export class IfStatementRepresentation extends Representation {
             rows[3].remove()
         }
 
+        this.shouldHover = false
+
         this.rows = rows
     }
 
@@ -136,7 +138,7 @@ export class IfStatementRepresentation extends Representation {
         const action = ApplicationState.actions[this.actionId]
 
         action.proxy.container.addEventListener('click', (e) => {
-            let success = this.clicked()
+            let success = this.clicked(e)
 
             if (success) {
                 e.preventDefault()
@@ -146,32 +148,26 @@ export class IfStatementRepresentation extends Representation {
     }
 
     select() {
+        super.select()
+
         const action = ApplicationState.actions[this.actionId]
         action.proxy.container.classList.add('is-focused')
     }
 
     deselect() {
+        super.deselect()
+
         const action = ApplicationState.actions[this.actionId]
         action.proxy.container.classList.remove('is-focused')
     }
-
-    // focus() {
-    //     const action = ApplicationState.actions[this.actionId]
-    //     action.proxy.container.classList.add('is-focused')
-
-    //     const focus = ApplicationState.visualization.focus
-    //     assert(focus != null, 'Focus is null')
-
-    //     clearExistingFocus()
-
-    //     focus.focusedActions.push(action.id)
-    // }
 
     destroySteps(): void {
         super.destroySteps()
 
         // this.ifLabelElement.remove()
-        this.elseLabelElement.remove()
+        this.elseLabelElement?.remove()
+
+        this.shouldHover = true
 
         this.rows.forEach((row) => row.remove())
         this.rows = []

@@ -29,7 +29,6 @@ export function VariableDeclarator(
         ...context,
         outputRegister: register,
     })
-
     addVertex(graph, init, { nodeData: getNodeData(ast.init, 'Value') })
 
     // Allocate a place for variable that *points* to the RHS

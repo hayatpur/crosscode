@@ -11,6 +11,7 @@ import { Compiler, getNodeData } from '../Compiler'
 export enum ScopeType {
     None = 'None',
     Default = 'Default',
+    Global = 'Global',
     Hard = 'Hard',
 }
 

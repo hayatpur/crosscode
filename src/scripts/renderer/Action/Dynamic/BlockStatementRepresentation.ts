@@ -9,7 +9,9 @@ export class BlockStatementRepresentation extends Representation {
         super(action)
 
         this.shouldHover = true
-        this.isSelectableGroup = true
+
+        const executionSteps = getExecutionSteps(action.execution)
+        this.isSelectableGroup = !(executionSteps.length == 1 && action.execution.nodeData.preLabel != 'Body')
     }
 
     postCreate(): void {

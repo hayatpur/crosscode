@@ -1,3 +1,4 @@
+import { FrameInfo } from '../../../../../environment/EnvironmentState'
 import { DataRenderer } from '../DataRenderer'
 import { DataState, TransformStyles } from '../DataState'
 
@@ -9,7 +10,7 @@ export class FunctionRenderer extends DataRenderer {
         this.element.classList.add('data-function')
     }
 
-    setState(data: DataState) {
+    setState(data: DataState, frame: FrameInfo) {
         this.element.innerText = 'f'
     }
 }

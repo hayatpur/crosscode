@@ -1,7 +1,9 @@
 import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
+import { assert } from '../../../utilities/generic'
 import { ActionState } from '../Action'
+import { getTotalDuration } from '../Mapping/ControlFlowCursor'
 import { Representation } from './Representation'
 
 export class ReturnStatementRepresentation extends Representation {
@@ -15,6 +17,26 @@ export class ReturnStatementRepresentation extends Representation {
         monaco.editor.colorize(this.returnLabelElement.innerHTML, 'javascript', {}).then((html) => {
             this.returnLabelElement.innerHTML = html
         })
+
+        this.shouldHover = true
+    }
+
+    focus() {
+        const action = ApplicationState.actions[this.actionId]
+
+        // Update time
+        const spatialId = action.spatialParentID
+        assert(spatialId != null, 'Spatial parent ID is null')
+
+        const spatial = ApplicationState.actions[spatialId]
+        assert(spatial.isSpatial, 'Action is not spatial')
+        const controlFlow = spatial.controlFlow
+        assert(controlFlow != null, 'Control flow is null')
+
+        const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionId]
+
+        const child = ApplicationState.actions[action.vertices[0]]
+        selection.targetGlobalTime = child.globalTimeOffset + getTotalDuration(child.id)
     }
 
     postCreate() {

@@ -39,3 +39,32 @@
 .hole {
     position: relative;
 }
+
+.data.temp-move {
+    position: absolute;
+}
+
+.temp-return-animation-node {
+    position: absolute !important;
+}
+
+.trail-return {
+    opacity: 0 !important;
+}
+
+.temp-return-environment .data.data-literal {
+    opacity: 1 !important;
+    color: #000000a1 !important;
+}
+
+.temp-return-environment {
+    opacity: 0.4;
+
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+}
+
+.action-proxy.type-BinaryExpressionEvaluate {
+    background: none !important;
+    box-shadow: none !important;
+}

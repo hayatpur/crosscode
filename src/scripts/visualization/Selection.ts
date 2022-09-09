@@ -30,6 +30,21 @@ export function createSelection(overrides: Partial<SelectionState> = {}, isMain:
         if (e.key == 'ArrowLeft') {
             goToPrevStepSelection(base.id)
         }
+
+        // If pressed right arrow key
+        if (e.key == 'ArrowUp') {
+            // Seek back
+            base.targetGlobalTime = Math.max(0, base.targetGlobalTime - 1)
+        }
+
+        // If pressed left arrow key
+        if (e.key == 'ArrowDown') {
+            // Seek forward
+            base.targetGlobalTime = Math.min(
+                getTotalDuration(ApplicationState.visualization.programId!),
+                base.targetGlobalTime + 1
+            )
+        }
     })
 
     Object.assign(base, overrides)
@@ -40,7 +55,7 @@ export function createSelection(overrides: Partial<SelectionState> = {}, isMain:
 export function updateSelectionTime(selectionId: string) {
     const selection = ApplicationState.visualization.selections[selectionId]
 
-    let newTime = overLerp(selection._globalTime, selection.targetGlobalTime, 0.05, 1)
+    let newTime = overLerp(selection._globalTime, selection.targetGlobalTime, 0.05, 3)
     let different = Math.abs(newTime - selection._globalTime) > 0.0001
     selection._globalTime = newTime
 
@@ -50,7 +65,7 @@ export function updateSelectionTime(selectionId: string) {
 }
 
 export function updateSelectionActions(selection: SelectionState) {
-    const newSelections = getSelections(selection.targetGlobalTime).selectedIds
+    const newSelections = getSelections(selection._globalTime).selectedIds
 
     // Add new
     for (const id of newSelections) {
@@ -87,10 +102,12 @@ export function getSelections(time: number): SelectionInfo {
     let closestAction: string | null = null
     let closestDistance = Infinity
 
+    // console.log('-----')
     for (const [id, action] of Object.entries(ApplicationState.actions)) {
         if (action.representation.isFrame()) {
             if (action.globalTimeOffset < time && time <= action.globalTimeOffset + getTotalDuration(action.id)) {
                 newSelections.add(id)
+                // console.log('Adding', id, clone(ApplicationState.actions[id]))
                 amounts[id] = (time - action.globalTimeOffset) / getTotalDuration(action.id)
             } else {
                 let distances = [
@@ -139,14 +156,14 @@ export function getSelections(time: number): SelectionInfo {
     }
 
     // Add spatial parents
-    for (const id of newSelections) {
-        const action = ApplicationState.actions[id]
-        const spatialParent = ApplicationState.actions[action.spatialParentID!]
-        if (spatialParent.execution.nodeData.type != 'Program') {
-            const spatialParentParent = ApplicationState.actions[spatialParent.parentID!]
-            newSelections.add(spatialParentParent.id)
-        }
-    }
+    // for (const id of newSelections) {
+    //     const action = ApplicationState.actions[id]
+    //     const spatialParent = ApplicationState.actions[action.spatialParentID!]
+    //     if (spatialParent.execution.nodeData.type != 'Program') {
+    //         const spatialParentParent = ApplicationState.actions[spatialParent.parentID!]
+    //         newSelections.add(spatialParentParent.id)
+    //     }
+    // }
 
     return { selectedIds: newSelections, closestId: closestAction, amounts }
 }
@@ -271,4 +288,68 @@ export function goToPrevStepSelection(selectionId: string) {
         const nextAction = ApplicationState.actions[nextActionId]
         selection.targetGlobalTime = nextAction.globalTimeOffset + getTotalDuration(nextActionId)
     }
+}
+
+export function getSpatialActionsPathFromRoot(selectionId = 'main') {
+    const selection = ApplicationState.visualization.selections[selectionId]
+    const program = ApplicationState.actions[ApplicationState.visualization.programId!]
+    const time = selection._globalTime
+
+    const path: string[] = [program.id]
+
+    while (true) {
+        const lastAction = ApplicationState.actions[path[path.length - 1]]
+        const candidates = lastAction.spatialVertices
+
+        let closestCandidate: string | null = null
+        let closestDistance = Infinity
+
+        for (const candidateId of candidates) {
+            const candidate = ApplicationState.actions[candidateId]
+
+            let distances = [
+                Math.abs(candidate.globalTimeOffset - time),
+                Math.abs(candidate.globalTimeOffset + getTotalDuration(candidate.id) - time),
+            ]
+
+            let distance = Math.min(...distances)
+
+            if (distance < closestDistance) {
+                closestCandidate = candidateId
+                closestDistance = distance
+            }
+        }
+
+        if (closestCandidate == null) {
+            break
+        }
+
+        path.push(closestCandidate)
+    }
+
+    // const currentSelections = getSelections(selection._globalTime)
+
+    // const closest = ApplicationState.actions[currentSelections.closestId!]
+    // const closestSpatial = ApplicationState.actions[closest.spatialParentID!]
+
+    // const path = [closestSpatial]
+
+    // let spatialAncestor = (action: ActionState) => {
+    //     if (action.parentID == null) return null
+
+    //     const parent = ApplicationState.actions[action.parentID]
+    //     return ApplicationState.actions[parent.spatialParentID!]
+    // }
+
+    // while (spatialAncestor(path[path.length - 1]) != null) {
+    //     path.push(spatialAncestor(path[path.length - 1])!)
+    // }
+
+    // path.reverse()
+
+    return path
+}
+
+export function destroySelection(selectionState: SelectionState) {
+    selectionState.selectedActionIds.clear()
 }

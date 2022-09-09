@@ -6,7 +6,6 @@ import { createRepresentation } from '../../utilities/action'
 import { createElement, createPathElement, createSVGElement } from '../../utilities/dom'
 import { assert } from '../../utilities/generic'
 import { Ticker } from '../../utilities/Ticker'
-import { createViewState, ViewState } from '../View/View'
 import { getActionLocationInAbyss, getConsumedAbyss } from './Abyss'
 import { Representation } from './Dynamic/Representation'
 import { appendProxyToMapping } from './Mapping/ActionMapping'
@@ -65,10 +64,9 @@ export type ActionState = {
     startTime: number
     endTime: number
 
-    // Only for spatial actions
-    view: ViewState
-
     globalTimeOffset: number
+
+    rayTickId: string | null
 }
 
 /* --------------------- Initializer -------------------- */
@@ -114,6 +112,7 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
         isPinned: false,
         controlFlow: null,
         globalTimeOffset: 0,
+        rayTickId: null,
     }
 
     // Apply overrides
@@ -146,9 +145,6 @@ export function createActionState(overrides: Partial<ActionState> = {}): ActionS
         base.controlFlow = createControlFlowState({
             actionId: id,
         })
-
-        base.view = createViewState({ actionId: id })
-        ApplicationState.visualization.allViewsContainer.appendChild(base.view.container)
     }
 
     return base as ActionState
@@ -198,6 +194,9 @@ export function destroyAction(action: ActionState) {
     destroyActionProxy(action.proxy)
     action.representation.destroy()
     action.element.remove()
+    if (action.rayTickId != null) {
+        Ticker.instance.removeTickFrom(action.rayTickId!)
+    }
 }
 
 export function makeSpatial(actionId: string) {
@@ -248,7 +247,7 @@ export function makeSpatial(actionId: string) {
     action.proxy.container.insertBefore(svg, action.proxy.container.firstChild)
 
     // Update ray
-    Ticker.instance.registerTick(() => {
+    action.rayTickId = Ticker.instance.registerTick(() => {
         updateActionRay(action.id)
     })
 

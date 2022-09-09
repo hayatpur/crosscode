@@ -2,6 +2,8 @@
 /*                       Trail State                      */
 /* ------------------------------------------------------ */
 
+import { AnimationTraceOperator } from '../../execution/execution'
+
 /* --------------------- Definition --------------------- */
 
 export enum TrailType {
@@ -17,4 +19,5 @@ export type TrailState = {
     fromDataIDs?: string[]
     toDataID: string
     type: TrailType
+    operations: AnimationTraceOperator[]
 }

@@ -1,3 +1,5 @@
+import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../execution/primitive/ExecutionNode'
 import { DataState, Transform } from '../renderer/View/Environment/data/DataState'
 import { ScopeType } from '../transpiler/Statements/BlockStatement'
 import { stringHashCode } from '../utilities/string'
@@ -68,6 +70,7 @@ export type EnvironmentState = {
 export type FrameInfo = {
     environment: EnvironmentState
     actionId: string
+    overrideExecution?: ExecutionGraph | ExecutionNode
 }
 
 export function instanceOfEnvironment(environment: any): environment is EnvironmentState {

@@ -1,16 +1,17 @@
+import { FrameInfo } from '../../../../../environment/EnvironmentState'
 import { clone } from '../../../../../utilities/objects'
 import { DataRenderer } from '../DataRenderer'
 import { DataState, TransformStyles } from '../DataState'
 
 export class LiteralRenderer extends DataRenderer {
-    prevRenderStyles: TransformStyles
+    prevRenderStyles!: TransformStyles
 
     constructor() {
         super()
         this.element.classList.add('data-literal')
     }
 
-    setState(data: DataState) {
+    setState(data: DataState, frame: FrameInfo) {
         this.element.innerText = data.value?.toString() ?? 'null'
 
         if (typeof data.value == 'string') {

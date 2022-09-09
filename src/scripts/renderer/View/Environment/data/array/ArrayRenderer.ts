@@ -1,3 +1,6 @@
+import { ApplicationState } from '../../../../../ApplicationState'
+import { FrameInfo } from '../../../../../environment/EnvironmentState'
+import { reads, writes } from '../../../../../execution/execution'
 import { createElement } from '../../../../../utilities/dom'
 import { createDataRenderer } from '../../EnvironmentRenderer'
 import { DataRenderer } from '../DataRenderer'
@@ -31,16 +34,37 @@ export class ArrayRenderer extends DataRenderer {
         this.closingBrace.classList.add('data-array-brace', 'data-array-closing-brace')
         this.closingBrace.innerText = ']'
 
+        // autoAnimate(this.element)
+
         // this.element.append(this.openingBrace, this.closingBrace)
     }
 
-    setState(data: DataState) {
+    findRendererById(id: string): {
+        data: DataRenderer
+        column: HTMLElement
+    } | null {
+        for (const [itemId, item] of Object.entries(this.dataRenderers)) {
+            if (itemId === id) {
+                return { data: item.renderer, column: item.hole.parentElement! }
+            }
+        }
+
+        return null
+    }
+
+    setState(data: DataState, frame: FrameInfo) {
+        const { actionId, overrideExecution } = frame
         const items = data.value as DataState[]
 
+        this.element.innerHTML = ''
         this.element.append(this.openingBrace)
 
         // Hit test
         const hits = new Set()
+
+        const action = ApplicationState.actions[actionId]
+        const ws = writes(overrideExecution ?? action.execution).map((w) => w.id)
+        const rs = reads(overrideExecution ?? action.execution).map((r) => r.id)
 
         // Render data
         for (let i = 0; i < items.length; i++) {
@@ -64,10 +88,22 @@ export class ArrayRenderer extends DataRenderer {
             if (i < items.length - 1) {
                 this.element.append(this.dataRenderers[item.id].comma)
             }
-            this.dataRenderers[item.id].renderer.setState(item)
+            this.dataRenderers[item.id].renderer.setState(item, actionId)
 
             this.dataRenderers[item.id].index.setState(i, this.dataRenderers[item.id].renderer.element, this.element)
             updateIndexClasses(this.dataRenderers[item.id].renderer.element, i, items.length)
+
+            // Update read and writes
+            if (ws.includes(item.id)) {
+                this.dataRenderers[item.id].renderer.element.classList.add('environment-write')
+                this.dataRenderers[item.id].renderer.element.classList.remove('environment-read')
+            } else if (rs.includes(item.id)) {
+                this.dataRenderers[item.id].renderer.element.classList.add('environment-read')
+                this.dataRenderers[item.id].renderer.element.classList.remove('environment-write')
+            } else {
+                this.dataRenderers[item.id].renderer.element.classList.remove('environment-write')
+                this.dataRenderers[item.id].renderer.element.classList.remove('environment-read')
+            }
         }
 
         // Remove data that are no longer in the view

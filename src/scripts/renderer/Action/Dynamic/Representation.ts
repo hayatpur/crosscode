@@ -1,7 +1,17 @@
 import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { EnvironmentState, FrameInfo } from '../../../environment/EnvironmentState'
-import { getExecutionSteps, isPrimitiveByDefault, isTrimmedByDefault } from '../../../utilities/action'
+import { addVertex } from '../../../execution/execution'
+import { createExecutionGraph, ExecutionGraph } from '../../../execution/graph/ExecutionGraph'
+import { ExecutionNode } from '../../../execution/primitive/ExecutionNode'
+import {
+    getExecutionSteps,
+    isBreakableByDefault,
+    isPrimitiveByDefault,
+    isSkippedByDefault,
+    isTrimmedByDefault,
+    queryAction,
+} from '../../../utilities/action'
 import { reflow } from '../../../utilities/dom'
 import { assert } from '../../../utilities/generic'
 import { Keyboard } from '../../../utilities/Keyboard'
@@ -13,13 +23,15 @@ import {
     getTotalLengthOfPathChunks,
     overLerp,
 } from '../../../utilities/math'
-import { clearExistingFocus, isFocused } from '../../../visualization/Focus'
+import { clone } from '../../../utilities/objects'
 import {
     collapseActionIntoAbyss,
     destroyAbyss,
     getAbyssControlFlowPoints,
     getConsumedAbyss,
     getSpatialAbyssControlFlowPoints,
+    isIterationTestInMiddleOfAbyss,
+    updateAbyssSelection,
 } from '../Abyss'
 import { ActionState, createActionState, destroyAction, getActionCoordinates, updateAction } from '../Action'
 import { isSpatialByDefault } from '../Mapping/ActionProxy'
@@ -42,8 +54,15 @@ export class Representation {
     hasEndAnimation: boolean = false
 
     isSelectableGroup = false
+    isSkipped: boolean = false
+    isSelected: boolean = false
+
+    overrideSkipped: boolean = false
+    overrideAggregation: string[] | null = null
 
     dirtyFrames = false
+
+    isBreakable: boolean = false
 
     /**
      * Only class since typescript doesn't have type classes :(
@@ -58,6 +77,9 @@ export class Representation {
         if (action.isSpatial) {
             this.dirtyFrames = true
         }
+
+        this.isSkipped = isSkippedByDefault(action.execution)
+        this.isBreakable = isBreakableByDefault(action.execution)
     }
 
     getPreDuration() {
@@ -131,6 +153,7 @@ export class Representation {
         action.isSpatial ? proxy.container.classList.add('is-spatial') : proxy.container.classList.remove('is-spatial')
         this.isTrimmed ? proxy.element.classList.add('is-trimmed') : proxy.element.classList.remove('is-trimmed')
         this.isPrimitive ? proxy.element.classList.add('is-primitive') : proxy.element.classList.remove('is-primitive')
+        this.isSkipped ? proxy.container.classList.add('is-skipped') : proxy.container.classList.remove('is-skipped')
 
         // Add line break if necessary
         if (action.execution.nodeData.hasLineBreak) {
@@ -138,6 +161,8 @@ export class Representation {
         } else {
             proxy.container.classList.remove('has-line-break')
         }
+
+        proxy.element.setAttribute('title', getTitleFromExecution(action.execution))
 
         /* ------------- If statement representation ------------ */
         if (action.execution.nodeData.preLabel == 'Test') {
@@ -249,40 +274,24 @@ export class Representation {
 
         const action = ApplicationState.actions[this.actionId]
 
-        if (action.execution.nodeData.type == 'Arguments') {
-            return false
-        }
+        // if (action.execution.nodeData.type == 'Arguments') {
+        //     return false
+        // }
 
         return action.vertices.length == 0 && !action.isSpatial
     }
 
     // Get frames should call get frames of each step.
-    getFrames(originId: string): FrameInfo[] {
+    getFrames(): FrameInfo[] {
         const action = ApplicationState.actions[this.actionId]
 
-        if (action.vertices.length > 0 && (!action.isSpatial || action.id == originId)) {
+        if (action.vertices.length > 0) {
             const frames: FrameInfo[] = []
-
-            // if (this.isSelectableGroup) {
-            //     const frame = {
-            //         environment: action.execution.precondition as EnvironmentState,
-            //         actionId: action.id,
-            //     }
-            //     frames.push(frame)
-            // }
 
             for (const stepID of action.vertices) {
                 const step = ApplicationState.actions[stepID]
-                frames.push(...step.representation.getFrames(originId))
+                frames.push(...step.representation.getFrames())
             }
-
-            // if (this.isSelectableGroup) {
-            //     const frame = {
-            //         environment: action.execution.postcondition as EnvironmentState,
-            //         actionId: action.id,
-            //     }
-            //     frames.push(frame)
-            // }
 
             return frames
         } else {
@@ -290,8 +299,23 @@ export class Representation {
                 return []
             }
 
-            if (action.execution.nodeData.preLabel == 'Value') {
+            if (this.overrideSkipped) {
+                console.log('Being skipped...')
+                return []
+            } else if (this.overrideAggregation != null) {
+                console.log('Being aggregated...')
+                return [
+                    {
+                        environment: action.execution.postcondition as EnvironmentState,
+                        actionId: action.id,
+                        overrideExecution: aggregateExecutionFromActionIds(this.overrideAggregation),
+                    },
+                ]
+            }
+
+            if (action.execution.nodeData.preLabel == 'Value' && !action.isShowingSteps) {
                 const parent = ApplicationState.actions[action.parentID!]
+
                 if (parent.execution.nodeData.type == 'VariableDeclaration') {
                     return [{ environment: parent.execution.postcondition as EnvironmentState, actionId: action.id }]
                 }
@@ -310,12 +334,39 @@ export class Representation {
         }
 
         const action = ApplicationState.actions[this.actionId]
+
         let bbox = action.proxy.element.getBoundingClientRect()
+
         const abyssInfo = getConsumedAbyss(action.id)
 
         if (abyssInfo != null && !action.isSpatial) {
-            // Find the abyss that it's in
+            // Find the abyss that it's in, and return that position
             const abyss = ApplicationState.abysses[abyssInfo.id]
+
+            const parent = ApplicationState.actions[action.parentID!]
+
+            if (parent.execution.nodeData.type == 'ForStatement') {
+                // The first test should get skipped
+                if (action.execution.nodeData.preLabel == 'Test' && parent.vertices[1] == action.id) {
+                    return null
+                }
+
+                // Any tests in the 'middle' of a consumed abyss should be skipped
+                if (!abyss.expanded && isIterationTestInMiddleOfAbyss(abyss, abyssInfo.index!, action.id)) {
+                    return null
+                }
+
+                // If body statement, skip
+                if (action.execution.nodeData.preLabel == 'Body') {
+                    return null
+                }
+
+                // If update statement, skip
+                if (action.execution.nodeData.preLabel == 'Update') {
+                    return null
+                }
+            }
+
             return getAbyssControlFlowPoints(abyss, abyssInfo.index!)
         }
 
@@ -323,6 +374,7 @@ export class Representation {
             bbox = action.placeholder.getBoundingClientRect()
         } else if (action.isSpatial && abyssInfo != null) {
             const abyss = ApplicationState.abysses[abyssInfo.id]
+
             return getSpatialAbyssControlFlowPoints(abyss, action.id)
         }
 
@@ -331,6 +383,13 @@ export class Representation {
         }
 
         const offset = Math.min(2, bbox.height * 0.1)
+
+        // if (action.execution.nodeData.type == 'FunctionCall' && referencePoint.x != 0) {
+        //     return [
+        //         [referencePoint.x, bbox.y + offset],
+        //         [referencePoint.x, bbox.y + bbox.height - offset],
+        //     ]
+        // }
 
         return [
             [bbox.x + bbox.width / 2, bbox.y + offset],
@@ -342,7 +401,7 @@ export class Representation {
         const action = ApplicationState.actions[this.actionId]
         let cache = ''
 
-        if (action.vertices.length > 0 && (!action.isSpatial || action.id == originId)) {
+        if (action.vertices.length > 0) {
             if (action.representation.isSelectableGroup) {
                 let points = this.getControlFlowPoints(false)
                 cache += JSON.stringify(points)
@@ -366,6 +425,7 @@ export class Representation {
     updateControlFlow(controlFlow: ControlFlowState, originId: string, isSpatiallyConsumed: boolean = false) {
         const action = ApplicationState.actions[this.actionId]
 
+        /* ----------------- Spatially consumed ----------------- */
         if (action.vertices.length > 0 && !action.isSpatial && isSpatiallyConsumed) {
             // Start
             let [x, y] = getLastPointInPathChunks(controlFlow.flowPathChunks)!
@@ -411,14 +471,14 @@ export class Representation {
             return
         }
 
+        /* ----------------- Not spatially consumed ----------------- */
+        const consumed = getConsumedAbyss(action.id)
+
         if (action.vertices.length > 0 && (!action.isSpatial || action.id == originId)) {
             let starts: number[] = []
             let ends: number[] = []
 
-            const consumed = getConsumedAbyss(action.id)
-
             // Start for selectable groups
-            // Create discontinuous path
             if (
                 (consumed == null && action.execution.nodeData.type == 'ForStatement') ||
                 action.execution.nodeData.type == 'BlockStatement'
@@ -433,6 +493,7 @@ export class Representation {
 
                 createNewPathChunk(controlFlow)
             } else if (action.representation.isSelectableGroup) {
+                // Get the start of this group
                 let start = this.getControlFlowPoints(false)![0]
                 const containerBbox = controlFlow.container!.getBoundingClientRect()
 
@@ -447,6 +508,8 @@ export class Representation {
             for (let s = 0; s < action.vertices.length; s++) {
                 const stepID = action.vertices[s]
                 const step = ApplicationState.actions[stepID]
+                step.representation.overrideSkipped = false
+                step.representation.overrideAggregation = null
 
                 if (consumed == null && action.execution.nodeData.type == 'ForStatement' && s == 0) {
                     const containerBbox = controlFlow.container!.getBoundingClientRect()
@@ -457,12 +520,6 @@ export class Representation {
                         stepBbox.x + stepBbox.width / 2 - containerBbox.x,
                         bbox.y - containerBbox.y
                     )
-                } else if (
-                    consumed == null &&
-                    action.execution.nodeData.type == 'ForStatement' &&
-                    s > 2 &&
-                    step.execution.nodeData.type == 'Update'
-                ) {
                 }
 
                 // Add start point to path
@@ -492,19 +549,159 @@ export class Representation {
                     }
                 }
 
+                if (consumed == null && action.execution.nodeData.type == 'CallExpression' && s == 1) {
+                    const firstStep = ApplicationState.actions[action.vertices[0]]
+                    firstStep.startTime = step.startTime
+                    firstStep.endTime = step.startTime + (step.endTime - step.startTime) / 4
+
+                    step.startTime = firstStep.endTime
+                }
+
+                if (consumed == null && action.execution.nodeData.type == 'BinaryExpression') {
+                    if (s == 0 || s == 1) {
+                        createNewPathChunk(controlFlow)
+                    }
+                }
+
+                if (consumed == null && action.execution.nodeData.type == 'VariableDeclaration' && s == 1) {
+                    const firstStep = ApplicationState.actions[action.vertices[0]]
+
+                    if (firstStep.isShowingSteps) {
+                        if (firstStep.execution.nodeData.type == 'BinaryExpression') {
+                            let firstStepLastChild =
+                                ApplicationState.actions[firstStep.vertices[firstStep.vertices.length - 1]]
+
+                            step.startTime =
+                                firstStepLastChild.endTime - (1 * (firstStep.endTime - firstStep.startTime)) / 4
+                            step.endTime = firstStepLastChild.endTime
+
+                            firstStepLastChild.endTime = step.startTime
+                            firstStep.endTime = step.startTime
+                        } else if (firstStep.execution.nodeData.type == 'CallExpression') {
+                            step.startTime = firstStep.startTime + (3 * (firstStep.endTime - firstStep.startTime)) / 4
+                            step.endTime = firstStep.endTime
+
+                            firstStep.endTime = firstStep.startTime
+                        }
+                    } else {
+                        step.startTime = firstStep.endTime
+                        step.endTime = firstStep.endTime
+                    }
+                }
+
+                if (stepConsumed != null && action.execution.nodeData.type == 'ForStatement') {
+                    // If test statement and s == 1 then skip
+                    const prev = ApplicationState.actions[action.vertices[s - 1]]
+                    const abyss = ApplicationState.abysses[stepConsumed.id]
+
+                    // Only the first test should get skipped
+                    if (s == 1 && step.execution.nodeData.preLabel == 'Test') {
+                        step.startTime = prev.endTime
+                        step.endTime = prev.endTime
+                        step.representation.overrideSkipped = true
+                    }
+
+                    if (
+                        !abyss.expanded &&
+                        step.execution.nodeData.preLabel == 'Test' &&
+                        isIterationTestInMiddleOfAbyss(
+                            ApplicationState.abysses[stepConsumed.id],
+                            stepConsumed.index!,
+                            step.id
+                        )
+                    ) {
+                        step.startTime = prev.endTime
+                        step.endTime = prev.endTime
+                        step.representation.overrideSkipped = true
+                    }
+
+                    if (step.execution.nodeData.preLabel == 'Test' && !step.representation.overrideSkipped) {
+                        // Is a test statement that hasn't been skipped
+                        // TODO: Also do variable declarations
+
+                        let aggregation: string[] | null = null
+
+                        if (abyss.startIndex == stepConsumed.index || abyss.expanded) {
+                            // Aggregate next three steps
+                            aggregation = [action.vertices[s], action.vertices[s + 1], action.vertices[s + 2]]
+                        } else if (abyss.startIndex + abyss.numItems - 3 == stepConsumed.index) {
+                            // Aggregate next three steps
+                            aggregation = [action.vertices[s], action.vertices[s + 1], action.vertices[s + 2]]
+                        } else {
+                            // In the middle
+                            aggregation = []
+                            for (let p = s; p < abyss.startIndex + abyss.numItems - 3; p++) {
+                                aggregation.push(action.vertices[p])
+                            }
+                        }
+
+                        step.representation.overrideAggregation = aggregation
+                    }
+
+                    // If body statement, skip
+                    if (step.execution.nodeData.preLabel == 'Body') {
+                        step.startTime = prev.endTime
+                        step.endTime = prev.endTime
+                        step.representation.overrideSkipped = true
+                    }
+
+                    // If update statement, skip
+                    if (step.execution.nodeData.preLabel == 'Update') {
+                        step.startTime = prev.endTime
+                        step.endTime = prev.endTime
+                        step.representation.overrideSkipped = true
+                    }
+                }
+
                 starts.push(step.startTime)
                 ends.push(step.endTime)
             }
 
             // End for selectable groups
             if (action.representation.isSelectableGroup) {
-                let end = this.getControlFlowPoints(false)!.at(-1)!
+                const lastPoint = getLastPointInPathChunks(controlFlow.flowPathChunks)!
                 const containerBbox = controlFlow.container!.getBoundingClientRect()
+
+                let end = this.getControlFlowPoints(false, {
+                    x: lastPoint[0] + containerBbox.x,
+                    y: lastPoint[1] + containerBbox.y,
+                })!.at(-1)!
+
                 end[0] -= containerBbox.x
                 end[1] -= containerBbox.y
 
+                let returnAnimation: ActionState | null = null
+                let returnAnimationParent: ActionState | null = null
+
+                if (consumed == null && action.execution.nodeData.type == 'FunctionCall') {
+                    const returnStep = queryAction(action, (step) => step.execution.nodeData.type == 'ReturnStatement')!
+                    returnAnimation = ApplicationState.actions[returnStep.vertices[1]]
+                    returnAnimation.startTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
+
+                    returnAnimationParent = returnStep
+                }
+
                 addPointToPathChunks(controlFlow.flowPathChunks, end[0], end[1])
+
+                if (consumed == null && action.execution.nodeData.type == 'FunctionCall') {
+                    if (action.minimized) {
+                        addPointToPathChunks(controlFlow.flowPathChunks, end[0], end[1] + 4)
+                        addPointToPathChunks(controlFlow.flowPathChunks, end[0] - 15, end[1] + 4)
+                        addPointToPathChunks(controlFlow.flowPathChunks, end[0] - 15, end[1] + 2)
+                    } else {
+                        addPointToPathChunks(controlFlow.flowPathChunks, end[0], end[1] + 8)
+                        addPointToPathChunks(controlFlow.flowPathChunks, end[0] - 15, end[1] + 8)
+                        addPointToPathChunks(controlFlow.flowPathChunks, end[0] - 15, end[1] + 2)
+                    }
+                }
+
+                if (returnAnimation != null) {
+                    returnAnimation.endTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
+                    returnAnimationParent!.endTime = returnAnimation.endTime
+                }
+
                 action.endTime = getTotalLengthOfPathChunks(controlFlow.flowPathChunks)
+
                 ends.push(action.endTime)
             }
 
@@ -514,6 +711,11 @@ export class Representation {
             if (starts.length > 0 && ends.length > 0) {
                 action.startTime = starts[0]
                 action.endTime = ends[ends.length - 1]
+
+                // if (action.isSpatial) {
+                //     console.log('Assigning start time ...', action.startTime, action.id)
+                //     console.log(ApplicationState.actions)
+                // }
             }
         } else {
             let points = null
@@ -683,11 +885,27 @@ export class Representation {
     select() {
         const action = ApplicationState.actions[this.actionId]
         action.proxy.element.classList.add('is-focused')
+        action.element.classList.add('is-focused')
+        this.isSelected = true
+
+        // If action is consumed, update consumed select()
+        const abyssInfo = getConsumedAbyss(this.actionId)
+        if (abyssInfo) {
+            updateAbyssSelection(abyssInfo.id)
+        }
     }
 
     deselect() {
         const action = ApplicationState.actions[this.actionId]
         action.proxy.element.classList.remove('is-focused')
+        action.element.classList.remove('is-focused')
+        this.isSelected = false
+
+        // If action is consumed, update consumed select()
+        const abyssInfo = getConsumedAbyss(this.actionId)
+        if (abyssInfo) {
+            updateAbyssSelection(abyssInfo.id)
+        }
     }
 
     consume() {
@@ -706,13 +924,6 @@ export class Representation {
 
     focus() {
         const action = ApplicationState.actions[this.actionId]
-        // action.proxy.element.classList.add('is-focused')
-
-        // const focus = ApplicationState.visualization.focus
-        // assert(focus != null, 'Focus is null')
-
-        // clearExistingFocus()
-        // focus.focusedActions.push(action.id)
 
         // Update time
         const spatialId = action.spatialParentID
@@ -757,7 +968,7 @@ export class Representation {
         }
     }
 
-    clicked(): boolean {
+    clicked(e: MouseEvent): boolean {
         const action = ApplicationState.actions[this.actionId]
 
         if (Keyboard.instance.isPressed('Alt')) {
@@ -766,7 +977,7 @@ export class Representation {
                 collapseActionIntoAbyss(action.id)
                 return true
             }
-        } else if (Keyboard.instance.isPressed('Control')) {
+        } else if (e.ctrlKey || e.metaKey) {
             if (
                 (action.isSpatial && !(action.execution.nodeData.type == 'Program') && action.isShowingSteps) ||
                 this.ignoreStepClicks
@@ -778,11 +989,7 @@ export class Representation {
             return true
         } else if (action.proxy.isHovering) {
             // Pointer
-            if (isFocused(action.id)) {
-                clearExistingFocus()
-            } else {
-                action.representation.focus()
-            }
+            action.representation.focus()
             return true
         }
 
@@ -821,8 +1028,7 @@ export class Representation {
         const action = ApplicationState.actions[this.actionId]
 
         action.proxy.element.addEventListener('click', (e) => {
-            console.log('Clicked', action.execution.nodeData.type)
-            let success = this.clicked()
+            let success = this.clicked(e)
 
             if (success) {
                 e.preventDefault()
@@ -836,7 +1042,9 @@ export class Representation {
         this.setupHoverListener()
     }
 
-    destroy() {}
+    destroy() {
+        const action = ApplicationState.actions[this.actionId]
+    }
 }
 
 export function getPrincipleBbox(action: ActionState) {
@@ -854,4 +1062,34 @@ export function getPrincipleBbox(action: ActionState) {
     }
 
     return bbox
+}
+
+export function getTitleFromExecution(execution: ExecutionGraph | ExecutionNode) {
+    let name = execution.nodeData.type ?? ''
+    name = name.replace(/([A-Z])/g, ' $1').trim()
+
+    // if (
+    //     execution.nodeData.preLabel != null &&
+    //     execution.nodeData.preLabel != 'Value' &&
+    //     execution.nodeData.preLabel != 'Program'
+    // ) {
+    //     let preName = execution.nodeData.preLabel
+    //     preName = preName.replace(/([A-Z])/g, ' $1').trim()
+    //     name = `${preName} > ${name}`
+    // }
+
+    return name
+}
+
+export function aggregateExecutionFromActionIds(actionIds: string[]) {
+    const actions = actionIds.map((id) => ApplicationState.actions[id])
+
+    const graph = createExecutionGraph(actions[0].execution.nodeData)
+    graph.precondition = clone(actions[0].execution.precondition)
+    for (const action of actions) {
+        addVertex(graph, action.execution, { nodeData: action.execution.nodeData })
+    }
+    graph.postcondition = clone(actions[actions.length - 1].execution.postcondition)
+
+    return graph
 }

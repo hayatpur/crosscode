@@ -1,3 +1,4 @@
+import { FrameInfo } from '../../../../../environment/EnvironmentState'
 import { createDataRenderer } from '../../EnvironmentRenderer'
 import { DataRenderer } from '../DataRenderer'
 import { DataState } from '../DataState'
@@ -15,9 +16,9 @@ export class ObjectItemRenderer {
         this.keyRenderer.classList.add('data-object-item-key')
     }
 
-    setState(key: string, value: DataState) {
+    setState(key: string, value: DataState, frame: FrameInfo) {
         this.dataRenderer = createDataRenderer(value)
-        this.dataRenderer.setState(value)
+        this.dataRenderer.setState(value, frame)
 
         this.keyRenderer.innerText = key
 

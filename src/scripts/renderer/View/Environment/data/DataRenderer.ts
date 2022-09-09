@@ -1,3 +1,4 @@
+import { FrameInfo } from '../../../../environment/EnvironmentState'
 import { DataState } from './DataState'
 
 export class DataRenderer {
@@ -11,7 +12,7 @@ export class DataRenderer {
         this.element.classList.add('data')
     }
 
-    setState(data: DataState) {
+    setState(data: DataState, frame: FrameInfo) {
         console.warn('No fallback for', data)
     }
 

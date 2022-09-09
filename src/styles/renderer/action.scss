@@ -131,7 +131,6 @@
 }
 
 .action-proxy.type-VariableDeclaration {
-    flex-direction: row-reverse;
     box-shadow: none !important;
 }
 
@@ -208,7 +207,7 @@
 }
 
 .action-proxy-for-label {
-    width: 25px;
+    width: 22px;
     transition: 0.2s;
     height: 14px;
 }
@@ -229,6 +228,20 @@
     min-width: 9px;
     padding: 2px;
     font-size: 14px;
+}
+
+.action-proxy.is-primitive {
+    font-family: var(--code-font-family);
+    justify-content: center;
+    align-items: center;
+    min-width: 9px;
+    padding: 2px;
+    font-size: 14px;
+    background: var(--color-2);
+}
+
+.action-proxy.type-Arguments {
+    width: fit-content !important;
 }
 
 .action-proxy.is-trimmed {
@@ -358,9 +371,9 @@
     box-shadow: none !important;
 }
 
-.action-proxy.type-BinaryExpression.is-showing-steps {
-    box-shadow: none !important;
-}
+// .action-proxy.type-BinaryExpression.is-showing-steps {
+//     box-shadow: none !important;
+// }
 
 .action-proxy.frameless {
     box-shadow: none !important;
@@ -381,6 +394,7 @@ svg.control-flow-svg {
     top: 0px;
     left: 0px;
     pointer-events: none;
+    overflow: visible;
 }
 
 svg.control-flow-svg.control-flow-svg-overlay {
@@ -484,8 +498,8 @@ svg.control-flow-svg.control-flow-svg-overlay {
 /* ----------------------- Trails ----------------------- */
 .action-mapping-connection {
     fill: #0000;
-    stroke: #00000024;
-    stroke-width: 1px;
+    stroke: #00000017;
+    stroke-width: 5px;
     stroke-linecap: round;
 }
 
@@ -507,6 +521,12 @@ path.action-mapping-connection.hidden {
     white-space: pre;
     font-weight: 400;
     font-size: 14px;
+}
+
+.action-proxy-abyss.is-spatial.action-proxy-abyss-label {
+    position: absolute;
+    top: -15px;
+    left: 4px;
 }
 
 .action-proxy.out-of-focus {
@@ -680,9 +700,27 @@ svg.ray-svg {
     }
 }
 
-.action-proxy.type-VariableDeclaration > .action-proxy-container.is-minimized {
-    > .action-proxy.type-Identifier,
-    > .action-proxy.type-Literal {
+.action-proxy-container.is-minimized {
+    > .action-proxy.type-Identifier > span,
+    > .action-proxy.type-Literal > span {
+        opacity: 0 !important;
+    }
+
+    > .action-proxy.type-Identifier {
+        height: 5px !important;
+    }
+}
+
+.action-proxy-code-label.action-proxy-identifier-label {
+    transition: 0.2s;
+}
+
+// .action-proxy-container.is-minimized.has-line-break {
+//     padding: 0px !important;
+// }
+
+.action-proxy-container.is-showing-steps.is-minimized > .action-proxy.type-VariableDeclaration {
+    > .action-proxy-code-label.action-proxy-identifier-label {
         @include action-minimized-mixin();
     }
 }
@@ -707,6 +745,8 @@ svg.ray-svg {
         border-left: 1px solid #00000030;
         border-radius: 0px 10px;
         margin-left: 6px;
+        padding: 0px;
+        padding-left: 5px;
     }
 }
 
@@ -765,6 +805,15 @@ svg.ray-svg {
 
 .action-proxy-container.is-minimized > .action-proxy.type-BinaryExpression {
     height: 5px !important;
+    box-shadow: none !important;
+
+    > .action-proxy-container.is-minimized > .action-proxy.type-BinaryExpressionEvaluate > span {
+        transform: translateY(-2px);
+    }
+}
+
+.action-proxy.type-BinaryExpressionEvaluate > span {
+    transition: 0.2s;
 }
 
 .action-proxy-if-row:first-child {
@@ -783,6 +832,7 @@ svg.ray-svg {
     .action-proxy-for-iteration {
         margin-left: 0px !important;
         padding: 2px;
+        box-shadow: none !important;
     }
 }
 
@@ -870,7 +920,6 @@ svg.ray-svg {
     margin: 0px 2px;
     opacity: 0.5;
     transition: 0.2s;
-    cursor: pointer;
 }
 
 .action-proxy-abyss.action-proxy-abyss-overflow
@@ -881,7 +930,6 @@ svg.ray-svg {
 
 .action-proxy-abyss-dot:hover {
     opacity: 1;
-    width: 12px;
 }
 
 .action-proxy.is-hovering {
@@ -1034,7 +1082,7 @@ svg.ray-svg {
 
 .action-proxy-container.is-for-loop > .action-proxy-for-label {
     margin-right: 5px;
-    padding-left: 3px;
+    padding-left: 0px;
 }
 
 .action-proxy-container.is-if-statement > .action-proxy-if-label {
@@ -1054,6 +1102,10 @@ svg.ray-svg {
 
 .action-proxy-container.is-for-loop.is-showing-steps.is-focused {
     background: none !important;
+}
+
+.action-proxy-container.is-for-loop.is-showing-steps.is-minimized {
+    box-shadow: none !important;
 }
 
 // .action-proxy-container.is-minimized > .action-proxy.type-BlockStatement {
@@ -1129,10 +1181,16 @@ svg.ray-svg {
 
 .action-proxy-abyss-dot-spatial {
     position: absolute;
+    transition: none;
+    opacity: 1;
 }
 
 .action-proxy-abyss.is-spatial > .action-proxy-abyss-dots-container {
-    background: none !important;
+    background: none;
+}
+
+.action-proxy-abyss.is-spatial > .action-proxy-abyss-dots-container:hover {
+    background: #b5e0ff;
 }
 
 .action-proxy-for-iteration-bottom2 {
@@ -1156,4 +1214,45 @@ svg.ray-svg {
 
 .action-proxy.is-focused.pre-label-Test._Test_true {
     background: #00ff5947 !important;
+}
+
+.action-proxy-container.action-proxy-binary-operator-evaluate {
+    opacity: 0 !important;
+    margin: 0px !important;
+}
+
+.action-proxy-container.action-proxy-binary-operator-evaluate > .action-proxy {
+    min-width: 0px !important;
+    min-height: 0px !important;
+    width: 1px !important;
+}
+
+.action-proxy.type-Arguments.pre-label-Arguments {
+}
+
+.action-proxy-container.is-skipped > .action-proxy {
+    opacity: 0;
+    min-width: 0px !important;
+    min-height: 0px !important;
+    width: 0px !important;
+    height: 0px !important;
+    padding: 0px !important;
+    pointer-events: none !important;
+}
+
+.action-proxy.type-FunctionCall.is-showing-steps {
+    // padding-bottom: 20px !important;
+}
+
+.action:not(.is-showing-steps).is-focused {
+    background: var(--focused-background) !important;
+    box-shadow: 0px 0px 0px 1px var(--s-color-0-2) !important;
+}
+
+.action-proxy-abyss-dot.is-selected {
+    opacity: 1;
+}
+
+.action-proxy-abyss-dots-container:hover {
+    background: var(--s-color-0-2);
 }

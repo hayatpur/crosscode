@@ -1,5 +1,5 @@
 import { ApplicationState } from '../../../ApplicationState'
-import { getAccumulatedBoundingBox } from '../../../utilities/action'
+import { getAccumulatedBoundingBox, queryAction } from '../../../utilities/action'
 import { addPointToPathChunks, getTotalLengthOfPathChunks } from '../../../utilities/math'
 import { getConsumedAbyss, getSpatialAbyssControlFlowPoints } from '../Abyss'
 import { ActionState } from '../Action'
@@ -12,12 +12,25 @@ export class FunctionCallRepresentation extends Representation {
     constructor(action: ActionState) {
         super(action)
 
-        this.shouldHover = true
+        // this.shouldHover = true
         this.isSelectableGroup = true
     }
 
     postCreate() {
         this.createSteps()
+
+        // Keep destructuring the last step until Return is found
+        const action = ApplicationState.actions[this.actionId]
+        const stack = [action]
+        while (queryAction(stack.at(-1)!, (child) => child.execution.nodeData.type == 'ReturnStatement') == null) {
+            const lastStep = stack.at(-1)!
+
+            if (!lastStep.isShowingSteps) {
+                lastStep.representation.createSteps()
+            }
+
+            stack.push(ApplicationState.actions[lastStep.vertices.at(-1)!])
+        }
 
         // const action = ApplicationState.actions[this.actionId]
 
@@ -40,9 +53,15 @@ export class FunctionCallRepresentation extends Representation {
 
         const rOffset = { x: 50, y: 0 }
 
-        // if (getConsumedAbyss(action.id) != null) {
-        //     rOffset.x = 0
-        // }
+        const isConsumed = getConsumedAbyss(action.id)
+
+        if (action.parentID != null) {
+            const parent = ApplicationState.actions[action.parentID]
+
+            // if (getConsumedAbyss(parent.id) != null) {
+            //     rOffset.x += 50
+            // }
+        }
 
         const spatialIDs: string[] = []
 
@@ -51,9 +70,15 @@ export class FunctionCallRepresentation extends Representation {
             const childSpatialIDs: string[] = []
 
             const copy = { ...rOffset }
-            if (getConsumedAbyss(id) != null && getConsumedAbyss(action.id) != null) {
+
+            if (isConsumed != null) {
                 copy.x = 0
             }
+
+            if (action.parentID != null && getConsumedAbyss(action.id)) {
+                copy.x += 20
+            }
+
             childSpatialIDs.push(...vertex.representation.updateSpatialActionProxyPosition(copy))
 
             // If hit something

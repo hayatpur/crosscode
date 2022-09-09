@@ -51,7 +51,10 @@ export function updateControlFlowCursor(controlFlowCursor: ControlFlowCursor) {
         controlFlowCursor.element.classList.remove('out-of-range')
     }
 
-    let { x, y, distanceToEnd, distanceToStart } = getPositionAtControlFlow(controlFlow, localTime[0])!
+    const positionInfo = getPositionAtControlFlow(controlFlow, localTime[0])
+    if (positionInfo == null) return
+
+    let { x, y, distanceToEnd, distanceToStart } = positionInfo
     x -= 3.5
     y -= 3.5
 
@@ -185,7 +188,7 @@ export function getTotalDuration(actionId: string): number {
             const vertex = ApplicationState.actions[action.vertices[i]]
             const delta = vertex.startTime - localEnd
 
-            if (!isNaN(delta)) {
+            if (!isNaN(delta) && !vertex.isSpatial) {
                 duration += delta
             }
 

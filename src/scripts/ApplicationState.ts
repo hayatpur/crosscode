@@ -1,7 +1,6 @@
 import { Editor } from './editor/Editor'
 import { AbyssState } from './renderer/Action/Abyss'
 import { ActionState } from './renderer/Action/Action'
-import { CodeQueryState } from './visualization/query/CodeSelectionQuery'
 import { VisualizationState } from './visualization/Visualization'
 
 export class ApplicationState {
@@ -10,7 +9,7 @@ export class ApplicationState {
     static editor: Editor
 
     // Interaction
-    static currentQuery: CodeQueryState
+    // static currentQuery: CodeQueryState
 
     // Constants
     static proxyHeightMultiplier = 0.4
@@ -19,6 +18,7 @@ export class ApplicationState {
     // Collections
     static actions: { [id: string]: ActionState } = {}
     static abysses: { [id: string]: AbyssState } = {}
+    static traceIndicators: { trace: HTMLElement; source: HTMLElement }[] = []
 
     static Epsilon = 0.001
 }

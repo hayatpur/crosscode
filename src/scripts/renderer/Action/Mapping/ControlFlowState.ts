@@ -122,7 +122,7 @@ export function destroyControlFlow(controlFlow: ControlFlowState) {
     controlFlow.overlayContainer = undefined
 }
 
-export function updateControlFlowState(controlFlow: ControlFlowState) {
+export function updateControlFlowState(controlFlow: ControlFlowState, forceUpdate: boolean = false) {
     assert(
         controlFlow.container != undefined && controlFlow.overlayContainer != undefined,
         'Control flow state is not initialized'
@@ -130,8 +130,9 @@ export function updateControlFlowState(controlFlow: ControlFlowState) {
     const action = ApplicationState.actions[controlFlow.actionId]
 
     // Exit early if no change
+    let wasUpdated = false
     const cached = action.representation.getControlFlowCache(action.id)
-    if (cached != controlFlow.pathCache) {
+    if (cached != controlFlow.pathCache || forceUpdate) {
         // Reset control flow
         resetPathChunks(controlFlow.flowPathChunks)
 
@@ -140,15 +141,19 @@ export function updateControlFlowState(controlFlow: ControlFlowState) {
 
         // Update spatial offsets
         // if (ApplicationState.visualization.programId == action.id) {
+        // console.log(clone(ApplicationState.actions), clone(ApplicationState.visualization.programId))
         updateSpatialOffsets(ApplicationState.visualization.programId as string)
         // }
 
         // Update cache
         controlFlow.pathCache = cached
+        wasUpdated = true
     }
 
     // Update cursor
     updateControlFlowCursor(controlFlow.cursor)
+
+    return wasUpdated
 }
 
 export function updateSpatialOffsets(actionId: string, offset: number = 0) {
@@ -164,12 +169,40 @@ export function updateSpatialOffsets(actionId: string, offset: number = 0) {
             const vertex = ApplicationState.actions[action.vertices[i]]
             const delta = vertex.startTime - localEnd
 
-            if (!isNaN(delta)) {
+            // console.log(
+            //     'Start time',
+            //     vertex.execution.nodeData.type,
+            //     vertex.startTime,
+            //     '...',
+            //     localEnd,
+            //     delta,
+            //     duration,
+            //     offset
+            // )
+
+            // console.log(offset, duration, delta, localEnd)
+            if (!isNaN(delta) && !vertex.isSpatial) {
                 duration += delta
             }
 
-            duration += updateSpatialOffsets(action.vertices[i], offset + duration)
+            // if (i == 0 && action.isSpatial) {
+            //     console.log(
+            //         action.id,
+            //         'adding',
+            //         duration,
+            //         'to',
+            //         offset,
+            //         '\nvertexStart:',
+            //         vertex.startTime,
+            //         'localEnd:',
+            //         localEnd
+            //     )
+            //     console.log(action)
+            // }
+
+            duration += updateSpatialOffsets(vertex.id, offset + duration)
             localEnd = vertex.endTime
+            // console.log('End time', vertex.execution.nodeData.type, localEnd)
         }
 
         const delta = action.endTime - localEnd

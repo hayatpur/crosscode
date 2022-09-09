@@ -1,3 +1,4 @@
+import { FrameInfo } from '../../../../../environment/EnvironmentState'
 import { DataRenderer } from '../DataRenderer'
 import { DataState } from '../DataState'
 import { ObjectItemRenderer } from './ObjectItemRenderer'
@@ -13,7 +14,32 @@ export class ObjectRenderer extends DataRenderer {
         this.element.classList.add('object-renderer')
     }
 
-    setState(data: DataState) {
+    findRendererById(id: string): {
+        data: DataRenderer
+        column: HTMLElement
+    } | null {
+        console.log(id, Object.keys(this.dataRenderers))
+
+        for (const [key, renderer] of Object.entries(this.dataRenderers)) {
+            if (key.split('@')[0] == id) {
+                return { data: renderer.dataRenderer, column: null! }
+            }
+        }
+
+        for (const [containerId, containerRenderer] of Object.entries(this.dataRenderers)) {
+            if (containerRenderer.dataRenderer instanceof ObjectRenderer) {
+                const item = containerRenderer.dataRenderer.findRendererById(id)
+                if (item != null) {
+                    return item
+                }
+            }
+        }
+
+        return null
+    }
+
+    setState(data: DataState, frame: FrameInfo) {
+        const { actionId } = frame
         const obj = data.value as { [id: string]: DataState }
         const hits = new Set()
 
@@ -29,7 +55,7 @@ export class ObjectRenderer extends DataRenderer {
 
             hits.add(storeKey)
             this.element.append(this.dataRenderers[storeKey].element)
-            this.dataRenderers[storeKey].setState(key, value)
+            this.dataRenderers[storeKey].setState(key, value, actionId)
         }
 
         // Remove data that are no longer in the view

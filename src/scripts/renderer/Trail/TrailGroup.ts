@@ -8,6 +8,7 @@ import {
 } from '../../execution/execution'
 import { ExecutionGraph, instanceOfExecutionGraph } from '../../execution/graph/ExecutionGraph'
 import { ExecutionNode } from '../../execution/primitive/ExecutionNode'
+import { clone } from '../../utilities/objects'
 import { instanceOfData } from '../View/Environment/data/DataState'
 import { EnvironmentRenderer, getRelevantFlatData } from '../View/Environment/EnvironmentRenderer'
 import { Trail } from './Trail'
@@ -19,16 +20,14 @@ import { TrailState, TrailType } from './TrailState'
 export class TrailGroup {
     trails: Trail[] | null = []
     execution: ExecutionGraph | ExecutionNode | null
-    originId: string
 
-    constructor(execution: ExecutionGraph | ExecutionNode, originId: string, time: number) {
+    constructor(execution: ExecutionGraph | ExecutionNode, time: number) {
         this.execution = execution
-        this.originId = originId
 
         if (instanceOfExecutionGraph(execution)) {
             const trailStates = getTrail(execution)
             for (const trailState of trailStates) {
-                const trail = new Trail(trailState, execution, originId, time)
+                const trail = new Trail(trailState, execution, time)
                 this.trails!.push(trail)
             }
         } else {
@@ -36,15 +35,15 @@ export class TrailGroup {
         }
     }
 
-    updateTime(amount: number, environment: EnvironmentRenderer) {
+    updateTime(amount: number, environment: EnvironmentRenderer, totalTime: number) {
         this.trails!.forEach((trail) => {
-            trail.update(amount, environment)
+            trail.update(amount, environment, totalTime)
         })
     }
 
-    postUpdate(amount: number, environment: EnvironmentRenderer) {
+    postUpdate(amount: number, environment: EnvironmentRenderer, totalTime: number) {
         this.trails!.forEach((trail) => {
-            trail.renderer.postUpdate(amount, environment)
+            trail.renderer.postUpdate(amount, environment, totalTime)
         })
     }
 
@@ -126,6 +125,17 @@ export function getTrail(execution: ExecutionGraph) {
         trails.push(...trailGroup)
     }
 
+    // Remove duplicates
+    for (let i = trails.length - 1; i >= 0; i--) {
+        const s = JSON.stringify(trails[i])
+        for (let j = i - 1; j >= 0; j--) {
+            if (JSON.stringify(trails[j]) === s) {
+                trails.splice(i, 1)
+                break
+            }
+        }
+    }
+
     return trails
 }
 
@@ -145,7 +155,7 @@ export function convertEndOperationsAndLeavesToTrails(
         AnimationTraceOperatorType.CreateArray,
         AnimationTraceOperatorType.CreateLiteral,
         AnimationTraceOperatorType.CreateReference,
-        AnimationTraceOperatorType.CreateVariable,
+        // AnimationTraceOperatorType.CreateVariable,
     ]
 
     let effects: TrailState[] = []
@@ -163,6 +173,7 @@ export function convertEndOperationsAndLeavesToTrails(
                 type: partial ? TrailType.PartialMove : TrailType.Move,
                 fromDataIDs: [leaf.value.id],
                 toDataID: dataID,
+                operations: [op],
             })
         }
     }
@@ -172,6 +183,7 @@ export function convertEndOperationsAndLeavesToTrails(
             type: TrailType.PartialCreate,
             fromDataIDs: leaves.map((leaf) => leaf.value?.id),
             toDataID: dataID,
+            operations: clone(endOperations),
         })
     }
 
@@ -184,6 +196,7 @@ export function convertEndOperationsAndLeavesToTrails(
                 creates.push({
                     type: TrailType.Create,
                     toDataID: dataID,
+                    operations: [op],
                 })
             }
         }

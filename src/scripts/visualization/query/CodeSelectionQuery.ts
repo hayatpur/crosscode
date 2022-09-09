@@ -46,7 +46,11 @@ export function onCodeQuerySelectionUpdate(e: monaco.editor.ICursorSelectionChan
     selectionBbox.height += paddingY * 2
 
     if (ApplicationState.editor.getSelectedText().length > 0) {
-        ApplicationState.currentQuery = getQuery({
+        // ApplicationState.currentQuery = getQuery({
+        //     start: { line: e.selection.startLineNumber, column: e.selection.startColumn },
+        //     end: { line: e.selection.endLineNumber, column: e.selection.endColumn },
+        // })
+        getQuery({
             start: { line: e.selection.startLineNumber, column: e.selection.startColumn },
             end: { line: e.selection.endLineNumber, column: e.selection.endColumn },
         })

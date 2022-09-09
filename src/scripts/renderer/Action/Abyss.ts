@@ -2,8 +2,9 @@ import { ApplicationState } from '../../ApplicationState'
 import { getAccumulatedBoundingBoxForElements } from '../../utilities/action'
 import { createElement } from '../../utilities/dom'
 import { assert } from '../../utilities/generic'
-import { clearExistingFocus } from '../../visualization/Focus'
+import { clone } from '../../utilities/objects'
 import { ForStatementRepresentation } from './Dynamic/ForStatementRepresentation'
+import { getTotalDuration } from './Mapping/ControlFlowCursor'
 
 export enum AbyssKind {
     Normal = 'Normal',
@@ -34,6 +35,9 @@ export type AbyssState = {
     dotsContainer: HTMLElement
     dots: HTMLElement[]
     label: HTMLElement
+
+    // If the abyss collapses actions in the middle
+    expanded: boolean
 }
 
 let __ABYSS_ID = 0
@@ -60,6 +64,8 @@ export function createAbyss(overrides: Partial<AbyssState>): AbyssState {
         dots: [],
         label,
         dotsContainer,
+
+        expanded: false,
     }
 
     // Apply overrides
@@ -100,14 +106,87 @@ export function createAbyss(overrides: Partial<AbyssState>): AbyssState {
         }
     }
 
+    dotsContainer.onclick = (e) => {
+        toggleExpandedAbyss(abyss.id)
+
+        e.preventDefault()
+        e.stopPropagation()
+    }
+
     // Update abyss visual
     updateAbyssVisual(id)
 
     return base
 }
 
+export function toggleExpandedAbyss(id: string) {
+    const abyss = ApplicationState.abysses[id]
+    abyss.expanded = !abyss.expanded
+
+    updateAbyssVisual(id)
+
+    if (abyss.kind != AbyssKind.Spatial) {
+        const container = ApplicationState.actions[abyss.containerActionId!]
+        ApplicationState.actions[container.spatialParentID!].representation.dirtyFrames = true
+    }
+}
+
+export function isIterationTestInMiddleOfAbyss(abyss: AbyssState, index: number, actionId: string): boolean {
+    if (index - abyss.startIndex > 5 && abyss.startIndex + abyss.numItems - index > 5) {
+        return true
+    }
+
+    return false
+}
+
 export function getAbyssControlFlowPoints(abyss: AbyssState, index: number): [[number, number], [number, number]] {
     const bbox = abyss.dotsContainer.getBoundingClientRect()
+
+    if (abyss.kind == AbyssKind.ForLoop) {
+        const iteration = Math.floor(Math.max(0, (index - 1) / 3))
+
+        const startIteration = Math.floor(Math.max(0, abyss.startIndex / 3))
+        const totalIterations = Math.floor(Math.max(0, abyss.numItems / 3))
+
+        // console.log('startIteration', startIteration) // 1
+        // console.log('totalIterations', totalIterations) // 2
+
+        if (!abyss.expanded) {
+            let bbox_dot: DOMRect
+
+            if (iteration == startIteration) {
+                // At the start
+                bbox_dot = abyss.dots[0].getBoundingClientRect()
+            } else if (iteration == startIteration + totalIterations - 1 && totalIterations >= 2) {
+                // At the end
+                if (totalIterations > 2) {
+                    bbox_dot = abyss.dots[2].getBoundingClientRect()
+                } else {
+                    bbox_dot = abyss.dots[1].getBoundingClientRect()
+                }
+            } else {
+                // In the middle
+                bbox_dot = abyss.dots[1].getBoundingClientRect()
+                // const segmentSize = bbox.width / (totalIterations - 2)
+
+                // console.log(
+                //     bbox.x + segmentSize * (iteration - startIteration - 1),
+                //     bbox.x + segmentSize * (iteration - startIteration)
+                // )
+
+                return [
+                    [bbox_dot.x, bbox_dot.y + bbox_dot.height / 2],
+                    [bbox_dot.x + bbox_dot.width, bbox_dot.y + bbox_dot.height / 2],
+                ]
+            }
+
+            return [
+                [bbox_dot.x, bbox_dot.y + bbox_dot.height / 2],
+                [bbox_dot.x + bbox_dot.width, bbox_dot.y + bbox_dot.height / 2],
+            ]
+        }
+    }
+
     const segmentSize = bbox.width / abyss.numItems
 
     return [
@@ -223,13 +302,19 @@ export function updateAbyssVisual(abyssId: string) {
     }
 
     if (abyss.kind != AbyssKind.Spatial) {
-        for (let i = 0; i < Math.min(3, totalItems); i++) {
+        let numDots = abyss.expanded ? totalItems : Math.min(3, totalItems)
+        for (let i = 0; i < numDots; i++) {
             dots.push(createElement('div', 'action-proxy-abyss-dot', abyss.dotsContainer))
         }
 
         // Event listeners
         dots[0].onclick = (e) => {
-            popAbyssFromStart(abyssId)
+            if (e.ctrlKey || e.metaKey) {
+                popAbyssFromStart(abyssId)
+            } else {
+                navigateToStartOfAbyss(abyssId)
+            }
+
             e.preventDefault()
             e.stopPropagation()
         }
@@ -237,14 +322,45 @@ export function updateAbyssVisual(abyssId: string) {
         if (dots.length > 1) {
             const last = dots[dots.length - 1]
             last.onclick = (e) => {
-                popAbyssFromEnd(abyssId)
+                if (e.ctrlKey || e.metaKey) {
+                    popAbyssFromEnd(abyssId)
+                } else {
+                    navigateToEndOfAbyss(abyssId)
+                }
+
                 e.preventDefault()
                 e.stopPropagation()
             }
         }
 
+        if (dots.length == 3 && !abyss.expanded) {
+            dots[1].onclick = (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                } else {
+                    navigateToMidOfAbyss(abyssId)
+                }
+
+                e.preventDefault()
+                e.stopPropagation()
+            }
+        }
+
+        if (dots.length > 2 && abyss.expanded) {
+            for (let k = 1; k < dots.length - 1; k++) {
+                dots[k].onclick = (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                    } else {
+                        navigateToIndexOfAbyss(abyssId, k)
+                    }
+
+                    e.preventDefault()
+                    e.stopPropagation()
+                }
+            }
+        }
+
         // Width and label
-        if (totalItems > 3) {
+        if (totalItems > 3 && !abyss.expanded) {
             dots[1].style.width = `${Math.min(totalItems * 2, 10)}px`
         } else {
             abyss.element.style.width = 'inherit'
@@ -263,7 +379,13 @@ export function updateAbyssVisual(abyssId: string) {
         }
     } else {
         assert(abyss.referenceActionId != null, 'Reference action ID must be specified')
-        const elements = updateSpatialDotsPosition(abyss.referenceActionId, { x: 5, y: 5 }, abyss.dotsContainer, null)
+        const elements = updateSpatialDotsPosition(
+            abyss.referenceActionId,
+            { x: 5, y: 5 },
+            abyss.dotsContainer,
+            null,
+            abyss
+        )
 
         // Update width
         const accBbox = getAccumulatedBoundingBoxForElements(elements)
@@ -274,17 +396,154 @@ export function updateAbyssVisual(abyssId: string) {
 
         const reference = ApplicationState.actions[abyss.referenceActionId.value]
         reference.proxy.container.append(abyss.element)
+
+        // Setup event listeners
+        const stack = [abyss.referenceActionId]
+        while (stack.length > 0) {
+            const current = stack.pop()!
+
+            current.element!.onclick = (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    if (current.children.length == 0) {
+                        popLeafFromSpatialAbyss(abyssId, current.value)
+                    } else if (abyss.referenceActionId == current) {
+                        popRootFromSpatialAbyss(abyssId)
+                    }
+                } else {
+                    navigateToSpatialAbyss(abyssId, current.value)
+                }
+
+                e.preventDefault()
+                e.stopPropagation()
+            }
+
+            stack.push(...current.children)
+        }
+
+        abyss.label.innerText = `${totalItems} more`
     }
 
     // Update dots
     abyss.dots = dots
 }
 
+export function navigateToSpatialAbyss(abyssId: string, target: string) {}
+
+export function popLeafFromSpatialAbyss(abyssId: string, target: string) {
+    const abyss = ApplicationState.abysses[abyssId]
+    console.log(clone(abyss.referenceActionId))
+
+    // Find target
+    const stack: [AbyssSpatialChild, AbyssSpatialChild | null][] = [[abyss.referenceActionId!, null]]
+    let targetAndTargetParent: [AbyssSpatialChild, AbyssSpatialChild | null] | null = null
+
+    while (stack.length > 0) {
+        const current = stack.pop()!
+
+        if (current[0].value == target) {
+            targetAndTargetParent = current
+            break
+        }
+
+        for (const child of current[0].children) {
+            stack.push([child, current[0]])
+        }
+    }
+
+    if (targetAndTargetParent == null) {
+        console.warn("Can't find leaf to remove")
+        return
+    }
+
+    const [targetChild, targetParent] = targetAndTargetParent
+    targetParent!.children.splice(targetParent!.children.indexOf(targetChild), 1)
+
+    targetChild.element!.remove()
+
+    const action = ApplicationState.actions[targetChild.value]
+    action.representation.unConsume()
+
+    // Update visual
+    updateAbyssVisual(abyssId)
+
+    console.log(clone(abyss.referenceActionId))
+
+    const program = ApplicationState.actions[ApplicationState.visualization.programId!]
+    program.representation.dirtyFrames = true
+}
+
+export function popRootFromSpatialAbyss(abyssId: string) {}
+
+export function navigateToStartOfAbyss(abyssId: string) {
+    const abyss = ApplicationState.abysses[abyssId]
+    const container = ApplicationState.actions[abyss.containerActionId!]
+
+    const startAction = ApplicationState.actions[container.vertices[abyss.startIndex]]
+
+    const spatial = ApplicationState.actions[container.spatialParentID!]
+    const controlFlow = spatial.controlFlow!
+
+    const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionId]
+    selection.targetGlobalTime = startAction.globalTimeOffset + getTotalDuration(startAction.id)
+}
+
+export function navigateToEndOfAbyss(abyssId: string) {
+    const abyss = ApplicationState.abysses[abyssId]
+    const container = ApplicationState.actions[abyss.containerActionId!]
+
+    const endAction = ApplicationState.actions[container.vertices[abyss.startIndex + abyss.numItems - 1]]
+
+    const spatial = ApplicationState.actions[container.spatialParentID!]
+    const controlFlow = spatial.controlFlow!
+
+    const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionId]
+    selection.targetGlobalTime = endAction.globalTimeOffset + getTotalDuration(endAction.id)
+}
+
+export function navigateToMidOfAbyss(abyssId: string) {
+    const abyss = ApplicationState.abysses[abyssId]
+    const container = ApplicationState.actions[abyss.containerActionId!]
+
+    let midIndex = abyss.kind == AbyssKind.ForLoop ? abyss.startIndex + 3 : abyss.startIndex + 1
+
+    if (abyss.kind == AbyssKind.ForLoop && abyss.startIndex == 0) {
+        midIndex += 1
+    }
+
+    const endAction = ApplicationState.actions[container.vertices[abyss.startIndex + abyss.numItems - 1]]
+
+    const spatial = ApplicationState.actions[container.spatialParentID!]
+    const controlFlow = spatial.controlFlow!
+
+    const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionId]
+    selection.targetGlobalTime = endAction.globalTimeOffset + getTotalDuration(endAction.id)
+}
+
+export function navigateToIndexOfAbyss(abyssId: string, index: number) {
+    const abyss = ApplicationState.abysses[abyssId]
+    const container = ApplicationState.actions[abyss.containerActionId!]
+
+    let actualIndex = abyss.startIndex + index
+
+    if (abyss.kind == AbyssKind.ForLoop) {
+        actualIndex = 4 + index * 3
+
+        if (index == 0) {
+            actualIndex = 0
+        }
+    }
+
+    const action = ApplicationState.actions[container.vertices[actualIndex]]
+    const spatial = ApplicationState.actions[container.spatialParentID!]
+    const controlFlow = spatial.controlFlow!
+
+    const selection = ApplicationState.visualization.selections[controlFlow.cursor.selectionId]
+    selection.targetGlobalTime = action.globalTimeOffset + getTotalDuration(action.id)
+}
+
 export function getActionLocationInAbyss(abyssId: string, actionId: string) {
     const abyss = ApplicationState.abysses[abyssId]
     const action = ApplicationState.actions[actionId]
-
-    console.log(abyss, action)
 
     if (abyss.kind == AbyssKind.Spatial) {
         let stack: AbyssSpatialChild[] = [abyss.referenceActionId!]
@@ -317,7 +576,8 @@ export function updateSpatialDotsPosition(
     node: AbyssSpatialChild,
     offset: { x: number; y: number },
     container: HTMLElement,
-    relativeTo: HTMLElement | null
+    relativeTo: HTMLElement | null,
+    abyss: AbyssState
 ): HTMLElement[] {
     const childrenElements: HTMLElement[] = []
 
@@ -329,6 +589,16 @@ export function updateSpatialDotsPosition(
     // Update self
     let x = 0
     let y = 0
+
+    let isInMiddle = relativeTo != null && node.children.length > 0
+
+    if (isInMiddle) {
+        // Check if last one
+        const lastChild = node.children[node.children.length - 1]
+        if (lastChild.children.length == 0) {
+            isInMiddle = false
+        }
+    }
 
     if (relativeTo != null) {
         const parentBbox = relativeTo.getBoundingClientRect()
@@ -349,9 +619,13 @@ export function updateSpatialDotsPosition(
     // Update children
     const rOffset = { x: 2, y: 0 }
 
+    if (isInMiddle && !abyss.expanded) {
+        rOffset.x = -5
+    }
+
     node.children.forEach((child) => {
         const childElements: HTMLElement[] = []
-        childElements.push(...updateSpatialDotsPosition(child, { ...rOffset }, container, node.element!))
+        childElements.push(...updateSpatialDotsPosition(child, { ...rOffset }, container, node.element!, abyss))
 
         // If hit something
         if (childElements.length > 0) {
@@ -424,22 +698,18 @@ export function popAbyssFromStart(abyssId: string) {
 
             action.representation.focus()
         } else if (abyss.kind == AbyssKind.ForLoop) {
-            const focus = ApplicationState.visualization.focus
-            assert(focus != null, 'Focus must be set.')
-
             let numItems = abyss.startIndex == 0 ? 4 : 3
             let iterationIndex = Math.floor(Math.max(0, (abyss.startIndex - 1) / 3))
 
             const representation = container.representation as ForStatementRepresentation
             representation.unConsumeIteration(iterationIndex)
 
-            clearExistingFocus()
-            focusIteration(container.id, iterationIndex)
-
             abyss.startIndex += numItems
             abyss.numItems -= numItems
 
             updateForLoopAbyss(container.id)
+
+            ApplicationState.actions[action.spatialParentID!].representation.dirtyFrames = true
         }
     } else {
         // TODO
@@ -465,10 +735,6 @@ export function popAbyssFromEnd(abyssId: string) {
             // Update abyss
             abyss.numItems -= 1
         } else if (abyss.kind == AbyssKind.ForLoop) {
-            // Set focus
-            const focus = ApplicationState.visualization.focus
-            assert(focus != null, 'Focus must be set.')
-
             // Update abyss
             let numItems = abyss.startIndex + abyss.numItems - 1 == 0 ? 4 : 3
             let iterationIndex = Math.floor(Math.max(0, (abyss.startIndex + abyss.numItems - 2) / 3))
@@ -476,13 +742,15 @@ export function popAbyssFromEnd(abyssId: string) {
             const representation = container.representation as ForStatementRepresentation
             representation.unConsumeIteration(iterationIndex)
 
-            clearExistingFocus()
-            focusIteration(container.id, iterationIndex)
+            // clearExistingFocus()
+            // focusIteration(container.id, iterationIndex)
 
             abyss.numItems -= numItems
 
             // Collapse un-focused iterations.
             updateForLoopAbyss(container.id)
+
+            ApplicationState.actions[action.spatialParentID!].representation.dirtyFrames = true
         }
     } else {
         // TODO
@@ -519,6 +787,8 @@ export function expandAbyssForward(abyssId: string, length: number = 1) {
         abyss.numItems += numItems + (length - 1) * 3
     }
 
+    ApplicationState.actions[container.spatialParentID!].representation.dirtyFrames = true
+
     updateAbyssVisual(abyssId)
 }
 
@@ -553,6 +823,7 @@ export function expandAbyssBackward(abyssId: string, length: number = 1) {
         abyss.numItems += numItems + (length - 1) * 3
     }
 
+    ApplicationState.actions[container.spatialParentID!].representation.dirtyFrames = true
     updateAbyssVisual(abyssId)
 }
 
@@ -672,8 +943,6 @@ export function collapseForIterationIntoAbyss(forActionId: string, iterationInde
             numItems = 4
         }
 
-        console.log(candidate.startIndex, candidate.numItems, index, numItems)
-
         if (candidate.startIndex - index - numItems == 0) {
             adjacentAbyss = candidate
         } else if (candidate.startIndex + candidate.numItems - index == 0) {
@@ -700,7 +969,6 @@ export function collapseForIterationIntoAbyss(forActionId: string, iterationInde
         forAction.abyssesIds.push(abyss.id)
         updateAbyssVisual(abyss.id)
     } else {
-        // console.log(iterationIndex, adjacentAbyss.element, isAfter)
         if (isAfter) {
             expandAbyssForward(adjacentAbyss.id)
         } else {
@@ -715,52 +983,103 @@ export function updateForLoopAbyss(forActionId: string) {
     // Collapse any iterations that are not selected
     const totalVertices = (forAction.vertices.length - 2) / 3
 
-    for (let iter = 0; iter < totalVertices; iter++) {
-        let startIndex = iter * 3 + 1
-        let numItems = 3
+    // for (let iter = 0; iter < totalVertices; iter++) {
+    //     let startIndex = iter * 3 + 1
+    //     let numItems = 3
 
-        if (iter == 0) {
-            startIndex = 0
-            numItems = 4
+    //     if (iter == 0) {
+    //         startIndex = 0
+    //         numItems = 4
+    //     }
+
+    //     const vertexIds = forAction.vertices.slice(startIndex, startIndex + numItems)
+
+    //     // If vertex is selected
+    //     let isSelected = false
+    //     for (const selectedVertexIds of ApplicationState.visualization.focus?.focusedActions ?? []) {
+    //         if (Array.isArray(selectedVertexIds) && JSON.stringify(vertexIds) == JSON.stringify(selectedVertexIds)) {
+    //             isSelected = true
+    //             break
+    //         }
+    //     }
+
+    //     if (!isSelected) {
+    //         const representation = forAction.representation as ForStatementRepresentation
+    //         const isConsumed = representation.iterationElements[iter].classList.contains('consumed')
+
+    //         if (!isConsumed) {
+    //             collapseForIterationIntoAbyss(forActionId, iter)
+    //         }
+    //     }
+    // }
+}
+
+export function updateAbyssSelection(abyssId: string) {
+    const abyss = ApplicationState.abysses[abyssId]
+
+    if (abyss.kind != AbyssKind.Spatial) {
+        const container = ApplicationState.actions[abyss.containerActionId!]
+
+        // Update first dot
+        const firstIter = ApplicationState.actions[container.vertices[abyss.startIndex]]
+        if (firstIter.representation.isSelected) {
+            abyss.dots[0].classList.add('is-selected')
+        } else {
+            abyss.dots[0].classList.remove('is-selected')
         }
 
-        const vertexIds = forAction.vertices.slice(startIndex, startIndex + numItems)
+        // Update mid (if it exists)
+        {
+            let isMidSelected = false
+            let midStart = abyss.startIndex + (abyss.kind == AbyssKind.ForLoop ? (abyss.startIndex == 0 ? 4 : 3) : 1)
+            let midEnd =
+                abyss.kind == AbyssKind.ForLoop
+                    ? abyss.startIndex + abyss.numItems - 3
+                    : abyss.startIndex + abyss.numItems - 1
+            let midIncrement = abyss.kind == AbyssKind.ForLoop ? 3 : 1
 
-        // If vertex is selected
-        let isSelected = false
-        for (const selectedVertexIds of ApplicationState.visualization.focus?.focusedActions ?? []) {
-            if (Array.isArray(selectedVertexIds) && JSON.stringify(vertexIds) == JSON.stringify(selectedVertexIds)) {
-                isSelected = true
-                break
+            if (!abyss.expanded && abyss.dots.length > 2) {
+                for (let i = midStart; i < midEnd; i += midIncrement) {
+                    const item = ApplicationState.actions[container.vertices[i]]
+                    if (item.representation.isSelected) {
+                        isMidSelected = true
+                        break
+                    }
+                }
+
+                if (isMidSelected) {
+                    abyss.dots[1].classList.add('is-selected')
+                } else {
+                    abyss.dots[1].classList.remove('is-selected')
+                }
+            } else {
+                for (let i = midStart; i < midEnd; i += midIncrement) {
+                    const item = ApplicationState.actions[container.vertices[i]]
+                    let k = abyss.kind == AbyssKind.ForLoop ? Math.floor(Math.max(0, (i - 1) / 3)) - 1 : i
+
+                    if (item.representation.isSelected) {
+                        abyss.dots[k].classList.add('is-selected')
+                    } else {
+                        abyss.dots[k].classList.remove('is-selected')
+                    }
+                }
             }
         }
 
-        if (!isSelected) {
-            const representation = forAction.representation as ForStatementRepresentation
-            const isConsumed = representation.iterationElements[iter].classList.contains('consumed')
-
-            if (!isConsumed) {
-                collapseForIterationIntoAbyss(forActionId, iter)
+        // Update last dot
+        if (abyss.dots.length > 1) {
+            const lastIter = ApplicationState.actions[container.vertices[abyss.startIndex + abyss.numItems - 3]]
+            if (lastIter.representation.isSelected) {
+                abyss.dots[abyss.dots.length - 1].classList.add('is-selected')
+            } else {
+                abyss.dots[abyss.dots.length - 1].classList.remove('is-selected')
             }
         }
     }
 }
 
-export function focusIteration(forActionId: string, iterationIndex: number) {
-    const focus = ApplicationState.visualization.focus
-    assert(focus != null, 'Focus must be set.')
-
-    const forAction = ApplicationState.actions[forActionId]
-    let start = iterationIndex * 3 + 1
-    let numItems = 3
-
-    if (iterationIndex == 0) {
-        start = 0
-        numItems = 4
-    }
-
-    focus.focusedActions.push(forAction.vertices.slice(start, start + numItems))
-
-    const representation = forAction.representation as ForStatementRepresentation
-    representation.iterationElements[iterationIndex].classList.add('is-focused')
+export function destroyAbyssCleanup(abyss: AbyssState) {
+    abyss.dotsContainer.remove()
+    abyss.element.remove()
+    abyss.label.remove()
 }

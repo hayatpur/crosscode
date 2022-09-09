@@ -4,15 +4,16 @@ import { ApplicationState } from '../ApplicationState'
 import { createEnvironment } from '../environment/environment'
 import { EnvironmentState } from '../environment/EnvironmentState'
 import { ExecutionGraph } from '../execution/graph/ExecutionGraph'
+import { destroyAbyssCleanup } from '../renderer/Action/Abyss'
 import { createActionState, destroyAction } from '../renderer/Action/Action'
 import { ActionMappingState, createActionMapping, destroyActionMapping } from '../renderer/Action/Mapping/ActionMapping'
 import { ControlFlowState, updateControlFlowState } from '../renderer/Action/Mapping/ControlFlowState'
-import { setViewFrames, updateView } from '../renderer/View/View'
+import { createViewState, destroyView, setViewFrames, updateView, ViewState } from '../renderer/View/View'
 import { Compiler } from '../transpiler/Compiler'
 import { createElement } from '../utilities/dom'
 import { getAST } from '../utilities/executor'
-import { createFocus, FocusState } from './Focus'
-import { createSelection, SelectionState, updateSelectionTime } from './Selection'
+import { Mouse } from '../utilities/Mouse'
+import { createSelection, destroySelection, SelectionState, updateSelectionTime } from './Selection'
 
 /* ------------------------------------------------------ */
 /*             Displays execution information             */
@@ -20,10 +21,10 @@ import { createSelection, SelectionState, updateSelectionTime } from './Selectio
 export type VisualizationState = {
     execution: ExecutionGraph | undefined
     mapping: ActionMappingState | undefined
+    view: ViewState | undefined
 
     programId: string | undefined
 
-    focus: FocusState | undefined
     selections: { [key: string]: SelectionState }
 
     container: HTMLElement
@@ -48,15 +49,14 @@ export function createVisualization(overrides: Partial<VisualizationState> = {})
     const container = createVisualContainer()
     const allViewsContainer = createElement('div', 'all-views-container', container)
 
-    const mainSelection = createSelection({}, true)
-    const selections = { [mainSelection.id]: mainSelection }
+    const selections = {}
 
     const base: VisualizationState = {
         execution: undefined,
         mapping: undefined,
+        view: undefined,
         programId: undefined,
 
-        focus: createFocus(),
         selections: selections,
 
         container,
@@ -83,14 +83,42 @@ export function resetVisualization(visualization: VisualizationState) {
         destroyActionMapping(visualization.mapping)
     }
 
+    if (visualization.view != undefined) {
+        destroyView(visualization.view)
+    }
+
     if (visualization.programId != undefined) {
         const program = ApplicationState.actions[visualization.programId]
         destroyAction(program)
     }
 
+    for (const [id, selection] of Object.entries(visualization.selections)) {
+        destroySelection(selection)
+    }
+
+    for (const [id, action] of Object.entries(ApplicationState.actions)) {
+        destroyAction(action)
+    }
+    ApplicationState.actions = {}
+
+    for (const [id, abyss] of Object.entries(ApplicationState.abysses)) {
+        destroyAbyssCleanup(abyss)
+    }
+    ApplicationState.abysses = {}
+
+    for (const traceIndicator of ApplicationState.traceIndicators) {
+        traceIndicator.trace.remove()
+        traceIndicator.source.remove()
+    }
+    ApplicationState.traceIndicators = []
+
+    // visualization.container?.remove()
+    // visualization.allViewsContainer?.remove()
+
     visualization.mapping = undefined
     visualization.programId = undefined
     visualization.execution = undefined
+    visualization.view = undefined
 }
 
 /**
@@ -137,6 +165,9 @@ export function compileVisualization(visualization: VisualizationState, code: st
     console.log('\tAnimation', visualization.execution)
     console.log('\tEnvironment', env)
 
+    const mainSelection = createSelection({}, true)
+    visualization.selections[mainSelection.id] = mainSelection
+
     visualization.mapping = createActionMapping()
     visualization.container.appendChild(visualization.mapping.element)
 
@@ -148,8 +179,10 @@ export function compileVisualization(visualization: VisualizationState, code: st
     visualization.programId = program.id
 
     program.representation.postCreate()
-
     document.body.appendChild(program.element)
+
+    visualization.view = createViewState()
+    visualization.allViewsContainer.appendChild(visualization.view.container)
 
     // TODO: Maintain layout from last time
 }
@@ -207,15 +240,15 @@ export function tickVisualization(visualization: VisualizationState, dt: number)
         }
     }
 
-    // Update positions
-    if (visualization.programId != undefined) {
-        const program = ApplicationState.actions[visualization.programId]
+    if (visualization.programId == null) return
 
-        program.representation.updateSpatialActionProxyPosition({
-            x: 35,
-            y: 115,
-        })
-    }
+    // Update positions
+    const program = ApplicationState.actions[visualization.programId]
+
+    program.representation.updateSpatialActionProxyPosition({
+        x: 35,
+        y: 115,
+    })
 
     // Update selections
     for (const selectionId of Object.keys(visualization.selections)) {
@@ -223,33 +256,51 @@ export function tickVisualization(visualization: VisualizationState, dt: number)
     }
 
     // Update spatial control flow
+    let forceUpdate = false
     for (const actionId of Object.keys(ApplicationState.actions)) {
         const action = ApplicationState.actions[actionId]
         if (action.isSpatial) {
-            updateControlFlowState(action.controlFlow as ControlFlowState)
+            forceUpdate = updateControlFlowState(action.controlFlow as ControlFlowState, forceUpdate)
         }
     }
 
     // Update dirty frames
     for (const [id, action] of Object.entries(ApplicationState.actions)) {
         if (action.isSpatial && action.representation.dirtyFrames) {
+            const program = ApplicationState.actions[visualization.programId!]
             setViewFrames(
-                action.view!,
-                action.representation.getFrames(action.id),
-                action.execution.precondition as EnvironmentState
+                visualization.view!,
+                program.representation.getFrames(),
+                program.execution.precondition as EnvironmentState
             )
-            updateView(action.view!)
+            updateView(visualization.view!)
 
             action.representation.dirtyFrames = false
         }
     }
 
-    // Update views
-    for (const [id, action] of Object.entries(ApplicationState.actions)) {
-        if (action.isSpatial) {
-            updateView(action.view!)
+    // Update view
+    updateView(visualization.view!)
+
+    // Update indicators
+    for (const indicator of ApplicationState.traceIndicators) {
+        const mouse = { ...Mouse.instance.position }
+        const rect = indicator.trace.getBoundingClientRect()
+
+        const distance = (mouse.x - rect.x - rect.width / 2) ** 2 + (mouse.y - rect.y - rect.height / 2) ** 2
+        if (distance < 500) {
+            indicator.trace.classList.add('is-enabled')
+            indicator.source.classList.add('is-enabled')
+        } else {
+            indicator.trace.classList.remove('is-enabled')
+            indicator.source.classList.remove('is-enabled')
         }
     }
+
+    // for (const [id, action] of Object.entries(ApplicationState.actions)) {
+    //     if (action.isSpatial) {
+    //     }
+    // }
 
     // Update view
 

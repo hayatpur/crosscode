@@ -32,7 +32,7 @@ export function createEnvironment(): EnvironmentState {
                     // },
                 },
 
-                type: ScopeType.Default,
+                type: ScopeType.Global,
             },
         ],
         memory: {

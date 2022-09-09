@@ -2,8 +2,7 @@ import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { Keyboard } from '../../../utilities/Keyboard'
-import { clearExistingFocus } from '../../../visualization/Focus'
-import { AbyssKind, collapseForIterationIntoAbyss, createAbyss, focusIteration } from '../Abyss'
+import { AbyssKind, collapseForIterationIntoAbyss, createAbyss } from '../Abyss'
 import { ActionState } from '../Action'
 import { Representation } from './Representation'
 
@@ -197,27 +196,25 @@ export class ForStatementRepresentation extends Representation {
         })
         action.abyssesIds.push(abyss.id)
 
-        // for (let k = 1; k < iterations; k++) {
-        // consumeForIterationToAbyss(action.id, 1)
-        // }
-
         // Focus on the first iteration
-        const focus = ApplicationState.visualization.focus
-        clearExistingFocus()
-
-        // focus?.focusedActions.push([action.vertices[0], action.vertices[1], action.vertices[2], action.vertices[3]])
-        // iterationElements[0].classList.add('is-focused')
+        // const focus = ApplicationState.visualization.focus
+        // clearExistingFocus()
 
         this.setupHoverEventsForIterations()
         this.setupClickListenerForIterations()
     }
 
     select() {
+        super.select()
+
         const action = ApplicationState.actions[this.actionId]
         action.proxy.container.classList.add('is-focused')
+        action.proxy.element.classList.remove('is-focused')
     }
 
     deselect() {
+        super.deselect()
+
         const action = ApplicationState.actions[this.actionId]
         action.proxy.container.classList.remove('is-focused')
     }
@@ -262,14 +259,6 @@ export class ForStatementRepresentation extends Representation {
         } else if (Keyboard.instance.isPressed('Control')) {
             // action.representation.toggleSteps()
             // TODO
-        } else if (isHovering) {
-            // Pointer
-            const isIterationFocused = this.iterationElements[iter].classList.contains('is-focused')
-            clearExistingFocus()
-            if (!isIterationFocused) {
-                focusIteration(this.actionId, iter)
-            }
-            return true
         }
 
         return false
@@ -323,7 +312,7 @@ export class ForStatementRepresentation extends Representation {
         const action = ApplicationState.actions[this.actionId]
 
         action.proxy.container.addEventListener('click', (e) => {
-            let success = this.clicked()
+            let success = this.clicked(e)
 
             if (success) {
                 e.preventDefault()

@@ -68,8 +68,10 @@ export class Editor {
             }, 500)
         })
 
+        const defaultUrl = new URL('/default.js', import.meta.url).href
+
         // Fetch default text
-        fetch(`./src/scripts/editor/files/default.js`)
+        fetch(defaultUrl)
             .then((response) => response.text())
             .then((data) => {
                 editor.monaco.getModel()?.setValue(data)
