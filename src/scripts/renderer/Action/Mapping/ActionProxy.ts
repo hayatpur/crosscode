@@ -50,6 +50,14 @@ export function createActionProxy(overrides: Partial<ActionProxyState> = {}): Ac
         container
     )
 
+    element.addEventListener('mouseenter', () => {
+        action?.element?.classList.add('hover')
+    })
+
+    element.addEventListener('mouseleave', () => {
+        action?.element?.classList.remove('hover')
+    })
+
     // autoAnimate(element)
 
     const base: ActionProxyState = {

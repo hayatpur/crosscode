@@ -2,7 +2,7 @@ import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
 import { Keyboard } from '../../../utilities/Keyboard'
-import { AbyssKind, collapseForIterationIntoAbyss, createAbyss } from '../Abyss'
+import { AbyssKind, collapseForIterationIntoAbyss, createAbyss, destroyAbyss, updateForLoopAbyss } from '../Abyss'
 import { ActionState } from '../Action'
 import { Representation } from './Representation'
 
@@ -16,6 +16,9 @@ export class ForStatementRepresentation extends Representation {
 
     pinnedIterations: Set<number> = new Set()
 
+    showAllButton: HTMLElement
+    showingAll: boolean = false
+
     constructor(action: ActionState) {
         super(action)
 
@@ -27,8 +30,38 @@ export class ForStatementRepresentation extends Representation {
             action.proxy.header.after(this.forLabelElement)
         })
 
+        this.showAllButton = createElement('div', ['action-proxy-for-button', 'action-proxy-show-all-button'])
+        this.showAllButton.innerText = '+'
+        this.showAllButton.addEventListener('click', (e) => {
+            this.showAll()
+            e.stopPropagation()
+            e.preventDefault()
+        })
+        this.showAllButton.setAttribute('title', 'Toggle iterations')
+
         this.shouldHover = true
         this.isSelectableGroup = true
+    }
+
+    showAll() {
+        console.log('Show all iterations')
+
+        const action = ApplicationState.actions[this.actionId]
+
+        if (this.showingAll) {
+            updateForLoopAbyss(this.actionId, 0)
+            this.showingAll = false
+            this.showAllButton.innerText = '+'
+        } else {
+            for (const abyssId of action.abyssesIds) {
+                const abyss = ApplicationState.abysses[abyssId]
+                if (abyss.kind == AbyssKind.ForLoop) {
+                    destroyAbyss(abyssId)
+                }
+            }
+            this.showingAll = true
+            this.showAllButton.innerText = '-'
+        }
     }
 
     // getControlFlowPointsForIteration(iteration: number, i: number): [number[], number[]] {
@@ -200,8 +233,12 @@ export class ForStatementRepresentation extends Representation {
         // const focus = ApplicationState.visualization.focus
         // clearExistingFocus()
 
+        this.shouldHover = false
+
         this.setupHoverEventsForIterations()
         this.setupClickListenerForIterations()
+
+        this.forLabelElement.append(this.showAllButton)
     }
 
     select() {
@@ -327,8 +364,17 @@ export class ForStatementRepresentation extends Representation {
         // Destroy abysses
         // TODO
 
+        this.shouldHover = true
+
         this.iterationElements.forEach((iterationElement) => iterationElement.remove())
         this.iterationElements = []
+
+        this.showAllButton.remove()
+    }
+
+    destroy(): void {
+        super.destroy()
+        this.showAllButton.remove()
     }
 }
 

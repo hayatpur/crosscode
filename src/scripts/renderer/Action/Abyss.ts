@@ -707,7 +707,7 @@ export function popAbyssFromStart(abyssId: string) {
             abyss.startIndex += numItems
             abyss.numItems -= numItems
 
-            updateForLoopAbyss(container.id)
+            updateForLoopAbyss(container.id, iterationIndex)
 
             ApplicationState.actions[action.spatialParentID!].representation.dirtyFrames = true
         }
@@ -748,7 +748,7 @@ export function popAbyssFromEnd(abyssId: string) {
             abyss.numItems -= numItems
 
             // Collapse un-focused iterations.
-            updateForLoopAbyss(container.id)
+            updateForLoopAbyss(container.id, iterationIndex)
 
             ApplicationState.actions[action.spatialParentID!].representation.dirtyFrames = true
         }
@@ -977,41 +977,37 @@ export function collapseForIterationIntoAbyss(forActionId: string, iterationInde
     }
 }
 
-export function updateForLoopAbyss(forActionId: string) {
+export function updateForLoopAbyss(forActionId: string, focusIteration: number) {
     const forAction = ApplicationState.actions[forActionId]
 
     // Collapse any iterations that are not selected
     const totalVertices = (forAction.vertices.length - 2) / 3
 
-    // for (let iter = 0; iter < totalVertices; iter++) {
-    //     let startIndex = iter * 3 + 1
-    //     let numItems = 3
+    if (!ApplicationState.visualization.PARAMS.Closure) {
+        return
+    }
 
-    //     if (iter == 0) {
-    //         startIndex = 0
-    //         numItems = 4
-    //     }
+    for (let iter = 0; iter < totalVertices; iter++) {
+        let startIndex = iter * 3 + 1
+        let numItems = 3
 
-    //     const vertexIds = forAction.vertices.slice(startIndex, startIndex + numItems)
+        if (iter == 0) {
+            startIndex = 0
+            numItems = 4
+        }
 
-    //     // If vertex is selected
-    //     let isSelected = false
-    //     for (const selectedVertexIds of ApplicationState.visualization.focus?.focusedActions ?? []) {
-    //         if (Array.isArray(selectedVertexIds) && JSON.stringify(vertexIds) == JSON.stringify(selectedVertexIds)) {
-    //             isSelected = true
-    //             break
-    //         }
-    //     }
+        // If vertex is selected
+        let isSelected = iter == focusIteration
 
-    //     if (!isSelected) {
-    //         const representation = forAction.representation as ForStatementRepresentation
-    //         const isConsumed = representation.iterationElements[iter].classList.contains('consumed')
+        if (!isSelected) {
+            const representation = forAction.representation as ForStatementRepresentation
+            const isConsumed = representation.iterationElements[iter].classList.contains('consumed')
 
-    //         if (!isConsumed) {
-    //             collapseForIterationIntoAbyss(forActionId, iter)
-    //         }
-    //     }
-    // }
+            if (!isConsumed) {
+                collapseForIterationIntoAbyss(forActionId, iter)
+            }
+        }
+    }
 }
 
 export function updateAbyssSelection(abyssId: string) {

@@ -185,10 +185,14 @@ export class Representation {
                 throw new Error('Action has no location')
             }
 
-            const label = ApplicationState.editor.getValueAt(parent.execution.nodeData.location)
+            let label = ApplicationState.editor.getValueAt(parent.execution.nodeData.location)
 
             if (label == undefined) {
                 throw new Error('Action has no label')
+            }
+
+            if (parent.execution.nodeData.preLabel == 'AssignmentEquals') {
+                label = '='
             }
 
             proxy.element.innerHTML = `${label.trim()}`
@@ -791,6 +795,8 @@ export class Representation {
         const action = ApplicationState.actions[this.actionId]
 
         const t = performance.now()
+
+        if (!this.isBreakable) return
 
         if (action.isShowingSteps) {
             console.warn('Steps already created! Destroying existing.')

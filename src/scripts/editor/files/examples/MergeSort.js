@@ -1,19 +1,25 @@
 function merge(left, right) {
-    let arr = []
+    let i = 0
+    let j = 0
+    let results = []
 
-    // Break out of loop if any one of the array gets empty
-    while (left.length && right.length) {
-        // Pick the smaller among the smallest element of left and right sub arrays
-        if (left[0] < right[0]) {
-            arr.push(left.shift())
+    for (let k = 0; k < left.length + right.length; k = k + 1) {
+        if (i > left.length - 1) {
+            results.push(right[j])
+            j = j + 1
+        } else if (j > right.length - 1) {
+            results.push(left[i])
+            i = i + 1
+        } else if (left[i] < right[j]) {
+            results.push(left[i])
+            i = i + 1
         } else {
-            arr.push(right.shift())
+            results.push(right[j])
+            j = j + 1
         }
     }
 
-    // Concatenating the leftover elements
-    // (in case we didn't go through the entire left or right array)
-    return [...arr, ...left, ...right]
+    return results
 }
 
 function mergeSort(array) {
@@ -22,7 +28,21 @@ function mergeSort(array) {
         return array
     }
 
-    const half = array.length / 2
-    const left = array.splice(0, half)
-    return merge(mergeSort(left), mergeSort(array))
+    let half = array.length / 2
+    let left = []
+    let right = []
+
+    for (let i = 0; i < array.length; i = i + 1) {
+        if (i < half) {
+            left.push(array[i])
+        } else {
+            right.push(array[i])
+        }
+    }
+
+    return merge(mergeSort(left), mergeSort(right))
 }
+
+let unsorted = [4, 1, 7, 0, 3, 9, 1, 6, 3]
+let sorted = mergeSort(unsorted)
+console.log(sorted)

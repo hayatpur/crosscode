@@ -32,10 +32,9 @@ export type VisualizationState = {
 
     // Tweakpane
     PARAMS: {
-        a: number
-        b: number
-        c: number
-        d: number
+        Speed: number
+        Disclosure: boolean
+        Closure: boolean
     }
     fpsGraph: any
 }
@@ -63,10 +62,9 @@ export function createVisualization(overrides: Partial<VisualizationState> = {})
         allViewsContainer,
 
         PARAMS: {
-            a: 0.5,
-            b: 0.5,
-            c: 0.5,
-            d: 0.5,
+            Speed: 1,
+            Disclosure: false,
+            Closure: false,
         },
         fpsGraph: undefined,
     }
@@ -194,7 +192,7 @@ export function compileVisualization(visualization: VisualizationState, code: st
 export function setupTweakpane(executor: VisualizationState) {
     const pane = new Pane({
         title: 'Info',
-        expanded: true,
+        expanded: false,
     })
     pane.registerPlugin(EssentialsPlugin)
 
@@ -204,16 +202,20 @@ export function setupTweakpane(executor: VisualizationState) {
         lineCount: 2,
     })
 
-    const folder = pane.addFolder({
-        title: 'Parameters',
-        expanded: false,
-    })
+    // const folder = pane.addFolder({
+    //     title: 'Parameters',
+    //     expanded: false,
+    // })
 
     for (const key of Object.keys(executor.PARAMS)) {
-        folder.addInput(executor.PARAMS, key as any, {
-            min: 0,
-            max: 1,
-        })
+        if (key == 'Speed') {
+            pane.addInput(executor.PARAMS, key, {
+                min: 0.01,
+                max: 2,
+            })
+        } else {
+            pane.addInput(executor.PARAMS, key as any)
+        }
     }
 }
 

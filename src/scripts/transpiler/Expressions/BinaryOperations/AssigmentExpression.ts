@@ -25,7 +25,7 @@ export function AssignmentExpression(
         outputRegister: leftRegister,
         feed: true,
     })
-    addVertex(graph, left, { nodeData: getNodeData(ast.left) })
+    addVertex(graph, left, { nodeData: getNodeData(ast.left, 'AssignmentIdentifier') })
 
     // RHS should be in the  stack
     const right = Compiler.compile(ast.right, environment, {
@@ -35,7 +35,7 @@ export function AssignmentExpression(
     addVertex(graph, right, { nodeData: getNodeData(ast.right) })
 
     const place = moveAndPlaceAnimation(rightRegister, leftRegister)
-    addVertex(graph, place, { nodeData: getNodeData(ast.left) })
+    addVertex(graph, place, { nodeData: getNodeData(ast.left, 'AssignmentEquals') })
     applyExecutionNode(place, environment)
 
     cleanUpRegister(environment, leftRegister[0].value)

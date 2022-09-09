@@ -8,7 +8,8 @@ import {
     instanceOfEnvironment,
     Scope,
 } from '../../../environment/EnvironmentState'
-import { reads, writes } from '../../../execution/execution'
+import { queryExecutionGraph, reads, writes } from '../../../execution/execution'
+import { instanceOfExecutionGraph } from '../../../execution/graph/ExecutionGraph'
 import { ScopeType } from '../../../transpiler/Statements/BlockStatement'
 import { createElement } from '../../../utilities/dom'
 import { getSpatialActionsPathFromRoot } from '../../../visualization/Selection'
@@ -313,6 +314,20 @@ export class EnvironmentRenderer {
             let renderer = this.dataRenderers[data.id]
             ccount++
             if (instanceOfPrimitiveData(data) && data.type == DataType.Function) continue
+
+            if (typeof data.value == 'boolean') {
+                const targetId = data.id.split('_')[0]
+                const programExecution = ApplicationState.actions[ApplicationState.visualization.programId!].execution
+                const execution = queryExecutionGraph(programExecution, (d) => d.id == targetId)
+                const parentExecution = queryExecutionGraph(
+                    programExecution,
+                    (d) => instanceOfExecutionGraph(d) && d.vertices.includes(execution)
+                )
+
+                if (parentExecution.nodeData.preLabel == 'Test') {
+                    continue
+                }
+            }
 
             const scopeIndex = getHardScopeIndex(getHardScopeGlobalIndex(data, state), state)
             scopeIndexHits.add(scopeIndex)

@@ -5,6 +5,7 @@ import { getAbstractionPath } from '../../../utilities/action'
 import { createElement, createSVGElement } from '../../../utilities/dom'
 import { assert } from '../../../utilities/generic'
 import { Keyboard } from '../../../utilities/Keyboard'
+import { Mouse } from '../../../utilities/Mouse'
 import { ActionProxyState } from './ActionProxy'
 
 /* ------------------------------------------------------ */
@@ -52,35 +53,20 @@ export function createActionMapping(overrides: Partial<ActionMappingState> = {})
 export function createIndicationElement(parent: HTMLElement) {
     const container = createElement('div', ['mode-indicator-container'])
 
-    const selector = createElement('div', ['mode-indicator', 'pointer'], container)
+    const selector = createElement('div', ['mode-indicator', 'pointer'])
     selector.innerText = 'Select (Shift)'
 
-    const destructor = createElement('div', ['mode-indicator', 'destructor'], container)
+    const destructor = createElement('div', ['mode-indicator', 'destructor'])
     destructor.innerText = 'Destruct (Control)'
 
-    const abyss = createElement('div', ['mode-indicator', 'abyss'], container)
+    const abyss = createElement('div', ['mode-indicator', 'abyss'])
     abyss.innerText = 'Abyss (Alt)'
 
     setInterval(() => {
-        if (Keyboard.instance.isPressed('Control')) {
-            destructor.classList.add('active')
-
-            abyss.classList.remove('active')
-            selector.classList.remove('active')
-        } else if (Keyboard.instance.isPressed('Shift')) {
-            selector.classList.add('active')
-
-            destructor.classList.remove('active')
-            abyss.classList.remove('active')
-        } else if (Keyboard.instance.isPressed('Alt')) {
-            abyss.classList.add('active')
-
-            destructor.classList.remove('active')
-            selector.classList.remove('active')
+        if (Keyboard.instance.isPressed('Control') || Keyboard.instance.isPressed('Command')) {
+            Mouse.instance.element.classList.add('ctrl')
         } else {
-            selector.classList.remove('active')
-            destructor.classList.remove('active')
-            abyss.classList.remove('active')
+            Mouse.instance.element.classList.remove('ctrl')
         }
     }, 100)
 

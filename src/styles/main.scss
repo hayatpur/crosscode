@@ -87,49 +87,78 @@ body {
 }
 
 /* --------------------- Tweak pane --------------------- */
+// .tp-dfwv {
+//     z-index: 10;
+// }
+
+// .tp-rotv {
+//     background: none !important;
+//     box-shadow: none !important;
+//     font-family: Source Sans Pro !important;
+//     font-size: 13px !important;
+
+//     --mo-fg: var(--color-4) !important;
+// }
+
+// .tp-fldv_b,
+// .tp-rotv_b {
+//     background-color: transparent !important;
+// }
+
+// .tp-fldv_m,
+// .tp-rotv_m {
+//     background: none !important;
+// }
+
+// .tp-fldv_t {
+//     opacity: 0 !important;
+// }
+
+// .tp-rotv_b {
+//     opacity: 0 !important;
+// }
+
+// .tp-lblv_l {
+//     opacity: 0;
+// }
+
+// .tp-dfwv:hover .tp-lblv_l {
+//     opacity: 1;
+// }
+
+// .tp-grlv_g,
+// .tp-sglv_i,
+// .tp-mllv_i {
+//     background: none !important;
+// }
+
+:root {
+    --tp-base-background-color: hsla(230, 5%, 90%, 1);
+    --tp-base-shadow-color: hsla(0, 0%, 0%, 0.1);
+    --tp-button-background-color: hsla(230, 7%, 75%, 1);
+    --tp-button-background-color-active: hsla(230, 7%, 60%, 1);
+    --tp-button-background-color-focus: hsla(230, 7%, 65%, 1);
+    --tp-button-background-color-hover: hsla(230, 7%, 70%, 1);
+    --tp-button-foreground-color: hsla(230, 10%, 30%, 1);
+    --tp-container-background-color: hsla(230, 15%, 30%, 0.2);
+    --tp-container-background-color-active: hsla(230, 15%, 30%, 0.32);
+    --tp-container-background-color-focus: hsla(230, 15%, 30%, 0.28);
+    --tp-container-background-color-hover: hsla(230, 15%, 30%, 0.24);
+    --tp-container-foreground-color: hsla(230, 10%, 30%, 1);
+    --tp-groove-foreground-color: hsla(230, 0%, 0%, 0.1);
+    --tp-input-background-color: hsla(230, 15%, 30%, 0.1);
+    --tp-input-background-color-active: hsla(230, 15%, 30%, 0.22);
+    --tp-input-background-color-focus: hsla(230, 15%, 30%, 0.18);
+    --tp-input-background-color-hover: hsla(230, 15%, 30%, 0.14);
+    --tp-input-foreground-color: hsla(230, 10%, 30%, 1);
+    --tp-label-foreground-color: hsla(230, 0%, 0%, 1);
+    --tp-monitor-background-color: hsla(230, 15%, 30%, 0.1);
+    --tp-monitor-foreground-color: hsla(230, 10%, 30%, 0.5);
+}
+
 .tp-dfwv {
-    z-index: 10;
-}
-
-.tp-rotv {
-    background: none !important;
-    box-shadow: none !important;
-    font-family: Source Sans Pro !important;
-    font-size: 13px !important;
-
-    --mo-fg: var(--color-4) !important;
-}
-
-.tp-fldv_b,
-.tp-rotv_b {
-    background-color: transparent !important;
-}
-
-.tp-fldv_m,
-.tp-rotv_m {
-    background: none !important;
-}
-
-.tp-fldv_t {
-    opacity: 0 !important;
-}
-
-.tp-rotv_b {
-    opacity: 0 !important;
-}
-
-.tp-lblv_l {
-    opacity: 0;
-}
-
-.tp-dfwv:hover .tp-lblv_l {
-    opacity: 1;
-}
-
-.tp-grlv_g,
-.tp-sglv_i,
-.tp-mllv_i {
-    background: none !important;
+    transform: scale(1);
+    transform-origin: top right;
 }
 
 /* --------------------- SVG canvas --------------------- */
@@ -188,4 +217,22 @@ body {
     width: -webkit-fill-available;
     height: 100%;
     display: flex;
+}
+
+.mouse-indicator {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    transform: translate(-2.5px, -2.5px) scale(1.5);
+    background: var(--s-color-0);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+    transition-property: opacity;
+    transition-duration: 0.2s;
+}
+
+.mouse-indicator.ctrl {
+    transform: translate(-2.5px, -2.5px) scale(1.5) !important;
+    opacity: 0.8;
 }

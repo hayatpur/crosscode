@@ -33,6 +33,8 @@ export class BinaryStatementRepresentation extends Representation {
     createSteps(): void {
         super.createSteps()
 
+        if (!this.isBreakable) return
+
         const action = ApplicationState.actions[this.actionId]
         const proxy = action.proxy
 

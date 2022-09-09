@@ -40,4 +40,18 @@ export class AssignmentExpressionRepresentation extends Representation {
             return super.getControlFlowPoints(usePlaceholder)
         }
     }
+
+    createSteps(): void {
+        super.createSteps()
+
+        const action = ApplicationState.actions[this.actionId]
+        const proxy = action.proxy
+
+        // Swap second and third child in the proxy
+        const secondChild = proxy.element.children[1]
+        const thirdChild = proxy.element.children[2]
+        proxy.element.insertBefore(thirdChild, secondChild)
+
+        console.log('Runs...')
+    }
 }

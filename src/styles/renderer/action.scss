@@ -210,6 +210,7 @@
     width: 22px;
     transition: 0.2s;
     height: 14px;
+    position: relative;
 }
 
 .action-proxy-for-iteration-top > div {
@@ -1255,4 +1256,34 @@ svg.ray-svg {
 
 .action-proxy-abyss-dots-container:hover {
     background: var(--s-color-0-2);
+}
+
+.action-proxy.type-Identifier.pre-label-AssignmentEquals.is-primitive {
+    background: none !important;
+    box-shadow: none !important;
+}
+
+.action.hover:not(.is-showing-steps) {
+    background: var(--color-3);
+}
+
+.action-proxy-for-button {
+    position: absolute;
+    font-size: 9px;
+    left: -11px;
+    top: 2px;
+    background: var(--color-2);
+    border-radius: var(--border-radius);
+    padding: 2px;
+    font-weight: bold;
+    width: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 10px;
+    cursor: pointer;
+}
+
+.action-proxy-for-button:hover {
+    background: var(--color-3);
 }

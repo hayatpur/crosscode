@@ -171,7 +171,19 @@ export function isSkippedByDefault(execution: ExecutionGraph | ExecutionNode): b
 }
 
 export function isBreakableByDefault(execution: ExecutionGraph | ExecutionNode): boolean {
-    return false
+    if (execution.nodeData.type == 'Arguments') {
+        return false
+    }
+
+    if (execution.nodeData.type == 'Identifier' || execution.nodeData.type == 'Literal') {
+        return false
+    }
+
+    if (execution.nodeData.type == 'ArrayExpression') {
+        return false
+    }
+
+    return true
 }
 
 export function isTrimmedByDefault(execution: ExecutionGraph | ExecutionNode): boolean {

@@ -1,7 +1,7 @@
 import { ApplicationState } from '../../../ApplicationState'
 import { getAccumulatedBoundingBox, queryAction } from '../../../utilities/action'
 import { addPointToPathChunks, getTotalLengthOfPathChunks } from '../../../utilities/math'
-import { getConsumedAbyss, getSpatialAbyssControlFlowPoints } from '../Abyss'
+import { collapseActionIntoAbyss, getConsumedAbyss, getSpatialAbyssControlFlowPoints } from '../Abyss'
 import { ActionState } from '../Action'
 import { ControlFlowState } from '../Mapping/ControlFlowState'
 import { Representation } from './Representation'
@@ -15,6 +15,10 @@ export class FunctionCallRepresentation extends Representation {
         // this.shouldHover = true
         this.isSelectableGroup = true
     }
+
+    // createSteps(): void {
+
+    // }
 
     postCreate() {
         this.createSteps()
@@ -30,6 +34,15 @@ export class FunctionCallRepresentation extends Representation {
             }
 
             stack.push(ApplicationState.actions[lastStep.vertices.at(-1)!])
+        }
+
+        if (ApplicationState.visualization.PARAMS.Disclosure) {
+            if (action.vertices.length > 4) {
+                // Only show the last four steps
+                for (let i = 0; i < action.vertices.length - 4; i++) {
+                    collapseActionIntoAbyss(action.vertices[i])
+                }
+            }
         }
 
         // const action = ApplicationState.actions[this.actionId]

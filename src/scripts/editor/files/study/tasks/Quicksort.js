@@ -1,12 +1,12 @@
 function concat(a, b) {
     let c = []
     for (let i = 0; i < a.length; i = i + 1) c.push(a[i])
-    for (let i = 0; i < b.length; i = i + 1) c.push(a[i])
+    for (let i = 0; i < b.length; i = i + 1) c.push(b[i])
     return c
 }
 
 function qs(array) {
-    if (array.length <= 2) {
+    if (array.length <= 1) {
         return array
     }
 

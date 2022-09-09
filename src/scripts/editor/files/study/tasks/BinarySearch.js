@@ -1,5 +1,5 @@
 function bs(arr, searchValue, low, high) {
-    if (high <= low || arr.length == 0) return -1
+    if (low >= high) return -1
 
     let mid = low + Math.floor((high - low) / 2)
 

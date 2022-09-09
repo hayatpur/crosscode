@@ -132,11 +132,12 @@ export function getQuery(selection: ESTree.SourceLocation) {
     //     }
     // }
 
-    console.log(createdSpatialActionsIds)
-    for (const actionId of createdSpatialActionsIds) {
-        const abyssInfo = getConsumedAbyss(actionId)
-        if (abyssInfo == null) {
-            collapseActionIntoAbyss(actionId)
+    if (ApplicationState.visualization.PARAMS.Disclosure) {
+        for (const actionId of createdSpatialActionsIds) {
+            const abyssInfo = getConsumedAbyss(actionId)
+            if (abyssInfo == null) {
+                collapseActionIntoAbyss(actionId)
+            }
         }
     }
 }

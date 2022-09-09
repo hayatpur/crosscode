@@ -1,6 +1,7 @@
 import * as monaco from 'monaco-editor'
 import { ApplicationState } from '../../../ApplicationState'
 import { createElement } from '../../../utilities/dom'
+import { collapseActionIntoAbyss } from '../Abyss'
 import { ActionState } from '../Action'
 import { getTotalDuration } from '../Mapping/ControlFlowCursor'
 import { Representation } from './Representation'
@@ -40,16 +41,27 @@ export class CallExpressionRepresentation extends Representation {
         // If was before the global time, then seek to the start of the function call
         if (timeDelta.start < 0) {
             setTimeout(() => {
-                const child = ApplicationState.actions[action.vertices[1]]
-                const childVertex = ApplicationState.actions[child.vertices[0]]
-                selection.targetGlobalTime = childVertex.globalTimeOffset + getTotalDuration(childVertex.id)
+                let firstChild = ApplicationState.actions[action.vertices[1]]
+                while (firstChild.vertices.length > 0) {
+                    firstChild = ApplicationState.actions[firstChild.vertices[0]]
+                }
+                selection.targetGlobalTime = firstChild.globalTimeOffset + getTotalDuration(firstChild.id)
             }, 0)
         } else if (timeDelta.end >= 0) {
             setTimeout(() => {
-                // const child = ApplicationState.actions[action.vertices[1]]
-                const parent = ApplicationState.actions[action.parentID!]
-                selection.targetGlobalTime = parent.globalTimeOffset + getTotalDuration(parent.id)
-                selection._globalTime = parent.globalTimeOffset + getTotalDuration(parent.id)
+                let lastChild = ApplicationState.actions[action.vertices.at(-1)!]
+                while (lastChild.vertices.length > 0) {
+                    lastChild = ApplicationState.actions[lastChild.vertices.at(-1)!]
+                }
+
+                // const parent = ApplicationState.actions[action.parentID!]
+                selection.targetGlobalTime = lastChild.globalTimeOffset + getTotalDuration(lastChild.id)
+                selection._globalTime = lastChild.globalTimeOffset + getTotalDuration(lastChild.id)
+
+                setTimeout(() => {
+                    const lastChildParent = ApplicationState.actions[lastChild.parentID!]
+                    lastChildParent.representation.focus()
+                }, 0)
             }, 100)
         }
 
@@ -61,8 +73,21 @@ export class CallExpressionRepresentation extends Representation {
         //         child.classList.contains('action-proxy-placeholder')
         // )
 
-        // const spatialParent = ApplicationState.actions[action.spatialParentID!]
-        // spatialParent.representation.minimize()
+        if (ApplicationState.visualization.PARAMS.Closure) {
+            const spatialParent = ApplicationState.actions[action.spatialParentID!]
+            spatialParent.representation.minimize()
+
+            if (spatialParent.parentID != null) {
+                const spatialParentParent = ApplicationState.actions[spatialParent.parentID!]
+                const spatialParentParentSpatialParent = ApplicationState.actions[spatialParentParent.spatialParentID!]
+                if (
+                    spatialParentParentSpatialParent.minimized &&
+                    spatialParentParentSpatialParent.execution.nodeData.type != 'Program'
+                ) {
+                    collapseActionIntoAbyss(spatialParentParentSpatialParent.id)
+                }
+            }
+        }
 
         // Remove all action-proxy children
         // argElement.remove()

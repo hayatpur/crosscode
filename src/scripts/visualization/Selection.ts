@@ -34,7 +34,7 @@ export function createSelection(overrides: Partial<SelectionState> = {}, isMain:
         // If pressed right arrow key
         if (e.key == 'ArrowUp') {
             // Seek back
-            base.targetGlobalTime = Math.max(0, base.targetGlobalTime - 1)
+            base.targetGlobalTime = Math.max(0, base.targetGlobalTime - 2 * ApplicationState.visualization.PARAMS.Speed)
         }
 
         // If pressed left arrow key
@@ -42,7 +42,7 @@ export function createSelection(overrides: Partial<SelectionState> = {}, isMain:
             // Seek forward
             base.targetGlobalTime = Math.min(
                 getTotalDuration(ApplicationState.visualization.programId!),
-                base.targetGlobalTime + 1
+                base.targetGlobalTime + 2 * ApplicationState.visualization.PARAMS.Speed
             )
         }
     })
@@ -55,7 +55,12 @@ export function createSelection(overrides: Partial<SelectionState> = {}, isMain:
 export function updateSelectionTime(selectionId: string) {
     const selection = ApplicationState.visualization.selections[selectionId]
 
-    let newTime = overLerp(selection._globalTime, selection.targetGlobalTime, 0.05, 3)
+    let newTime = overLerp(
+        selection._globalTime,
+        selection.targetGlobalTime,
+        0.05 * ApplicationState.visualization.PARAMS.Speed,
+        3
+    )
     let different = Math.abs(newTime - selection._globalTime) > 0.0001
     selection._globalTime = newTime
 
