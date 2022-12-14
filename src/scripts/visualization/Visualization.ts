@@ -62,9 +62,9 @@ export function createVisualization(overrides: Partial<VisualizationState> = {})
         allViewsContainer,
 
         PARAMS: {
-            Speed: 1,
-            Disclosure: false,
-            Closure: false,
+            Speed: 0.7,
+            Disclosure: true,
+            Closure: true,
         },
         fpsGraph: undefined,
     }

@@ -196,6 +196,7 @@ export class Representation {
             }
 
             proxy.element.innerHTML = `${label.trim()}`
+
             monaco.editor.colorize(proxy.element.innerHTML, 'javascript', {}).then((html) => {
                 proxy.element.innerHTML = html
                 proxy.element.classList.add('fit-width')
@@ -304,10 +305,8 @@ export class Representation {
             }
 
             if (this.overrideSkipped) {
-                console.log('Being skipped...')
                 return []
             } else if (this.overrideAggregation != null) {
-                console.log('Being aggregated...')
                 return [
                     {
                         environment: action.execution.postcondition as EnvironmentState,

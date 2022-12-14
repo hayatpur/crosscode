@@ -17,9 +17,9 @@ export class VariableDeclarationRepresentation extends Representation {
         this.equalSignElement.innerText = '='
 
         this.identifierElement = createElement('div', ['action-proxy-code-label', 'action-proxy-identifier-label'])
-        this.identifierElement.innerText = ApplicationState.editor.getValueAt(
-            (action.execution as ExecutionGraph).vertices[1].nodeData.location!
-        )!
+        this.identifierElement.innerText = ApplicationState.editor
+            .getValueAt((action.execution as ExecutionGraph).vertices[1].nodeData.location!)!
+            .trim()
 
         monaco.editor.colorize(this.identifierElement.innerHTML, 'javascript', {}).then((html) => {
             this.identifierElement.innerHTML = html

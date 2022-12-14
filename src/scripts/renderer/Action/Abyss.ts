@@ -880,6 +880,7 @@ export function collapseActionIntoAbyss(actionId: string) {
         const parentAbyssInfo = getConsumedAbyss(parent.id)
 
         if (parentAbyssInfo == null) {
+            console.log('Creating a new abyss.', parent)
             const newAbyss = createAbyss({
                 referenceActionId: { value: action.id, children: [], element: null },
                 numItems: 1,

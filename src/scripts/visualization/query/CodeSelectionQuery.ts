@@ -132,14 +132,16 @@ export function getQuery(selection: ESTree.SourceLocation) {
     //     }
     // }
 
-    if (ApplicationState.visualization.PARAMS.Disclosure) {
-        for (const actionId of createdSpatialActionsIds) {
-            const abyssInfo = getConsumedAbyss(actionId)
-            if (abyssInfo == null) {
-                collapseActionIntoAbyss(actionId)
-            }
+    // collapseActionIntoAbyss(createdSpatialActionsIds[0])
+
+    // if (ApplicationState.visualization.PARAMS.Disclosure) {
+    for (const actionId of createdSpatialActionsIds) {
+        const abyssInfo = getConsumedAbyss(actionId)
+        if (abyssInfo == null) {
+            collapseActionIntoAbyss(actionId)
         }
     }
+    // }
 }
 
 // Expand the root Action to include the step

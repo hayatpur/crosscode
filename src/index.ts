@@ -9,6 +9,7 @@ import {
     tickVisualization,
 } from './scripts/visualization/Visualization'
 import './styles/main.scss'
+// import './styles/themes/dark.scss'
 
 function main() {
     ApplicationState.editor = new Editor()

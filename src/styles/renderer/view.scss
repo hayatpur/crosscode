@@ -208,6 +208,7 @@ svg.environment-svg {
     background-color: var(--color-5);
     transition: 0.2s;
     transform: scale(0);
+    opacity: 0 !important;
 }
 
 .operation-indicator.is-hidden {

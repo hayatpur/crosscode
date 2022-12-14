@@ -42,6 +42,7 @@ export class Editor {
             // codeLens: false,
             dragAndDrop: false,
             theme: 'dawn',
+            // theme: 'atom',
             fontFamily: window.getComputedStyle(document.documentElement).getPropertyValue('--code-font-family'),
             fontLigatures: true,
             // quickSuggestions: false,

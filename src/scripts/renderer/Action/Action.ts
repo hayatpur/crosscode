@@ -266,9 +266,15 @@ export function updateActionRay(actionID: string) {
 
     // If end is consumed
     const abyssInfo = getConsumedAbyss(actionID)
+    let startIsConsumed = false
     if (abyssInfo != null) {
         const location = getActionLocationInAbyss(abyssInfo.id, actionID)
         endBbox = location!.getBoundingClientRect()
+
+        // endBbox.y += 18
+        // endBbox.x += 3
+
+        startIsConsumed = true
     }
 
     // If start is consumed
@@ -289,7 +295,7 @@ export function updateActionRay(actionID: string) {
         throw new Error('Ray has no parent element.')
     }
 
-    if (action.minimized) {
+    if (action.minimized && !startIsConsumed) {
         endBbox.width = 10
         endBbox.height = 10
         endBbox.y -= 19
