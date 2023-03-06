@@ -1,26 +1,16 @@
-// Tutorial A
-//
 // Controls:
 //    - Left key to move one step back
 //    - Right key to move one step forward
 //    - Up key to move animation backward
 //    - Down key to move animation forward
 //    - Grab control flow cursor to move
-//    - Set animation speed
-// Concepts
-//    - Control flow panel
-//    - Data panel
-//    - Source code panel
-//    - Color encoding for read and writes
-//    - Trace and trace information
-//    - Movement and effect animations
+//    - Control/Cmd click to get break down a step
 
-// Variable declaration
-let l = [1, 2, 3]
+let list = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+let n = list.length
 
-// Trace, and partial trace
-let y = l[0]
-let z = l[2] + y
-
-// Residual
-y = z
+if (list[0] < list[n - 1]) {
+    let temp = list[0]
+    list[0] = list[n - 1]
+    list[n - 1] = temp
+}

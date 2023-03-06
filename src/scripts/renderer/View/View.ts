@@ -1,4 +1,3 @@
-import { Howl } from 'howler'
 import { ApplicationState } from '../../ApplicationState'
 import { createEnvironment } from '../../environment/environment'
 import { EnvironmentState, FrameInfo, Residual } from '../../environment/EnvironmentState'
@@ -30,8 +29,6 @@ export type ViewState = {
     renderers: EnvironmentRenderer[]
     containers: HTMLElement[]
 
-    sound: Howl
-
     // Like animation paths (that are acting on a given animation)
     trails: (TrailGroup | ReturnAnimation)[]
 
@@ -53,10 +50,6 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
     const scopeContainers: { [key: string]: HTMLElement } = {}
     scopeContainers[programId] = createElement('div', 'scope-container', container)
 
-    const sound = new Howl({
-        src: ['./src/assets/material_product_sounds/ogg/04 Secondary System Sounds/navigation_transition-left.ogg'],
-    })
-
     const base: ViewState = {
         preFrame: createEnvironment(),
         frames: [],
@@ -70,7 +63,6 @@ export function createViewState(overrides: Partial<ViewState> = {}): ViewState {
         renderers: [],
         containers: [],
 
-        sound: sound,
         prevTime: -1,
         scopeContainers,
     }

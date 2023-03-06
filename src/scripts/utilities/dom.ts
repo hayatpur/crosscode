@@ -1,4 +1,3 @@
-import * as CurvedArrows from 'curved-arrows'
 import * as PerfectArrows from 'perfect-arrows'
 
 export function reflow(el: HTMLElement) {
@@ -98,20 +97,6 @@ export function flipAnimate(element: HTMLElement, first: DOMRect, last: DOMRect,
             fill: 'both',
         }
     )
-}
-
-export function getCurvedArrow(x0: number, y0: number, x1: number, y1: number, reflect = false) {
-    let [sx, sy, c1x, c1y, c2x, c2y, ex, ey, ae] = CurvedArrows.getArrow(x0, y0, x1, y1, {
-        padEnd: 0,
-        padStart: 0,
-    })
-    if (reflect) {
-        sy = sy + 2 * (y0 - sy)
-        c1y = c1y + 2 * (y0 - c1y)
-        c2y = c2y + 2 * (y0 - c2y)
-        ey = ey + 2 * (y0 - ey)
-    }
-    return `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`
 }
 
 export function getPerfectArrow(x0: number, y0: number, x1: number, y1: number): [string, number, number, number] {
