@@ -1,40 +1,16 @@
-function concat(a, b) {
-    let c = []
-    for (let i = 0; i < a.length; i = i + 1) c.push(a[i])
-    for (let i = 0; i < b.length; i = i + 1) c.push(b[i])
-    return c
+// Controls:
+//    - Left key to move one step back
+//    - Right key to move one step forward
+//    - Up key to move animation backward
+//    - Down key to move animation forward
+//    - Grab control flow cursor to move
+//    - Control/Cmd click to get break down a step
+
+let list = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+let n = list.length
+
+if (list[0] < list[n - 1]) {
+    let temp = list[0]
+    list[0] = list[n - 1]
+    list[n - 1] = temp
 }
-
-function push(O, item) {
-    let len = O.length
-    O[len] = item
-}
-
-function qs(array) {
-    if (array.length <= 1) {
-        return array
-    }
-
-    let pivot = array[0]
-
-    let left = []
-    let right = []
-
-    for (let i = 1; i < array.length - 1; i = i + 1) {
-        if (array[i] < pivot) {
-            push(left, array[i])
-        } else {
-            push(right, array[i])
-        }
-    }
-
-    let l = qs(left)
-    let r = qs(right)
-
-    l.push(pivot)
-
-    return concat(l, r)
-}
-
-let unsorted = [4, 1, 7, 0, 3, 9, 1, 6, 3]
-let sorted = qs(unsorted)
