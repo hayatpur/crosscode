@@ -80,9 +80,11 @@ export class CallExpressionRepresentation extends Representation {
             if (spatialParent.parentID != null) {
                 const spatialParentParent = ApplicationState.actions[spatialParent.parentID!]
                 const spatialParentParentSpatialParent = ApplicationState.actions[spatialParentParent.spatialParentID!]
+
                 if (
                     spatialParentParentSpatialParent.minimized &&
-                    spatialParentParentSpatialParent.execution.nodeData.type != 'Program'
+                    spatialParentParentSpatialParent.execution.nodeData.type != 'Program' &&
+                    !spatialParentParentSpatialParent.proxy.container.classList.contains('consumed')
                 ) {
                     collapseActionIntoAbyss(spatialParentParentSpatialParent.id)
                 }

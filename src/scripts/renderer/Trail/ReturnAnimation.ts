@@ -61,10 +61,6 @@ export class ReturnAnimation {
             this.tempReturnAnimationNode?.remove()
             this.tempReturnAnimationNode = null
 
-            // this.tempReturnEnvironment
-            // this.tempReturnEnvironment?.destroy()
-            // this.tempReturnEnvironment = null
-
             return
         }
 
@@ -175,5 +171,6 @@ export class ReturnAnimation {
 
     destroy() {
         this.tempReturnAnimationNode?.remove()
+        this.tempReturnAnimationNode = null
     }
 }
