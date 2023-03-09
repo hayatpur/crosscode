@@ -261,6 +261,11 @@ export class ForStatementRepresentation extends Representation {
 
     unConsumeIteration(iteration: number) {
         this.iterationElements[iteration].classList.remove('consumed')
+
+        // Focus that iteration's body, TODO
+        // const action = ApplicationState.actions[this.actionId]
+        // let index = iteration * 3 + 1
+        // ApplicationState.actions[action.vertices[2]].representation.focus()
     }
 
     setupHoverEventsForIterations() {

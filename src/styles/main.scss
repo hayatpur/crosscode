@@ -240,3 +240,13 @@ body {
     transform: translate(-2.5px, -2.5px) scale(1.5) !important;
     opacity: 0.8;
 }
+
+div#disclaimer {
+    position: absolute;
+    left: 19px;
+    bottom: 8px;
+    width: 450px;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0.3;
+}

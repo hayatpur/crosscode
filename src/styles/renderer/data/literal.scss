@@ -13,7 +13,7 @@
     width: fit-content;
     font-size: 14px;
     transition-property: color;
-    transition-duration: 0.2s;
+    transition-duration: 0s; // Flashes if given a transition
 }
 
 .data-array > .hole > .data-literal {

@@ -183,6 +183,18 @@ export function isBreakableByDefault(execution: ExecutionGraph | ExecutionNode):
         return false
     }
 
+    if (execution.nodeData.type == 'MemberExpression') {
+        return false
+    }
+
+    if (execution.nodeData.type == 'ExpressionStatement') {
+        if (instanceOfExecutionGraph(execution)) {
+            if (execution.vertices.length > 0 && execution.vertices[0].nodeData.preLabel == 'AssignmentIdentifier') {
+                return false
+            }
+        }
+    }
+
     return true
 }
 
