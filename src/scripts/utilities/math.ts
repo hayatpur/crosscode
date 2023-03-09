@@ -1,11 +1,13 @@
 import { SourceLocation } from 'acorn'
 import * as ESTree from 'estree'
-import { ApplicationState } from '../ApplicationState'
-import { queryAllExecutionGraph, queryExecutionGraph } from '../execution/execution'
-import { ExecutionGraph, instanceOfExecutionGraph } from '../execution/graph/ExecutionGraph'
-import { ExecutionNode, instanceOfExecutionNode } from '../execution/primitive/ExecutionNode'
-import { ControlFlowState } from '../renderer/Action/Mapping/ControlFlowState'
-import { DataState, instanceOfObjectData } from '../renderer/View/Environment/data/DataState'
+import { queryAllExecutionGraph } from '../Analysis/execution/execution'
+import { ExecutionGraph, instanceOfExecutionGraph } from '../Analysis/execution/graph/ExecutionGraph'
+import { ExecutionNode, instanceOfExecutionNode } from '../Analysis/execution/primitive/ExecutionNode'
+import { CFPathState } from '../ControlFlowView/ControlFlowPath'
+import { CFVInstance } from '../ControlFlowView/ControlFlowView'
+import { Step, Steps } from '../ControlFlowView/Step'
+import { DataState, instanceOfObjectData } from '../DataView/Environment/data/DataState'
+
 import { createPathElement } from './dom'
 
 export type Vector = {
@@ -66,52 +68,6 @@ export function remap(x: number, a: number, b: number, c: number, d: number) {
     return c + ((d - c) / (b - a)) * (x - a)
 }
 
-export function solveLP(data, mip = true) {
-    const solver = window['__GLP']
-    let logs = []
-
-    function log(value) {
-        logs.push({ action: 'log', message: value })
-    }
-
-    solver.glp_set_print_func(log)
-
-    var lp
-
-    var result = {},
-        objective,
-        i
-    try {
-        lp = solver.glp_create_prob()
-        solver.glp_read_lp_from_string(lp, null, data)
-
-        solver.glp_scale_prob(lp, solver.GLP_SF_AUTO)
-
-        var smcp = new solver.SMCP({ presolve: solver.GLP_ON })
-        solver.glp_simplex(lp, smcp)
-
-        if (mip) {
-            solver.glp_intopt(lp)
-            objective = solver.glp_mip_obj_val(lp)
-            for (i = 1; i <= solver.glp_get_num_cols(lp); i++) {
-                result[solver.glp_get_col_name(lp, i)] = solver.glp_mip_col_val(lp, i)
-            }
-        } else {
-            objective = solver.glp_get_obj_val(lp)
-            for (i = 1; i <= solver.glp_get_num_cols(lp); i++) {
-                result[solver.glp_get_col_name(lp, i)] = solver.glp_get_col_prim(lp, i)
-            }
-        }
-        lp = null
-    } catch (err) {
-        log(err.message)
-    } finally {
-        console.log({ action: 'done', result: result, objective: objective })
-    }
-
-    return { logs, result, objective }
-}
-
 /**
  *
  * @param data flattened points
@@ -154,7 +110,7 @@ export function catmullRomSolve(data: number[], k: number) {
 /**
  * @returns true iff query is included in data or is data itself
  */
-export function includes(data: DataState, query: string) {
+export function includes(data: DataState, query: string): boolean {
     if (data.id === query) {
         return true
     }
@@ -263,7 +219,7 @@ export function getDeepestChunks(
 
         const contains: Set<string> = new Set()
         for (const id of selection) {
-            if (queryExecutionGraph(child, (node) => node.id == id) != null) {
+            if (Step.queryExecutionGraph(child, (node) => node.id == id) != null) {
                 contains.add(id)
             }
         }
@@ -292,8 +248,8 @@ export function getDeepestChunks(
     }
 
     // console.log(allDeepestChunks, parentExecution.nodeData.type)
-    const parent = queryExecutionGraph(
-        Executor.instance.execution,
+    const parent = Step.queryExecutionGraph(
+        CFVInstance.instance.execution as ExecutionGraph,
         (node) => instanceOfExecutionGraph(node) && node.vertices.map((v) => v.id).includes(parentExecution.id)
     )
     // console.log(parent)
@@ -307,7 +263,7 @@ export function getDeepestChunks(
     }
 }
 
-export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
+export function stripChunk(chunk: ExecutionGraph | ExecutionNode): ExecutionGraph | ExecutionNode {
     let blacklist = new Set<string>(['IfStatement', 'ForStatement', 'ReturnStatement', 'CallExpression'])
     if (instanceOfExecutionGraph(chunk) && chunk.vertices.length == 1 && !blacklist.has(chunk.nodeData.type)) {
         return stripChunk(chunk.vertices[0])
@@ -317,8 +273,8 @@ export function stripChunk(chunk: ExecutionGraph | ExecutionNode) {
 }
 
 export function getClosestMatch(target: ESTree.SourceLocation) {
-    const programId = ApplicationState.visualization.programId as string
-    const allNodes = queryAllExecutionGraph(ApplicationState.actions[programId].execution, (_) => true)
+    const programId = CFVInstance.instance.rootStepId as string
+    const allNodes = queryAllExecutionGraph(Steps.get(programId).execution, (_) => true)
     const allDistances = allNodes.map((node) =>
         tokenDistanceFromTarget(node.nodeData.location as SourceLocation, target)
     )
@@ -421,8 +377,28 @@ export function resetPathChunks(pathChunks: SVGPathElement[]) {
     pathChunks[0].setAttribute('d', '')
 }
 
-export function createNewPathChunk(controlFlow: ControlFlowState) {
+export function createNewPathChunk(controlFlow: CFPathState) {
     const newPath = createPathElement('control-flow-path', controlFlow.container)
     newPath.setAttribute('d', '')
     controlFlow.flowPathChunks.push(newPath)
+}
+
+export function unionOfBounds(bounds: { x: number; y: number; width: number; height: number }[]) {
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+
+    for (const bound of bounds) {
+        minX = Math.min(minX, bound.x)
+        minY = Math.min(minY, bound.y)
+        maxX = Math.max(maxX, bound.x + bound.width)
+        maxY = Math.max(maxY, bound.y + bound.height)
+    }
+
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+}
+
+export function objEquals(a: any, b: any) {
+    return JSON.stringify(a ?? 'null') == JSON.stringify(b ?? 'null')
 }

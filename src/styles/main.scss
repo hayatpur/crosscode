@@ -12,13 +12,13 @@
 @import './generic/button.scss';
 
 /* State */
-@import './renderer/data/data.scss';
-@import './renderer/data/literal.scss';
-@import './renderer/data/array.scss';
-@import './renderer/data/identifier.scss';
-@import './renderer/view.scss';
-@import './renderer/trail.scss';
-@import './renderer/action.scss';
+@import './renderer/data-view/data.scss';
+@import './renderer/data-view/literal.scss';
+@import './renderer/data-view/array.scss';
+@import './renderer/data-view/identifier.scss';
+@import './renderer/data-view/data-view.scss';
+@import './renderer/data-view/trail.scss';
+@import './renderer/control-flow/control-flow.scss';
 
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;300;400;600;700&display=swap');
@@ -214,13 +214,14 @@ body {
     background-color: #909090;
 }
 
-.visualization-container {
+#visualization-container {
     position: absolute;
     top: 0px;
     left: 320px;
     width: -webkit-fill-available;
     height: 100%;
     display: flex;
+    background: grey;
 }
 
 .mouse-indicator {

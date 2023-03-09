@@ -14,44 +14,13 @@
 
 /* ----------------------- Monaco ----------------------- */
 
-.monaco-editor,
-.monaco-editor-background,
-.monaco-editor .inputarea.ime-input {
-    background-color: rgba(0, 0, 0, 0) !important;
-}
-
-.monaco-editor-background {
-    /* background-color: var(--main-bg-color) !important; */
-    background-color: rgba(0, 0, 0, 0) !important;
-}
-
-.monaco-editor .margin {
-    /* background-color: var(--main-bg-color) !important; */
-    background-color: rgba(0, 0, 0, 0) !important;
-}
-
 .monaco-editor .view-overlays .current-line {
     display: none;
 }
 
-// // .execution-decoration {
-// //     left: 45px !important;
-
-// //     width: 8px !important;
-// //     height: 8px !important;
-
-// //     border-radius: 50%;
-// //     border: 1px solid #bfbebe;
-// //     background-color: #00000008 !important;
-
-// //     margin-top: 10%;
-
-// //     display: none;
-// // }
-
 .monaco-editor .line-numbers {
     opacity: 0.4;
-    font-size: 12px !important;
+    font-size: 18px !important;
     margin-top: 2px !important;
     transition-property: opacity;
     color: black !important;
@@ -101,8 +70,8 @@
     // transition-property: top, left;
     // transition: 0.1s;
     opacity: 0.8;
-    height: 15px !important;
-    margin-top: 4px !important;
+    height: 24px !important;
+    margin-top: 8px !important;
     margin-left: 0px !important;
 }
 

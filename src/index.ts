@@ -1,45 +1,46 @@
-import { ApplicationState } from './scripts/ApplicationState'
-import { Editor } from './scripts/editor/Editor'
-import { Ticker } from './scripts/utilities/Ticker'
-import { createCodeQuerySelector } from './scripts/visualization/query/CodeSelectionQuery'
-import {
-    compileVisualization,
-    createVisualization,
-    setupTweakpane,
-    tickVisualization,
-} from './scripts/visualization/Visualization'
+import { CFVRenderer, CFVRendererState } from './scripts/ControlFlowView/CFVRenderer'
+import { CFV, CFVState } from './scripts/ControlFlowView/ControlFlowView'
+import { Editor, EditorState } from './scripts/Editor/Editor'
 import './styles/main.scss'
-// import './styles/themes/dark.scss'
 
-function main() {
-    ApplicationState.editor = new Editor()
+let editor: EditorState = null!
+let visContainer: HTMLElement = null!
 
-    ApplicationState.visualization = createVisualization()
+let cfv: CFVState = null!
+let cfvRenderer: CFVRendererState = null!
 
-    setupTweakpane(ApplicationState.visualization)
+async function main() {
+    // Initialize editor and populate it with default code
+    editor = await Editor.createEditor()
+
+    // Timeout for 1s to give time for monaco to load
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    // Initialize the control flow view, based on the current code
+    cfv = CFV.createCFV(editor)
+
+    // Initialize the renderer for the control flow view
+    visContainer = document.getElementById('visualization-container')!
+    cfvRenderer = CFVRenderer.createCFVRenderer(visContainer)
+
+    // const dataView = DataView.createDataView(controlFlowView)
 
     /* --- Live programming: update after 0.5s of activity -- */
-    let typingTimer: any
-    let firstCompilation = true
-    ApplicationState.editor.onChangeContent.add(() => {
-        clearTimeout(typingTimer)
+    // let timer: NodeJS.Timeout,
+    //     first = true
+    // ApplicationState.editor.onChangeContent.add(() => {
+    //     clearTimeout(timer)
 
-        const delay = firstCompilation ? 500 : 50 // Stagger on first execution to allow time for monaco to load
-        typingTimer = setTimeout(() => {
-            compileVisualization(ApplicationState.visualization, ApplicationState.editor.getValue())
-        }, delay)
+    //     // Stagger on first execution to give time for monaco to load
+    //     const delay = first ? 500 : 50
+    //     timer = setTimeout(() => {
+    //         compileVisualization(ApplicationState.visualization, Editor.getValue(ApplicationState.editor))
+    //     }, delay)
 
-        firstCompilation = false
-    })
+    //     first = false
+    // })
 
-    createCodeQuerySelector()
-
-    /* ------------------------ Ticks ----------------------- */
-    Ticker.instance.registerTick(tick)
-}
-
-function tick(dt: number) {
-    tickVisualization(ApplicationState.visualization, dt)
+    // createCodeQuerySelector()
 }
 
 main()

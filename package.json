@@ -3,11 +3,9 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "preview": "vite preview",
-        "postinstall": "patch-package"
+        "preview": "vite preview"
     },
     "dependencies": {
-        "@formkit/auto-animate": "^1.0.0-beta.1",
         "@tweakpane/plugin-essentials": "^0.1.4",
         "@types/acorn": "^4.0.6",
         "@types/estree": "0.0.51",
@@ -15,35 +13,25 @@
         "acorn-walk": "^8.2.0",
         "astring": "^1.8.3",
         "csstype": "^3.1.0",
-        "curved-arrows": "^0.1.0",
-        "howler": "^2.2.3",
-        "kld-intersections": "^0.7.0",
         "monaco-editor": "^0.33.0",
-        "patch-package": "^6.4.7",
         "perfect-arrows": "^0.3.7",
-        "stream": "0.0.2",
-        "svg-catmull-rom-spline": "^0.0.1",
-        "tweakpane": "^3.1.0"
+        "tweakpane": "^3.1.0",
+        "vite-plugin-monaco-editor": "^1.1.0"
     },
     "devDependencies": {
         "@tweakpane/core": "^1.1.0",
-        "@types/howler": "^2.2.7",
         "@types/svg-intersections": "^0.4.1",
         "@typescript-eslint/eslint-plugin": "^5.29.0",
         "@typescript-eslint/parser": "^5.29.0",
         "css-loader": "^6.7.1",
-        "eslint": "^8.18.0",
         "file-loader": "^6.2.0",
-        "gh-pages": "^4.0.0",
         "ignore-loader": "^0.1.2",
-        "node-sass": "^7.0.1",
         "sass": "^1.53.0",
         "sass-loader": "^13.0.1",
         "style-loader": "^3.3.1",
         "ts-loader": "^9.3.1",
         "typescript": "^4.7.4",
         "url-loader": "^4.1.1",
-        "vite": "^2.9.12",
-        "vite-plugin-monaco-editor": "^1.0.10"
+        "vite": "^2.9.12"
     }
 }

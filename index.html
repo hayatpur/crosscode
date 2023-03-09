@@ -21,6 +21,9 @@
         <div id="editor"></div>
         <div id="errors"></div>
 
+        <!-- Visualization -->
+        <div id="visualization-container"></div>
+
         <!-- SVG canvas -->
         <svg
             class="svg-canvas top"
@@ -29,15 +32,12 @@
             preserveAspectRatio="none"
             xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <marker viewBox="0 0 10 10" refX="3" refY="5" id="redArrowhead" orient="auto">
-                    <polygon points="0,0 10,5 0,10 3,5" fill="red" />
-                </marker>
-
                 <linearGradient id="grad1">
                     <stop offset="0%" stop-color="var(--s-color-3)" stop-opacity="0.4" />
                     <stop offset="50%" stop-color="var(--s-color-3)" />
                     <stop offset="100%" stop-color="var(--s-color-3)" stop-opacity="0.4" />
                 </linearGradient>
+
                 <linearGradient id="grad2">
                     <stop offset="0%" stop-color="var(--s-color-2)" stop-opacity="0.1" />
                     <stop offset="50%" stop-color="var(--s-color-2)" />
@@ -47,35 +47,6 @@
                 <linearGradient id="grad3" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stop-color="#ff9431" stop-opacity="0.2" />
                     <stop offset="100%" stop-color="var(--s-color-0-3)" stop-opacity="0.2" />
-                </linearGradient>
-
-                <linearGradient id="fade_start" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="var(--path-color)" stop-opacity="0" />
-                    <stop offset="50%" stop-color="var(--path-color)" />
-                    <stop offset="100%" stop-color="var(--path-color)" stop-opacity="1" />
-                </linearGradient>
-
-                <linearGradient id="fade_end">
-                    <stop offset="0%" stop-color="var(--path-color)" stop-opacity="1" />
-                    <stop offset="50%" stop-color="var(--path-color)" />
-                    <stop offset="100%" stop-color="var(--path-color)" stop-opacity="0" />
-                </linearGradient>
-
-                <linearGradient id="fade_both">
-                    <stop offset="0%" stop-color="var(--path-color)" stop-opacity="0" />
-                    <stop offset="50%" stop-color="var(--path-color)" stop-opacity="1" />
-                    <stop offset="100%" stop-color="var(--path-color)" stop-opacity="0" />
-                </linearGradient>
-
-                <linearGradient id="grad4" gradientUnits="userSpaceOnUse" gradientTransform="rotate(90)">
-                    <stop offset="0%" stop-color="var(--color-2)" stop-opacity="0" />
-                    <stop offset="50%" stop-color="var(--color-2)" stop-opacity="1" />
-                    <stop offset="100%" stop-color="var(--color-2)" stop-opacity="0" />
-                </linearGradient>
-                <linearGradient id="grad5">
-                    <stop offset="0%" stop-color="var(--color-4)" stop-opacity="1" />
-                    <stop offset="50%" stop-color="var(--color-4)" />
-                    <stop offset="100%" stop-color="var(--color-4)" stop-opacity="0" />
                 </linearGradient>
             </defs>
         </svg>

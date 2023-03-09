@@ -1,5 +1,3 @@
-import { ApplicationState } from '../ApplicationState'
-
 export class Ticker {
     // Singleton
     static instance: Ticker
@@ -18,11 +16,9 @@ export class Ticker {
         const timer = this
 
         function tick(time: number) {
-            ApplicationState.visualization.fpsGraph.begin()
             const dt = time - timer.time
             Object.values(timer.callbacks).forEach((callback) => callback(dt))
             timer.time = time
-            ApplicationState.visualization.fpsGraph.end()
             requestAnimationFrame(tick)
         }
 
